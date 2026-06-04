@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../i18n/strings.g.dart';
 import '../../utils/fortune_api.dart'
     show RelocationAngleNarrative, fetchRelocationAngleNarrative;
+import '../../utils/solara_i18n.dart' show currentLang;
 import 'horo_constants.dart' show planetGlyphs, planetLabel;
 import 'horo_relocation_angles.dart';
 
@@ -147,6 +148,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
       birthPlaceName: widget.birthPlaceName,
       homeName: widget.homeName,
       userName: widget.userName,
+      lang: currentLang(),
     );
     if (!mounted) return;
     setState(() {

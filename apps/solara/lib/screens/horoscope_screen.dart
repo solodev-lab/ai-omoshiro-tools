@@ -693,7 +693,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
         final id = cat['id'] as String;
         final reading = await fetchFortune(
           category: id,
-          lang: 'ja',
+          lang: currentLang(),
           natal: _natalPlanets,
           planetHouses: planetHouses.isEmpty ? null : planetHouses,
           aspects: aspects,

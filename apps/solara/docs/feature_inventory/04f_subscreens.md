@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11054
+- ファイル数: 32 / 総行数: 11055
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 286
 - Navigator.push 等: 0
@@ -211,7 +211,7 @@ Consultation Input — だれと / 願い の記入例 (テーマ別)
   </details>
 
 
-### `lib/screens/consultation/consultation_input_logic.dart` (205 行)
+### `lib/screens/consultation/consultation_input_logic.dart` (206 行)
 
 **ファイル先頭コメント:**
 

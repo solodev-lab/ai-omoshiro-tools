@@ -422,7 +422,7 @@
 | 3b | 1 | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | 2 | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 16 | 13 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
-| 4b | 11 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
+| 4b | 12 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
 | 4c | 3 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 9 | 6 | 13 | 1 | 2 | 2 | 11 | 3 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 5 | 6 | · | 3 | 7 | 2 | 16 | 1 | · | · | · | · | · | 9 | 3 | · |
@@ -438,8 +438,8 @@
 
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
+| `lib/utils/solara_i18n.dart` | 1a | 39 |
 | `lib/theme/solara_colors.dart` | 3b | 38 |
-| `lib/utils/solara_i18n.dart` | 1a | 38 |
 | `lib/utils/solara_storage.dart` | 2b | 33 |
 | `lib/widgets/info_popup.dart` | 3a | 26 |
 | `lib/screens/map/map_constants.dart` | 3b | 23 |
@@ -472,17 +472,14 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **2** / 削除: **0** / 変更: **2**
+- 追加: **0** / 削除: **0** / 変更: **5**
 
 ### 変更されたファイル (層別)
 
-- **層 1b**: `lib/screens/map/daily_transit_data.dart`
-- **層 4a**: `lib/screens/map/map_daily_transit_screen.dart`
-
-### 追加されたファイル
-
-- `lib/screens/map/daily_transit_data_en.dart` (層 4a)
-- `lib/screens/map/daily_transit_data_en2.dart` (層 4a)
+- **層 2b**: `lib/utils/app_locale.dart`
+- **層 4b**: `lib/screens/horoscope/horo_relocation_panel.dart`, `lib/screens/horoscope_screen.dart`
+- **層 4c**: `lib/screens/observe_screen.dart`
+- **層 4f**: `lib/screens/consultation/consultation_input_logic.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

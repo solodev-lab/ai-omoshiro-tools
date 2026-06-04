@@ -191,6 +191,7 @@ extension _ConsultationInputLogic on _ConsultationInputScreenState {
       scope: _buildScope(),
       withWhom: _whomCtrl.text.trim(),
       wish: _wishCtrl.text.trim(),
+      lang: currentLang(),
     );
 
     await Navigator.of(context).push(

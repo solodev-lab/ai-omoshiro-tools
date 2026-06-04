@@ -334,6 +334,7 @@ class ObserveScreenState extends State<ObserveScreen>
       thinking: isPro,
       question: question.isEmpty ? null : question,
       category: reading.category,
+      lang: currentLang(),
     );
 
     if (!mounted) return;

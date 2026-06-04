@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3576
+- ファイル数: 12 / 総行数: 3577
 - class/mixin/extension/enum: 25
 - 関数 (top-level + method の素拾い): 82
 - Navigator.push 等: 0
@@ -342,7 +342,7 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/observe_screen.dart` (768 行)
+### `lib/screens/observe_screen.dart` (769 行)
 
 **imports:** dart=2 / package=1 / relative=20
 
@@ -360,7 +360,7 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
 - L139 `initState()`
 - L164 `restoreState()` — 復元: HISTORY タブ + サブタブ (現在/過去サイクル) を再現する。
 - L175 `dispose()`
-- L446 `build()`
+- L447 `build()`
 
   <details><summary>private 関数 18 件</summary>
 
@@ -373,15 +373,15 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
   - L225 `_loadHistory()`
   - L230 `_drawCard()`
   - L308 `_fetchReading()`
-  - L412 `_retryReading()`
-  - L421 `_handleTarotCreditExhausted()`
-  - L431 `_startTypewriter()`
-  - L472 `_buildInnerTabs()`
-  - L486 `_innerTabBtn()`
-  - L507 `_buildDrawPanel()`
-  - L583 `_buildLoadingIndicator()`
-  - L660 `_buildReadingError()`
-  - L715 `_buildReadingPanel()`
+  - L413 `_retryReading()`
+  - L422 `_handleTarotCreditExhausted()`
+  - L432 `_startTypewriter()`
+  - L473 `_buildInnerTabs()`
+  - L487 `_innerTabBtn()`
+  - L508 `_buildDrawPanel()`
+  - L584 `_buildLoadingIndicator()`
+  - L661 `_buildReadingError()`
+  - L716 `_buildReadingPanel()`
 
   </details>
 

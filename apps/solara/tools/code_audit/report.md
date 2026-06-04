@@ -19,7 +19,7 @@
 | 858 | 🟠 WARN | lib/screens/map/map_astro_carto.dart |
 | 810 | 🟠 WARN | lib/screens/map/map_search.dart |
 | 775 | 🟠 WARN | lib/widgets/catasterism_formation_overlay.dart |
-| 768 | 🟠 WARN | lib/screens/observe_screen.dart |
+| 769 | 🟠 WARN | lib/screens/observe_screen.dart |
 | 758 | 🟠 WARN | lib/widgets/fortune_overlays/work_painter.dart |
 | 750 | 🟠 WARN | lib/screens/map/map_fortune_sheet.dart |
 | 744 | 🟠 WARN | lib/screens/locations_screen.dart |
@@ -41,7 +41,7 @@
 | 576 | 🟠 WARN | lib/utils/app_attest_client.dart |
 | 558 | 🟠 WARN | lib/utils/astro_glossary_en.dart |
 | 555 | 🟠 WARN | lib/main.dart |
-| 538 | 🟠 WARN | lib/screens/horoscope/horo_relocation_panel.dart |
+| 540 | 🟠 WARN | lib/screens/horoscope/horo_relocation_panel.dart |
 | 535 | 🟠 WARN | lib/utils/astro_lines.dart |
 | 533 | 🟠 WARN | lib/utils/consultation_v2_api.dart |
 | 529 | 🟠 WARN | lib/screens/consultation/consultation_input_widgets.dart |
@@ -144,7 +144,7 @@
 
 ### 5. 📁 別ファイル間 (11 箇所、10 ファイル)
 
-  - lib/screens/observe_screen.dart:707
+  - lib/screens/observe_screen.dart:708
   - lib/screens/paywall_comparison.dart:124
   - lib/screens/paywall_comparison.dart:199
   - lib/screens/paywall_legal_links.dart:83

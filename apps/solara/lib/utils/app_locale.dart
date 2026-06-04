@@ -10,10 +10,10 @@ import '../i18n/strings.g.dart' as i18n;
 ///
 /// 🔴 完成度ゲート (正典「半英語UIを出さない」):
 ///   notifier の変化を slang の LocaleSettings へ橋渡しする (_syncSlang)。
-///   Phase 0 では override=='en' のときだけ slang を en にする。
-///   それ以外 (ja / null=端末設定) は ja に固定 = EN カバレッジが揃うまで
-///   端末が英語でも英語UIを出さない。`dart run slang analyze` で未訳 0 を
-///   確認したら _syncSlang を system 連動 (端末 en → en) へ広げる。
+///   Phase 3 (2026-06-04) で system 連動へ解除済: EN カバレッジが揃った
+///   (slang analyze 未訳 0 + Phase 2 content/data 英訳完了) ため、override が
+///   null (端末設定) のときは端末ロケールに従う (英語端末 → en、それ以外 → ja)。
+///   override=='ja'/'en' は固定。半英語UIはもう出ない。
 class AppLocale {
   AppLocale._() {
     // notifier の変化を slang ロケールへ反映 (直接 value を差し替えるテストにも追従)。
@@ -51,11 +51,15 @@ class AppLocale {
   }
 
   /// override → slang LocaleSettings の橋渡し (完成度ゲート本体)。
-  /// Phase 0: EN は override=='en' のときだけ。それ以外 (ja / null=system) は ja。
+  /// Phase 3: override=='en'/'ja' は固定。null=端末設定なら slang の supported
+  /// (ja=base / en) から端末ロケールの最良一致を取る (英語端末 → en、他 → ja)。
   /// lazy:false なので setLocaleRawSync は同期。
   void _syncSlang() {
-    final wantEn = notifier.value?.languageCode == 'en';
-    i18n.LocaleSettings.setLocaleRawSync(wantEn ? 'en' : 'ja');
+    final ov = notifier.value?.languageCode;
+    final want = (ov == 'en' || ov == 'ja')
+        ? ov!
+        : i18n.AppLocaleUtils.findDeviceLocale().languageCode;
+    i18n.LocaleSettings.setLocaleRawSync(want);
   }
 
   String get currentCode => notifier.value?.languageCode ?? 'system';

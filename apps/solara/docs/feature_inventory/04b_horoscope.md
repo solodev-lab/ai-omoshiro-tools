@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 6119
+- ファイル数: 23 / 総行数: 6121
 - class/mixin/extension/enum: 33
 - 関数 (top-level + method の素拾い): 165
 - Navigator.push 等: 0
@@ -535,40 +535,40 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_relocation_panel.dart` (538 行)
+### `lib/screens/horoscope/horo_relocation_panel.dart` (540 行)
 
-**imports:** dart=0 / package=2 / relative=4
+**imports:** dart=0 / package=2 / relative=5
 
-- relative: `../../i18n/strings.g.dart`, `../../utils/fortune_api.dart`, `horo_constants.dart`, `horo_relocation_angles.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/fortune_api.dart`, `../../utils/solara_i18n.dart`, `horo_constants.dart`, `horo_relocation_angles.dart`
 
 **型定義 (2):**
 
-- L23 `class HoroRelocationPanel : StatefulWidget`
-- L51 `class _HoroRelocationPanelState : State`
+- L24 `class HoroRelocationPanel : StatefulWidget`
+- L52 `class _HoroRelocationPanelState : State`
 
 **関数 (4 public + 14 private):**
 
-- L48 `createState()`
-- L78 `initState()`
-- L86 `didUpdateWidget()`
-- L170 `build()`
+- L49 `createState()`
+- L79 `initState()`
+- L87 `didUpdateWidget()`
+- L172 `build()`
 
   <details><summary>private 関数 14 件</summary>
 
-  - L99 `_recompute()`
-  - L122 `_buildFetchKey()`
-  - L127 `_maybeFetch()`
-  - L164 `_retry()`
-  - L208 `_buildHeader()`
-  - L240 `_buildSectionTitle()`
-  - L252 `_buildSummary()`
-  - L271 `_buildLoadingBlock()`
-  - L299 `_buildFailureBlock()`
-  - L355 `_buildAngleChangeCard()`
-  - L395 `_buildPlanetCard()`
-  - L490 `_buildNeedChartHint()`
-  - L509 `_buildSamePlaceHint()`
-  - L528 `_buildFootnote()`
+  - L100 `_recompute()`
+  - L123 `_buildFetchKey()`
+  - L128 `_maybeFetch()`
+  - L166 `_retry()`
+  - L210 `_buildHeader()`
+  - L242 `_buildSectionTitle()`
+  - L254 `_buildSummary()`
+  - L273 `_buildLoadingBlock()`
+  - L301 `_buildFailureBlock()`
+  - L357 `_buildAngleChangeCard()`
+  - L397 `_buildPlanetCard()`
+  - L492 `_buildNeedChartHint()`
+  - L511 `_buildSamePlaceHint()`
+  - L530 `_buildFootnote()`
 
   </details>
 

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2923
+- ファイル数: 9 / 総行数: 2927
 - class/mixin/extension/enum: 15
 - 関数 (top-level + method の素拾い): 142
 - Navigator.push 等: 0
@@ -83,7 +83,7 @@ Worker 側仕様: apps/solara/worker/src/index.js
   </details>
 
 
-### `lib/utils/app_locale.dart` (62 行)
+### `lib/utils/app_locale.dart` (66 行)
 
 **imports:** dart=0 / package=2 / relative=1
 
@@ -101,7 +101,7 @@ Worker 側仕様: apps/solara/worker/src/index.js
 
   <details><summary>private 関数 1 件</summary>
 
-  - L56 `_syncSlang()`
+  - L57 `_syncSlang()`
 
   </details>
 
