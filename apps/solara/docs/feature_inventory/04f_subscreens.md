@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11069
+- ファイル数: 32 / 総行数: 11073
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 286
 - Navigator.push 等: 0
@@ -1077,7 +1077,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/paywall_comparison.dart` (281 行)
+### `lib/screens/paywall_comparison.dart` (285 行)
 
 **ファイル先頭コメント:**
 
@@ -1107,9 +1107,9 @@ Paywall Screen — Free vs Pro 比較テーブル / FAQ アコーディオン
   - L16 `_buildComparisonTable()`
   - L84 `_comparisonHeader()`
   - L132 `_comparisonSection()`
-  - L160 `_comparisonRow()`
-  - L207 `_buildFaqSection()`
-  - L235 `_faqItem()`
+  - L164 `_comparisonRow()`
+  - L211 `_buildFaqSection()`
+  - L239 `_faqItem()`
 
   </details>
 

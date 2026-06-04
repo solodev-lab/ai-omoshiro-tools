@@ -1370,6 +1370,11 @@ async function dispatchPublic(request, env, url, origin) {
     if (rankParam === 'distance' || rankParam === 'relevance') {
       options.rank = rankParam;
     }
+    // lang: 検索結果の言語 (en/ja/将来 fr 等)。未指定の旧クライアントは search.js 側で 'ja' default。
+    const langParam = url.searchParams.get('lang');
+    if (langParam) {
+      options.lang = langParam;
+    }
     const results = await searchPlace(q, env, options);
     return jsonOk(results, origin);
   }

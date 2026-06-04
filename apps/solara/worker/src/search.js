@@ -49,11 +49,11 @@ export async function searchPlace(query, env, options = {}) {
   }
 
   // Fallback: Nominatim
-  const nominatimResults = await searchNominatim(query);
+  const nominatimResults = await searchNominatim(query, options.lang);
   return { source: 'nominatim', results: nominatimResults };
 }
 
-async function searchNominatim(query) {
+async function searchNominatim(query, lang = 'ja') {
   const params = new URLSearchParams({
     q: query,
     format: 'json',
@@ -62,7 +62,7 @@ async function searchNominatim(query) {
   });
 
   const resp = await fetch(`${NOMINATIM_URL}?${params}`, {
-    headers: { 'User-Agent': NOMINATIM_UA, 'Accept-Language': 'ja,en' },
+    headers: { 'User-Agent': NOMINATIM_UA, 'Accept-Language': `${lang},en` },
   });
 
   if (!resp.ok) return [];
@@ -92,11 +92,11 @@ async function searchNominatim(query) {
 async function searchGooglePlacesNew(
   query,
   apiKey,
-  { lat, lng, radius = 15000, rank } = {},
+  { lat, lng, radius = 15000, rank, lang = 'ja' } = {},
 ) {
   const reqBody = {
     textQuery: query,
-    languageCode: 'ja',
+    languageCode: lang,
     pageSize: 20,
   };
 

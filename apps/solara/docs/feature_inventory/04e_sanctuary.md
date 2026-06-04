@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 11 / 総行数: 5990
+- ファイル数: 11 / 総行数: 5943
 - class/mixin/extension/enum: 29
-- 関数 (top-level + method の素拾い): 130
+- 関数 (top-level + method の素拾い): 129
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 5
 - Worker URL リテラル: 0
@@ -42,30 +42,30 @@
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_home_editor.dart` (241 行)
+### `lib/screens/sanctuary/sanctuary_home_editor.dart` (243 行)
 
-**imports:** dart=1 / package=2 / relative=4
+**imports:** dart=1 / package=2 / relative=5
 
-- relative: `../../i18n/strings.g.dart`, `../../utils/solara_storage.dart`, `../../widgets/location_picker_minimap.dart`, `../../widgets/tap_to_unfocus.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/app_locale.dart`, `../../utils/solara_storage.dart`, `../../widgets/location_picker_minimap.dart`, `../../widgets/tap_to_unfocus.dart`
 
 **型定義 (2):**
 
-- L15 `class SanctuaryHomeEditorPage : StatefulWidget`
-- L23 `class _SanctuaryHomeEditorPageState : State`
+- L17 `class SanctuaryHomeEditorPage : StatefulWidget`
+- L25 `class _SanctuaryHomeEditorPageState : State`
 
 **関数 (4 public + 4 private):**
 
-- L20 `createState()`
-- L31 `initState()`
-- L40 `dispose()`
-- L92 `build()`
+- L22 `createState()`
+- L33 `initState()`
+- L42 `dispose()`
+- L94 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L45 `_search()`
-  - L70 `_save()`
-  - L208 `_input()`
-  - L223 `_readonlyField()`
+  - L47 `_search()`
+  - L72 `_save()`
+  - L210 `_input()`
+  - L225 `_readonlyField()`
 
   </details>
 
@@ -146,7 +146,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (612 行)
+### `lib/screens/sanctuary/sanctuary_profile_editor.dart` (552 行)
 
 **imports:** dart=1 / package=3 / relative=6
 
@@ -156,27 +156,26 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L19 `class SanctuaryProfileEditorPage : StatefulWidget`
 - L27 `class _SanctuaryProfileEditorPageState : State`
-- L586 `class DateSlashFormatter : TextInputFormatter`
+- L526 `class DateSlashFormatter : TextInputFormatter`
   - Auto-inserts `/` after YYYY and MM for date input (YYYY/MM/DD format).
 
-**関数 (5 public + 8 private):**
+**関数 (5 public + 7 private):**
 
 - L24 `createState()`
 - L45 `initState()`
 - L70 `dispose()`
-- L174 `build()`
-- L588 `formatEditUpdate()`
+- L176 `build()`
+- L528 `formatEditUpdate()`
 
-  <details><summary>private 関数 8 件</summary>
+  <details><summary>private 関数 7 件</summary>
 
   - L81 `_searchPlace()`
-  - L109 `_selectPlace()`
-  - L123 `_resolveTimezone()`
-  - L136 `_save()`
-  - L500 `_langBtn()`
-  - L543 `_birthSection()`
-  - L561 `_inputDecoration()`
-  - L572 `_readonlyField()`
+  - L111 `_selectPlace()`
+  - L125 `_resolveTimezone()`
+  - L138 `_save()`
+  - L483 `_birthSection()`
+  - L501 `_inputDecoration()`
+  - L512 `_readonlyField()`
 
   </details>
 
@@ -231,7 +230,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_title_diagnosis.dart` (1397 行)
+### `lib/screens/sanctuary/sanctuary_title_diagnosis.dart` (1408 行)
 
 **imports:** dart=1 / package=3 / relative=8
 
@@ -263,12 +262,12 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L679 `_buildIntro()`
   - L881 `_showHowItWorks()`
   - L889 `_buildRound()`
-  - L952 `_buildPartTrans()`
-  - L1055 `_buildForging()`
-  - L1180 `_toggleShadowSide()`
-  - L1191 `_buildReveal()`
-  - L1249 `_buildRevealLightSide()`
-  - L1336 `_buildRevealShadowSide()`
+  - L963 `_buildPartTrans()`
+  - L1066 `_buildForging()`
+  - L1191 `_toggleShadowSide()`
+  - L1202 `_buildReveal()`
+  - L1260 `_buildRevealLightSide()`
+  - L1347 `_buildRevealShadowSide()`
 
   </details>
 

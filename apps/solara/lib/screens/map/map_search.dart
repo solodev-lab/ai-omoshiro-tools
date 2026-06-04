@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../i18n/strings.g.dart';
+// slang も AppLocale を定義するため、app_locale.dart の AppLocale と衝突しないよう hide。
+import '../../i18n/strings.g.dart' hide AppLocale;
+import '../../utils/app_locale.dart';
 import '../../utils/solara_api.dart' show solaraSearchUrl;
 import '../../widgets/info_popup.dart';
 import 'map_astro.dart';
@@ -123,7 +125,12 @@ Future<List<SearchHit>> searchPlaces(String query,
     // rank: 'distance' (中心点=地図中心からの近さ優先) | 'relevance' (知名度)。
     // 件数は Worker 側で 20 件のまま。Google の順位が変わることで「上から 20 件」の
     // 中身が変わり、近所中心 / 知名度中心の 2 パターンの結果が取れる。
-    final params = <String, String>{'q': query, 'rank': rank};
+    // lang: 検索結果の言語を現在の表示言語に合わせる (Worker→Nominatim/Google Places)。
+    final params = <String, String>{
+      'q': query,
+      'rank': rank,
+      'lang': AppLocale.instance.resolvedCode,
+    };
     if (biasCenter != null) {
       params['lat'] = biasCenter.latitude.toString();
       params['lng'] = biasCenter.longitude.toString();

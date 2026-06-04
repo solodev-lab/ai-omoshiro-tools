@@ -1829,6 +1829,16 @@ forecast_screen 112 / galaxy_screen 105 / map_fortune_sheet 96 / map_daily_trans
 #### 用語修正
 - 「現住所」EN を **"Current address" → "Current residence"** に統一 (英語15箇所・GPSの "Current location" とは別概念で区別)。
 
+### 0.2.64 ジオコーディング多言語化 + 診断/比較表レイアウト + 入力例Dallas + カードr版差替 (2026-06-04)
+
+> §0.2.63 の続き (英語 E2E 中の追加調整群)。analyze クリーン / test 全319件green / extract `+0 -0 ~9`。
+
+- **ジオコーディング多言語化**: 出生地検索(`sanctuary_profile_editor`)・現住所検索(`sanctuary_home_editor`)・逆ジオ(`reverse_geocode`)・Map検索(`map_search`→Worker) の言語を `AppLocale.resolvedCode` 連動へ (従来 `ja` 固定 → 英語端末で英語地名)。Worker `search.js`/`index.js` に `lang` を通し Nominatim `Accept-Language` / Google `languageCode` へ適用 (未指定は `ja` default=後方互換)。**`wrangler deploy` 済 (Version `4f0070d7`)**。
+- **入力例 Dallas**: 出生地/現住所の EN `placeHint` を "e.g. Dallas, Texas" に (i18n=言語別に持つ)。
+- **レイアウト修正 (大フォント×英語の overflow)**: ① 称号カード(`class_card`) の textScaler を [1.0,1.2] クランプ (固定絵札の文字はみ出し防止。1.0 固定だと周囲より小さすぎる為クランプ採用)。② 称号診断の質問カードグリッドを画面幅から動的算出 (4枚=2列 / 3・6枚=3列・2:3比率固定・6枚は2行で縦も伸びる)。③ Cosmic Pro 比較表のセクション見出しを `Expanded` で折返し (横 overflow 解消)。
+- **言語トグル整理**: プロフィール編集内の重複言語トグルを削除し Sanctuary ✦App に一本化。
+- **カード画像 r版差替**: `assets/card-images/` の `rXXX.webp` 28枚を `XXX.webp` へ差替 (白枠修正版)。元画像は `_original/` へ退避 (git管理外・asset 非バンドル・履歴でも復元可)。ファイル名据置で称号診断+Tarot 両方に反映。`tools/swap_r_cards.py`。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

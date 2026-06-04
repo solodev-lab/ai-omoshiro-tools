@@ -87,7 +87,9 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
       );
       final resp = await http.get(uri, headers: {
         'User-Agent': 'SolaraApp/1.0 (solodev-lab.com)',
-        'Accept-Language': 'ja,en',
+        // 検索結果の言語は現在の表示言語に合わせる (en→英語 / ja→日本語 / 将来 fr 等)。
+        // 末尾に en を付け、対象言語名を持たない地名は英語へフォールバックさせる。
+        'Accept-Language': '${AppLocale.instance.resolvedCode},en',
       });
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body) as List;
@@ -445,26 +447,6 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
 
                     const SizedBox(height: 16),
 
-                    // 言語切替
-                    _birthSection(t.profileEdit.language, ValueListenableBuilder<Locale?>(
-                      valueListenable: AppLocale.instance.notifier,
-                      builder: (_, currentLocale, _) {
-                        final code = currentLocale?.languageCode;
-                        return Row(children: [
-                          _langBtn(t.profileEdit.langDevice, t.profileEdit.langDeviceSub, code == null, () =>
-                            AppLocale.instance.setOverride(null)),
-                          const SizedBox(width: 8),
-                          _langBtn('日本語', 'Japanese', code == 'ja', () =>
-                            AppLocale.instance.setOverride('ja')),
-                          const SizedBox(width: 8),
-                          _langBtn('English', t.profileEdit.langEnglishSub, code == 'en', () =>
-                            AppLocale.instance.setOverride('en')),
-                        ]);
-                      },
-                    )),
-
-                    const SizedBox(height: 16),
-
                     // Save button
                     // HTML: .birth-save-btn { width:100%; padding:14px; border-radius:14px; }
                     GestureDetector(
@@ -497,48 +479,6 @@ class _SanctuaryProfileEditorPageState extends State<SanctuaryProfileEditorPage>
   }
 
   // HTML: .birth-section { margin-bottom:18px; }
-  Widget _langBtn(String primary, String sub, bool active, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: active
-              ? const Color(0x33F9D976) : const Color(0x0FFFFFFF),
-            border: Border.all(
-              color: active
-                ? const Color(0xFFF9D976) : const Color(0x20FFFFFF),
-              width: active ? 1.5 : 1,
-            ),
-          ),
-          // 各ボタンは Expanded で 1/3 幅。1.5x フォントで「システム設定」等が枠を
-          // 超えないよう FittedBox(scaleDown) で全文を保ったまま収める (truncation 回避)。
-          child: Column(children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(primary, style: TextStyle(
-                fontSize: 15, fontWeight: FontWeight.w600,
-                color: active ? const Color(0xFFF9D976) : const Color(0xFFE0E0E0),
-              )),
-            ),
-            const SizedBox(height: 2),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(sub, style: TextStyle(
-                fontSize: 15,
-                color: active
-                  ? const Color(0xFFF9D976).withAlpha(180)
-                  : const Color(0xFF888888),
-              )),
-            ),
-          ]),
-        ),
-      ),
-    );
-  }
 
   Widget _birthSection(String label, Widget child) {
     return Padding(

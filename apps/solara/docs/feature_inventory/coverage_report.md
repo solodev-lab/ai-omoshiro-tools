@@ -55,12 +55,11 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **479**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **292**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **294**
 
-### #1 機械にあるが Doc に書かれていない (277)
+### #1 機械にあるが Doc に書かれていない (276)
 
 - `AppAttestClient`
-- `AppFontSize`
 - `AppTextScale`
 - `ConstellationShareCardPage`
 - `ConsultEntryPopup`
@@ -259,9 +258,10 @@
 - `_PillChip`
 - `_PlanetDef`
 - `_PlanetGlyphPainter`
-- … 残り 77 省略
+- `_PlanetIntroBody`
+- … 残り 76 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (90)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (91)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -330,6 +330,7 @@
 - `RelocationNarrative`
 - `RepaintBoundary`
 - `RestorableProperty`
+- `SOLARA`
 - `SOLARA_GCP_PROJECT_NUMBER`
 - `SOLARA_GOOGLE_SERVER_CLIENT_ID`
 - `SOLARA_RC_ANDROID_KEY`
@@ -415,17 +416,17 @@
 | 1a | 3 | 1 | 1 | 1 | 3 | · | · | · | · | · | · | · | · | · | · | · |
 | 1b | 8 | · | · | 2 | 1 | · | 1 | · | · | 2 | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| 2a | 3 | 1 | · | 6 | 5 | · | · | 1 | · | · | · | · | · | · | · | · |
+| 2a | 3 | 1 | · | 6 | 6 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 3 | 3 | 5 | 6 | 4 | 1 | · | · | · | · | · | · | · | · | · | · |
 | 2c | 1 | · | 1 | 3 | 2 | · | · | · | · | · | · | · | · | · | · | · |
 | 3a | 4 | 4 | 2 | 2 | 1 | 1 | 8 | 7 | 4 | 1 | · | · | · | · | 1 | · |
 | 3b | 1 | · | · | · | · | · | · | 1 | · | · | · | · | · | · | · | · |
 | 3c | 2 | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
-| 4a | 16 | 13 | · | 14 | 8 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
+| 4a | 16 | 13 | · | 14 | 9 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
 | 4b | 12 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
 | 4c | 3 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 9 | 6 | 13 | 1 | 2 | 2 | 11 | 3 | 1 | · | · | · | 9 | · | · | · |
-| 4e | 5 | 6 | · | 3 | 11 | 2 | 16 | 1 | · | · | · | · | · | 10 | 3 | · |
+| 4e | 5 | 6 | · | 3 | 12 | 2 | 16 | 1 | · | · | · | · | · | 10 | 3 | · |
 | 4f | 6 | 6 | · | 8 | 16 | 6 | 19 | 14 | · | 6 | · | · | · | · | 30 | · |
 | 5 | 2 | 2 | · | 2 | 6 | 5 | 1 | 1 | · | 1 | 1 | 1 | 1 | 3 | 4 | · |
 
@@ -451,13 +452,13 @@
 | `lib/utils/pro_status.dart` | 2b | 11 |
 | `lib/widgets/tap_to_unfocus.dart` | 3a | 11 |
 | `lib/screens/horoscope/horo_panel_shared.dart` | 4b | 9 |
+| `lib/utils/app_locale.dart` | 2b | 9 |
 | `lib/widgets/pro_unlock_dialog.dart` | 3a | 9 |
 | `lib/models/lunar_intention.dart` | 1c | 8 |
 | `lib/utils/constellation_namer.dart` | 1b | 8 |
 | `lib/utils/consultation_api.dart` | 2a | 8 |
 | `lib/utils/consultation_credits.dart` | 2c | 8 |
 | `lib/utils/tarot_data.dart` | 2c | 8 |
-| `lib/models/tarot_card.dart` | 1c | 7 |
 
 ### #5c 孤立ファイル (2) — 誰からも import されない
 
@@ -472,20 +473,16 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **2** / 削除: **0** / 変更: **5**
+- 追加: **0** / 削除: **0** / 変更: **9**
 
 ### 変更されたファイル (層別)
 
-- **層 2a**: `lib/utils/legal_urls.dart`
-- **層 2b**: `lib/utils/app_locale.dart`
-- **層 4e**: `lib/screens/sanctuary_screen.dart`
-- **層 4f**: `lib/screens/ai_consent_screen.dart`
-- **層 5**: `lib/main.dart`
-
-### 追加されたファイル
-
-- `lib/screens/sanctuary/sanctuary_settings_pickers.dart` (層 4e)
-- `lib/utils/app_text_scale.dart` (層 2b)
+- **層 0**: `worker/src/index.js`, `worker/src/search.js`
+- **層 2a**: `lib/utils/reverse_geocode.dart`
+- **層 3a**: `lib/widgets/class_card.dart`
+- **層 4a**: `lib/screens/map/map_search.dart`
+- **層 4e**: `lib/screens/sanctuary/sanctuary_home_editor.dart`, `lib/screens/sanctuary/sanctuary_profile_editor.dart`, `lib/screens/sanctuary/sanctuary_title_diagnosis.dart`
+- **層 4f**: `lib/screens/paywall_comparison.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

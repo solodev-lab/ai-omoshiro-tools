@@ -146,9 +146,22 @@ class ClassCard extends StatelessWidget {
     }
 
     if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: card);
+      card = GestureDetector(onTap: onTap, child: card);
     }
-    return card;
+
+    // 称号カードは固定サイズの「絵札」(画像 + 下部に固定高さのテキストオーバーレイ)。
+    // 端末/アプリのフォント倍率をそのまま掛けると overlay の文字がカードからはみ出す
+    // (絵主役ゾーン)。かといって 1.0 固定だと周囲の拡大UIに対し小さすぎる。
+    // → 倍率は活かしつつ、カードが破綻しない上限 (1.2) までクランプ (1.0 未満には縮めない)。
+    // 長文は各 Text の maxLines + ellipsis で吸収済み。
+    final inheritedScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+    final cardScale = inheritedScale.clamp(1.0, 1.2).toDouble();
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: TextScaler.linear(cardScale),
+      ),
+      child: card,
+    );
   }
 
   Widget _buildOverlay() {

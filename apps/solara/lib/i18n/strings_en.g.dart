@@ -688,7 +688,7 @@ class _Translations$homeEdit$en extends Translations$homeEdit$ja {
 
 	// Translations
 	@override String get addressLabel => 'Address / place name';
-	@override String get placeHint => 'e.g. Shibuya, Tokyo';
+	@override String get placeHint => 'e.g. Dallas, Texas';
 	@override String get notFound => 'No results found';
 	@override String get connError => 'Connection error';
 }
@@ -837,7 +837,7 @@ class _Translations$profileEdit$en extends Translations$profileEdit$ja {
 	@override String get timeUnknownNote => 'The reading uses planetary positions and aspects. House, ASC and MC readings are omitted.';
 	@override String get birthPlace => 'Birthplace';
 	@override String get cityLevelHint => 'City/town level is fine — no street address needed';
-	@override String get placeHint => 'e.g. Gifu, Japan';
+	@override String get placeHint => 'e.g. Dallas, Texas';
 	@override String get placeRequired => 'Please enter your birthplace';
 	@override String get search => 'Search';
 	@override String get latitude => 'Latitude';
@@ -3200,7 +3200,7 @@ extension on TranslationsEn {
 			'mapScreen.locSlotDefaults.2' => 'Place 3',
 			'mapScreen.locSlotDefaults.3' => 'Place 4',
 			'homeEdit.addressLabel' => 'Address / place name',
-			'homeEdit.placeHint' => 'e.g. Shibuya, Tokyo',
+			'homeEdit.placeHint' => 'e.g. Dallas, Texas',
 			'homeEdit.notFound' => 'No results found',
 			'homeEdit.connError' => 'Connection error',
 			'resetPicker.title' => '✦ Start of day',
@@ -3277,7 +3277,7 @@ extension on TranslationsEn {
 			'profileEdit.timeUnknownNote' => 'The reading uses planetary positions and aspects. House, ASC and MC readings are omitted.',
 			'profileEdit.birthPlace' => 'Birthplace',
 			'profileEdit.cityLevelHint' => 'City/town level is fine — no street address needed',
-			'profileEdit.placeHint' => 'e.g. Gifu, Japan',
+			'profileEdit.placeHint' => 'e.g. Dallas, Texas',
 			'profileEdit.placeRequired' => 'Please enter your birthplace',
 			'profileEdit.search' => 'Search',
 			'profileEdit.latitude' => 'Latitude',

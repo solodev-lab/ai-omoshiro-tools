@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 2411
+- ファイル数: 10 / 総行数: 2413
 - class/mixin/extension/enum: 26
 - 関数 (top-level + method の素拾い): 40
 - Navigator.push 等: 0
@@ -322,19 +322,21 @@ Solara 法務リンク定数 — Phase 2-6b
 - L36: `'https://solodev-lab.com/legal/solara'`
 
 
-### `lib/utils/reverse_geocode.dart` (100 行)
+### `lib/utils/reverse_geocode.dart` (102 行)
 
-**imports:** dart=1 / package=1 / relative=0
+**imports:** dart=1 / package=1 / relative=1
+
+- relative: `app_locale.dart`
 
 **型定義 (1):**
 
-- L35 `class ReverseGeocodeResult`
+- L37 `class ReverseGeocodeResult`
   - Nominatim Reverse の結果から取り出した詳細レコード。
 
 **関数 (2 public + 0 private):**
 
-- L23 `reverseGeocode()` — 緯度経度から地名（市町村名）を逆ジオコーディングで取得する。
-- L68 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
+- L25 `reverseGeocode()` — 緯度経度から地名（市町村名）を逆ジオコーディングで取得する。
+- L70 `reverseGeocodeDetail()` — 緯度経度から逆ジオコーディングで region / country まで含む詳細を取得する。
 
 
 ### `lib/utils/solara_api.dart` (103 行)

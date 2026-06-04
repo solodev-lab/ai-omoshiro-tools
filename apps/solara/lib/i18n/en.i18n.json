@@ -391,7 +391,7 @@
   },
   "homeEdit": {
     "addressLabel": "Address / place name",
-    "placeHint": "e.g. Shibuya, Tokyo",
+    "placeHint": "e.g. Dallas, Texas",
     "notFound": "No results found",
     "connError": "Connection error"
   },
@@ -484,7 +484,7 @@
     "timeUnknownNote": "The reading uses planetary positions and aspects. House, ASC and MC readings are omitted.",
     "birthPlace": "Birthplace",
     "cityLevelHint": "City/town level is fine — no street address needed",
-    "placeHint": "e.g. Gifu, Japan",
+    "placeHint": "e.g. Dallas, Texas",
     "placeRequired": "Please enter your birthplace",
     "search": "Search",
     "latitude": "Latitude",

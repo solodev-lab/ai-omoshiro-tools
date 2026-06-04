@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 15623
+- ファイル数: 27 / 総行数: 15630
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 324
 - Navigator.push 等: 0
@@ -775,45 +775,45 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 - 集計: `showLineNarrativeSheet`×1
 
 
-### `lib/screens/map/map_search.dart` (810 行)
+### `lib/screens/map/map_search.dart` (817 行)
 
-**imports:** dart=2 / package=4 / relative=6
+**imports:** dart=2 / package=4 / relative=7
 
-- relative: `../../i18n/strings.g.dart`, `../../utils/solara_api.dart`, `../../widgets/info_popup.dart`, `map_astro.dart`, `map_constants.dart`, `map_fortune_sheet.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/app_locale.dart`, `../../utils/solara_api.dart`, `../../widgets/info_popup.dart`, `map_astro.dart`, `map_constants.dart`, `map_fortune_sheet.dart`
 
 **型定義 (5):**
 
-- L17 `class SearchHit`
+- L19 `class SearchHit`
   - 検索結果1件分
-- L184 `class SearchResultList : StatelessWidget`
+- L191 `class SearchResultList : StatelessWidget`
   - 検索結果リスト（スコア付き）ポップアップ
-- L469 `class SearchFocusPopup : StatelessWidget`
+- L476 `class SearchFocusPopup : StatelessWidget`
   - 検索候補から1件選ばれたあとの詳細ポップアップ。
-- L721 `class _CatChip : StatelessWidget`
-- L746 `class _ActionTile : StatelessWidget`
+- L728 `class _CatChip : StatelessWidget`
+- L753 `class _ActionTile : StatelessWidget`
 
 **関数 (9 public + 8 private):**
 
-- L53 `toJson()` — 画面復元 (Android プロセス死対策) 用シリアライズ。
-- L82 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
-- L87 `distanceKmFrom()` — 中心から km 距離
-- L160 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
-- L216 `build()`
-- L511 `build()`
-- L727 `build()`
-- L752 `build()`
-- L778 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
+- L55 `toJson()` — 画面復元 (Android プロセス死対策) 用シリアライズ。
+- L84 `directionFrom()` — 中心座標から見たこの地点の方位（16方位名）
+- L89 `distanceKmFrom()` — 中心から km 距離
+- L167 `annotateHitsWithScores()` — 検索結果に、現在中心からの方位スコアと支配カテゴリを注入する
+- L223 `build()`
+- L518 `build()`
+- L734 `build()`
+- L759 `build()`
+- L785 `googleMapsUrlForHit()` — 検索結果を Google マップで開く URL を組み立てる。
 
   <details><summary>private 関数 8 件</summary>
 
-  - L92 `_bearingDeg()`
-  - L101 `_azimuthToDir16()`
-  - L107 `_haversineKm()`
-  - L270 `_rankToggle()`
-  - L291 `_rankSeg()`
-  - L321 `_showRankHelp()`
-  - L363 `_hitRow()`
-  - L796 `_openInGoogleMaps()`
+  - L94 `_bearingDeg()`
+  - L103 `_azimuthToDir16()`
+  - L109 `_haversineKm()`
+  - L277 `_rankToggle()`
+  - L298 `_rankSeg()`
+  - L328 `_showRankHelp()`
+  - L370 `_hitRow()`
+  - L803 `_openInGoogleMaps()`
 
   </details>
 

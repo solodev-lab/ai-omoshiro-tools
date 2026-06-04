@@ -143,13 +143,17 @@ extension _PaywallComparison on _PaywallScreenState {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              color: SolaraColors.textPrimary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
+          // ラベルは Expanded で折返す (英語の長いセクション名が大きいフォント倍率で
+          // 横にはみ出す overflow を防ぐ)。
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: SolaraColors.textPrimary,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
             ),
           ),
         ],

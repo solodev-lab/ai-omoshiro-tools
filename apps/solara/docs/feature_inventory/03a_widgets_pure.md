@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 7020
+- ファイル数: 27 / 総行数: 7033
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 181
 - Navigator.push 等: 0
@@ -187,7 +187,7 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 - 集計: `showInfoPopup`×1
 
 
-### `lib/widgets/class_card.dart` (322 行)
+### `lib/widgets/class_card.dart` (335 行)
 
 **imports:** dart=0 / package=1 / relative=1
 
@@ -197,7 +197,7 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 
 - L13 `class ClassCard : StatelessWidget`
   - Solara クラスカード表示ウィジェット
-- L313 `enum ClassCardMode`
+- L326 `enum ClassCardMode`
   - ClassCard のオーバーレイ表示モード
 
 **関数 (1 public + 2 private):**
@@ -206,8 +206,8 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 
   <details><summary>private 関数 2 件</summary>
 
-  - L154 `_buildOverlay()`
-  - L278 `_buildPlaceholder()`
+  - L167 `_buildOverlay()`
+  - L291 `_buildPlaceholder()`
 
   </details>
 

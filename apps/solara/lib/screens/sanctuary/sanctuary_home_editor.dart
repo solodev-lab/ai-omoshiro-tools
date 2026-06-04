@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../../i18n/strings.g.dart';
+// slang も AppLocale を定義するため、app_locale.dart の AppLocale と衝突しないよう hide。
+import '../../i18n/strings.g.dart' hide AppLocale;
+import '../../utils/app_locale.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/location_picker_minimap.dart';
 import '../../widgets/tap_to_unfocus.dart';
@@ -48,7 +50,7 @@ class _SanctuaryHomeEditorPageState extends State<SanctuaryHomeEditorPage> {
     setState(() { _searching = true; _searchResult = ''; });
     try {
       final uri = Uri.parse(
-        'https://nominatim.openstreetmap.org/search?format=json&q=${Uri.encodeComponent(query)}&limit=1&accept-language=ja',
+        'https://nominatim.openstreetmap.org/search?format=json&q=${Uri.encodeComponent(query)}&limit=1&accept-language=${AppLocale.instance.resolvedCode},en',
       );
       final resp = await http.get(uri, headers: {'User-Agent': 'Solara/1.0'});
       final data = json.decode(resp.body) as List;

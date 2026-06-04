@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'app_locale.dart';
+
 // ============================================================
 // reverseGeocode — 緯度経度 → 地名 (Nominatim Reverse) 共通ヘルパー
 //
@@ -73,7 +75,7 @@ Future<ReverseGeocodeResult?> reverseGeocodeDetail(double lat, double lng) async
     );
     final resp = await http.get(uri, headers: {
       'User-Agent': 'SolaraApp/1.0',
-      'Accept-Language': 'ja,en',
+      'Accept-Language': '${AppLocale.instance.resolvedCode},en',
     }).timeout(const Duration(seconds: 8));
     if (resp.statusCode != 200) return null;
     final data = json.decode(resp.body) as Map<String, dynamic>;
