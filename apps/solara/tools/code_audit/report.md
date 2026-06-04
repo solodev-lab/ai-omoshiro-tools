@@ -54,11 +54,11 @@
 | 489 | 🟡 NOTICE | lib/widgets/full_moon_overlay.dart |
 | 478 | 🟡 NOTICE | lib/screens/sanctuary/class_share_card.dart |
 | 451 | 🟡 NOTICE | lib/widgets/catasterism_overlay.dart |
-| 448 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
+| 449 | 🟡 NOTICE | lib/screens/galaxy/galaxy_star_atlas.dart |
+| 438 | 🟡 NOTICE | lib/screens/galaxy/constellation_share_card_page.dart |
 | 432 | 🟡 NOTICE | lib/screens/consultation/consultation_result_widgets.dart |
 | 424 | 🟡 NOTICE | lib/screens/paywall_widgets.dart |
 | 423 | 🟡 NOTICE | lib/screens/observe/observe_history.dart |
-| 416 | 🟡 NOTICE | lib/screens/galaxy/constellation_share_card_page.dart |
 | 413 | 🟡 NOTICE | lib/utils/forecast_cache.dart |
 | 413 | 🟡 NOTICE | lib/screens/consultation/consultation_place_picker_widgets.dart |
 | 409 | 🟡 NOTICE | lib/screens/map/map_display_menu.dart |
@@ -232,7 +232,7 @@
   - lib/screens/galaxy_screen.dart:581
   - lib/widgets/full_moon_overlay.dart:306
   - lib/widgets/new_moon_overlay.dart:317
-  - lib/screens/galaxy/constellation_share_card_page.dart:171
+  - lib/screens/galaxy/constellation_share_card_page.dart:176
   - lib/screens/map/map_line_narrative_sheet.dart:140
   ```
   ),
@@ -254,8 +254,8 @@
   - lib/widgets/ai_report_button.dart:307
   - lib/widgets/new_moon_overlay.dart:315
   - lib/screens/consultation/consultation_input_picker_widgets.dart:84
-  - lib/screens/galaxy/constellation_share_card_page.dart:378
-  - lib/screens/galaxy/galaxy_cycle_actions_sheet.dart:235
+  - lib/screens/galaxy/constellation_share_card_page.dart:400
+  - lib/screens/galaxy/galaxy_cycle_actions_sheet.dart:242
   ```
   ],
   ```
@@ -275,9 +275,9 @@
 
   - lib/screens/consultation/consultation_input_picker.dart:337
   - lib/screens/consultation/consultation_result_card.dart:303
-  - lib/screens/galaxy/galaxy_star_atlas.dart:136
-  - lib/screens/galaxy/galaxy_star_atlas.dart:170
-  - lib/screens/galaxy/galaxy_star_atlas.dart:343
+  - lib/screens/galaxy/galaxy_star_atlas.dart:137
+  - lib/screens/galaxy/galaxy_star_atlas.dart:171
+  - lib/screens/galaxy/galaxy_star_atlas.dart:344
   ```
   ),
   ```
@@ -298,8 +298,8 @@
   - lib/screens/consultation/consultation_input_picker.dart:336
   - lib/screens/consultation/consultation_result_card.dart:302
   - lib/screens/galaxy/galaxy_archive_filter_chips.dart:58
-  - lib/screens/galaxy/galaxy_star_atlas.dart:135
-  - lib/screens/galaxy/galaxy_star_atlas.dart:342
+  - lib/screens/galaxy/galaxy_star_atlas.dart:136
+  - lib/screens/galaxy/galaxy_star_atlas.dart:343
   ```
   ),
   ```
