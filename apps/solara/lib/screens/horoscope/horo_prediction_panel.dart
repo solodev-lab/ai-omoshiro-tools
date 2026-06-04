@@ -57,7 +57,7 @@ class HoroPredictionPanel extends StatelessWidget {
   }
 
   void _showPatternDescription(BuildContext context, String type, Color color) {
-    final data = patternDescriptions[type];
+    final data = patternDescriptionFor(type);
     if (data == null) return;
     // 2026-05-07: showModalBottomSheet → showInfoPopup へ統一移行。
     // 右上 × / 全文スクロール / 外タップ閉じが Shell 側で自動提供される。

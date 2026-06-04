@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 5410
+- ファイル数: 15 / 総行数: 5514
 - class/mixin/extension/enum: 20
 - 関数 (top-level + method の素拾い): 52
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/screens/horoscope/horo_aspect_description.dart` (116 行)
+### `lib/screens/horoscope/horo_aspect_description.dart` (220 行)
 
 **ファイル先頭コメント:**
 
@@ -23,11 +23,19 @@
 Aspect Description Data
 惑星の意味 + アスペクトの性質 を組み合わせて読める文章を生成
 ══════════════════════════════════════════════════════════════
+
+英語化Phase 2: 日本語マップを正典に planetInfoEN/aspectInfoEN/patternDescriptionsEN を
+STYLE_VOICE_EN で併設。buildAspectDescription / patternDescriptionFor が isEnLocale()
+で選択。Soft(調和)/Hard(緊張)は吉凶でなく質の違いとして中立に (lucky/predict 不使用)。
 ```
+
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `../../utils/solara_i18n.dart`
 
 **関数 (1 public + 0 private):**
 
-- L94 `buildAspectDescription()` — アスペクト説明を生成 (3セクション)
+- L190 `buildAspectDescription()` — アスペクト説明を生成 (3セクション・ロケール連動)
 
 
 ### `lib/screens/horoscope/horo_constants.dart` (140 行)

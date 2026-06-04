@@ -2,6 +2,12 @@
 // Aspect Description Data
 // 惑星の意味 + アスペクトの性質 を組み合わせて読める文章を生成
 // ══════════════════════════════════════════════════════════════
+//
+// 英語化Phase 2: 日本語マップを正典に planetInfoEN/aspectInfoEN/patternDescriptionsEN を
+// STYLE_VOICE_EN で併設。buildAspectDescription / patternDescriptionFor が isEnLocale()
+// で選択。Soft(調和)/Hard(緊張)は吉凶でなく質の違いとして中立に (lucky/predict 不使用)。
+
+import '../../utils/solara_i18n.dart' show isEnLocale;
 
 /// 惑星ごとのテーマ・キーワード
 const Map<String, Map<String, String>> planetInfo = {
@@ -86,25 +92,123 @@ const Map<String, Map<String, String>> patternDescriptions = {
   },
 };
 
-/// アスペクト説明を生成 (3セクション)
-///   title: "太陽 トライン 月" 形式
+// ══════════════════════════════════════════════════════════════
+// 英語版 (英語化Phase 2)
+// ══════════════════════════════════════════════════════════════
+
+/// 惑星ごとのテーマ・キーワード (英語)
+const Map<String, Map<String, String>> planetInfoEN = {
+  'sun':     {'name': 'Sun',     'theme': 'Self · will · vitality', 'keywords': 'Purpose / Presence / Confidence'},
+  'moon':    {'name': 'Moon',    'theme': 'Emotion · the unconscious · security', 'keywords': 'Sensitivity / Habit / Nurture'},
+  'mercury': {'name': 'Mercury', 'theme': 'Thought · words · intellect', 'keywords': 'Communication / Learning / Analysis'},
+  'venus':   {'name': 'Venus',   'theme': 'Love · harmony · beauty', 'keywords': 'Relationships / Art / Joy'},
+  'mars':    {'name': 'Mars',    'theme': 'Action · passion · desire', 'keywords': 'Courage / Competition / Decision'},
+  'jupiter': {'name': 'Jupiter', 'theme': 'Expansion · generosity · growth', 'keywords': 'Tolerance / Adventure / Philosophy'},
+  'saturn':  {'name': 'Saturn',  'theme': 'Limits · responsibility · structure', 'keywords': 'Discipline / Patience / Maturity'},
+  'uranus':  {'name': 'Uranus',  'theme': 'Change · independence · innovation', 'keywords': 'Freedom / Insight / Breakthrough'},
+  'neptune': {'name': 'Neptune', 'theme': 'Ideals · spirit · imagination', 'keywords': 'Intuition / Art / Dissolving'},
+  'pluto':   {'name': 'Pluto',   'theme': 'Transformation · depth · death & rebirth', 'keywords': 'Primal power / Secrets / Cleansing'},
+  'asc':     {'name': 'ASC', 'theme': 'Appearance · first impression · self-expression', 'keywords': 'Bearing / Beginnings'},
+  'mc':      {'name': 'MC',  'theme': 'Social role · vocation', 'keywords': 'Career / Destination'},
+  'dsc':     {'name': 'DSC', 'theme': 'Relationships · partners', 'keywords': 'Others / Mirror'},
+  'ic':      {'name': 'IC',  'theme': 'Home · roots · inner foundation', 'keywords': 'Security / Origins'},
+};
+
+/// アスペクトタイプごとの性質 (英語)
+const Map<String, Map<String, String>> aspectInfoEN = {
+  'conjunction': {
+    'name': 'Conjunction', 'angle': '0°', 'quality': 'Fusion',
+    'summary': 'Two energies overlap and merge, exerting the strongest influence.',
+  },
+  'sextile': {
+    'name': 'Sextile', 'angle': '60°', 'quality': 'Harmony (light)',
+    'summary': 'A light, cooperative bond. It tends to show up as talent or opportunity you can consciously make use of.',
+  },
+  'square': {
+    'name': 'Square', 'angle': '90°', 'quality': 'Tension',
+    'summary': 'It generates friction and conflict while prompting inner growth and action.',
+  },
+  'trine': {
+    'name': 'Trine', 'angle': '120°', 'quality': 'Harmony (strong)',
+    'summary': 'Talent flows out naturally. Its gifts come easily, with little effort.',
+  },
+  'opposition': {
+    'name': 'Opposition', 'angle': '180°', 'quality': 'Polarity · balance',
+    'summary': 'The task of balancing two poles, inner and outer. You come to know yourself within relationship.',
+  },
+  'quincunx': {
+    'name': 'Quincunx', 'angle': '150°', 'quality': 'Differing views',
+    'summary': 'Energies of differing perspectives and values meet face to face. A task of integration and readjustment.',
+  },
+  'semisextile': {
+    'name': 'Semisextile', 'angle': '30°', 'quality': 'Fine-tuning',
+    'summary': 'Small openings and realizations prompt subtle adjustment. A direction that grows when you stay aware of it.',
+  },
+  'semisquare': {
+    'name': 'Semisquare', 'angle': '45°', 'quality': 'Slight tension',
+    'summary': 'Small friction sets things in motion. It prompts progress through everyday adjustments.',
+  },
+};
+
+/// 特殊アスペクト (英語) — N=ネイタル / T=トランジット / P=プログレス
+const Map<String, Map<String, String>> patternDescriptionsEN = {
+  'grandtrine': {
+    'title': 'Grand Trine',
+    'quality': 'Harmony · grace',
+    'summary': 'The most harmonious configuration — three bodies linked at 120° each. Talent and grace flow naturally.',
+    'N': 'A Grand Trine is present in your natal chart. Three bodies are linked harmoniously at 120° each — a configuration where talent and grace flow naturally. Drawing on this consciously lets your gifts come alive more easily.',
+    'T': 'A transiting body is forming a Grand Trine with your natal chart. A cosmic harmony is pouring toward you right now. Let yourself move with the flow, and things can proceed remarkably smoothly. You can make use of that harmony at your own pace.',
+    'P': 'A progressed body is completing a Grand Trine. In life\'s deeper layers, an energy of harmony is ripening, and a long-term current of grace is taking shape. An important time when inner growth is reflected in outer reality.',
+  },
+  'tsquare': {
+    'title': 'T-Square',
+    'quality': 'Tension · growth',
+    'summary': 'Two bodies in opposition, with an apex body at 90° to both. The tension prompts action.',
+    'N': 'A T-Square is present in your natal chart. An energy of tension and conflict arises among three bodies, and it is also a driving force for growth. Working on the theme shown by the apex body tends to lead to growth.',
+    'T': 'A transiting body is activating a T-Square. You may feel a temporary tension or pressure, but it is a sign of change and growth. Facing the challenge head-on makes it easier for movement to arise.',
+    'P': 'A progressed body is forming a T-Square. An important configuration marking a turning point in life. Inner conflict can surface more readily now, but moving through this tension brings a maturing of character.',
+  },
+  'yod': {
+    'title': 'Yod (Finger of God)',
+    'quality': 'Calling · turning point',
+    'summary': 'Two bodies in sextile, with an apex body at 150° to both — a mysterious configuration.',
+    'N': 'A Yod (Finger of God) is present in your natal chart. A mysterious configuration that reflects a calling. The purpose of your soul is hidden in the direction the apex body points to. Trust your intuition and explore that path.',
+    'T': 'A transiting body is completing a Yod. The rhythm of a turning point is rising. An unexpected event or encounter may show you a new direction in life. Listen for the message from the cosmos.',
+    'P': 'A progressed body is forming a Yod. A time when a deep transformation is taking place at the level of the soul. You may have realizations that solve a long-standing riddle, or experiences that bring your life\'s calling into clearer focus.',
+  },
+};
+
+/// patternDescriptions のロケール連動アクセサ (en では英語版を引く)。
+Map<String, String>? patternDescriptionFor(String type) =>
+    (isEnLocale() ? patternDescriptionsEN : patternDescriptions)[type];
+
+/// アスペクト説明を生成 (3セクション・ロケール連動)
+///   title: "太陽 × 月" 形式
 ///   theme: 両惑星のテーマ
 ///   quality: アスペクトの性質
 ///   reading: 組み合わせ解釈 (短文)
 Map<String, String> buildAspectDescription(String p1, String p2, String aspectType) {
-  final pi1 = planetInfo[p1] ?? {'name': p1, 'theme': '', 'keywords': ''};
-  final pi2 = planetInfo[p2] ?? {'name': p2, 'theme': '', 'keywords': ''};
-  final asp = aspectInfo[aspectType] ?? {
+  final en = isEnLocale();
+  final pInfo = en ? planetInfoEN : planetInfo;
+  final aInfo = en ? aspectInfoEN : aspectInfo;
+  final pi1 = pInfo[p1] ?? {'name': p1, 'theme': '', 'keywords': ''};
+  final pi2 = pInfo[p2] ?? {'name': p2, 'theme': '', 'keywords': ''};
+  final asp = aInfo[aspectType] ?? {
     'name': aspectType, 'angle': '', 'quality': '', 'summary': '',
   };
 
   final title = '${pi1['name']} × ${pi2['name']}';
   final aspectLine = '${asp['name']} (${asp['angle']}) — ${asp['quality']}';
-  final theme = '${pi1['theme']} と ${pi2['theme']} の関係';
+  final theme = en
+      ? 'The relationship between ${pi1['theme']} and ${pi2['theme']}'
+      : '${pi1['theme']} と ${pi2['theme']} の関係';
   final summary = asp['summary'] ?? '';
-  final reading = '${pi1['name']}(${pi1['keywords']}) と '
-      '${pi2['name']}(${pi2['keywords']}) のテーマが '
-      '${asp['quality']}な形で絡み合う。';
+  final reading = en
+      ? 'The themes of ${pi1['name']} (${pi1['keywords']}) and '
+          '${pi2['name']} (${pi2['keywords']}) intertwine — ${asp['quality']}.'
+      : '${pi1['name']}(${pi1['keywords']}) と '
+          '${pi2['name']}(${pi2['keywords']}) のテーマが '
+          '${asp['quality']}な形で絡み合う。';
 
   return {
     'title': title,

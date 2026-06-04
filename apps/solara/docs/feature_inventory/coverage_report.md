@@ -413,7 +413,7 @@
 | from\to | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b | 3c | 4a | 4b | 4c | 4d | 4e | 4f | 5 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1a | 3 | · | 1 | 1 | 3 | · | · | · | · | · | · | · | · | · | · | · |
-| 1b | 3 | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
+| 1b | 4 | · | · | 2 | 1 | · | 1 | · | · | · | · | · | · | · | · | · |
 | 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 3 | 1 | · | 6 | 4 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 3 | 3 | 5 | 6 | 4 | 1 | · | · | · | · | · | · | · | · | · | · |
@@ -440,7 +440,7 @@
 | --- | --- | --- |
 | `lib/theme/solara_colors.dart` | 3b | 38 |
 | `lib/utils/solara_storage.dart` | 2b | 33 |
-| `lib/utils/solara_i18n.dart` | 1a | 27 |
+| `lib/utils/solara_i18n.dart` | 1a | 28 |
 | `lib/widgets/info_popup.dart` | 3a | 26 |
 | `lib/screens/map/map_constants.dart` | 3b | 23 |
 | `lib/utils/solara_api.dart` | 2a | 15 |
@@ -476,8 +476,8 @@
 
 ### 変更されたファイル (層別)
 
-- **層 1b**: `lib/utils/astro_zenith_messages.dart`
-- **層 4a**: `lib/screens/map/map_astro_carto.dart`
+- **層 1b**: `lib/screens/horoscope/horo_aspect_description.dart`
+- **層 4b**: `lib/screens/horoscope/horo_prediction_panel.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

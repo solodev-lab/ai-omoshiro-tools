@@ -15,7 +15,7 @@
 | 1057 | 🔴 HARD | lib/screens/forecast_screen.dart |
 | 945 | 🟠 WARN | lib/screens/horoscope_screen.dart |
 | 937 | 🟠 WARN | lib/utils/solara_storage.dart |
-| 859 | 🟠 WARN | lib/screens/map/map_astro_carto.dart |
+| 858 | 🟠 WARN | lib/screens/map/map_astro_carto.dart |
 | 810 | 🟠 WARN | lib/screens/map/map_search.dart |
 | 775 | 🟠 WARN | lib/widgets/catasterism_formation_overlay.dart |
 | 768 | 🟠 WARN | lib/screens/observe_screen.dart |
@@ -73,14 +73,15 @@
 | 357 | 🟡 NOTICE | lib/screens/locations/locations_date_stepper.dart |
 | 355 | 🟡 NOTICE | lib/screens/consultation/consultation_credit_sheet.dart |
 | 354 | 🟡 NOTICE | lib/widgets/sanctuary_account_section.dart |
+| 352 | 🟡 NOTICE | lib/utils/astro_zenith_messages.dart |
 | 346 | 🟡 NOTICE | lib/screens/horoscope/horo_birth_panel.dart |
 | 345 | 🟡 NOTICE | lib/screens/consultation/consultation_input_picker.dart |
 | 339 | 🟡 NOTICE | lib/screens/map/consult_entry_popup.dart |
 | 335 | 🟡 NOTICE | lib/screens/horoscope/horo_fortune_cards.dart |
+| 317 | 🟡 NOTICE | lib/utils/celestial_events.dart |
 | 315 | 🟡 NOTICE | lib/widgets/ai_report_button.dart |
 | 314 | 🟡 NOTICE | lib/utils/fortune_api.dart |
 | 314 | 🟡 NOTICE | lib/screens/galaxy/galaxy_archive_filter.dart |
-| 313 | 🟡 NOTICE | lib/utils/celestial_events.dart |
 | 312 | 🟡 NOTICE | lib/utils/moon_notification_service.dart |
 | 312 | 🟡 NOTICE | lib/screens/observe/observe_history_past.dart |
 | 311 | 🟡 NOTICE | lib/screens/paywall_screen.dart |
@@ -210,7 +211,7 @@
   - lib/screens/consultation/consultation_input_widgets.dart:404
   - lib/screens/consultation/consultation_result_widgets.dart:31
   - lib/screens/map/consult_entry_popup.dart:278
-  - lib/screens/map/map_astro_carto.dart:89
+  - lib/screens/map/map_astro_carto.dart:88
   ```
   ),
   ```
@@ -287,7 +288,7 @@
   - lib/widgets/info_popup.dart:108
   - lib/screens/consultation/consultation_input_widgets.dart:403
   - lib/screens/map/consult_entry_popup.dart:277
-  - lib/screens/map/map_astro_carto.dart:449
+  - lib/screens/map/map_astro_carto.dart:448
   ```
   ),
   ```
@@ -306,7 +307,7 @@
 ### 20. 📁 別ファイル間 (6 箇所、6 ファイル)
 
   - lib/screens/forecast_screen.dart:948
-  - lib/screens/map/map_astro_carto.dart:212
+  - lib/screens/map/map_astro_carto.dart:211
   - lib/screens/map/map_daily_transit_screen.dart:1997
   - lib/screens/map/map_fortune_sheet.dart:707
   - lib/screens/map/map_viewpoint_menu.dart:103
@@ -332,4 +333,4 @@
 
 ---
 
-総計: 行数 HARD 7 / WARN 34 / NOTICE 44 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
+総計: 行数 HARD 7 / WARN 34 / NOTICE 45 / 重複 20 / TODO 4 / print 1 / 未使用候補 0
