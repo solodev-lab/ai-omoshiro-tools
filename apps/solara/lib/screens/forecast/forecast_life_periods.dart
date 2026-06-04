@@ -88,6 +88,7 @@ class ForecastLifePeriodsSection extends StatelessWidget {
     final color = categoryColors[cat] ?? const Color(0xFFC9A84C);
     final startLabel = '${p.start.month}/${p.start.day.toString().padLeft(2, "0")}';
     final endLabel = '${p.end.month}/${p.end.day.toString().padLeft(2, "0")}';
+    final sep = isEnLocale() ? ' - ' : ' 〜 ';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -111,7 +112,7 @@ class ForecastLifePeriodsSection extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(child: Text('$startLabel 〜 $endLabel',
+        Expanded(child: Text('$startLabel$sep$endLabel',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 11, color: Color(0xFFE8E0D0)))),

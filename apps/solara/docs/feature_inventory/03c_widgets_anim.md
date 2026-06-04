@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 5 / 総行数: 2380
+- ファイル数: 5 / 総行数: 2402
 - class/mixin/extension/enum: 11
 - 関数 (top-level + method の素拾い): 58
 - Navigator.push 等: 0
@@ -14,66 +14,66 @@
 
 ## ファイル別
 
-### `lib/widgets/catasterism_formation_overlay.dart` (775 行)
+### `lib/widgets/catasterism_formation_overlay.dart` (779 行)
 
-**imports:** dart=2 / package=2 / relative=5
+**imports:** dart=2 / package=2 / relative=6
 
-- relative: `../models/galaxy_cycle.dart`, `../theme/solara_colors.dart`, `../utils/constellation_namer.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`
+- relative: `../models/galaxy_cycle.dart`, `../theme/solara_colors.dart`, `../utils/constellation_namer.dart`, `../utils/solara_i18n.dart`, `../utils/solara_storage.dart`, `../utils/title_data.dart`
 
 **型定義 (2):**
 
-- L50 `class CatasterismFormationOverlay : StatefulWidget`
+- L51 `class CatasterismFormationOverlay : StatefulWidget`
   - 刻星化 (Catasterism) 完了演出オーバーレイ
-- L515 `class _FormationPainter : CustomPainter`
+- L519 `class _FormationPainter : CustomPainter`
   - 4ステージ専用Painter
 
 **関数 (7 public + 5 private):**
 
-- L74 `createState()`
-- L88 `initState()`
-- L220 `dispose()`
-- L241 `build()`
-- L543 `paint()`
-- L555 `toScreen()`
-- L773 `shouldRepaint()`
+- L75 `createState()`
+- L89 `initState()`
+- L221 `dispose()`
+- L242 `build()`
+- L547 `paint()`
+- L559 `toScreen()`
+- L777 `shouldRepaint()`
 
   <details><summary>private 関数 5 件</summary>
 
-  - L134 `_resolveBgCandidates()`
-  - L177 `_loadBgImage()`
-  - L204 `_preloadZodiacImages()`
-  - L226 `_stageLabel()`
-  - L233 `_stageLabelJP()`
+  - L135 `_resolveBgCandidates()`
+  - L178 `_loadBgImage()`
+  - L205 `_preloadZodiacImages()`
+  - L227 `_stageLabel()`
+  - L234 `_stageLabelJP()`
 
   </details>
 
 
-### `lib/widgets/catasterism_overlay.dart` (451 行)
+### `lib/widgets/catasterism_overlay.dart` (467 行)
 
-**imports:** dart=0 / package=2 / relative=6
+**imports:** dart=0 / package=2 / relative=7
 
-- relative: `../models/lunar_intention.dart`, `../theme/solara_colors.dart`, `../utils/cycle_story_texts.dart`, `../utils/solara_storage.dart`, `glass_panel.dart`, `moon_overlay_shared.dart`
+- relative: `../models/lunar_intention.dart`, `../theme/solara_colors.dart`, `../utils/cycle_story_texts.dart`, `../utils/solara_i18n.dart`, `../utils/solara_storage.dart`, `glass_panel.dart`, `moon_overlay_shared.dart`
 
 **型定義 (2):**
 
-- L15 `class CatasterismOverlay : StatefulWidget`
-- L33 `class _CatasterismOverlayState : State`
+- L16 `class CatasterismOverlay : StatefulWidget`
+- L34 `class _CatasterismOverlayState : State`
 
 **関数 (4 public + 6 private):**
 
-- L30 `createState()`
-- L48 `initState()`
-- L103 `dispose()`
-- L112 `build()`
+- L31 `createState()`
+- L49 `initState()`
+- L104 `dispose()`
+- L113 `build()`
 
   <details><summary>private 関数 6 件</summary>
 
-  - L77 `_transitionToChoice()`
-  - L84 `_onReleasedTap()`
-  - L140 `_buildStoryContent()`
-  - L202 `_buildChoiceContent()`
-  - L360 `_buildChoice()`
-  - L436 `_submit()`
+  - L78 `_transitionToChoice()`
+  - L85 `_onReleasedTap()`
+  - L141 `_buildStoryContent()`
+  - L203 `_buildChoiceContent()`
+  - L374 `_buildChoice()`
+  - L452 `_submit()`
 
   </details>
 
@@ -105,7 +105,7 @@
   </details>
 
 
-### `lib/widgets/full_moon_overlay.dart` (489 行)
+### `lib/widgets/full_moon_overlay.dart` (490 行)
 
 **imports:** dart=2 / package=2 / relative=8
 
@@ -130,16 +130,16 @@
   - L123 `_runRevealSequence()`
   - L152 `_buildStoryContent()`
   - L211 `_buildRatingList()`
-  - L317 `_buildRevealLayout()`
-  - L382 `_titleBlock()`
-  - L418 `_ratingCardWidget()`
-  - L474 `_revealMessage()`
-  - L480 `_submitRating()`
+  - L318 `_buildRevealLayout()`
+  - L383 `_titleBlock()`
+  - L419 `_ratingCardWidget()`
+  - L475 `_revealMessage()`
+  - L481 `_submitRating()`
 
   </details>
 
 
-### `lib/widgets/new_moon_overlay.dart` (580 行)
+### `lib/widgets/new_moon_overlay.dart` (581 行)
 
 **imports:** dart=1 / package=2 / relative=10
 
@@ -166,12 +166,12 @@
   - L147 `_runRevealSequence()`
   - L176 `_buildStoryContent()`
   - L233 `_buildChoiceList()`
-  - L328 `_buildRevealLayout()`
-  - L446 `_titleBlock()`
-  - L486 `_choiceCardWidget()`
-  - L525 `_revealMessage()`
-  - L532 `_revealEvents()`
-  - L556 `_setIntention()`
+  - L329 `_buildRevealLayout()`
+  - L447 `_titleBlock()`
+  - L487 `_choiceCardWidget()`
+  - L526 `_revealMessage()`
+  - L533 `_revealEvents()`
+  - L557 `_setIntention()`
 
   </details>
 

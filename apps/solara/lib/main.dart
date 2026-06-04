@@ -28,6 +28,7 @@ import 'utils/moon_notification_service.dart';
 import 'utils/pro_status.dart';
 import 'utils/purchases_service.dart';
 import 'utils/solara_auth.dart';
+import 'utils/solara_i18n.dart' show isEnLocale;
 import 'utils/solara_storage.dart';
 import 'utils/tarot_data.dart';
 import 'widgets/solara_nav_bar.dart';
@@ -391,7 +392,9 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('✦ サインインしました！クレジットを$amountつ進呈しました'),
+        content: Text(isEnLocale()
+            ? '✦ Signed in! $amount free credits awarded'
+            : '✦ サインインしました！クレジットを$amountつ進呈しました'),
         backgroundColor: const Color(0xFF1A2438),
         duration: const Duration(seconds: 4),
       ));

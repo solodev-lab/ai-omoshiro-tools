@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../i18n/strings.g.dart';
+import '../i18n/strings.g.dart' hide AppLocale;
 import '../utils/forecast_cache.dart';
 import '../utils/pro_status.dart';
+import '../utils/solara_i18n.dart' show isEnLocale;
 import '../utils/solara_storage.dart';
 import '../widgets/info_popup.dart';
 import '../widgets/no_profile_guide.dart';
@@ -275,7 +276,8 @@ class _ForecastScreenState extends State<ForecastScreen> {
     final year = DateTime.now().year + _yearOffset;
     final start = DateTime(year, 1, 1);
     final end = DateTime(year, 12, 31);
-    final rangeText = '${_fmt(start)} 〜 ${_fmt(end)}';
+    final sep = isEnLocale() ? ' - ' : ' 〜 ';
+    final rangeText = '${_fmt(start)}$sep${_fmt(end)}';
 
     // 年間ベスト
     ForecastDay? best;

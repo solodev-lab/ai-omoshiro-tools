@@ -1839,6 +1839,17 @@ forecast_screen 112 / galaxy_screen 105 / map_fortune_sheet 96 / map_daily_trans
 - **言語トグル整理**: プロフィール編集内の重複言語トグルを削除し Sanctuary ✦App に一本化。
 - **カード画像 r版差替**: `assets/card-images/` の `rXXX.webp` 28枚を `XXX.webp` へ差替 (白枠修正版)。元画像は `_original/` へ退避 (git管理外・asset 非バンドル・履歴でも復元可)。ファイル名据置で称号診断+Tarot 両方に反映。`tools/swap_r_cards.py`。
 
+### 0.2.65 月/刻星化イベントのEN日本語漏れ修正 + タロット透過エンブレム + レイアウト調整 (2026-06-04)
+
+> §0.2.64 の続き (実機/エミュ EN E2E で発見した日本語漏れ・レイアウト崩れを潰す)。analyze クリーン / test 全319件green。横断スキャンは Explore エージェントに委譲。
+
+- **月イベント overlay**: 新月/満月の質問・選択肢を月背景に被らないよう下げる (new_moon +75 / full_moon +100px)。満月選択肢の絵文字を `Flexible`→固有幅にしラベルが全幅を使えるよう修正 (大フォントで早期2行折返しを解消)。
+- **刻星化**: 形成演出(`catasterism_formation_overlay`)とリリース確認(`catasterism_overlay`)の EN時日本語を全て `isEnLocale()` で非表示化 (刻星化/段階ラベル(集来点灯連結完成)/星名 nameJP/手放せた・まだ途中/手放せましたか/midLabel/chosenTextJP)。
+- **タロット裏エンブレム**: `app_icon_foreground.png` は黒正方形背景 (ランチャーアイコン兼用で編集不可) → `tools/make_emblem_transparent.py` で透過版 `app_icon_emblem.png` を生成・差し替えで黒四角枠を解消。🔴新規アセット=フル再起動要。
+- **称号診断カード**: 質問カードグリッドを画面幅から動的算出 (4枚2列/3・6枚3列・2:3比率・6枚は縦も伸びる)。`class_card` 文字を [1.0,1.2] クランプ (固定絵札の文字はみ出し防止)。
+- **横断スキャン結果 (残5箇所修正)**: `main.dart` サインインSnackBar を EN化、日付範囲の全角 `〜` を EN `-`/JA `〜` に (consultation 入力/履歴・forecast/life_periods)。
+- 多言語アーキ知見を memory `project_solara_multilang_arch.md` に保存 (層1 slang=スケール / 層2 インライン isEnLocale 2択=新言語で要作り替え)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

@@ -632,7 +632,8 @@ class _ConsultationInputScreenState extends State<ConsultationInputScreen> {
   String? _whenLabel() {
     if (_whenKind == 'date') return _whenDate;
     if (_whenKind == 'range' && _whenStart != null && _whenEnd != null) {
-      return '$_whenStart 〜 $_whenEnd';
+      final sep = isEnLocale() ? ' - ' : ' 〜 ';
+      return '$_whenStart$sep$_whenEnd';
     }
     return null;
   }

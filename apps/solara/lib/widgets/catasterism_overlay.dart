@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/lunar_intention.dart';
 import '../theme/solara_colors.dart';
 import '../utils/cycle_story_texts.dart';
+import '../utils/solara_i18n.dart' show isEnLocale;
 import '../utils/solara_storage.dart';
 import 'glass_panel.dart';
 import 'moon_overlay_shared.dart';
@@ -204,7 +205,8 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
     String midLabel = '';
     if (midRating != null) {
       const labels = ['', '\u{1F30A} \u307e\u3060\u53d6\u308a\u7d44\u3093\u3067\u3044\u305f', '\u{2728} \u9032\u5c55\u3042\u308a', '\u{1F31F} \u8efd\u304f\u306a\u3063\u3066\u304d\u305f'];
-      midLabel = labels[midRating];
+      const labelsEN = ['', '🌊 Still working on it', '✨ Making progress', '🌟 Feeling lighter'];
+      midLabel = isEnLocale() ? labelsEN[midRating] : labels[midRating];
     }
 
     return AnimatedBuilder(
@@ -232,6 +234,8 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
                       letterSpacing: 2.5,
                     ),
                   ),
+                  // EN ロケールでは日本語「刻星化」を出さない (上の英語タイトルで足りる)。
+                  if (!isEnLocale()) ...[
                   const SizedBox(height: 4),
                   const Text(
                     '\u523b\u661f\u5316', // 刻星化
@@ -242,6 +246,7 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
                       letterSpacing: 2,
                     ),
                   ),
+                  ],
                   const SizedBox(height: 28),
                   Text(
                     'This cycle, you chose to release:',
@@ -256,23 +261,29 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
                     borderRadius: BorderRadius.circular(14),
                     child: Column(
                       children: [
+                        // EN: 英語の意図を主役・日本語は出さない。JA: 日本語主役+英語副。
                         Text(
-                          widget.intention.chosenTextJP,
+                          isEnLocale()
+                              ? widget.intention.chosenText
+                              : widget.intention.chosenTextJP,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: SolaraColors.solaraGold,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.intention.chosenText,
-                          style: const TextStyle(
-                            color: SolaraColors.textSecondary,
-                            fontSize: 13,
-                            letterSpacing: 0.5,
+                        if (!isEnLocale()) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.intention.chosenText,
+                            style: const TextStyle(
+                              color: SolaraColors.textSecondary,
+                              fontSize: 13,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        ),
+                        ],
                         if (midLabel.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text(
@@ -297,14 +308,17 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    '\u624b\u653e\u305b\u307e\u3057\u305f\u304b\uff1f',
-                    style: TextStyle(
-                      color: SolaraColors.textSecondary,
-                      fontSize: 13,
+                  // EN \u30ed\u30b1\u30fc\u30eb\u3067\u306f\u65e5\u672c\u8a9e\u300c\u624b\u653e\u305b\u307e\u3057\u305f\u304b\uff1f\u300d\u3092\u51fa\u3055\u306a\u3044\u3002
+                  if (!isEnLocale()) ...[
+                    const SizedBox(height: 4),
+                    const Text(
+                      '\u624b\u653e\u305b\u307e\u3057\u305f\u304b\uff1f',
+                      style: TextStyle(
+                        color: SolaraColors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 40),
                   // Yes / Not yet
                   // \u5404\u30ab\u30fc\u30c9\u306f Expanded \u3067\u7b49\u5206 (\u56fa\u5b9a 130\u00d72+16=276 \u306f\u72ed\u7aef\u672b 320dp \u3067
@@ -406,8 +420,9 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
               children: [
                 Text(emoji, style: const TextStyle(fontSize: 32)),
                 const SizedBox(height: 8),
+                // EN: 英語(sublabel)を主役・日本語(label)は出さない。JA: 日本語主役+英語副。
                 Text(
-                  label,
+                  isEnLocale() ? sublabel : label,
                   style: TextStyle(
                     color: Color.lerp(
                       SolaraColors.textPrimary,
@@ -418,13 +433,14 @@ class _CatasterismOverlayState extends State<CatasterismOverlay>
                     fontWeight: glow > 0.5 ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
-                Text(
-                  sublabel,
-                  style: const TextStyle(
-                    color: SolaraColors.textSecondary,
-                    fontSize: 11,
+                if (!isEnLocale())
+                  Text(
+                    sublabel,
+                    style: const TextStyle(
+                      color: SolaraColors.textSecondary,
+                      fontSize: 11,
+                    ),
                   ),
-                ),
               ],
             ),
           );

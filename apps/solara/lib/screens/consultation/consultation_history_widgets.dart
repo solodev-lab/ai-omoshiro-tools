@@ -179,7 +179,8 @@ class _HistoryCard extends StatelessWidget {
       final s = fmt(record.whenStart);
       final e = fmt(record.whenEnd);
       if (s == null && e == null) return null;
-      return '${s ?? '?'}〜${e ?? '?'}';
+      final sep = isEnLocale() ? '-' : '〜';
+      return '${s ?? '?'}$sep${e ?? '?'}';
     }
     return _horizonLabel(k);
   }

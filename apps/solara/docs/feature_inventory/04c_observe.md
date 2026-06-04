@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3577
+- ファイル数: 12 / 総行数: 3580
 - class/mixin/extension/enum: 25
 - 関数 (top-level + method の素拾い): 82
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/screens/observe/observe_card_widgets.dart` (201 行)
+### `lib/screens/observe/observe_card_widgets.dart` (204 行)
 
 **imports:** dart=1 / package=1 / relative=3
 
@@ -24,15 +24,15 @@
 
 - L11 `class Observe3DCard : StatelessWidget`
 - L48 `class ObserveCardBack : StatelessWidget`
-- L108 `class ObserveCardFront : StatelessWidget`
-- L140 `class ObserveCardInfo : StatelessWidget`
+- L111 `class ObserveCardFront : StatelessWidget`
+- L143 `class ObserveCardInfo : StatelessWidget`
 
 **関数 (4 public + 0 private):**
 
 - L24 `build()`
 - L52 `build()`
-- L114 `build()`
-- L146 `build()`
+- L117 `build()`
+- L149 `build()`
 
 
 ### `lib/screens/observe/observe_category_selector.dart` (203 行)

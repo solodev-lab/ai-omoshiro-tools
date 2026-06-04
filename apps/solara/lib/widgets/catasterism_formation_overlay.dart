@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../models/galaxy_cycle.dart';
 import '../theme/solara_colors.dart';
 import '../utils/constellation_namer.dart';
+import '../utils/solara_i18n.dart' show isEnLocale;
 import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as title_data;
 
@@ -271,8 +272,8 @@ class _CatasterismFormationOverlayState
                             letterSpacing: 3,
                           ),
                         ),
-                        // 完成 (最終画面) では日本語「刻星化」を出さない。
-                        if (!isComplete) ...[
+                        // 完成時 + EN ロケールでは日本語「刻星化」を出さない (EN は上の Catasterism で足りる)。
+                        if (!isComplete && !isEnLocale()) ...[
                         const SizedBox(height: 4),
                         const Text(
                           '\u523b\u661f\u5316', // 刻星化
@@ -318,8 +319,8 @@ class _CatasterismFormationOverlayState
                       ),
                     ),
                   ),
-                  // 完成 (最終画面) では日本語のステージ名 (完成) を出さない。
-                  if (!isComplete)
+                  // 完成時 + EN ロケールでは日本語のステージ名 (集来/点灯/連結/完成) を出さない。
+                  if (!isComplete && !isEnLocale())
                   Positioned(
                     top: MediaQuery.of(context).size.height * 0.18 + 22,
                     left: 0,
@@ -363,15 +364,18 @@ class _CatasterismFormationOverlayState
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.cycle.nameJP,
-                            style: const TextStyle(
-                              color: SolaraColors.solaraGold,
-                              fontSize: 14,
+                          // EN ロケールでは日本語の星座名 (nameJP) を出さない。
+                          if (!isEnLocale()) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.cycle.nameJP,
+                              style: const TextStyle(
+                                color: SolaraColors.solaraGold,
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
+                          ],
                           const SizedBox(height: 8),
                           Text(
                             '${'\u2605' * widget.cycle.rarity}${'\u2606' * (5 - widget.cycle.rarity)}  \u00b7  ${widget.cycle.rarityLabel}',

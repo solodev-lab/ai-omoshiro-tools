@@ -110,6 +110,7 @@ flutter:
     - assets/celestial_events_2026.json
     - assets/solara_logo.png
     - assets/app_icon_foreground.png
+    - assets/app_icon_emblem.png
     - assets/constellation-art/
     - assets/card-images/
     - assets/class-cards/

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11073
+- ファイル数: 32 / 総行数: 11079
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 286
 - Navigator.push 等: 0
@@ -93,7 +93,7 @@ Stella 相談 追加クレジット購入シート (消費型 IAP、設計 B 案
   </details>
 
 
-### `lib/screens/consultation/consultation_history_screen.dart` (305 行)
+### `lib/screens/consultation/consultation_history_screen.dart` (306 行)
 
 **ファイル先頭コメント:**
 
@@ -113,40 +113,40 @@ Consultation History Screen — Phase 2-4
   - 検索・フィルタは Pro 機能 (本画面では UI のみプレースホルダ、ゲートは課金後)
 ```
 
-**imports:** dart=0 / package=1 / relative=8
+**imports:** dart=0 / package=1 / relative=9
 
-- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/consultation_record.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `../map/map_constants.dart`, `consultation_result_screen.dart`
+- relative: `../../i18n/strings.g.dart`, `../../theme/solara_colors.dart`, `../../utils/consult_restore.dart`, `../../utils/consultation_record.dart`, `../../utils/solara_i18n.dart`, `../../utils/solara_storage.dart`, `../../widgets/glass_panel.dart`, `../map/map_constants.dart`, `consultation_result_screen.dart`
 
 **型定義 (2):**
 
-- L88 `class ConsultationHistoryScreen : StatefulWidget`
-- L110 `class _ConsultationHistoryScreenState : State`
+- L89 `class ConsultationHistoryScreen : StatefulWidget`
+- L111 `class _ConsultationHistoryScreenState : State`
 
 **関数 (4 public + 11 private):**
 
-- L106 `createState()`
-- L119 `initState()`
-- L128 `dispose()`
-- L208 `build()`
+- L107 `createState()`
+- L120 `initState()`
+- L129 `dispose()`
+- L209 `build()`
 
   <details><summary>private 関数 11 件</summary>
 
-  - L30 `_themeLabel()`
-  - L47 `_themeColor()`
-  - L71 `_modeLabel()`
-  - L78 `_scopeLabel()`
-  - L133 `_load()`
-  - L145 `_delete()`
-  - L154 `_toggleFavorite()`
-  - L165 `_confirmDeleteAll()`
-  - L253 `_buildFilterBar()`
-  - L274 `_buildList()`
-  - L298 `_openDetail()`
+  - L31 `_themeLabel()`
+  - L48 `_themeColor()`
+  - L72 `_modeLabel()`
+  - L79 `_scopeLabel()`
+  - L134 `_load()`
+  - L146 `_delete()`
+  - L155 `_toggleFavorite()`
+  - L166 `_confirmDeleteAll()`
+  - L254 `_buildFilterBar()`
+  - L275 `_buildList()`
+  - L299 `_openDetail()`
 
   </details>
 
 
-### `lib/screens/consultation/consultation_history_widgets.dart` (507 行)
+### `lib/screens/consultation/consultation_history_widgets.dart` (508 行)
 
 **ファイル先頭コメント:**
 
@@ -162,18 +162,18 @@ Consultation History — サブウィジェット (part of consultation_history_
 - L57 `class _FilterChip : StatelessWidget`
   - 履歴フィルタ用のトグルチップ (すべて / お気に入り)。
 - L96 `class _HistoryCard : StatelessWidget`
-- L479 `class _MetaChip : StatelessWidget`
+- L480 `class _MetaChip : StatelessWidget`
 
 **関数 (4 public + 1 private):**
 
 - L13 `build()`
 - L68 `build()`
-- L261 `build()`
-- L487 `build()`
+- L262 `build()`
+- L488 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L451 `_confirmDelete()`
+  - L452 `_confirmDelete()`
 
   </details>
 
@@ -316,7 +316,7 @@ consultation_input_picker.dart の HARD500 回避のため、検索結果行・�
 - L150 `build()`
 
 
-### `lib/screens/consultation/consultation_input_screen.dart` (639 行)
+### `lib/screens/consultation/consultation_input_screen.dart` (640 行)
 
 **ファイル先頭コメント:**
 
@@ -863,7 +863,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   </details>
 
 
-### `lib/screens/forecast/forecast_life_periods.dart` (200 行)
+### `lib/screens/forecast/forecast_life_periods.dart` (201 行)
 
 **imports:** dart=0 / package=1 / relative=6
 
@@ -881,7 +881,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   <details><summary>private 関数 2 件</summary>
 
   - L77 `_periodRow()`
-  - L134 `_showLifePeriodsInfo()`
+  - L135 `_showLifePeriodsInfo()`
 
   </details>
 
@@ -933,59 +933,59 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/forecast_screen.dart` (1057 行)
+### `lib/screens/forecast_screen.dart` (1059 行)
 
-**imports:** dart=0 / package=1 / relative=11
+**imports:** dart=0 / package=1 / relative=12
 
-- relative: `../i18n/strings.g.dart`, `../utils/forecast_cache.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/pro_unlock_dialog.dart`, `forecast/forecast_life_periods.dart`, `forecast/forecast_section_header.dart`, `forecast/forecast_top5.dart`, `map/map_constants.dart`
+- relative: `../i18n/strings.g.dart`, `../utils/forecast_cache.dart`, `../utils/pro_status.dart`, `../utils/solara_i18n.dart`, `../utils/solara_storage.dart`, `../widgets/info_popup.dart`, `../widgets/no_profile_guide.dart`, `../widgets/pro_unlock_dialog.dart`, `forecast/forecast_life_periods.dart`, `forecast/forecast_section_header.dart`, `forecast/forecast_top5.dart`, `map/map_constants.dart`
 
 **型定義 (3):**
 
-- L17 `class ForecastScreen : StatefulWidget`
+- L18 `class ForecastScreen : StatefulWidget`
   - Forecast 画面 — 1年予測（ヒートマップ + 選択日詳細 + 強運Top5）
-- L35 `class _ForecastScreenState : State`
-- L1028 `class _DayStepperButton : StatelessWidget`
+- L36 `class _ForecastScreenState : State`
+- L1030 `class _DayStepperButton : StatelessWidget`
   - 選択日詳細パネルの △ ボタン (左右で 1 日前後に動かす)。
 
 **関数 (4 public + 30 private):**
 
-- L32 `createState()`
-- L67 `initState()`
-- L164 `build()`
-- L1039 `build()`
+- L33 `createState()`
+- L68 `initState()`
+- L165 `build()`
+- L1041 `build()`
 
   <details><summary>private 関数 30 件</summary>
 
-  - L72 `_initialize()`
-  - L78 `_loadSettings()`
-  - L92 `_setColorMode()`
-  - L97 `_setHighColor()`
-  - L102 `_load()`
-  - L145 `_setYearOffset()`
-  - L215 `_buildBody()`
-  - L273 `_buildBasisCard()`
-  - L328 `_fmt()`
-  - L331 `_buildBestChip()`
-  - L369 `_yearSeg()`
-  - L395 `_buildHeatmap()`
-  - L461 `_buildColorModeToggle()`
-  - L504 `_rankSeg()`
-  - L534 `_segment()`
-  - L555 `_buildLegend()`
-  - L595 `_catColorChips()`
-  - L609 `_monthRow()`
-  - L638 `_dayCell()`
-  - L669 `_cellColor()`
-  - L686 `_gradientColor()`
-  - L697 `_categoryColor()`
-  - L713 `_canShiftSelectedDay()`
-  - L724 `_shiftSelectedDay()`
-  - L731 `_buildSelectedDayDetail()`
-  - L796 `_metric()`
-  - L804 `_catBar()`
-  - L841 `_buildFetchInfo()`
-  - L855 `_showForecastUsageGuide()`
-  - L958 `_showHeatmapInfo()`
+  - L73 `_initialize()`
+  - L79 `_loadSettings()`
+  - L93 `_setColorMode()`
+  - L98 `_setHighColor()`
+  - L103 `_load()`
+  - L146 `_setYearOffset()`
+  - L216 `_buildBody()`
+  - L274 `_buildBasisCard()`
+  - L330 `_fmt()`
+  - L333 `_buildBestChip()`
+  - L371 `_yearSeg()`
+  - L397 `_buildHeatmap()`
+  - L463 `_buildColorModeToggle()`
+  - L506 `_rankSeg()`
+  - L536 `_segment()`
+  - L557 `_buildLegend()`
+  - L597 `_catColorChips()`
+  - L611 `_monthRow()`
+  - L640 `_dayCell()`
+  - L671 `_cellColor()`
+  - L688 `_gradientColor()`
+  - L699 `_categoryColor()`
+  - L715 `_canShiftSelectedDay()`
+  - L726 `_shiftSelectedDay()`
+  - L733 `_buildSelectedDayDetail()`
+  - L798 `_metric()`
+  - L806 `_catBar()`
+  - L843 `_buildFetchInfo()`
+  - L857 `_showForecastUsageGuide()`
+  - L960 `_showHeatmapInfo()`
 
   </details>
 

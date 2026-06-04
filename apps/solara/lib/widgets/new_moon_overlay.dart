@@ -244,8 +244,9 @@ class _NewMoonOverlayState extends State<NewMoonOverlay>
           children: [
             const SizedBox(height: 14),
             _titleBlock(keyRef: _titleKey, sign: sign, signJP: signJP),
-            // 月背景にかぶらないよう、削除した惑星イベントブロック分の縦スペースを確保
-            const SizedBox(height: 110),
+            // 新月(暗い月)の背景を隠さないよう、質問文以下を下げて月を見せる。
+            // (オーナー指示 2026-06-04: WHAT WILL を選択肢1個目あたりの高さまで下げる)
+            const SizedBox(height: 185),
             Text(
               'What will you release\nthis cycle?',
               textAlign: TextAlign.center,

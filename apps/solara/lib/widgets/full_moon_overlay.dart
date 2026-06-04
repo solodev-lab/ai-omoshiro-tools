@@ -221,8 +221,9 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
           children: [
             const SizedBox(height: 14),
             _titleBlock(keyRef: _titleKey, moonName: moonName, moonNameJP: moonNameJP),
-            // 月背景にかぶらないよう縦スペースを広げる (全体を下に)
-            const SizedBox(height: 170),
+            // 満月(明るい満ち月)の背景を隠さないよう、リキャップ以下を下げて月を見せる。
+            // (オーナー指示 2026-06-04: 新月と同様、月とテキストの重なりを解消)
+            const SizedBox(height: 270),
             Text(
               'You set out to release:',
               style: GoogleFonts.cinzel(
@@ -425,12 +426,12 @@ class _FullMoonOverlayState extends State<FullMoonOverlay>
       isSelected: isSelected,
       child: Row(
         children: [
-          Flexible(
-            child: Text(emoji,
-                maxLines: 1,
-                overflow: TextOverflow.clip,
-                style: const TextStyle(fontSize: 26)),
-          ),
+          // アイコン絵文字は固有幅で置く。Flexible(flex:1) で囲むと Row 幅の約半分を
+          // 絵文字が占有し、ラベル(Expanded)が半幅しか使えず早期に2行折返していた。
+          Text(emoji,
+              maxLines: 1,
+              overflow: TextOverflow.clip,
+              style: const TextStyle(fontSize: 26)),
           const SizedBox(width: 14),
           // Column を Expanded で囲んで Row の残幅を割り当てる。
           // 旧: 直接 Column → 内容の自然幅が容器を超えてフォント拡大時に

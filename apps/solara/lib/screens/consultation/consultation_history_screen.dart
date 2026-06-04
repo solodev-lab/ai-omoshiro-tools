@@ -14,10 +14,11 @@
 
 import 'package:flutter/material.dart';
 
-import '../../i18n/strings.g.dart';
+import '../../i18n/strings.g.dart' hide AppLocale;
 import '../../theme/solara_colors.dart';
 import '../../utils/consult_restore.dart';
 import '../../utils/consultation_record.dart';
+import '../../utils/solara_i18n.dart' show isEnLocale;
 import '../../utils/solara_storage.dart';
 import '../../widgets/glass_panel.dart';
 import '../map/map_constants.dart' show categoryColors;

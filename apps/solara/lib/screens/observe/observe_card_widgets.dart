@@ -76,8 +76,11 @@ class ObserveCardBack extends StatelessWidget {
           Center(
             child: Padding(
               padding: const EdgeInsets.all(20),
+              // タロット裏は黒背景を抜いた透過版エンブレム。ランチャーアイコン兼用の
+              // app_icon_foreground.png は黒い正方形背景を持つため、
+              // tools/make_emblem_transparent.py で透過コピーを生成して使う。
               child: Image.asset(
-                'assets/app_icon_foreground.png',
+                'assets/app_icon_emblem.png',
                 width: 120,
                 height: 120,
                 fit: BoxFit.contain,
