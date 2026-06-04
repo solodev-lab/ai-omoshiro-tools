@@ -426,6 +426,8 @@ class SolaraStorage {
     required String classJP,
     required String lightJP,
     required String shadowJP,
+    String lightEN = '',
+    String shadowEN = '',
   }) async {
     final list = (await loadTitleHistory()).toList();
     // 直近 (新しい順 1 件目) と同じクラスなら skip。
@@ -442,6 +444,8 @@ class SolaraStorage {
       'classJP': classJP,
       'lightJP': lightJP,
       'shadowJP': shadowJP,
+      'lightEN': lightEN,
+      'shadowEN': shadowEN,
     });
     if (list.length > titleHistoryMax) {
       list.removeRange(titleHistoryMax, list.length);

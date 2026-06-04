@@ -10,6 +10,7 @@ import '../utils/consultation_credits.dart';
 import '../utils/moon_notification_service.dart';
 import '../utils/pro_status.dart';
 import '../utils/purchases_service.dart';
+import '../utils/solara_i18n.dart' show isEnLocale;
 import '../utils/solara_storage.dart';
 import '../utils/title_data.dart' as title_data;
 import '../widgets/class_card.dart';
@@ -46,6 +47,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
   // Title diagnosis results
   String? _titleLight;
   String? _titleShadow;
+  String? _titleLightEN;
+  String? _titleShadowEN;
   String? _titleClassEN;
   String? _titleClassJP;
   String? _titleAxis;
@@ -145,6 +148,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
       if (td != null) {
         _titleLight = td['lightJP'] as String?;
         _titleShadow = td['shadowJP'] as String?;
+        _titleLightEN = td['lightEN'] as String?;
+        _titleShadowEN = td['shadowEN'] as String?;
         _titleClassEN = td['classEN'] as String?;
         _titleClassJP = td['classJP'] as String?;
         _titleAxis = td['axis'] as String?;
@@ -171,15 +176,23 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         if (newSun != oldSun || newMoon != oldMoon) {
           final t144 = title_data.title144[newSun]?[newMoon];
           final sunA = title_data.sunAdj[newSun];
+          final moonN = title_data.moonNoun[newMoon];
           final newLight = t144?['light'] ?? (sunA?['jp'] ?? '');
-          final newShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${title_data.moonNoun[newMoon]?['jp'] ?? ''}';
+          final newShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
+          final enFallback = '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}';
+          final newLightEN = t144?['lightEN'] ?? (sunA?['en'] ?? '');
+          final newShadowEN = t144?['shadowEN'] ?? enFallback;
           final updated = {
             'lightJP': newLight, 'shadowJP': newShadow,
+            'lightEN': newLightEN, 'shadowEN': newShadowEN,
             'classEN': _titleClassEN ?? '', 'classJP': _titleClassJP ?? '',
             'axis': _titleAxis ?? '', 'court': _titleCourt ?? '',
           };
           await SolaraStorage.saveTitleData(updated);
-          setState(() { _titleLight = newLight; _titleShadow = newShadow; });
+          setState(() {
+            _titleLight = newLight; _titleShadow = newShadow;
+            _titleLightEN = newLightEN; _titleShadowEN = newShadowEN;
+          });
         }
       }
       setState(() => _profile = result);
@@ -196,12 +209,15 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     // 一言 Light / Shadow (フォールバック: sunA.jp + moonN.jp)
     final titleLight = t144?['light'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
     final titleShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
+    final enFallback = '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}';
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => ClassShareCardPage(
         axis: _titleAxis!, court: _titleCourt!,
         titleLightJP: titleLight,
         titleShadowJP: titleShadow,
-        titleEN: '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}',
+        titleLightEN: t144?['lightEN'] ?? enFallback,
+        titleShadowEN: t144?['shadowEN'] ?? enFallback,
+        titleEN: enFallback,
       ),
     ));
   }
@@ -246,10 +262,14 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
         classJP: result['classJP'] ?? '',
         lightJP: result['lightJP'] ?? '',
         shadowJP: result['shadowJP'] ?? '',
+        lightEN: result['lightEN'] ?? '',
+        shadowEN: result['shadowEN'] ?? '',
       );
       setState(() {
         _titleLight = result['lightJP'];
         _titleShadow = result['shadowJP'];
+        _titleLightEN = result['lightEN'];
+        _titleShadowEN = result['shadowEN'];
         _titleClassEN = result['classEN'];
         _titleClassJP = result['classJP'];
         _titleAxis = result['axis'];
@@ -955,6 +975,8 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
     final moonN = title_data.moonNoun[moonSign];
     final titleLight = t144?['light'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
     final titleShadow = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
+    final titleLightEN = t144?['lightEN'] ?? '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}';
+    final titleShadowEN = t144?['shadowEN'] ?? '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}';
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 600),
@@ -966,8 +988,11 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
           width: 280,
           mode: _titleFlipped ? ClassCardMode.shadow : ClassCardMode.light,
           showGlow: true,
+          isEnglish: isEnLocale(),
           titleLightJP: titleLight,
           titleShadowJP: titleShadow,
+          titleLightEN: titleLightEN,
+          titleShadowEN: titleShadowEN,
         ),
       ),
     );
@@ -980,7 +1005,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             key: const ValueKey('shadow-legacy'),
             label: '✦ SHADOW ✦',
             labelColor: const Color(0x80ACACAC),
-            title: _titleShadow ?? '',
+            title: (isEnLocale() ? _titleShadowEN : null)?.isNotEmpty == true
+                ? _titleShadowEN!
+                : (_titleShadow ?? ''),
             titleColor: const Color(0xFFEAEAEA),
             className: _titleClassEN ?? '',
             isLight: false,
@@ -989,7 +1016,9 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
             key: const ValueKey('light-legacy'),
             label: '✦ LIGHT ✦',
             labelColor: const Color(0x80F9D976),
-            title: _titleLight ?? '',
+            title: (isEnLocale() ? _titleLightEN : null)?.isNotEmpty == true
+                ? _titleLightEN!
+                : (_titleLight ?? ''),
             titleColor: const Color(0xFFF9D976),
             className: _titleClassEN ?? '',
             isLight: true,

@@ -303,6 +303,8 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
           court: court,
           titleLightJP: route['light'] as String? ?? '',
           titleShadowJP: route['shadow'] as String? ?? '',
+          titleLightEN: route['lightEN'] as String? ?? '',
+          titleShadowEN: route['shadowEN'] as String? ?? '',
           titleEN: route['en'] as String? ?? '',
           initialShowShadow: route['showShadow'] == true,
         ),

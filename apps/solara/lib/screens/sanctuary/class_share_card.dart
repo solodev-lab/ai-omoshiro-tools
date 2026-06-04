@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../i18n/strings.g.dart';
 import '../../utils/consult_restore.dart';
+import '../../utils/solara_i18n.dart' show isEnLocale;
 import '../../utils/title_data.dart' as title_data;
 import '../../widgets/class_card.dart';
 
@@ -27,6 +28,8 @@ class ClassShareCardPage extends StatefulWidget {
   final String court;
   final String titleLightJP; // 一言 Light (t144.light) 例: 「省察に長けた」
   final String titleShadowJP; // 一言 Shadow (t144.shadow) 例: 「謎キャラぶって脳内ダメ出し中な」
+  final String titleLightEN; // 一言 Light EN (t144.lightEN) 例: 「Skilled in Reflection」
+  final String titleShadowEN; // 一言 Shadow EN (t144.shadowEN)
   final String titleEN; // 太陽×月 英語二つ名 例: 「Abyssal Lighthouse」
 
   /// 画面復元 (Android プロセス死対策): 復元時に Shadow 面で開く。
@@ -38,6 +41,8 @@ class ClassShareCardPage extends StatefulWidget {
     required this.court,
     required this.titleLightJP,
     required this.titleShadowJP,
+    this.titleLightEN = '',
+    this.titleShadowEN = '',
     required this.titleEN,
     this.initialShowShadow = false,
   });
@@ -74,6 +79,8 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
         'court': widget.court,
         'light': widget.titleLightJP,
         'shadow': widget.titleShadowJP,
+        'lightEN': widget.titleLightEN,
+        'shadowEN': widget.titleShadowEN,
         'en': widget.titleEN,
         'showShadow': _showShadow,
       },
@@ -135,12 +142,18 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
       final file = await File('${tmpDir.path}/solara_title.png').create();
       await file.writeAsBytes(byteData.buffer.asUint8List());
 
-      final titleForShare =
-          _showShadow ? widget.titleShadowJP : widget.titleLightJP;
+      final en = isEnLocale();
+      final titleForShare = _showShadow
+          ? (en && widget.titleShadowEN.isNotEmpty
+              ? widget.titleShadowEN
+              : widget.titleShadowJP)
+          : (en && widget.titleLightEN.isNotEmpty
+              ? widget.titleLightEN
+              : widget.titleLightJP);
+      final clsForShare = en ? (_cls?.nameEN ?? '') : (_cls?.nameJP ?? '');
       await SharePlus.instance.share(ShareParams(
         files: [XFile(file.path)],
-        text: t.shareCard.shareText(
-            title: titleForShare, cls: _cls?.nameJP ?? ''),
+        text: t.shareCard.shareText(title: titleForShare, cls: clsForShare),
       ));
     } catch (e) {
       if (mounted) {
@@ -272,11 +285,19 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
 
   Widget _buildShareImageInner(
       title_data.TitleClass cls, double w, double h) {
-    final accent = _accentColor;            // 大きい/太字 (一言、クラス名JP) 用
+    final accent = _accentColor;            // 大きい/太字 (一言、クラス名) 用
     final readable = _readableAccent;       // 小さい文字 (SOLARA/サブ/EN等) 用
-    final titleOneLine =
-        _showShadow ? widget.titleShadowJP : widget.titleLightJP;
-    final classText = _showShadow ? cls.shadowJP : cls.lightJP;
+    final en = isEnLocale();
+    final titleOneLine = _showShadow
+        ? (en && widget.titleShadowEN.isNotEmpty
+            ? widget.titleShadowEN
+            : widget.titleShadowJP)
+        : (en && widget.titleLightEN.isNotEmpty
+            ? widget.titleLightEN
+            : widget.titleLightJP);
+    final classText = _showShadow
+        ? (en ? cls.shadowEN : cls.shadowJP)
+        : (en ? cls.lightEN : cls.lightJP);
 
     // ── Padding (内側余白) ──
     final paddingH = w * 0.06;
@@ -423,9 +444,9 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                               ),
                             ),
                             SizedBox(height: w * 0.012),
-                            // クラス名 JP
+                            // クラス名 (EN ロケールは英名を主役に)
                             Text(
-                              cls.nameJP,
+                              en ? cls.nameEN : cls.nameJP,
                               style: TextStyle(
                                 color: const Color(0xFFEAEAEA),
                                 fontSize: fsClassJP,
@@ -435,7 +456,9 @@ class _ClassShareCardPageState extends State<ClassShareCardPage> {
                             ),
                             SizedBox(height: w * 0.006),
                             Text(
-                              cls.nameEN,
+                              en
+                                  ? '— ${cls.axis.toUpperCase()} ${cls.court.toUpperCase()} —'
+                                  : cls.nameEN,
                               style: TextStyle(
                                 color: readable.withValues(alpha: 0.75),
                                 fontSize: fsClassEN,

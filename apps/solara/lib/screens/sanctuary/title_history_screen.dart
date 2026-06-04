@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/consult_restore.dart';
+import '../../utils/solara_i18n.dart' show isEnLocale;
 import '../../utils/solara_storage.dart';
 import '../../utils/title_data.dart' as title_data;
 import '../../widgets/info_popup.dart';
@@ -327,6 +328,8 @@ class _TitleChainRow extends StatelessWidget {
     final classEN = record['classEN'] as String? ?? '';
     final lightJP = record['lightJP'] as String? ?? '';
     final shadowJP = record['shadowJP'] as String? ?? '';
+    final lightEN = record['lightEN'] as String? ?? '';
+    final shadowEN = record['shadowEN'] as String? ?? '';
     final note = record['note'] as String? ?? '';
 
     final cls = (axis.isNotEmpty && court.isNotEmpty)
@@ -336,6 +339,12 @@ class _TitleChainRow extends StatelessWidget {
         ? classJP
         : (cls?.nameJP ?? '—');
     final displayEN = classEN.isNotEmpty ? classEN : (cls?.nameEN ?? '');
+    // EN ロケールは英名・英語一言を主役に (旧レコードに EN が無ければ JP へフォールバック)
+    final en = isEnLocale();
+    final primaryName = en && displayEN.isNotEmpty ? displayEN : displayJP;
+    final secondaryName = en ? '' : displayEN;
+    final lightLine = en && lightEN.isNotEmpty ? lightEN : lightJP;
+    final shadowLine = en && shadowEN.isNotEmpty ? shadowEN : shadowJP;
 
     return Container(
       decoration: BoxDecoration(
@@ -390,7 +399,7 @@ class _TitleChainRow extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  displayJP,
+                  primaryName,
                   style: const TextStyle(
                     color: SolaraColors.textPrimary,
                     fontSize: 17,
@@ -401,11 +410,11 @@ class _TitleChainRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (displayEN.isNotEmpty) ...[
+              if (secondaryName.isNotEmpty) ...[
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    displayEN,
+                    secondaryName,
                     style: const TextStyle(
                       color: SolaraColors.textSecondary,
                       fontSize: 12,
@@ -418,7 +427,7 @@ class _TitleChainRow extends StatelessWidget {
               ],
             ],
           ),
-          if (lightJP.isNotEmpty) ...[
+          if (lightLine.isNotEmpty) ...[
             const SizedBox(height: 6),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,7 +445,7 @@ class _TitleChainRow extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    lightJP,
+                    lightLine,
                     style: const TextStyle(
                       color: SolaraColors.textPrimary,
                       fontSize: 12,
@@ -447,7 +456,7 @@ class _TitleChainRow extends StatelessWidget {
               ],
             ),
           ],
-          if (shadowJP.isNotEmpty) ...[
+          if (shadowLine.isNotEmpty) ...[
             const SizedBox(height: 4),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,7 +474,7 @@ class _TitleChainRow extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    shadowJP,
+                    shadowLine,
                     style: const TextStyle(
                       color: SolaraColors.textSecondary,
                       fontSize: 12,

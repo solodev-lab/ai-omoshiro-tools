@@ -39,6 +39,13 @@ class ClassCard extends StatelessWidget {
   /// 同上 (Shadow面: t144.shadow、例「謎キャラぶって脳内ダメ出し中な」)
   final String titleShadowJP;
 
+  /// 一言の英語版 (Light面: t144.lightEN、例「Skilled in Reflection」)。
+  /// isEnglish==true のとき表示。空文字なら JP にフォールバック。
+  final String titleLightEN;
+
+  /// 同上 (Shadow面: t144.shadowEN)
+  final String titleShadowEN;
+
   const ClassCard({
     super.key,
     required this.classData,
@@ -49,6 +56,8 @@ class ClassCard extends StatelessWidget {
     this.showGlow = true,
     this.titleLightJP = '',
     this.titleShadowJP = '',
+    this.titleLightEN = '',
+    this.titleShadowEN = '',
   });
 
   // ── 軸別カラー ──
@@ -154,8 +163,10 @@ class ClassCard extends StatelessWidget {
 
     final accentColor = isLight ? const Color(0xFFF9D976) : const Color(0xFFEAEAEA);
 
-    // 一言 (Light/Shadow 切替)
-    final titleOneLine = isLight ? titleLightJP : titleShadowJP;
+    // 一言 (Light/Shadow 切替・EN/JP 切替。EN が空なら JP にフォールバック)
+    final titleOneLine = isLight
+        ? (isEnglish && titleLightEN.isNotEmpty ? titleLightEN : titleLightJP)
+        : (isEnglish && titleShadowEN.isNotEmpty ? titleShadowEN : titleShadowJP);
     final hasTitle = titleOneLine.isNotEmpty;
 
     // ── 固定高さで Light/Shadow のクラス名位置を一致させる ──

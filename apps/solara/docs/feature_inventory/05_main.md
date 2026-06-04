@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 1 / 総行数: 553
+- ファイル数: 1 / 総行数: 555
 - class/mixin/extension/enum: 4
 - 関数 (top-level + method の素拾い): 16
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/main.dart` (553 行)
+### `lib/main.dart` (555 行)
 
 **imports:** dart=0 / package=3 / relative=29
 
@@ -34,20 +34,20 @@
 - L110 `build()`
 - L159 `createState()`
 - L175 `initState()`
-- L351 `dispose()`
-- L390 `didChangeAppLifecycleState()`
-- L503 `build()`
+- L353 `dispose()`
+- L392 `didChangeAppLifecycleState()`
+- L505 `build()`
 
   <details><summary>private 関数 8 件</summary>
 
   - L193 `_restoreLastScreen()`
   - L261 `_restorePushedRoute()`
-  - L314 `_saveRestoreSnapshot()`
-  - L361 `_onSigninCelebration()`
-  - L379 `_onMapFocusRequested()`
-  - L423 `_onGalaxyOverlayChanged()`
-  - L449 `_refreshMoonStatus()`
-  - L467 `_onTabTap()`
+  - L316 `_saveRestoreSnapshot()`
+  - L363 `_onSigninCelebration()`
+  - L381 `_onMapFocusRequested()`
+  - L425 `_onGalaxyOverlayChanged()`
+  - L451 `_refreshMoonStatus()`
+  - L469 `_onTabTap()`
 
   </details>
 

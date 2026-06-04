@@ -130,6 +130,11 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   String _revealClassEN = '', _revealClassJP = '';
   String _revealLightJP = '', _revealShadowJP = '', _revealAxis = '', _revealCourt = '';
   String _revealClsLightJP = ''; // クラス Light テキスト (cls.lightJP)
+  // 英語版 (EN ロケールで JP の代わりに主役表示・英語化 Phase 2)
+  String _revealLightEN = '';        // t144.lightEN (Light面の一言 EN)
+  String _revealShadowTitleEN = '';  // t144.shadowEN (Shadow面のタイトル EN)
+  String _revealClsLightEN = '';     // cls.lightEN (クラス Light テキスト EN)
+  String _revealClsShadowEN = '';    // cls.shadowEN (クラス Shadow テキスト EN)
 
   /// 各ラウンドの cards を毎回シャッフルした _rounds を生成する。
   /// PART の順番 (1→2→3) と質問順は元データのまま、選択肢の左右配置だけ
@@ -360,11 +365,16 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
     // HTML: mainTitle = {jp: t144.shadow, en: sunAdj.en + moonNoun.en, lightJP: t144.light}
     final sunA = title_data.sunAdj[sunSign];
     final moonN = title_data.moonNoun[moonSign];
+    final enFallback = '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}';
     _revealTitleJP = t144?['shadow'] ?? '${sunA?['jp'] ?? ''}${moonN?['jp'] ?? ''}';
-    _revealTitleEN = '${sunA?['en'] ?? ''} ${moonN?['en'] ?? ''}';
+    _revealTitleEN = enFallback;
     _revealLightJP = t144?['light'] ?? (sunA?['jp'] ?? '');
+    _revealLightEN = t144?['lightEN'] ?? (sunA?['en'] ?? '');
+    _revealShadowTitleEN = t144?['shadowEN'] ?? enFallback;
     _revealClsLightJP = cls.lightJP;
+    _revealClsLightEN = cls.lightEN;
     _revealShadowJP = cls.shadowJP;
+    _revealClsShadowEN = cls.shadowEN;
     _revealClassEN = cls.nameEN;
     _revealClassJP = cls.nameJP;
     _revealAxis = topAxis;
@@ -411,6 +421,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
   void _accept() {
     Navigator.of(context).pop({
       'lightJP': _revealLightJP, 'shadowJP': _revealShadowJP,
+      'lightEN': _revealLightEN, 'shadowEN': _revealClsShadowEN,
       'classEN': _revealClassEN, 'classJP': _revealClassJP,
       'axis': _revealAxis, 'court': _revealCourt,
       'titleJP': _revealTitleJP, 'titleEN': _revealTitleEN,
@@ -470,7 +481,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               const SizedBox(height: 14),
               Center(
                 child: Text(
-                  prevCls.nameJP,
+                  isEnLocale() ? prevCls.nameEN : prevCls.nameJP,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -482,7 +493,9 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               const SizedBox(height: 2),
               Center(
                 child: Text(
-                  prevCls.nameEN,
+                  isEnLocale()
+                      ? '— ${prevCls.axis.toUpperCase()} ${prevCls.court.toUpperCase()} —'
+                      : prevCls.nameEN,
                   style: const TextStyle(
                     fontSize: 11,
                     color: Color(0x99EAEAEA),
@@ -492,7 +505,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               ),
               const SizedBox(height: 12),
               Text(
-                '✦ ${prevCls.lightJP}',
+                '✦ ${isEnLocale() ? prevCls.lightEN : prevCls.lightJP}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 13,
@@ -502,7 +515,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               ),
               const SizedBox(height: 4),
               Text(
-                '✦ ${prevCls.shadowJP}',
+                '✦ ${isEnLocale() ? prevCls.shadowEN : prevCls.shadowJP}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 13,
@@ -1253,17 +1266,17 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           // ── Light の言葉 (最上段、ゴールド) ──
           Opacity(opacity: (t / 1.5).clamp(0.0, 1.0),
             child: Transform.translate(offset: Offset(0, 20 * (1 - (t / 1.5).clamp(0.0, 1.0))),
-              child: Text('✦ $_revealLightJP ✦', textAlign: TextAlign.center,
+              child: Text('✦ ${isEnLocale() ? _revealLightEN : _revealLightJP} ✦', textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFF9D976), height: 1.5, letterSpacing: 1)))),
           const SizedBox(height: 10),
-          // ── クラス名 ──
+          // ── クラス名 (EN ロケールは英名を主役に) ──
           if (cls != null)
             Opacity(opacity: ((t - 1.0) / 1.0).clamp(0.0, 1.0),
               child: Column(children: [
-                Text(_revealClassJP, textAlign: TextAlign.center,
+                Text(isEnLocale() ? _revealClassEN : _revealClassJP, textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFEAEAEA), letterSpacing: 6)),
                 const SizedBox(height: 2),
-                Text(_revealClassEN, textAlign: TextAlign.center,
+                Text(isEnLocale() ? '— ${_revealAxis.toUpperCase()} ${_revealCourt.toUpperCase()} —' : _revealClassEN, textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 11, color: Color(0x80EAEAEA), letterSpacing: 3)),
               ])),
           // ── divider ──
@@ -1283,7 +1296,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
           const SizedBox(height: 12),
           // ── クラス Light テキスト (カード下、Shadow 面と対をなす) ──
           Opacity(opacity: ((t - 4.5) / 1.0).clamp(0.0, 1.0),
-            child: Text('✦ $_revealClsLightJP ✦', textAlign: TextAlign.center,
+            child: Text('✦ ${isEnLocale() ? _revealClsLightEN : _revealClsLightJP} ✦', textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, color: Color(0xFFF9D976), height: 1.6, fontStyle: FontStyle.italic))),
           const SizedBox(height: 8),
           // ── Title EN (太陽×月の英語二つ名) ──
@@ -1327,13 +1340,13 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           // ── 一言シャドー (タイトル、アメジスト) ──
-          Text('✦ $_revealTitleJP ✦', textAlign: TextAlign.center,
+          Text('✦ ${isEnLocale() ? _revealShadowTitleEN : _revealTitleJP} ✦', textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFFC9A8E0), height: 1.5, letterSpacing: 1)),
           const SizedBox(height: 10),
-          // ── クラス名 (SHADOW SIDE) ──
+          // ── クラス名 (SHADOW SIDE・EN ロケールは英名) ──
           if (cls != null)
             Column(children: [
-              Text(_revealClassJP, textAlign: TextAlign.center,
+              Text(isEnLocale() ? _revealClassEN : _revealClassJP, textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFFD7BCEC), letterSpacing: 6)),
               const SizedBox(height: 2),
               Text('SHADOW SIDE', textAlign: TextAlign.center,
@@ -1354,7 +1367,7 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
             ),
           const SizedBox(height: 14),
           // ── クラス Shadow テキスト ──
-          Text('✦ $_revealShadowJP ✦', textAlign: TextAlign.center,
+          Text('✦ ${isEnLocale() ? _revealClsShadowEN : _revealShadowJP} ✦', textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14, color: Color(0xFFD7BCEC), height: 1.6, fontStyle: FontStyle.italic)),
           const SizedBox(height: 20),
           // ── ボタン群 (シャドー配色) ──
