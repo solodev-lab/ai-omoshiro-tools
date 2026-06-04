@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 
+import '../../i18n/strings.g.dart';
+
 /// Locations 画面の日付ステッパー（年▲▼ 月▲▼ 日▲▼ + 「今日」リセット）。
 /// 2026-05-08: 日付の下に時刻 (HH:00) 行を追加 (常時表示)。
 ///   表示形式は Map 画面と同じ HH:00、UI は date stepper と同じ ▲▼ ボタン。
@@ -60,18 +62,18 @@ class LocationsDateStepper extends StatelessWidget {
         children: [
           // ── 行1: 日付ステッパー ──
           Row(children: [
-            const Text('日付',
-                style: TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1.5)),
+            Text(t.dateStepper.date,
+                style: const TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1.5)),
             const SizedBox(width: 12),
             // 年/月/日 を枠なしで均等配置 (バランス重視)。年/月は数字タップで
             // 縦並び選択リスト、日は ◀ ▶ で ±1 日 (月末は翌月へ繰り上げ)。
             Expanded(child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _pickerBlock('年', localDate.year,
+                _pickerBlock(t.dateStepper.year, localDate.year,
                     [for (int y = dateMin.year; y <= dateMax.year; y++) y],
                     (v) => onSetYmd(v, localDate.month, localDate.day)),
-                _pickerBlock('月', localDate.month,
+                _pickerBlock(t.dateStepper.month, localDate.month,
                     const [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                     (v) => onSetYmd(localDate.year, v, localDate.day)),
                 _dayArrowBlock(localDate.day,
@@ -102,7 +104,7 @@ class LocationsDateStepper extends StatelessWidget {
                           : const Color(0x33C9A84C),
                         size: 16,
                       ),
-                      tooltip: '今日に戻す',
+                      tooltip: t.dateStepper.backToToday,
                       onPressed: onResetToToday,
                     ),
               ),
@@ -114,8 +116,8 @@ class LocationsDateStepper extends StatelessWidget {
           // 右端の今日ボタン領域 (28+8=36px) と幅を揃えて視覚的に整列。
           const SizedBox(height: 4),
           Row(children: [
-            const Text('時刻',
-                style: TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1.5)),
+            Text(t.dateStepper.time,
+                style: const TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1.5)),
             const SizedBox(width: 12),
             Expanded(child: _hourStepperBlock(context, localDate)),
             const SizedBox(width: 36),
@@ -163,8 +165,8 @@ class LocationsDateStepper extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF14142A),
-        title: const Text('時刻 (0〜23)',
-            style: TextStyle(color: Color(0xFFE8E0D0), fontSize: 14)),
+        title: Text(t.dateStepper.hourDialogTitle,
+            style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 14)),
         content: TextField(
           controller: ctrl,
           autofocus: true,
@@ -173,14 +175,14 @@ class LocationsDateStepper extends StatelessWidget {
           textAlign: TextAlign.center,
           cursorColor: const Color(0xFFC9A84C),
           style: const TextStyle(color: Color(0xFFE8E0D0), fontSize: 18),
-          decoration: const InputDecoration(suffixText: '時'),
+          decoration: InputDecoration(suffixText: t.dateStepper.hourSuffix),
           onSubmitted: (_) => Navigator.pop(ctx, int.tryParse(ctrl.text)),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('キャンセル',
-                  style: TextStyle(color: Color(0xFF888888)))),
+              child: Text(t.locations.cancel,
+                  style: const TextStyle(color: Color(0xFF888888)))),
           TextButton(
               onPressed: () => Navigator.pop(ctx, int.tryParse(ctrl.text)),
               child: const Text('OK',
@@ -232,8 +234,8 @@ class LocationsDateStepper extends StatelessWidget {
         _DateNumberField(value: value, min: 1, max: maxDay, onCommit: onSet),
         _arrowBtn(Icons.arrow_right, onNext),
       ]),
-      const Text('日',
-          style: TextStyle(fontSize: 8, color: Color(0xFF666666))),
+      Text(t.dateStepper.day,
+          style: const TextStyle(fontSize: 8, color: Color(0xFF666666))),
     ]);
   }
 

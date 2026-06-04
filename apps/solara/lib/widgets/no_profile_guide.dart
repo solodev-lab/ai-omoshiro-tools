@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../i18n/strings.g.dart';
 import '../screens/horoscope/horo_antique_icons.dart';
 
 /// プロフィール未設定時の案内カード (Forecast / Locations 共通)。
@@ -31,22 +32,22 @@ class NoProfileGuide extends StatelessWidget {
           const AntiqueGlyph(icon: AntiqueIcon.reading, size: 32,
             color: Color(0xFFF6BD60)),
           const SizedBox(height: 8),
-          const Text('✦ 出生情報と現住所を登録すると、無料クレジットを3つプレゼント',
+          Text(t.mapScreen.creditBannerTitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Color(0xFFF6D98A),
+            style: const TextStyle(fontSize: 13, color: Color(0xFFF6D98A),
               fontWeight: FontWeight.w700, height: 1.4)),
           const SizedBox(height: 6),
-          const Text('SANCTUARYで設定すると、各地点の方位スコアも表示されます',
+          Text(t.mapScreen.creditBannerSub,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: Color(0xFFF6BD60))),
+            style: const TextStyle(fontSize: 12, color: Color(0xFFF6BD60))),
           const SizedBox(height: 8),
           GestureDetector(
             onTap: () {
               Navigator.of(context).maybePop();
               onNavigateToSanctuary?.call();
             },
-            child: const Text('設定する →',
-              style: TextStyle(fontSize: 12, color: Color(0xFFF9D976),
+            child: Text(t.mapScreen.setupCta,
+              style: const TextStyle(fontSize: 12, color: Color(0xFFF9D976),
                 decoration: TextDecoration.underline)),
           ),
         ]),

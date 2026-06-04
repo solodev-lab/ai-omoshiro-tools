@@ -472,13 +472,13 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **8**
+- 追加: **0** / 削除: **0** / 変更: **5**
 
 ### 変更されたファイル (層別)
 
-- **層 3a**: `lib/widgets/celestial_event_bar.dart`
-- **層 3c**: `lib/widgets/full_moon_overlay.dart`, `lib/widgets/new_moon_overlay.dart`
-- **層 4d**: `lib/screens/galaxy/constellation_share_card_page.dart`, `lib/screens/galaxy/galaxy_archive_filter.dart`, `lib/screens/galaxy/galaxy_archive_filter_chips.dart`, `lib/screens/galaxy/galaxy_cycle_actions_sheet.dart`, `lib/screens/galaxy/galaxy_star_atlas.dart`
+- **層 2b**: `lib/utils/solara_auth.dart`
+- **層 3a**: `lib/widgets/location_picker_minimap.dart`, `lib/widgets/no_profile_guide.dart`
+- **層 4f**: `lib/screens/locations/locations_date_stepper.dart`, `lib/screens/solara_philosophy_screen.dart`
 
 ## #7 astro_glossary 用語辞書対整合
 

@@ -1,4 +1,28 @@
 {
+  "locationPicker": {
+    "hint": "Move the map to adjust the pin"
+  },
+  "dateStepper": {
+    "date": "Date",
+    "time": "Time",
+    "backToToday": "Back to today",
+    "year": "Year",
+    "month": "Month",
+    "day": "Day",
+    "hourDialogTitle": "Time (0–23)",
+    "hourSuffix": "h"
+  },
+  "solaraAuth": {
+    "appleAccount": "Apple account",
+    "googleAccount": "Google account",
+    "appleOnlyPlatform": "Sign in with Apple is only available on iOS / macOS",
+    "appleUnavailable": "Sign in with Apple isn't available on this device",
+    "appleNoUserId": "Couldn't retrieve your Apple user ID",
+    "googleSignInFailed": "Google sign-in failed"
+  },
+  "philosophy": {
+    "title": "Design Philosophy"
+  },
   "moonOverlay": {
     "pressAgainSkip": "Press again to start with \"No particular theme\""
   },

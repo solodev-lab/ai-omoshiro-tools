@@ -33,6 +33,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import '../i18n/strings.g.dart';
+
 import 'app_attest_client.dart';
 import 'consultation_api.dart' show grantWelcomeCredits, migratePurchasedCredits;
 import 'consultation_credits.dart';
@@ -92,8 +94,8 @@ class SolaraAuthAccount {
       : email?.isNotEmpty == true
           ? email!
           : provider == SolaraAuthProvider.apple
-              ? 'Apple アカウント'
-              : 'Google アカウント';
+              ? t.solaraAuth.appleAccount
+              : t.solaraAuth.googleAccount;
 }
 
 /// 認証エラー (UI が型で分岐できるよう薄い wrapper)。
@@ -200,13 +202,11 @@ class SolaraAuth extends ChangeNotifier {
   /// Apple サインイン (iOS / macOS 推奨)。
   Future<SolaraAuthAccount> signInWithApple() async {
     if (!_isApplePlatform) {
-      throw SolaraAuthException(
-          'Sign in with Apple は iOS / macOS でのみご利用いただけます');
+      throw SolaraAuthException(t.solaraAuth.appleOnlyPlatform);
     }
     final available = await SignInWithApple.isAvailable();
     if (!available) {
-      throw SolaraAuthException(
-          'この端末では Sign in with Apple が利用できません');
+      throw SolaraAuthException(t.solaraAuth.appleUnavailable);
     }
 
     final credential = await SignInWithApple.getAppleIDCredential(
@@ -218,7 +218,7 @@ class SolaraAuth extends ChangeNotifier {
 
     final userIdentifier = credential.userIdentifier;
     if (userIdentifier == null) {
-      throw SolaraAuthException('Apple ユーザー ID を取得できませんでした');
+      throw SolaraAuthException(t.solaraAuth.appleNoUserId);
     }
 
     // 表示名 / email は初回のみ来る → 既存と merge
@@ -258,7 +258,7 @@ class SolaraAuth extends ChangeNotifier {
       return account;
     } on GoogleSignInException catch (e) {
       // canceled / unknownError 等は SDK 仕様のまま投げ直し
-      throw SolaraAuthException('Google サインインに失敗しました', e);
+      throw SolaraAuthException(t.solaraAuth.googleSignInFailed, e);
     }
   }
 

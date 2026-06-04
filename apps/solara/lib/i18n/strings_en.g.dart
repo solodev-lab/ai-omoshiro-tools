@@ -39,6 +39,10 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$locationPicker$en locationPicker = _Translations$locationPicker$en._(_root);
+	@override late final _Translations$dateStepper$en dateStepper = _Translations$dateStepper$en._(_root);
+	@override late final _Translations$solaraAuth$en solaraAuth = _Translations$solaraAuth$en._(_root);
+	@override late final _Translations$philosophy$en philosophy = _Translations$philosophy$en._(_root);
 	@override late final _Translations$moonOverlay$en moonOverlay = _Translations$moonOverlay$en._(_root);
 	@override late final _Translations$galaxyArchive$en galaxyArchive = _Translations$galaxyArchive$en._(_root);
 	@override late final _Translations$galaxyActions$en galaxyActions = _Translations$galaxyActions$en._(_root);
@@ -91,6 +95,58 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: locationPicker
+class _Translations$locationPicker$en extends Translations$locationPicker$ja {
+	_Translations$locationPicker$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get hint => 'Move the map to adjust the pin';
+}
+
+// Path: dateStepper
+class _Translations$dateStepper$en extends Translations$dateStepper$ja {
+	_Translations$dateStepper$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get date => 'Date';
+	@override String get time => 'Time';
+	@override String get backToToday => 'Back to today';
+	@override String get year => 'Year';
+	@override String get month => 'Month';
+	@override String get day => 'Day';
+	@override String get hourDialogTitle => 'Time (0–23)';
+	@override String get hourSuffix => 'h';
+}
+
+// Path: solaraAuth
+class _Translations$solaraAuth$en extends Translations$solaraAuth$ja {
+	_Translations$solaraAuth$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get appleAccount => 'Apple account';
+	@override String get googleAccount => 'Google account';
+	@override String get appleOnlyPlatform => 'Sign in with Apple is only available on iOS / macOS';
+	@override String get appleUnavailable => 'Sign in with Apple isn\'t available on this device';
+	@override String get appleNoUserId => 'Couldn\'t retrieve your Apple user ID';
+	@override String get googleSignInFailed => 'Google sign-in failed';
+}
+
+// Path: philosophy
+class _Translations$philosophy$en extends Translations$philosophy$ja {
+	_Translations$philosophy$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Design Philosophy';
 }
 
 // Path: moonOverlay
@@ -2726,6 +2782,22 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'locationPicker.hint' => 'Move the map to adjust the pin',
+			'dateStepper.date' => 'Date',
+			'dateStepper.time' => 'Time',
+			'dateStepper.backToToday' => 'Back to today',
+			'dateStepper.year' => 'Year',
+			'dateStepper.month' => 'Month',
+			'dateStepper.day' => 'Day',
+			'dateStepper.hourDialogTitle' => 'Time (0–23)',
+			'dateStepper.hourSuffix' => 'h',
+			'solaraAuth.appleAccount' => 'Apple account',
+			'solaraAuth.googleAccount' => 'Google account',
+			'solaraAuth.appleOnlyPlatform' => 'Sign in with Apple is only available on iOS / macOS',
+			'solaraAuth.appleUnavailable' => 'Sign in with Apple isn\'t available on this device',
+			'solaraAuth.appleNoUserId' => 'Couldn\'t retrieve your Apple user ID',
+			'solaraAuth.googleSignInFailed' => 'Google sign-in failed',
+			'philosophy.title' => 'Design Philosophy',
 			'moonOverlay.pressAgainSkip' => 'Press again to start with "No particular theme"',
 			'galaxyArchive.proLabel' => 'Search & filter the archive',
 			'galaxyArchive.proDesc' => 'Filter your completed cycles by name, rarity, and order.\nThe more your records build up, the easier they are to look back on.',
@@ -3222,6 +3294,8 @@ extension on TranslationsEn {
 			'mapDaily.angle.ic' => 'Nadir (IC)',
 			'mapDaily.angleHint.asc' => ({required Object compass}) => 'The time it begins to rise — appearing on the ${compass} horizon',
 			'mapDaily.angleHint.mc' => ({required Object compass}) => 'The time it climbs highest — its peak in the ${compass} sky',
+			_ => null,
+		} ?? switch (path) {
 			'mapDaily.angleHint.dsc' => ({required Object compass}) => 'The time it sets — descending to the ${compass} horizon',
 			'mapDaily.angleHint.ic' => 'The time it passes underground — felt as an inner movement',
 			'mapDaily.zenithBias' => '★ Near zenith',
@@ -3238,8 +3312,6 @@ extension on TranslationsEn {
 			'mapDaily.usage.timeTitle' => '[Reading time and sky direction]',
 			'mapDaily.usage.timeBody' => 'It shows the times today when each planet passes the 4 sky directions (angles)\nin the sky above your chosen reference point:\n\n· ASC (eastern horizon) — the moment a planet rises\n· MC  (overhead = zenith) — the moment a planet passes its highest point\n· DSC (western horizon) — the moment a planet sets\n· IC  (straight below = underground) — the moment a planet is on the far side of the Earth\n\nYou can read guidance on the time to act — "when a love theme moves," "when a turning point at work comes," and so on.',
 			'mapDaily.usage.comboTitle' => '[Combining with the Map score bar]',
-			_ => null,
-		} ?? switch (path) {
 			'mapDaily.usage.comboBody' => 'The strength of the energy in each surface direction\ncan be checked from the Map\'s score bar (16 directions).\nThere\'s a detailed explanation in the i button under the "Total / Overall" label.\n\nCombine the score bar (the strength of surface directions) with\nthis screen (sky direction × time), and Solara works out\nthe best "direction × time" for the future you wish for.',
 			'mapFortune.srcShort.combined' => 'Total',
 			'mapFortune.srcShort.transit' => 'TR',
@@ -3736,6 +3808,8 @@ extension on TranslationsEn {
 			'paywall.period.year' => 'year',
 			'paywall.period.sixMonth' => '6 months',
 			'paywall.period.threeMonth' => '3 months',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.period.twoMonth' => '2 months',
 			'paywall.period.month' => 'month',
 			'paywall.period.week' => 'week',
@@ -3752,8 +3826,6 @@ extension on TranslationsEn {
 			'paywall.autoRenewNotice' => 'Your subscription renews automatically. Unless you cancel auto-renewal at least 24 hours before the end of the current period, it renews at the same price for the next period. You will be charged to your Apple ID / Google account within 24 hours before the period ends. You can manage or cancel auto-renewal anytime in your store account settings.',
 			'paywall.legal.cancelMethod' => 'How to cancel',
 			'paywall.legal.terms' => 'Terms of Service',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.legal.privacy' => 'Privacy Policy',
 			'paywall.legal.sctaNotice' => 'Commercial Transactions Act notice',
 			'paywall.restore' => 'Restore purchases',

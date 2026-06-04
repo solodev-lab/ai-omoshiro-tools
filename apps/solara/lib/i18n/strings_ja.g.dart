@@ -40,6 +40,10 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$locationPicker$ja locationPicker = Translations$locationPicker$ja.internal(_root);
+	late final Translations$dateStepper$ja dateStepper = Translations$dateStepper$ja.internal(_root);
+	late final Translations$solaraAuth$ja solaraAuth = Translations$solaraAuth$ja.internal(_root);
+	late final Translations$philosophy$ja philosophy = Translations$philosophy$ja.internal(_root);
 	late final Translations$moonOverlay$ja moonOverlay = Translations$moonOverlay$ja.internal(_root);
 	late final Translations$galaxyArchive$ja galaxyArchive = Translations$galaxyArchive$ja.internal(_root);
 	late final Translations$galaxyActions$ja galaxyActions = Translations$galaxyActions$ja.internal(_root);
@@ -92,6 +96,90 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: locationPicker
+class Translations$locationPicker$ja {
+	Translations$locationPicker$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '地図を動かしてピン位置調整'
+	String get hint => '地図を動かしてピン位置調整';
+}
+
+// Path: dateStepper
+class Translations$dateStepper$ja {
+	Translations$dateStepper$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '日付'
+	String get date => '日付';
+
+	/// ja: '時刻'
+	String get time => '時刻';
+
+	/// ja: '今日に戻す'
+	String get backToToday => '今日に戻す';
+
+	/// ja: '年'
+	String get year => '年';
+
+	/// ja: '月'
+	String get month => '月';
+
+	/// ja: '日'
+	String get day => '日';
+
+	/// ja: '時刻 (0〜23)'
+	String get hourDialogTitle => '時刻 (0〜23)';
+
+	/// ja: '時'
+	String get hourSuffix => '時';
+}
+
+// Path: solaraAuth
+class Translations$solaraAuth$ja {
+	Translations$solaraAuth$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'Apple アカウント'
+	String get appleAccount => 'Apple アカウント';
+
+	/// ja: 'Google アカウント'
+	String get googleAccount => 'Google アカウント';
+
+	/// ja: 'Sign in with Apple は iOS / macOS でのみご利用いただけます'
+	String get appleOnlyPlatform => 'Sign in with Apple は iOS / macOS でのみご利用いただけます';
+
+	/// ja: 'この端末では Sign in with Apple が利用できません'
+	String get appleUnavailable => 'この端末では Sign in with Apple が利用できません';
+
+	/// ja: 'Apple ユーザー ID を取得できませんでした'
+	String get appleNoUserId => 'Apple ユーザー ID を取得できませんでした';
+
+	/// ja: 'Google サインインに失敗しました'
+	String get googleSignInFailed => 'Google サインインに失敗しました';
+}
+
+// Path: philosophy
+class Translations$philosophy$ja {
+	Translations$philosophy$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '設計思想'
+	String get title => '設計思想';
 }
 
 // Path: moonOverlay
@@ -4914,6 +5002,22 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'locationPicker.hint' => '地図を動かしてピン位置調整',
+			'dateStepper.date' => '日付',
+			'dateStepper.time' => '時刻',
+			'dateStepper.backToToday' => '今日に戻す',
+			'dateStepper.year' => '年',
+			'dateStepper.month' => '月',
+			'dateStepper.day' => '日',
+			'dateStepper.hourDialogTitle' => '時刻 (0〜23)',
+			'dateStepper.hourSuffix' => '時',
+			'solaraAuth.appleAccount' => 'Apple アカウント',
+			'solaraAuth.googleAccount' => 'Google アカウント',
+			'solaraAuth.appleOnlyPlatform' => 'Sign in with Apple は iOS / macOS でのみご利用いただけます',
+			'solaraAuth.appleUnavailable' => 'この端末では Sign in with Apple が利用できません',
+			'solaraAuth.appleNoUserId' => 'Apple ユーザー ID を取得できませんでした',
+			'solaraAuth.googleSignInFailed' => 'Google サインインに失敗しました',
+			'philosophy.title' => '設計思想',
 			'moonOverlay.pressAgainSkip' => 'もう一度押すと「特別決めない」で開始',
 			'galaxyArchive.proLabel' => 'アーカイブの検索・フィルタ',
 			'galaxyArchive.proDesc' => '完成したサイクルを名前・レア度・並び順で絞り込めます。\n記録が積み上がるほど、振り返りやすくなります。',
@@ -5410,6 +5514,8 @@ extension on Translations {
 			'mapDaily.angle.ic' => '天底 (IC)',
 			'mapDaily.angleHint.asc' => ({required Object compass}) => '昇り始める時刻 — ${compass} の地平に現れる',
 			'mapDaily.angleHint.mc' => ({required Object compass}) => '最も高くに上る時刻 — ${compass} の空で頂点',
+			_ => null,
+		} ?? switch (path) {
 			'mapDaily.angleHint.dsc' => ({required Object compass}) => '沈む時刻 — ${compass} の地平に降る',
 			'mapDaily.angleHint.ic' => '地下を通る時刻 — 内的な動きとして効く',
 			'mapDaily.zenithBias' => '★ 天頂寄り',
@@ -5426,8 +5532,6 @@ extension on Translations {
 			'mapDaily.usage.timeTitle' => '【時間と天空方位を読む】',
 			'mapDaily.usage.timeBody' => '今日、各惑星が選択した基準地点の空で\n4 つの天空方位 (アングル) を通る時刻を表示します:\n\n・ASC (東の地平線) — 惑星が昇る瞬間\n・MC  (真上 = 天頂) — 惑星が最高点を通る瞬間\n・DSC (西の地平線) — 惑星が沈む瞬間\n・IC  (真下 = 地下) — 惑星が地球の裏側にある瞬間\n\n「いつ恋愛のテーマが動く」「いつ仕事の節目になる」など、\n行動する時間の指針が読み取れます。',
 			'mapDaily.usage.comboTitle' => '【Map スコアバーと組み合わせる】',
-			_ => null,
-		} ?? switch (path) {
 			'mapDaily.usage.comboBody' => '地表方位ごとのエネルギーの強さは、\nMap のスコアバーから確認できます (16 方位)。\n「合計 / 総合」ラベル下の i ボタンに詳細解説があります。\n\nスコアバー (地表方位の強さ) と\nこの画面 (天空方位 × 時刻) を組み合わせると、\nあなたの望む未来に対する最適な\n「方角 × 時間」を Solara が算出します。',
 			'mapFortune.srcShort.combined' => '合計',
 			'mapFortune.srcShort.transit' => 'TR',
@@ -5924,6 +6028,8 @@ extension on Translations {
 			'paywall.period.year' => '年',
 			'paywall.period.sixMonth' => '6 か月',
 			'paywall.period.threeMonth' => '3 か月',
+			_ => null,
+		} ?? switch (path) {
 			'paywall.period.twoMonth' => '2 か月',
 			'paywall.period.month' => '月',
 			'paywall.period.week' => '週',
@@ -5940,8 +6046,6 @@ extension on Translations {
 			'paywall.autoRenewNotice' => 'サブスクリプションは自動更新されます。期間終了の 24 時間以上前に自動更新を解約しない限り、同じ価格で次の期間に更新されます。料金は期間終了の 24 時間以内に Apple ID / Google アカウントへ請求されます。自動更新の管理や解約は、ご利用ストアのアカウント設定からいつでも行えます。',
 			'paywall.legal.cancelMethod' => '解約方法',
 			'paywall.legal.terms' => '利用規約',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.legal.privacy' => 'プライバシーポリシー',
 			'paywall.legal.sctaNotice' => '特定商取引法に基づく表記',
 			'paywall.restore' => '購入を復元',

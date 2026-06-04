@@ -315,26 +315,26 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
   google-services.json) があれば動く。クライアント ID を渡すと優先される
 ```
 
-**imports:** dart=3 / package=4 / relative=5
+**imports:** dart=3 / package=4 / relative=6
 
-- relative: `app_attest_client.dart`, `consultation_api.dart`, `consultation_credits.dart`, `purchases_service.dart`, `solara_api.dart`
+- relative: `../i18n/strings.g.dart`, `app_attest_client.dart`, `consultation_api.dart`, `consultation_credits.dart`, `purchases_service.dart`, `solara_api.dart`
 
 **型定義 (4):**
 
-- L42 `enum SolaraAuthProvider`
-- L45 `class SolaraAuthAccount`
+- L44 `enum SolaraAuthProvider`
+- L47 `class SolaraAuthAccount`
   - 認証済アカウント情報。
-- L100 `class SolaraAuthException : Exception`
+- L102 `class SolaraAuthException : Exception`
   - 認証エラー (UI が型で分岐できるよう薄い wrapper)。
-- L108 `class SolaraAuth : ChangeNotifier`
+- L110 `class SolaraAuth : ChangeNotifier`
 
 **関数 (9 public + 9 private):**
 
-- L66 `toJson()`
-- L105 `toString()`
-- L136 `consumeSigninGrantCelebration()`
-- L139 `load()` — 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
-- L201 `signInWithApple()` — Apple サインイン (iOS / macOS 推奨)。
+- L68 `toJson()`
+- L107 `toString()`
+- L138 `consumeSigninGrantCelebration()`
+- L141 `load()` — 起動時に 1 度呼ぶ。SharedPreferences から復元 + provider 別の silent restore。
+- L203 `signInWithApple()` — Apple サインイン (iOS / macOS 推奨)。
 - L247 `signInWithGoogle()` — Google サインイン (iOS / Android / macOS / Web)。
 - L266 `signOut()` — 現在のアカウントを取り外す。
 - L299 `deleteAccount()` — アカウント削除 (App Store ガイドライン 5.1.1(v) — Sign in を提供する以上、
@@ -342,7 +342,7 @@ Solara 認証サービス — Phase 2-9 Sign in 統合
 
   <details><summary>private 関数 9 件</summary>
 
-  - L164 `_verifyOrClear()`
+  - L166 `_verifyOrClear()`
   - L335 `_getFreshAppleAuthorizationCode()`
   - L359 `_purgeServerAccountData()`
   - L387 `_ensureGoogleInitialized()`

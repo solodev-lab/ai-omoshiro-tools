@@ -1,4 +1,28 @@
 {
+  "locationPicker": {
+    "hint": "地図を動かしてピン位置調整"
+  },
+  "dateStepper": {
+    "date": "日付",
+    "time": "時刻",
+    "backToToday": "今日に戻す",
+    "year": "年",
+    "month": "月",
+    "day": "日",
+    "hourDialogTitle": "時刻 (0〜23)",
+    "hourSuffix": "時"
+  },
+  "solaraAuth": {
+    "appleAccount": "Apple アカウント",
+    "googleAccount": "Google アカウント",
+    "appleOnlyPlatform": "Sign in with Apple は iOS / macOS でのみご利用いただけます",
+    "appleUnavailable": "この端末では Sign in with Apple が利用できません",
+    "appleNoUserId": "Apple ユーザー ID を取得できませんでした",
+    "googleSignInFailed": "Google サインインに失敗しました"
+  },
+  "philosophy": {
+    "title": "設計思想"
+  },
   "moonOverlay": {
     "pressAgainSkip": "もう一度押すと「特別決めない」で開始"
   },

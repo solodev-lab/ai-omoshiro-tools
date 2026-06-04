@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 7007
+- ファイル数: 27 / 総行数: 7009
 - class/mixin/extension/enum: 78
 - 関数 (top-level + method の素拾い): 181
 - Navigator.push 等: 0
@@ -525,7 +525,7 @@ Daily 未開封チップは `unsealed.webp` を別アセット名で使う (kind
 - 集計: `showInfoPopup`×2
 
 
-### `lib/widgets/location_picker_minimap.dart` (142 行)
+### `lib/widgets/location_picker_minimap.dart` (143 行)
 
 **ファイル先頭コメント:**
 
@@ -539,21 +539,21 @@ LocationPickerMinimap — 中央固定ピン + マップパンで座標選択
 ============================================================
 ```
 
-**imports:** dart=0 / package=3 / relative=1
+**imports:** dart=0 / package=3 / relative=2
 
-- relative: `../screens/map/map_styles.dart`
+- relative: `../i18n/strings.g.dart`, `../screens/map/map_styles.dart`
 
 **型定義 (2):**
 
-- L14 `class LocationPickerMinimap : StatefulWidget`
-- L42 `class _LocationPickerMinimapState : State`
+- L15 `class LocationPickerMinimap : StatefulWidget`
+- L43 `class _LocationPickerMinimapState : State`
 
 **関数 (4 public + 0 private):**
 
-- L39 `createState()`
-- L46 `initState()`
-- L52 `didUpdateWidget()`
-- L66 `build()`
+- L40 `createState()`
+- L47 `initState()`
+- L53 `didUpdateWidget()`
+- L67 `build()`
 
 
 ### `lib/widgets/memo_text_field.dart` (181 行)
@@ -670,20 +670,20 @@ Re-export split overlay files for backward compatibility
 - L217 `shouldRepaint()`
 
 
-### `lib/widgets/no_profile_guide.dart` (56 行)
+### `lib/widgets/no_profile_guide.dart` (57 行)
 
-**imports:** dart=0 / package=1 / relative=1
+**imports:** dart=0 / package=1 / relative=2
 
-- relative: `../screens/horoscope/horo_antique_icons.dart`
+- relative: `../i18n/strings.g.dart`, `../screens/horoscope/horo_antique_icons.dart`
 
 **型定義 (1):**
 
-- L14 `class NoProfileGuide : StatelessWidget`
+- L15 `class NoProfileGuide : StatelessWidget`
   - プロフィール未設定時の案内カード (Forecast / Locations 共通)。
 
 **関数 (1 public + 0 private):**
 
-- L20 `build()`
+- L21 `build()`
 
 
 ### `lib/widgets/pro_unlock_dialog.dart` (212 行)

@@ -10,6 +10,7 @@
 // ============================================================
 import 'package:flutter/material.dart';
 
+import '../i18n/strings.g.dart';
 import '../theme/solara_colors.dart';
 import '../utils/solara_manifesto.dart';
 import '../widgets/glass_panel.dart';
@@ -74,10 +75,10 @@ class _Hero extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        const Text(
-          '設計思想',
+        Text(
+          t.philosophy.title,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: SolaraColors.solaraGoldLight,
             fontSize: 18,
             letterSpacing: 6.0,

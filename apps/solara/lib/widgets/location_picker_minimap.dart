@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../i18n/strings.g.dart';
 import '../screens/map/map_styles.dart';
 
 class LocationPickerMinimap extends StatefulWidget {
@@ -122,9 +123,9 @@ class _LocationPickerMinimapState extends State<LocationPickerMinimap> {
                     color: const Color(0xCC0A0A14),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                    '地図を動かしてピン位置調整',
-                    style: TextStyle(
+                  child: Text(
+                    t.locationPicker.hint,
+                    style: const TextStyle(
                       fontSize: 15,
                       color: Color(0xFFE8E0D0),
                       fontWeight: FontWeight.w500,

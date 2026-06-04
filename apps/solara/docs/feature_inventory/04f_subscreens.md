@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11051
+- ファイル数: 32 / 総行数: 11054
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 286
 - Navigator.push 等: 0
@@ -994,36 +994,38 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×2
 
 
-### `lib/screens/locations/locations_date_stepper.dart` (355 行)
+### `lib/screens/locations/locations_date_stepper.dart` (357 行)
 
-**imports:** dart=0 / package=2 / relative=0
+**imports:** dart=0 / package=2 / relative=1
+
+- relative: `../../i18n/strings.g.dart`
 
 **型定義 (3):**
 
-- L9 `class LocationsDateStepper : StatelessWidget`
+- L11 `class LocationsDateStepper : StatelessWidget`
   - Locations 画面の日付ステッパー（年▲▼ 月▲▼ 日▲▼ + 「今日」リセット）。
-- L261 `class _DateNumberField : StatefulWidget`
+- L263 `class _DateNumberField : StatefulWidget`
   - 数値を直接タイプして編集できるフィールド（年/月/日 共通）。
-- L278 `class _DateNumberFieldState : State`
+- L280 `class _DateNumberFieldState : State`
 
 **関数 (6 public + 7 private):**
 
-- L53 `build()`
-- L275 `createState()`
-- L283 `initState()`
-- L291 `didUpdateWidget()`
-- L315 `dispose()`
-- L323 `build()`
+- L55 `build()`
+- L277 `createState()`
+- L285 `initState()`
+- L293 `didUpdateWidget()`
+- L317 `dispose()`
+- L325 `build()`
 
   <details><summary>private 関数 7 件</summary>
 
-  - L133 `_hourStepperBlock()`
-  - L160 `_editHour()`
-  - L196 `_pickerBlock()`
-  - L227 `_dayArrowBlock()`
-  - L242 `_arrowBtn()`
-  - L299 `_onFocusChange()`
-  - L303 `_commit()`
+  - L135 `_hourStepperBlock()`
+  - L162 `_editHour()`
+  - L198 `_pickerBlock()`
+  - L229 `_dayArrowBlock()`
+  - L244 `_arrowBtn()`
+  - L301 `_onFocusChange()`
+  - L305 `_commit()`
 
   </details>
 
@@ -1243,7 +1245,7 @@ Paywall Screen — Hero / 課金トグル / Free・Pro 2 カード (Suno 風 cor
   </details>
 
 
-### `lib/screens/solara_philosophy_screen.dart` (159 行)
+### `lib/screens/solara_philosophy_screen.dart` (160 行)
 
 **ファイル先頭コメント:**
 
@@ -1260,21 +1262,21 @@ E5: 流派ガイドページの最初の章として、Solaraの設計思想
 ============================================================
 ```
 
-**imports:** dart=0 / package=1 / relative=3
+**imports:** dart=0 / package=1 / relative=4
 
-- relative: `../theme/solara_colors.dart`, `../utils/solara_manifesto.dart`, `../widgets/glass_panel.dart`
+- relative: `../i18n/strings.g.dart`, `../theme/solara_colors.dart`, `../utils/solara_manifesto.dart`, `../widgets/glass_panel.dart`
 
 **型定義 (4):**
 
-- L17 `class SolaraPhilosophyScreen : StatelessWidget`
-- L61 `class _Hero : StatelessWidget`
-- L102 `class _SectionCard : StatelessWidget`
-- L143 `class _Footer : StatelessWidget`
+- L18 `class SolaraPhilosophyScreen : StatelessWidget`
+- L62 `class _Hero : StatelessWidget`
+- L103 `class _SectionCard : StatelessWidget`
+- L144 `class _Footer : StatelessWidget`
 
 **関数 (4 public + 0 private):**
 
-- L21 `build()`
-- L65 `build()`
-- L107 `build()`
-- L147 `build()`
+- L22 `build()`
+- L66 `build()`
+- L108 `build()`
+- L148 `build()`
 
