@@ -40,6 +40,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$consultShare$ja consultShare = Translations$consultShare$ja.internal(_root);
 	late final Translations$locationPicker$ja locationPicker = Translations$locationPicker$ja.internal(_root);
 	late final Translations$dateStepper$ja dateStepper = Translations$dateStepper$ja.internal(_root);
 	late final Translations$solaraAuth$ja solaraAuth = Translations$solaraAuth$ja.internal(_root);
@@ -96,6 +97,36 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: consultShare
+class Translations$consultShare$ja {
+	Translations$consultShare$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '— Solara · Stella による相談 —'
+	String get header => '— Solara · Stella による相談 —';
+
+	/// ja: 'テーマ: $theme / 場面: $mode / 範囲: $scope'
+	String metaLine({required Object theme, required Object mode, required Object scope}) => 'テーマ: ${theme} / 場面: ${mode} / 範囲: ${scope}';
+
+	/// ja: 'だれと: $v'
+	String withWhom({required Object v}) => 'だれと: ${v}';
+
+	/// ja: '願い: $v'
+	String wish({required Object v}) => '願い: ${v}';
+
+	/// ja: 'Solara で「$theme」について Stella に相談しました。'
+	String captionIntro({required Object theme}) => 'Solara で「${theme}」について Stella に相談しました。';
+
+	/// ja: '候補: $names'
+	String candidates({required Object names}) => '候補: ${names}';
+
+	late final Translations$consultShare$mode$ja mode = Translations$consultShare$mode$ja.internal(_root);
+	late final Translations$consultShare$scope$ja scope = Translations$consultShare$scope$ja.internal(_root);
 }
 
 // Path: locationPicker
@@ -2636,6 +2667,51 @@ class Translations$aiConsent$ja {
 	late final Translations$aiConsent$consentHandling$ja consentHandling = Translations$aiConsent$consentHandling$ja.internal(_root);
 }
 
+// Path: consultShare.mode
+class Translations$consultShare$mode$ja {
+	Translations$consultShare$mode$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '移住'
+	String get migration => '移住';
+
+	/// ja: '旅行'
+	String get travel => '旅行';
+
+	/// ja: 'おでかけ・イベント'
+	String get daily => 'おでかけ・イベント';
+}
+
+// Path: consultShare.scope
+class Translations$consultShare$scope$ja {
+	Translations$consultShare$scope$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '具体地点'
+	String get point => '具体地点';
+
+	/// ja: '方角別'
+	String get bearing => '方角別';
+
+	/// ja: '現住所から半径'
+	String get radius => '現住所から半径';
+
+	/// ja: '範囲指定'
+	String get region => '範囲指定';
+
+	/// ja: '自国内'
+	String get country => '自国内';
+
+	/// ja: '世界全体'
+	String get world => '世界全体';
+}
+
 // Path: aiReport.reasons
 class Translations$aiReport$reasons$ja {
 	Translations$aiReport$reasons$ja.internal(this._root);
@@ -5002,6 +5078,21 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'consultShare.header' => '— Solara · Stella による相談 —',
+			'consultShare.metaLine' => ({required Object theme, required Object mode, required Object scope}) => 'テーマ: ${theme} / 場面: ${mode} / 範囲: ${scope}',
+			'consultShare.withWhom' => ({required Object v}) => 'だれと: ${v}',
+			'consultShare.wish' => ({required Object v}) => '願い: ${v}',
+			'consultShare.captionIntro' => ({required Object theme}) => 'Solara で「${theme}」について Stella に相談しました。',
+			'consultShare.candidates' => ({required Object names}) => '候補: ${names}',
+			'consultShare.mode.migration' => '移住',
+			'consultShare.mode.travel' => '旅行',
+			'consultShare.mode.daily' => 'おでかけ・イベント',
+			'consultShare.scope.point' => '具体地点',
+			'consultShare.scope.bearing' => '方角別',
+			'consultShare.scope.radius' => '現住所から半径',
+			'consultShare.scope.region' => '範囲指定',
+			'consultShare.scope.country' => '自国内',
+			'consultShare.scope.world' => '世界全体',
 			'locationPicker.hint' => '地図を動かしてピン位置調整',
 			'dateStepper.date' => '日付',
 			'dateStepper.time' => '時刻',
@@ -5499,6 +5590,8 @@ extension on Translations {
 			'mapDaily.subLabelInner' => '内向きの相',
 			'mapDaily.subLabelMixed' => '外向き＋内向きの相が混在',
 			'mapDaily.recommendedActions' => 'おすすめ行動の例（参考）',
+			_ => null,
+		} ?? switch (path) {
 			'mapDaily.otherActionsNote' => '※ 他の行動も、この例を参考に自由に考えてみてください',
 			'mapDaily.loading' => '惑星の動きを読み取っています',
 			'mapDaily.failed' => 'データの取得に失敗しました',
@@ -5514,8 +5607,6 @@ extension on Translations {
 			'mapDaily.angle.ic' => '天底 (IC)',
 			'mapDaily.angleHint.asc' => ({required Object compass}) => '昇り始める時刻 — ${compass} の地平に現れる',
 			'mapDaily.angleHint.mc' => ({required Object compass}) => '最も高くに上る時刻 — ${compass} の空で頂点',
-			_ => null,
-		} ?? switch (path) {
 			'mapDaily.angleHint.dsc' => ({required Object compass}) => '沈む時刻 — ${compass} の地平に降る',
 			'mapDaily.angleHint.ic' => '地下を通る時刻 — 内的な動きとして効く',
 			'mapDaily.zenithBias' => '★ 天頂寄り',
@@ -6013,6 +6104,8 @@ extension on Translations {
 			'locations.bearing' => ({required Object dir}) => '${dir}方位',
 			'locations.emptyTitle' => '登録された拠点はまだありません',
 			'locations.addCurrent' => '📍 現在地を登録',
+			_ => null,
+		} ?? switch (path) {
 			'locations.menuRename' => '✏ 名称変更',
 			'locations.menuDelete' => '🗑 削除',
 			'locations.guide.title' => 'LOCATIONS の使い方',
@@ -6028,8 +6121,6 @@ extension on Translations {
 			'paywall.period.year' => '年',
 			'paywall.period.sixMonth' => '6 か月',
 			'paywall.period.threeMonth' => '3 か月',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.period.twoMonth' => '2 か月',
 			'paywall.period.month' => '月',
 			'paywall.period.week' => '週',

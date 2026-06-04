@@ -1,4 +1,14 @@
 {
+  "consultShare": {
+    "header": "— A consultation with Stella · Solara —",
+    "metaLine": "Theme: $theme / Setting: $mode / Scope: $scope",
+    "withWhom": "With whom: $v",
+    "wish": "Wish: $v",
+    "captionIntro": "I asked Stella about \"$theme\" on Solara.",
+    "candidates": "Candidates: $names",
+    "mode": { "migration": "Migration", "travel": "Travel", "daily": "Outings & events" },
+    "scope": { "point": "Specific place", "bearing": "By direction", "radius": "Radius from home", "region": "Selected area", "country": "Within my country", "world": "Worldwide" }
+  },
   "locationPicker": {
     "hint": "Move the map to adjust the pin"
   },

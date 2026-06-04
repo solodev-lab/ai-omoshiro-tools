@@ -1,4 +1,14 @@
 {
+  "consultShare": {
+    "header": "— Solara · Stella による相談 —",
+    "metaLine": "テーマ: $theme / 場面: $mode / 範囲: $scope",
+    "withWhom": "だれと: $v",
+    "wish": "願い: $v",
+    "captionIntro": "Solara で「$theme」について Stella に相談しました。",
+    "candidates": "候補: $names",
+    "mode": { "migration": "移住", "travel": "旅行", "daily": "おでかけ・イベント" },
+    "scope": { "point": "具体地点", "bearing": "方角別", "radius": "現住所から半径", "region": "範囲指定", "country": "自国内", "world": "世界全体" }
+  },
   "locationPicker": {
     "hint": "地図を動かしてピン位置調整"
   },

@@ -39,6 +39,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$consultShare$en consultShare = _Translations$consultShare$en._(_root);
 	@override late final _Translations$locationPicker$en locationPicker = _Translations$locationPicker$en._(_root);
 	@override late final _Translations$dateStepper$en dateStepper = _Translations$dateStepper$en._(_root);
 	@override late final _Translations$solaraAuth$en solaraAuth = _Translations$solaraAuth$en._(_root);
@@ -95,6 +96,23 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: consultShare
+class _Translations$consultShare$en extends Translations$consultShare$ja {
+	_Translations$consultShare$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get header => '— A consultation with Stella · Solara —';
+	@override String metaLine({required Object theme, required Object mode, required Object scope}) => 'Theme: ${theme} / Setting: ${mode} / Scope: ${scope}';
+	@override String withWhom({required Object v}) => 'With whom: ${v}';
+	@override String wish({required Object v}) => 'Wish: ${v}';
+	@override String captionIntro({required Object theme}) => 'I asked Stella about "${theme}" on Solara.';
+	@override String candidates({required Object names}) => 'Candidates: ${names}';
+	@override late final _Translations$consultShare$mode$en mode = _Translations$consultShare$mode$en._(_root);
+	@override late final _Translations$consultShare$scope$en scope = _Translations$consultShare$scope$en._(_root);
 }
 
 // Path: locationPicker
@@ -1337,6 +1355,33 @@ class _Translations$aiConsent$en extends Translations$aiConsent$ja {
 	@override late final _Translations$aiConsent$geminiContent$en geminiContent = _Translations$aiConsent$geminiContent$en._(_root);
 	@override late final _Translations$aiConsent$decisions$en decisions = _Translations$aiConsent$decisions$en._(_root);
 	@override late final _Translations$aiConsent$consentHandling$en consentHandling = _Translations$aiConsent$consentHandling$en._(_root);
+}
+
+// Path: consultShare.mode
+class _Translations$consultShare$mode$en extends Translations$consultShare$mode$ja {
+	_Translations$consultShare$mode$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get migration => 'Migration';
+	@override String get travel => 'Travel';
+	@override String get daily => 'Outings & events';
+}
+
+// Path: consultShare.scope
+class _Translations$consultShare$scope$en extends Translations$consultShare$scope$ja {
+	_Translations$consultShare$scope$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get point => 'Specific place';
+	@override String get bearing => 'By direction';
+	@override String get radius => 'Radius from home';
+	@override String get region => 'Selected area';
+	@override String get country => 'Within my country';
+	@override String get world => 'Worldwide';
 }
 
 // Path: aiReport.reasons
@@ -2782,6 +2827,21 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'consultShare.header' => '— A consultation with Stella · Solara —',
+			'consultShare.metaLine' => ({required Object theme, required Object mode, required Object scope}) => 'Theme: ${theme} / Setting: ${mode} / Scope: ${scope}',
+			'consultShare.withWhom' => ({required Object v}) => 'With whom: ${v}',
+			'consultShare.wish' => ({required Object v}) => 'Wish: ${v}',
+			'consultShare.captionIntro' => ({required Object theme}) => 'I asked Stella about "${theme}" on Solara.',
+			'consultShare.candidates' => ({required Object names}) => 'Candidates: ${names}',
+			'consultShare.mode.migration' => 'Migration',
+			'consultShare.mode.travel' => 'Travel',
+			'consultShare.mode.daily' => 'Outings & events',
+			'consultShare.scope.point' => 'Specific place',
+			'consultShare.scope.bearing' => 'By direction',
+			'consultShare.scope.radius' => 'Radius from home',
+			'consultShare.scope.region' => 'Selected area',
+			'consultShare.scope.country' => 'Within my country',
+			'consultShare.scope.world' => 'Worldwide',
 			'locationPicker.hint' => 'Move the map to adjust the pin',
 			'dateStepper.date' => 'Date',
 			'dateStepper.time' => 'Time',
@@ -3279,6 +3339,8 @@ extension on TranslationsEn {
 			'mapDaily.subLabelInner' => 'Inward phase',
 			'mapDaily.subLabelMixed' => 'Outward + inward phases mixed',
 			'mapDaily.recommendedActions' => 'Example actions (for reference)',
+			_ => null,
+		} ?? switch (path) {
 			'mapDaily.otherActionsNote' => '* Feel free to think up other actions too, using these as a guide',
 			'mapDaily.loading' => 'Reading the planets\' motion',
 			'mapDaily.failed' => 'Couldn\'t fetch the data',
@@ -3294,8 +3356,6 @@ extension on TranslationsEn {
 			'mapDaily.angle.ic' => 'Nadir (IC)',
 			'mapDaily.angleHint.asc' => ({required Object compass}) => 'The time it begins to rise — appearing on the ${compass} horizon',
 			'mapDaily.angleHint.mc' => ({required Object compass}) => 'The time it climbs highest — its peak in the ${compass} sky',
-			_ => null,
-		} ?? switch (path) {
 			'mapDaily.angleHint.dsc' => ({required Object compass}) => 'The time it sets — descending to the ${compass} horizon',
 			'mapDaily.angleHint.ic' => 'The time it passes underground — felt as an inner movement',
 			'mapDaily.zenithBias' => '★ Near zenith',
@@ -3793,6 +3853,8 @@ extension on TranslationsEn {
 			'locations.bearing' => ({required Object dir}) => '${dir}',
 			'locations.emptyTitle' => 'No places saved yet',
 			'locations.addCurrent' => '📍 Save current location',
+			_ => null,
+		} ?? switch (path) {
 			'locations.menuRename' => '✏ Rename',
 			'locations.menuDelete' => '🗑 Delete',
 			'locations.guide.title' => 'How to use LOCATIONS',
@@ -3808,8 +3870,6 @@ extension on TranslationsEn {
 			'paywall.period.year' => 'year',
 			'paywall.period.sixMonth' => '6 months',
 			'paywall.period.threeMonth' => '3 months',
-			_ => null,
-		} ?? switch (path) {
 			'paywall.period.twoMonth' => '2 months',
 			'paywall.period.month' => 'month',
 			'paywall.period.week' => 'week',

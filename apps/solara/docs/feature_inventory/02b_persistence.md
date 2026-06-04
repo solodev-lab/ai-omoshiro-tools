@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 9 / 総行数: 2928
+- ファイル数: 9 / 総行数: 2919
 - class/mixin/extension/enum: 15
-- 関数 (top-level + method の素拾い): 141
+- 関数 (top-level + method の素拾い): 142
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 0
 - Worker URL リテラル: 0
@@ -106,7 +106,7 @@ Worker 側仕様: apps/solara/worker/src/index.js
   </details>
 
 
-### `lib/utils/consultation_share.dart` (156 行)
+### `lib/utils/consultation_share.dart` (147 行)
 
 **ファイル先頭コメント:**
 
@@ -122,15 +122,21 @@ Consultation Share — シェアエクスポート (V2: 全要素統合)
 シェアは Pro 限定 (結果画面側で Pro ゲート)。
 ```
 
-**imports:** dart=2 / package=4 / relative=2
+**imports:** dart=2 / package=4 / relative=4
 
-- relative: `consultation_record.dart`, `consultation_v2_api.dart`
+- relative: `../i18n/strings.g.dart`, `consultation_record.dart`, `consultation_v2_api.dart`, `solara_i18n.dart`
 
-**関数 (3 public + 0 private):**
+**関数 (3 public + 1 private):**
 
-- L49 `formatConsultationAsText()` — 相談結果を plain text に整形する。
-- L110 `shareConsultationImage()` — RepaintBoundary を PNG 化して OS 標準シェアシートで共有する。
-- L141 `formatConsultationCaption()` — シェア用のキャプション短縮版 (画像と一緒に添える text)。
+- L37 `formatConsultationAsText()` — 相談結果を plain text に整形する。
+- L101 `shareConsultationImage()` — RepaintBoundary を PNG 化して OS 標準シェアシートで共有する。
+- L132 `formatConsultationCaption()` — シェア用のキャプション短縮版 (画像と一緒に添える text)。
+
+  <details><summary>private 関数 1 件</summary>
+
+  - L31 `_label()`
+
+  </details>
 
 
 ### `lib/utils/forecast_cache.dart` (413 行)
