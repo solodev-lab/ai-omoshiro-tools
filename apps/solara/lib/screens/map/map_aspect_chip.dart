@@ -56,7 +56,8 @@ class MapAspectChip extends StatelessWidget {
     final color = _color();
     final symbol = _aspectSymbol(aspect.type);
     final natalSym = planetMeta[aspect.natalPlanet]?.sym ?? '';
-    final natalJP = planetMeta[aspect.natalPlanet]?.jp ?? aspect.natalPlanet;
+    // ロケール別の惑星名 (en→英語 / ja→漢字)。チップに natal 名を出す。
+    final natalNm = planetName(aspect.natalPlanet);
 
     return GestureDetector(
       onTap: () => _showDetail(context),
@@ -77,7 +78,7 @@ class MapAspectChip extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              'natal $natalSym$natalJP',
+              'natal $natalSym$natalNm',
               style: TextStyle(
                 fontSize: 13,
                 color: color,
@@ -127,7 +128,7 @@ class MapAspectChip extends StatelessWidget {
                 style: TextStyle(fontSize: 20, color: transitMeta?.color)),
             const SizedBox(width: 6),
             Flexible(
-              child: Text(transitMeta?.jp ?? transitPlanet,
+              child: Text(planetName(transitPlanet),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -147,7 +148,7 @@ class MapAspectChip extends StatelessWidget {
                 style: TextStyle(fontSize: 20, color: natalMeta?.color)),
             const SizedBox(width: 6),
             Flexible(
-              child: Text(natalMeta?.jp ?? aspect.natalPlanet,
+              child: Text(planetName(aspect.natalPlanet),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

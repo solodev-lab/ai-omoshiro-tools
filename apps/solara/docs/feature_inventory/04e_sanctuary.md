@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 11 / 総行数: 5943
+- ファイル数: 11 / 総行数: 5948
 - class/mixin/extension/enum: 29
 - 関数 (top-level + method の素拾い): 129
 - Navigator.push 等: 0
@@ -230,7 +230,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   </details>
 
 
-### `lib/screens/sanctuary/sanctuary_title_diagnosis.dart` (1408 行)
+### `lib/screens/sanctuary/sanctuary_title_diagnosis.dart` (1410 行)
 
 **imports:** dart=1 / package=3 / relative=8
 
@@ -262,12 +262,12 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L679 `_buildIntro()`
   - L881 `_showHowItWorks()`
   - L889 `_buildRound()`
-  - L963 `_buildPartTrans()`
-  - L1066 `_buildForging()`
-  - L1191 `_toggleShadowSide()`
-  - L1202 `_buildReveal()`
-  - L1260 `_buildRevealLightSide()`
-  - L1347 `_buildRevealShadowSide()`
+  - L965 `_buildPartTrans()`
+  - L1068 `_buildForging()`
+  - L1193 `_toggleShadowSide()`
+  - L1204 `_buildReveal()`
+  - L1262 `_buildRevealLightSide()`
+  - L1349 `_buildRevealShadowSide()`
 
   </details>
 
@@ -362,7 +362,7 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/sanctuary_screen.dart` (1720 行)
+### `lib/screens/sanctuary_screen.dart` (1723 行)
 
 **imports:** dart=1 / package=3 / relative=28
 
@@ -372,11 +372,11 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 
 - L36 `class SanctuaryScreen : StatefulWidget`
 - L43 `class _SanctuaryScreenState : State`
-- L1535 `extension _WidgetOpacity : Widget`
-- L1544 `class _SettingsGroup : StatelessWidget`
-- L1577 `class _SettingsItem : StatelessWidget`
-- L1629 `class _NotificationToggleItem : StatefulWidget`
-- L1637 `class _NotificationToggleItemState : State`
+- L1538 `extension _WidgetOpacity : Widget`
+- L1547 `class _SettingsGroup : StatelessWidget`
+- L1580 `class _SettingsItem : StatelessWidget`
+- L1632 `class _NotificationToggleItem : StatefulWidget`
+- L1640 `class _NotificationToggleItemState : State`
 
 **関数 (10 public + 35 private):**
 
@@ -384,12 +384,12 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
 - L85 `initState()`
 - L98 `dispose()`
 - L474 `build()`
-- L1536 `withOpacity()`
-- L1550 `build()`
-- L1585 `build()`
-- L1633 `createState()`
-- L1642 `initState()`
-- L1678 `build()`
+- L1539 `withOpacity()`
+- L1553 `build()`
+- L1588 `build()`
+- L1636 `createState()`
+- L1645 `initState()`
+- L1681 `build()`
 
   <details><summary>private 関数 35 件</summary>
 
@@ -404,30 +404,30 @@ Solara Sanctuary 法務リンクメニュー (Phase 2 launch_checklist)
   - L294 `_showRediagnoseProGuide()`
   - L439 `_openHomeEditor()`
   - L456 `_syncHomeToVP()`
-  - L552 `_buildTopHeader()`
-  - L608 `_buildCreditRow()`
-  - L671 `_buildProfileOrb()`
-  - L734 `_buildProfileRow()`
-  - L766 `_buildStellarProfileSection()`
-  - L791 `_buildTitleDiagnosisSection()`
-  - L960 `_buildTitleFlipCard()`
-  - L1006 `_buildLegacyVCard()`
-  - L1033 `_buildTitleVCard()`
-  - L1099 `_buildRecordsSection()`
-  - L1135 `_buildCosmicProSection()`
-  - L1158 `_buildProUpgradeBanner()`
-  - L1221 `_buildProActiveBanner()`
-  - L1292 `_buildRestoreRow()`
-  - L1316 `_openPaywall()`
-  - L1325 `_restorePurchases()`
-  - L1349 `_buildAstrologySection()`
-  - L1379 `_buildHouseOption()`
-  - L1412 `_orbSummary()`
-  - L1425 `_openOrbOverlay()`
-  - L1441 `_buildAppSection()`
-  - L1486 `_pickDailyResetHour()`
-  - L1647 `_load()`
-  - L1652 `_toggle()`
+  - L555 `_buildTopHeader()`
+  - L611 `_buildCreditRow()`
+  - L674 `_buildProfileOrb()`
+  - L737 `_buildProfileRow()`
+  - L769 `_buildStellarProfileSection()`
+  - L794 `_buildTitleDiagnosisSection()`
+  - L963 `_buildTitleFlipCard()`
+  - L1009 `_buildLegacyVCard()`
+  - L1036 `_buildTitleVCard()`
+  - L1102 `_buildRecordsSection()`
+  - L1138 `_buildCosmicProSection()`
+  - L1161 `_buildProUpgradeBanner()`
+  - L1224 `_buildProActiveBanner()`
+  - L1295 `_buildRestoreRow()`
+  - L1319 `_openPaywall()`
+  - L1328 `_restorePurchases()`
+  - L1352 `_buildAstrologySection()`
+  - L1382 `_buildHouseOption()`
+  - L1415 `_orbSummary()`
+  - L1428 `_openOrbOverlay()`
+  - L1444 `_buildAppSection()`
+  - L1489 `_pickDailyResetHour()`
+  - L1650 `_load()`
+  - L1655 `_toggle()`
 
   </details>
 

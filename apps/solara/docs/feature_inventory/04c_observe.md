@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 12 / 総行数: 3580
+- ファイル数: 12 / 総行数: 3585
 - class/mixin/extension/enum: 25
 - 関数 (top-level + method の素拾い): 82
 - Navigator.push 等: 0
@@ -14,25 +14,25 @@
 
 ## ファイル別
 
-### `lib/screens/observe/observe_card_widgets.dart` (204 行)
+### `lib/screens/observe/observe_card_widgets.dart` (209 行)
 
-**imports:** dart=1 / package=1 / relative=3
+**imports:** dart=1 / package=1 / relative=4
 
-- relative: `../../i18n/strings.g.dart`, `../../models/tarot_card.dart`, `observe_constants.dart`
+- relative: `../../i18n/strings.g.dart`, `../../models/tarot_card.dart`, `../../utils/solara_i18n.dart`, `observe_constants.dart`
 
 **型定義 (4):**
 
-- L11 `class Observe3DCard : StatelessWidget`
-- L48 `class ObserveCardBack : StatelessWidget`
-- L111 `class ObserveCardFront : StatelessWidget`
-- L143 `class ObserveCardInfo : StatelessWidget`
+- L12 `class Observe3DCard : StatelessWidget`
+- L49 `class ObserveCardBack : StatelessWidget`
+- L112 `class ObserveCardFront : StatelessWidget`
+- L144 `class ObserveCardInfo : StatelessWidget`
 
 **関数 (4 public + 0 private):**
 
-- L24 `build()`
-- L52 `build()`
-- L117 `build()`
-- L149 `build()`
+- L25 `build()`
+- L53 `build()`
+- L118 `build()`
+- L150 `build()`
 
 
 ### `lib/screens/observe/observe_category_selector.dart` (203 行)
@@ -160,7 +160,7 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
   </details>
 
 
-### `lib/screens/observe/observe_history_past.dart` (312 行)
+### `lib/screens/observe/observe_history_past.dart` (310 行)
 
 **ファイル先頭コメント:**
 
@@ -197,9 +197,9 @@ Natal Tarot 履歴フィルタ — C3 (Pro 機能、柱 3)
   <details><summary>private 関数 4 件</summary>
 
   - L67 `_buildCycleCard()`
-  - L146 `_buildReadingsList()`
-  - L173 `_buildReadingRow()`
-  - L243 `_buildReadingDetail()`
+  - L144 `_buildReadingsList()`
+  - L171 `_buildReadingRow()`
+  - L241 `_buildReadingDetail()`
 
   </details>
 
@@ -342,7 +342,7 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/observe_screen.dart` (769 行)
+### `lib/screens/observe_screen.dart` (771 行)
 
 **imports:** dart=2 / package=1 / relative=20
 
@@ -360,7 +360,7 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
 - L139 `initState()`
 - L164 `restoreState()` — 復元: HISTORY タブ + サブタブ (現在/過去サイクル) を再現する。
 - L175 `dispose()`
-- L447 `build()`
+- L448 `build()`
 
   <details><summary>private 関数 18 件</summary>
 
@@ -373,15 +373,15 @@ showInfoPopup 経由 (popup 統一規約)。呼出側は returned bool で proce
   - L225 `_loadHistory()`
   - L230 `_drawCard()`
   - L308 `_fetchReading()`
-  - L413 `_retryReading()`
-  - L422 `_handleTarotCreditExhausted()`
-  - L432 `_startTypewriter()`
-  - L473 `_buildInnerTabs()`
-  - L487 `_innerTabBtn()`
-  - L508 `_buildDrawPanel()`
-  - L584 `_buildLoadingIndicator()`
-  - L661 `_buildReadingError()`
-  - L716 `_buildReadingPanel()`
+  - L414 `_retryReading()`
+  - L423 `_handleTarotCreditExhausted()`
+  - L433 `_startTypewriter()`
+  - L474 `_buildInnerTabs()`
+  - L488 `_innerTabBtn()`
+  - L509 `_buildDrawPanel()`
+  - L585 `_buildLoadingIndicator()`
+  - L662 `_buildReadingError()`
+  - L717 `_buildReadingPanel()`
 
   </details>
 

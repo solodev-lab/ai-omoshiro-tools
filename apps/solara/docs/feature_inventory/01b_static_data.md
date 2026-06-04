@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 6022
+- ファイル数: 15 / 総行数: 6024
 - class/mixin/extension/enum: 20
 - 関数 (top-level + method の素拾い): 56
 - Navigator.push 等: 0
@@ -339,7 +339,7 @@ Worker (consultation_engine.js runConsultationPipeline) の契約に対応する
   </details>
 
 
-### `lib/utils/fortune_api.dart` (314 行)
+### `lib/utils/fortune_api.dart` (316 行)
 
 **ファイル先頭コメント:**
 

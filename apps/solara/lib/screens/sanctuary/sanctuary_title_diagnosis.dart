@@ -915,11 +915,13 @@ class _SanctuaryTitleDiagnosisPageState extends State<SanctuaryTitleDiagnosisPag
               Text(r['qen'] as String, style: const TextStyle(fontSize: 15, color: Color(0x80ACACAC)), textAlign: TextAlign.center),
             ],
             const SizedBox(height: 28),
-            // 横幅を活かしてカードを大きく表示。列数: 4枚=2列 / 3・6枚=3列。
-            // カード幅は利用可能幅(constraints.maxWidth)から算出。6枚は2行になり縦にも伸びる。
+            // 列数は最大 2 (横 3 枚だと小さく見えにくいため)。Wrap +
+            // WrapAlignment.center により 3枚=上段2/下段1(中央)、4枚=2x2、6枚=2x3
+            // に並ぶ。カード幅は利用可能幅(constraints.maxWidth)から算出 (2:3 縦長)。
+            // 縦に伸びる分は親の SingleChildScrollView でスクロールできる。
             LayoutBuilder(builder: (ctx, constraints) {
               const spacing = 12.0;
-              final cols = cards.length == 4 ? 2 : 3;
+              final cols = cards.length == 1 ? 1 : 2;
               final cardW =
                   ((constraints.maxWidth - spacing * (cols - 1)) / cols)
                       .clamp(96.0, 240.0);

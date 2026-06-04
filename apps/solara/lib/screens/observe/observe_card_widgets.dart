@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../i18n/strings.g.dart';
 import '../../models/tarot_card.dart';
+import '../../utils/solara_i18n.dart' show isEnLocale;
 import 'observe_constants.dart';
 
 // ══════════════════════════════════════════════════
@@ -159,16 +160,19 @@ class ObserveCardInfo extends StatelessWidget {
         style: const TextStyle(fontSize: 11, color: Color(0xFFAAAAAA), letterSpacing: 1.5),
       ),
       const SizedBox(height: 6),
-      // Card name EN
-      Text(card.displayName,
-          style: const TextStyle(fontSize: 14, color: Color(0xFFC9A84C), letterSpacing: 2, fontWeight: FontWeight.w600),
-          textAlign: TextAlign.center),
-      const SizedBox(height: 2),
-      // Card name JP + 正逆位置
+      // JP モードのみ: 英語名 (displayName) を金ラベルで上に添える。EN モードでは
+      // 下の localName が既に英語名なので、重複を避けて省く。
+      if (!isEnLocale()) ...[
+        Text(card.displayName,
+            style: const TextStyle(fontSize: 14, color: Color(0xFFC9A84C), letterSpacing: 2, fontWeight: FontWeight.w600),
+            textAlign: TextAlign.center),
+        const SizedBox(height: 2),
+      ],
+      // カード名 (表示言語に追従: en=英語名 / ja=日本語名) + 正逆位置
       Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
         // 長いカード名 (fontSize18・最大級) が 1.5x で横 overflow しないよう Flexible+ellipsis。
         Flexible(
-          child: Text(card.nameJP,
+          child: Text(card.localName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 18, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w300)),
@@ -188,15 +192,16 @@ class ObserveCardInfo extends StatelessWidget {
         ),
       ]),
       const SizedBox(height: 6),
-      // Keyword
-      Text(card.keyword, style: const TextStyle(fontSize: 13, color: Color(0xFF999999), fontStyle: FontStyle.italic)),
+      // Keyword (表示言語に追従: en=英語キーワード / ja=日本語)
+      Text(card.localKeyword, style: const TextStyle(fontSize: 13, color: Color(0xFF999999), fontStyle: FontStyle.italic)),
       // Planet line
       if (pInfo != null) ...[
         const SizedBox(height: 6),
         Row(mainAxisSize: MainAxisSize.min, children: [
           Text(pInfo[0], style: TextStyle(fontSize: 11, color: planetColor)),
           const SizedBox(width: 4),
-          Text('${pInfo[1]} Line', style: const TextStyle(fontSize: 11, color: Color(0xFF888888))),
+          // 惑星名は表示言語に追従 (en=英名 / ja=漢字)。pInfo[0]=記号は言語非依存。
+          Text('${observePlanetName(card.planet!)} Line', style: const TextStyle(fontSize: 11, color: Color(0xFF888888))),
         ]),
       ],
     ]);

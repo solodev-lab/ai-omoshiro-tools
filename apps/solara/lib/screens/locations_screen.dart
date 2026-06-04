@@ -445,39 +445,46 @@ class _LocationsScreenState extends State<LocationsScreen> {
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Color(0x22C9A84C))),
       ),
-      child: Row(children: [
-        for (final c in cats) ...[
-          Expanded(child: GestureDetector(
-            onTap: () => setState(() {
-              _selectedCategory = _selectedCategory == c ? null : c;
-            }),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
+      // 英語 (実効 ~2x) では 5 等分だと "Abundance" 等が 2 行に折返すため、
+      // 横スクロール + 各チップは内容幅にして 1 行で綺麗に並べる。
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(children: [
+          for (final c in cats) ...[
+            GestureDetector(
+              onTap: () => setState(() {
+                _selectedCategory = _selectedCategory == c ? null : c;
+              }),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: _selectedCategory == c
+                        ? (categoryColors[c] ?? const Color(0xFFE8E0D0))
+                        : const Color(0x1FFFFFFF),
+                  ),
                   color: _selectedCategory == c
-                      ? (categoryColors[c] ?? const Color(0xFFE8E0D0))
-                      : const Color(0x1FFFFFFF),
+                      ? (categoryColors[c] ?? const Color(0xFFE8E0D0)).withAlpha(26)
+                      : Colors.transparent,
                 ),
-                color: _selectedCategory == c
-                    ? (categoryColors[c] ?? const Color(0xFFE8E0D0)).withAlpha(26)
-                    : Colors.transparent,
+                child: Text(
+                  categoryLabels[c] ?? c,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: _selectedCategory == c
+                        ? (categoryColors[c] ?? const Color(0xFFE8E0D0))
+                        : const Color(0xFF666666),
+                  ),
+                ),
               ),
-              child: Center(child: Text(
-                categoryLabels[c] ?? c,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: _selectedCategory == c
-                      ? (categoryColors[c] ?? const Color(0xFFE8E0D0))
-                      : const Color(0xFF666666),
-                ),
-              )),
             ),
-          )),
-          if (c != cats.last) const SizedBox(width: 4),
-        ],
-      ]),
+            if (c != cats.last) const SizedBox(width: 8),
+          ],
+        ]),
+      ),
     );
   }
 
@@ -535,9 +542,13 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.clip,
                 textAlign: TextAlign.center,
+                // 英語の実効 ~2x で emoji が枠 (34px) を溢れて方角に被るため
+                // スケールを 1.33x に固定 (枠内に収め、ja の見た目は据え置き)。
+                textScaler: const TextScaler.linear(1.33),
                 style: const TextStyle(fontSize: 22)),
           ),
-          const SizedBox(width: 10),
+          // アイコンと方角/距離が近く見えるため隙間を広げる (英語 ~2x で特に窮屈)。
+          const SizedBox(width: 20),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -570,10 +581,11 @@ class _LocationsScreenState extends State<LocationsScreen> {
             ],
           )),
           const SizedBox(width: 6),
-          // 右端は HOME バッジ / ⋯ メニューに必要な最小幅 (48px) のみ確保し、
-          // 残りを中央領域に回す。全行同幅でスコアバー右端も揃う。
+          // 右端は HOME バッジ / ⋯ メニューに必要な幅を確保し、残りを中央領域に回す。
+          // 全行同幅でスコアバー右端も揃う。英語 (実効 ~2x) で「HOME」が切れないよう
+          // 48 → 60 に拡張 (旧 48 では "HOM" に見切れていた)。
           SizedBox(
-            width: 48,
+            width: 60,
             child: Center(child: s.isHome
               ? Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -582,9 +594,12 @@ class _LocationsScreenState extends State<LocationsScreen> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text('HOME',
-                      // 基準 9 → 1.33x で約 12px。softWrap:false で 1 行固定。
+                      // バッジは小ラベルなのでスケールを 1.33x (≈12px) に固定。
+                      // 英語の実効 ~2x で "HOME" が "HOM" に見切れるのを防ぐ
+                      // (HISTORY チップ等と同じ固定スケール方針)。
                       maxLines: 1,
                       softWrap: false,
+                      textScaler: TextScaler.linear(1.33),
                       style: TextStyle(fontSize: 9, color: Color(0xFFF9D976), letterSpacing: 0.5)),
                 )
               : PopupMenuButton<String>(

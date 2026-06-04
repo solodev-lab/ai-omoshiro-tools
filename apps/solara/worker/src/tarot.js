@@ -130,7 +130,7 @@ async function callGemini(apiKey, prompt, models, { retries = 2, thinkingBudget 
 // 🔴 コンテンツ安全性:
 //   - 医療・法律・自傷に関わる断定的なアドバイスをしない
 //   - 必要に応じて専門家への相談を勧める
-function buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, planet, moonPhase, userName, lang, question, category }) {
+function buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, keywordEN, element, planet, moonPhase, userName, lang, question, category }) {
   const orientation = reversed
     ? (lang !== 'ja' ? 'Reversed' : '逆位置')
     : (lang !== 'ja' ? 'Upright' : '正位置');
@@ -171,7 +171,7 @@ Do NOT give definitive medical, legal, or self-harm advice. If the theme touches
       : '';
     return `You are a wise tarot reader with a poetic voice.
 Today's card: "${cardName}" (${orientation})
-Keyword: ${keyword}
+Keyword: ${keywordEN || keyword}
 Element: ${elementLabel}${planetLabel ? `\nRuling planet: ${planetLabel}` : ''}${moonLabel ? `\nMoon phase: ${moonLabel}` : ''}${cleanName ? `\nQuerent name: ${cleanName} (if you address them, use "${cleanName}"; do not invent another name)` : ''}${categorySection}${questionSection}
 
 🔴 CRITICAL: This card is "${cardName}". Stay faithful to this card's meaning. If you name the card, use exactly "${cardName}" — do NOT substitute any other card name (e.g. "Wheel of Fortune", "The Sun"). Names like "Death", "The Devil", "The Tower" are traditional tarot symbols of transformation; keep them verbatim.
@@ -237,6 +237,7 @@ export async function handleTarot(body, env) {
     nameJP,
     nameEN,
     keyword,
+    keywordEN,
     element,
     planet,
     moonPhase,
@@ -271,7 +272,7 @@ export async function handleTarot(body, env) {
   const fallback = env.TAROT_MODEL_FALLBACK || 'gemini-flash-latest';
   const models = primary === fallback ? [primary] : [primary, fallback];
 
-  const prompt = buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, element, planet, moonPhase, userName, lang, question, category });
+  const prompt = buildPrompt({ cardId, reversed, nameJP, nameEN, keyword, keywordEN, element, planet, moonPhase, userName, lang, question, category });
   // 🔴 2026-06-02: fortune と同じ理由で Free/Pro 問わず thinkingBudget:0 (真に OFF)。
   // 旧 `thinking ? 512 : null` の null は無料で動的thinking暴走→コスト9倍+MAX_TOKENS切れ。
   // ※ body.thinking は API 互換のため残すが参照しない。

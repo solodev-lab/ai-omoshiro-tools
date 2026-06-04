@@ -113,9 +113,12 @@ Widget horoAntiqueHeader(AntiqueIcon icon, String label, {double iconSize = 18})
   ]);
 }
 
-/// Helper: 名前解決 (planet/angle両対応)
+/// Helper: 名前解決 (planet/angle両対応・ロケール連動)。
+/// 惑星は planetLabel (en=英名 / ja=漢字)、アングルは ASC/MC/DSC/IC 共通。
 String horoPlanetOrAngleName(String key) =>
-    planetNamesJP[key] ?? angleNamesJP[key] ?? key.toUpperCase();
+    planetNamesJP.containsKey(key)
+        ? planetLabel(key)
+        : (angleNamesJP[key] ?? key.toUpperCase());
 
 /// アクティブパターン (detectPatterns の結果) 1件を一意に識別するキー。
 /// 同じタイプでも惑星組合せが違うパターンは別キーになる。

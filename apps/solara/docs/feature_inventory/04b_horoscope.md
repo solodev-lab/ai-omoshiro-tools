@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 6121
+- ファイル数: 23 / 総行数: 6126
 - class/mixin/extension/enum: 33
 - 関数 (top-level + method の素拾い): 165
 - Navigator.push 等: 0
@@ -259,7 +259,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_fortune_cards.dart` (335 行)
+### `lib/screens/horoscope/horo_fortune_cards.dart` (337 行)
 
 **imports:** dart=0 / package=2 / relative=7
 
@@ -275,12 +275,12 @@ ignore_for_file: invalid_use_of_protected_member
 
   <details><summary>private 関数 6 件</summary>
 
-  - L172 `_birthEditedBanner()`
-  - L189 `_loadingBanner()`
-  - L206 `_errorBanner()`
-  - L229 `_skeletonLine()`
-  - L237 `_skeletonBar()`
-  - L249 `_lockedTeaserCard()`
+  - L174 `_birthEditedBanner()`
+  - L191 `_loadingBanner()`
+  - L208 `_errorBanner()`
+  - L231 `_skeletonLine()`
+  - L239 `_skeletonBar()`
+  - L251 `_lockedTeaserCard()`
 
   </details>
 
@@ -341,7 +341,7 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_panel_shared.dart` (310 行)
+### `lib/screens/horoscope/horo_panel_shared.dart` (313 行)
 
 **imports:** dart=1 / package=2 / relative=4
 
@@ -354,9 +354,9 @@ ignore_for_file: invalid_use_of_protected_member
 - L47 `class _PlanetGlyphPainter : CustomPainter`
 - L74 `class ZodiacImageIcon : StatelessWidget`
   - 星座画像シンボル (assets/zodiac-symbols/*.webp + 黒透過)
-- L145 `class HoroAspectCheckmark : StatelessWidget`
-- L158 `class _CheckmarkPainter : CustomPainter`
-- L224 `class HoroHourMinuteDropdown : StatelessWidget`
+- L148 `class HoroAspectCheckmark : StatelessWidget`
+- L161 `class _CheckmarkPainter : CustomPainter`
+- L227 `class HoroHourMinuteDropdown : StatelessWidget`
 
 **関数 (12 public + 1 private):**
 
@@ -365,17 +365,17 @@ ignore_for_file: invalid_use_of_protected_member
 - L69 `shouldRepaint()`
 - L79 `build()`
 - L101 `horoAntiqueHeader()` — Helper: antique-style panel header row (icon + label).
-- L117 `horoPlanetOrAngleName()` — Helper: 名前解決 (planet/angle両対応)
-- L122 `horoActivePatternKey()` — アクティブパターン (detectPatterns の結果) 1件を一意に識別するキー。
-- L132 `horoPredictionKey()` — 予測 (predictPatternCompletions の結果) 1件を一意に識別するキー。
-- L150 `build()`
-- L163 `paint()`
-- L212 `shouldRepaint()`
-- L241 `build()`
+- L118 `horoPlanetOrAngleName()` — Helper: 名前解決 (planet/angle両対応・ロケール連動)。
+- L125 `horoActivePatternKey()` — アクティブパターン (detectPatterns の結果) 1件を一意に識別するキー。
+- L135 `horoPredictionKey()` — 予測 (predictPatternCompletions の結果) 1件を一意に識別するキー。
+- L153 `build()`
+- L166 `paint()`
+- L215 `shouldRepaint()`
+- L244 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L263 `_dropdownBox()`
+  - L266 `_dropdownBox()`
 
   </details>
 

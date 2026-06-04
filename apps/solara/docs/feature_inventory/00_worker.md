@@ -715,7 +715,7 @@ Stella相談 / Horo星読み / タロット の日本語プロンプトに共通
 **export (10):** `STYLE_VOICE_JP`, `STYLE_VOICE_EN`, `STYLE_VOICE_ES`, `STYLE_VOICE_PT`, `STYLE_VOICE_FR`, `STYLE_VOICE_DE`, `STYLE_VOICE_KO`, `STYLE_VOICE_BY_LANG`, `styleVoiceFor`, `outputLangDirective`
 
 
-### `worker/src/tarot.js` (299 行)
+### `worker/src/tarot.js` (300 行)
 
 **ファイル先頭コメント:**
 

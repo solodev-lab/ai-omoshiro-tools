@@ -188,6 +188,9 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
   final _horoKey = GlobalKey<HoroscopeScreenState>();
   final _observeKey = GlobalKey<ObserveScreenState>();
   final _galaxyKey = GlobalKey<GalaxyScreenState>();
+  // Sanctuary は state メソッドを呼ばないが、言語切替で _screens を作り直す際に
+  // State を保ち (スクロール位置等を失わず build だけ再実行) 即座に文言を更新する。
+  final _sanctuaryKey = GlobalKey();
 
   /// 画面復元スナップショットの有効期限。これより古いものは無視する。
   /// warm resume 時に破棄しているので、残存 = プロセス死を意味する。広めに取るが
@@ -203,6 +206,9 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     // SolaraHome (常駐) で SolaraAuth を listen する。サインインは Sanctuary /
     // 相談のサインインダイアログ等 複数箇所から起きるので中央で受ける。
     SolaraAuth.instance.addListener(_onSigninCelebration);
+    // 言語切替 (Sanctuary の言語設定) を即時に全画面へ反映するため locale notifier を
+    // listen。表示言語が変わったら _screens を作り直す (slang global t 対策・下記)。
+    AppLocale.instance.notifier.addListener(_onLocaleChanged);
     // ignore: unawaited_futures
     _restoreLastScreen();
     // C: 起動時の月イベント判定 (NavBar バッジ + Map 案内)。MapScreen の state は
@@ -377,7 +383,21 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     MapFocus.instance.removeListener(_onMapFocusRequested);
     SolaraAuth.instance.removeListener(_onSigninCelebration);
+    AppLocale.instance.notifier.removeListener(_onLocaleChanged);
     super.dispose();
+  }
+
+  /// 言語切替時に呼ばれ、表示言語 (resolvedCode) が実際に変わっていれば全画面を作り
+  /// 直して新ロケールで即再ビルドさせる。slang の global t は locale 変更だけでは
+  /// 再評価されないため、ここで明示的に画面を入れ替える (= アプリ再起動不要で即反映)。
+  void _onLocaleChanged() {
+    if (!mounted) return;
+    final code = AppLocale.instance.resolvedCode;
+    if (code == _lastLangCode) return; // 表示言語が実際に変わった時だけ
+    _lastLangCode = code;
+    // slang の LocaleSettings は AppLocale._syncSlang (同 notifier の先発 listener)
+    // で更新済み。ここで作り直せば各画面 build で新ロケールの t が引かれる。
+    setState(() => _screens = _buildScreens());
   }
 
   /// 初回サインイン特典 (signin grant) が新規付与された直後にお祝いスナックバーを出す。
@@ -483,13 +503,22 @@ class _SolaraHomeState extends State<SolaraHome> with WidgetsBindingObserver {
     _mapKey.currentState?.showMoonNotice(kind);
   }
 
-  late final _screens = <Widget>[
-    MapScreen(key: _mapKey, onNavigateToSanctuary: () => _onTabTap(4)),
-    HoroscopeScreen(key: _horoKey, onNavigateToSanctuary: () => _onTabTap(4)),
-    ObserveScreen(key: _observeKey),
-    GalaxyScreen(key: _galaxyKey, onOverlayChanged: _onGalaxyOverlayChanged),
-    const SanctuaryScreen(),
-  ];
+  // 言語切替時に作り直して全画面を新ロケールで再ビルドさせる (slang の global t は
+  // locale 変更だけでは自動再評価されないため)。GlobalKey 付き画面 (Map/Horo/
+  // Observe/Galaxy) は同じ key を再利用するので State は保たれ build だけ走る =
+  // 地図位置やアニメ状態を失わず、表示文言だけ新ロケールへ更新される。
+  List<Widget> _buildScreens() => <Widget>[
+        MapScreen(key: _mapKey, onNavigateToSanctuary: () => _onTabTap(4)),
+        HoroscopeScreen(key: _horoKey, onNavigateToSanctuary: () => _onTabTap(4)),
+        ObserveScreen(key: _observeKey),
+        GalaxyScreen(key: _galaxyKey, onOverlayChanged: _onGalaxyOverlayChanged),
+        SanctuaryScreen(key: _sanctuaryKey),
+      ];
+
+  late List<Widget> _screens = _buildScreens();
+
+  /// 直近の表示言語 (resolvedCode)。表示言語が実際に変わった時だけ画面を作り直す。
+  String _lastLangCode = AppLocale.instance.resolvedCode;
 
   void _onTabTap(int i) {
     // タブ切替前後の状態を捕捉 (setState で _currentIndex が変わる前)

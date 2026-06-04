@@ -790,7 +790,32 @@ class _ForecastScreenState extends State<ForecastScreen> {
         Text(t.forecast.categoryBy,
             style: const TextStyle(fontSize: 10, color: Color(0xFF888888), letterSpacing: 1)),
         const SizedBox(height: 6),
-        for (final e in catList) _catBar(e.key, e.value, catList.first.value),
+        // バーの左端を揃えるため、ラベル列を「現在のスケールでの最長ラベル幅」に
+        // 固定する (内容幅だと開始位置がバラつくため)。Builder で boosted scaler を
+        // 取り TextPainter で実測 → 全行同幅。言語・フォントサイズに依らず切れず揃う。
+        Builder(builder: (ctx) {
+          final scaler = MediaQuery.textScalerOf(ctx);
+          double labelW = 0;
+          for (final e in catList) {
+            final tp = TextPainter(
+              text: TextSpan(
+                  text: categoryLabels[e.key] ?? e.key,
+                  style: const TextStyle(fontSize: 10)),
+              textScaler: scaler,
+              textDirection: TextDirection.ltr,
+              maxLines: 1,
+            )..layout();
+            if (tp.width > labelW) labelW = tp.width;
+          }
+          labelW = labelW.ceilToDouble() + 2;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final e in catList)
+                _catBar(e.key, e.value, catList.first.value, labelW),
+            ],
+          );
+        }),
       ]),
     );
   }
@@ -803,15 +828,23 @@ class _ForecastScreenState extends State<ForecastScreen> {
     ]);
   }
 
-  Widget _catBar(String cat, double value, double maxValue) {
+  Widget _catBar(String cat, double value, double maxValue, double labelW) {
     final color = categoryColors[cat] ?? const Color(0xFFE8E0D0);
     final label = categoryLabels[cat] ?? cat;
     final ratio = maxValue <= 0 ? 0.0 : (value / maxValue).clamp(0.0, 1.0);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(children: [
-        SizedBox(width: 52,
-            child: Text(label, style: TextStyle(fontSize: 10, color: color))),
+        // ラベル列は「全行で最長ラベル幅 (labelW)」に固定 → バー左端が揃う。
+        // labelW は現在のスケールで実測済みなので、読める大きさのまま切れない。
+        SizedBox(
+          width: labelW,
+          child: Text(label,
+              maxLines: 1,
+              softWrap: false,
+              style: TextStyle(fontSize: 10, color: color)),
+        ),
+        const SizedBox(width: 10),
         Expanded(child: Container(
           height: 4,
           decoration: BoxDecoration(
@@ -831,11 +864,12 @@ class _ForecastScreenState extends State<ForecastScreen> {
             ),
           ),
         )),
-        const SizedBox(width: 8),
-        SizedBox(width: 30,
-            child: Text(value.toStringAsFixed(1),
-                textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 10, color: Color(0xFFAAAAAA)))),
+        const SizedBox(width: 10),
+        // スコア数字も内容幅で全表示 (固定列をやめ ".0" が切れないように)。
+        Text(value.toStringAsFixed(1),
+            maxLines: 1,
+            softWrap: false,
+            style: const TextStyle(fontSize: 10, color: Color(0xFFAAAAAA))),
       ]),
     );
   }

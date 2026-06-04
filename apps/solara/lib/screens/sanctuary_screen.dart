@@ -517,7 +517,10 @@ class _SanctuaryScreenState extends State<SanctuaryScreen> {
                   // ── ✦ Account (Phase 2-9 Sign in 統合) ──
                   // Sign in は任意。サインインで RevenueCat appUserID が
                   // 固定 uid になり端末間 Pro 復元が安定する。
-                  const SanctuaryAccountSection(),
+                  // 🔴 const にしない: const widget は祖先が再ビルドされてもスキップ
+                  // されるため、言語切替時に t.account.* が旧ロケールのまま残る
+                  // (slang global t 対策・main.dart の _onLocaleChanged と対)。
+                  SanctuaryAccountSection(),
                   const SizedBox(height: 20),
 
                   // ── ✦ Cosmic Pro ──

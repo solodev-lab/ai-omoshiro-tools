@@ -22,7 +22,7 @@ import '../../i18n/strings.g.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/astro_lines.dart' show NearbyAstroLine;
 import '../../utils/reverse_geocode.dart';
-import 'map_constants.dart' show planetMeta;
+import 'map_constants.dart' show planetMeta, planetName;
 
 /// ANGLE 略号 → 日本語表記 (popup 用、長くない範囲で意味を取りやすく)。
 const _angleLabelJP = <String, String>{
@@ -292,7 +292,8 @@ class _NearestLineRow extends StatelessWidget {
     final meta = planetMeta[nearby.line.planet];
     final color = meta?.color ?? SolaraColors.solaraGoldLight;
     final sym = meta?.sym ?? nearby.line.planet;
-    final jp = meta?.jp ?? nearby.line.planet;
+    // 惑星名はロケール連動 (en=英名 / ja=漢字)。angle は ASC/MC/DSC/IC 共通。
+    final jp = planetName(nearby.line.planet);
     final angleJp =
         _angleLabelJP[nearby.line.angle.toLowerCase()] ?? nearby.line.angle;
     final dist = nearby.distanceKm;

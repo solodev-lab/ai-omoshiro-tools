@@ -327,6 +327,7 @@ class ObserveScreenState extends State<ObserveScreen>
       nameJP: card.nameJP,
       nameEN: card.nameEN,
       keyword: card.keyword,
+      keywordEN: card.keywordEN,
       element: card.element,
       planet: card.planet,
       moonPhase: reading.moonPhase,
@@ -761,7 +762,8 @@ class ObserveScreenState extends State<ObserveScreen>
             text: t.observe.stellaNote,
           ),
           // disclaimer footer (Apple 4.0 + Google Misleading) — 報告ボタンの直下に常時。
-          const AiDisclaimerFooter(),
+          // 🔴 const にしない: 永続タブ (Observe) 内の const は言語切替で取り残されるため。
+          AiDisclaimerFooter(),
         ],
       ]),
     );

@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27 / 総行数: 15630
+- ファイル数: 27 / 総行数: 15633
 - class/mixin/extension/enum: 90
 - 関数 (top-level + method の素拾い): 324
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/screens/map/consult_entry_popup.dart` (339 行)
+### `lib/screens/map/consult_entry_popup.dart` (340 行)
 
 **ファイル先頭コメント:**
 
@@ -116,7 +116,7 @@ en ロケールで選択する (isEnLocale)。
 - relative: `daily_transit_data.dart`
 
 
-### `lib/screens/map/map_aspect_chip.dart` (222 行)
+### `lib/screens/map/map_aspect_chip.dart` (223 行)
 
 **ファイル先頭コメント:**
 
@@ -157,9 +157,9 @@ MapAspectChip — Daily Transit V2 用 1アスペクトチップ
   <details><summary>private 関数 4 件</summary>
 
   - L42 `_color()`
-  - L104 `_showDetail()`
-  - L192 `_descSection()`
-  - L212 `_aspectSymbol()`
+  - L105 `_showDetail()`
+  - L193 `_descSection()`
+  - L213 `_aspectSymbol()`
 
   </details>
 
@@ -492,7 +492,7 @@ E4 (2026-04-29): 設計思想に基づく「両エネルギー事実提示」型
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/map/map_line_narrative_sheet.dart` (299 行)
+### `lib/screens/map/map_line_narrative_sheet.dart` (300 行)
 
 **ファイル先頭コメント:**
 
@@ -528,14 +528,14 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
 **関数 (3 public + 3 private):**
 
 - L56 `createState()`
-- L86 `build()`
-- L281 `showLineNarrativeSheet()` — 共通呼び出しヘルパー: タップから直接 説明 popup を表示。
+- L87 `build()`
+- L282 `showLineNarrativeSheet()` — 共通呼び出しヘルパー: タップから直接 説明 popup を表示。
 
   <details><summary>private 関数 3 件</summary>
 
-  - L112 `_buildConsultCta()`
-  - L150 `_buildHeader()`
-  - L234 `_buildStaticSection()`
+  - L113 `_buildConsultCta()`
+  - L151 `_buildHeader()`
+  - L235 `_buildStaticSection()`
 
   </details>
 

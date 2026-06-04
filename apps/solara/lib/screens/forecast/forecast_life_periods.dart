@@ -56,6 +56,27 @@ class ForecastLifePeriodsSection extends StatelessWidget {
       if (list.any((p) => !p.end.isBefore(today))) visibleCats.add(cat);
     }
 
+    // カテゴリ名列を「表示中の最長名の実測幅」に固定 → 日付列の開始位置が揃い、
+    // かつ端末/アプリのフォント拡大 (実効 ~2x) でも "豊かさ期" 等が切れない。
+    final scaler = MediaQuery.textScalerOf(context);
+    final isJPmeasure = !isEnLocale();
+    double nameW = 0;
+    for (final cat in visibleCats) {
+      final jaName = lifePeriodLabels[cat]?.$1 ?? cat;
+      final nm = isJPmeasure ? jaName : (lifePeriodLabelsEn[cat] ?? jaName);
+      final tp = TextPainter(
+        text: TextSpan(
+            text: nm,
+            style:
+                const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        textScaler: scaler,
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+      )..layout();
+      if (tp.width > nameW) nameW = tp.width;
+    }
+    nameW = nameW.ceilToDouble() + 2;
+
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ForecastSectionHeader(
         label: t.forecast.cycles.title,
@@ -70,11 +91,11 @@ class ForecastLifePeriodsSection extends StatelessWidget {
         child: Text(t.forecast.cycles.empty,
             style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.45))),
       ) else for (final cat in visibleCats)
-        _periodRow(context, cat, byCategory[cat]!, today),
+        _periodRow(context, cat, byCategory[cat]!, today, nameW),
     ]);
   }
 
-  Widget _periodRow(BuildContext context, String cat, List<LifePeriod> list, DateTime today) {
+  Widget _periodRow(BuildContext context, String cat, List<LifePeriod> list, DateTime today, double nameW) {
     int idx = list.indexWhere((p) => !p.end.isBefore(today));
     if (idx < 0) idx = list.length - 1;
     final p = list[idx];
@@ -95,11 +116,12 @@ class ForecastLifePeriodsSection extends StatelessWidget {
       child: Row(children: [
         SizedBox(width: 24,
             child: Text(emoji, style: const TextStyle(fontSize: 14))),
-        // カテゴリ名は 1 行強制 (旧: 62px 幅で「豊かさ期」が 2 行に折返す
-        // 端末があった)。ja/en の最大長 (「Healing」など) を踏まえ 80px に
-        // 拡張、softWrap: false + ellipsis で 1 行を確定。
+        // emoji と名前が近く見えるため隙間を入れる (英語 ~2x で特に窮屈)。
+        const SizedBox(width: 8),
+        // カテゴリ名列は「表示中の最長名の実測幅 (nameW)」に固定 → 日付列が揃い、
+        // フォント拡大でも切れない (旧 80px 固定は実効 ~2x で "豊かさ期" が見切れた)。
         SizedBox(
-          width: 80,
+          width: nameW,
           child: Text(
             name,
             maxLines: 1,

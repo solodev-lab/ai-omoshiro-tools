@@ -1,8 +1,11 @@
+import '../utils/solara_i18n.dart' show isEnLocale;
+
 class TarotCard {
   final int id;
   final String nameEN;
   final String nameJP;
   final String keyword;
+  final String keywordEN;
   final String? planet;
   final String element;
   final String? suit;
@@ -25,6 +28,7 @@ class TarotCard {
     required this.nameEN,
     required this.nameJP,
     required this.keyword,
+    this.keywordEN = '',
     this.planet,
     required this.element,
     this.suit,
@@ -34,12 +38,23 @@ class TarotCard {
     required this.isMajor,
   });
 
+  /// 表示言語に応じたカード名 (en=英語名 / 他=日本語名)。HISTORY 等の表示で使う。
+  String get localName => isEnLocale()
+      ? (nameEN.isNotEmpty ? nameEN : nameJP)
+      : (nameJP.isNotEmpty ? nameJP : nameEN);
+
+  /// 表示言語に応じたキーワード (en=英語 / 他=日本語)。英語未保存(旧構築)は JP へ。
+  String get localKeyword => isEnLocale()
+      ? (keywordEN.isNotEmpty ? keywordEN : keyword)
+      : keyword;
+
   factory TarotCard.fromMajorJson(Map<String, dynamic> json) {
     return TarotCard(
       id: json['id'] as int,
       nameEN: json['nameEN'] as String,
       nameJP: json['nameJP'] as String,
       keyword: json['keyword'] as String,
+      keywordEN: json['keywordEN'] as String? ?? '',
       planet: json['planet'] as String?,
       element: json['element'] as String,
       displayName: json['displayName'] as String,
@@ -60,6 +75,7 @@ class TarotCard {
       nameEN: json['nameEN'] as String,
       nameJP: json['nameJP'] as String,
       keyword: json['keyword'] as String,
+      keywordEN: json['keywordEN'] as String? ?? '',
       planet: planet,
       element: element,
       suit: json['suit'] as String,

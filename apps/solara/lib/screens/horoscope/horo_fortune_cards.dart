@@ -157,7 +157,9 @@ class HoroAstrologyView extends StatelessWidget {
                   text: t.horoDisplay.stellaNote,
                 ),
                 // disclaimer footer — 報告ボタンの直下に常時。
-                const AiDisclaimerFooter(padding: EdgeInsets.zero),
+                // 🔴 const にしない: 永続タブ (Horo) 内の const は言語切替で再ビルド
+                // されず disclaimer.ai が旧ロケールのまま残る (slang global t 対策)。
+                AiDisclaimerFooter(padding: EdgeInsets.zero),
               ],
             ]),
           );

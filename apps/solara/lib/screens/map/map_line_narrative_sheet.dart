@@ -24,7 +24,7 @@ import '../../theme/solara_colors.dart';
 import '../../utils/astro_glossary.dart';
 import '../../utils/astro_lines.dart';
 import '../../widgets/info_popup.dart';
-import '../horoscope/horo_constants.dart' show planetGlyphs, planetNamesJP;
+import '../horoscope/horo_constants.dart' show planetGlyphs, planetLabel;
 import 'map_constants.dart' show planetMeta;
 
 class MapLineNarrativeSheet extends StatefulWidget {
@@ -64,7 +64,8 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
       planetMeta[_planet]?.color ?? SolaraColors.solaraGoldLight;
 
   String get _glyph => planetGlyphs[_planet] ?? '';
-  String get _planetJp => planetNamesJP[_planet] ?? _planet;
+  // 惑星名はロケール連動 (en=英名 / ja=漢字)。
+  String get _planetName => planetLabel(_planet);
 
   /// 静的辞書のキー。
   /// アスペクト線 (B1: square/trine/sextile) は aspect 種別ごと、
@@ -166,7 +167,7 @@ class _MapLineNarrativeSheetState extends State<MapLineNarrativeSheet> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                _planetJp,
+                _planetName,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.notoSansJp(
                   fontSize: 16,

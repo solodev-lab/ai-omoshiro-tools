@@ -55,7 +55,7 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **479**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **294**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **295**
 
 ### #1 機械にあるが Doc に書かれていない (276)
 
@@ -261,7 +261,7 @@
 - `_PlanetIntroBody`
 - … 残り 76 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (91)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (92)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -304,6 +304,7 @@
 - `FULL_SCORE_LIMIT`
 - `FilledButton`
 - `FittedBox`
+- `Flexible`
 - `FlutterMap`
 - `Front`
 - `GEMINI_API_KEY`
@@ -415,7 +416,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1a | 3 | 1 | 1 | 1 | 3 | · | · | · | · | · | · | · | · | · | · | · |
 | 1b | 8 | · | · | 2 | 1 | · | 1 | · | · | 2 | · | · | · | · | · | · |
-| 1c | · | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
+| 1c | 2 | · | 1 | · | · | · | · | · | · | · | · | · | · | · | · | · |
 | 2a | 3 | 1 | · | 6 | 6 | · | · | 1 | · | · | · | · | · | · | · | · |
 | 2b | 3 | 3 | 5 | 6 | 4 | 1 | · | · | · | · | · | · | · | · | · | · |
 | 2c | 1 | · | 1 | 3 | 2 | · | · | · | · | · | · | · | · | · | · | · |
@@ -424,7 +425,7 @@
 | 3c | 4 | 5 | 4 | 2 | 4 | 1 | 12 | 4 | · | · | · | · | · | · | · | · |
 | 4a | 16 | 13 | · | 14 | 9 | 1 | 19 | 24 | 3 | 32 | 4 | · | · | · | 4 | · |
 | 4b | 12 | 14 | · | 3 | 4 | · | 15 | · | · | · | 30 | · | · | 2 | · | · |
-| 4c | 3 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
+| 4c | 4 | 1 | 14 | 1 | 4 | 5 | 8 | 6 | · | · | · | 16 | · | · | 1 | · |
 | 4d | 9 | 6 | 13 | 1 | 2 | 2 | 11 | 3 | 1 | · | · | · | 9 | · | · | · |
 | 4e | 5 | 6 | · | 3 | 12 | 2 | 16 | 1 | · | · | · | · | · | 10 | 3 | · |
 | 4f | 8 | 6 | · | 8 | 16 | 6 | 19 | 14 | · | 6 | · | · | · | · | 30 | · |
@@ -439,7 +440,7 @@
 
 | ファイル | 層 | 被 import 数 |
 | --- | --- | --- |
-| `lib/utils/solara_i18n.dart` | 1a | 44 |
+| `lib/utils/solara_i18n.dart` | 1a | 47 |
 | `lib/theme/solara_colors.dart` | 3b | 38 |
 | `lib/utils/solara_storage.dart` | 2b | 33 |
 | `lib/widgets/info_popup.dart` | 3a | 26 |
@@ -473,13 +474,19 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **11**
+- 追加: **0** / 削除: **0** / 変更: **21**
 
 ### 変更されたファイル (層別)
 
-- **層 3c**: `lib/widgets/catasterism_formation_overlay.dart`, `lib/widgets/catasterism_overlay.dart`, `lib/widgets/full_moon_overlay.dart`, `lib/widgets/new_moon_overlay.dart`
-- **層 4c**: `lib/screens/observe/observe_card_widgets.dart`
-- **層 4f**: `lib/screens/consultation/consultation_history_screen.dart`, `lib/screens/consultation/consultation_history_widgets.dart`, `lib/screens/consultation/consultation_input_screen.dart`, `lib/screens/forecast/forecast_life_periods.dart`, `lib/screens/forecast_screen.dart`
+- **層 0**: `worker/src/tarot.js`
+- **層 1b**: `lib/utils/fortune_api.dart`
+- **層 1c**: `lib/models/galaxy_cycle.dart`, `lib/models/tarot_card.dart`
+- **層 4a**: `lib/screens/map/consult_entry_popup.dart`, `lib/screens/map/map_aspect_chip.dart`, `lib/screens/map/map_line_narrative_sheet.dart`
+- **層 4b**: `lib/screens/horoscope/horo_fortune_cards.dart`, `lib/screens/horoscope/horo_panel_shared.dart`
+- **層 4c**: `lib/screens/observe/observe_card_widgets.dart`, `lib/screens/observe/observe_history.dart`, `lib/screens/observe/observe_history_past.dart`, `lib/screens/observe_screen.dart`
+- **層 4d**: `lib/screens/galaxy_screen.dart`
+- **層 4e**: `lib/screens/sanctuary/sanctuary_title_diagnosis.dart`, `lib/screens/sanctuary_screen.dart`
+- **層 4f**: `lib/screens/forecast/forecast_life_periods.dart`, `lib/screens/forecast/forecast_section_header.dart`, `lib/screens/forecast_screen.dart`, `lib/screens/locations_screen.dart`
 - **層 5**: `lib/main.dart`
 
 ## #7 astro_glossary 用語辞書対整合

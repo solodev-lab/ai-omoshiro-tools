@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 4 / 総行数: 384
+- ファイル数: 4 / 総行数: 407
 - class/mixin/extension/enum: 7
 - 関数 (top-level + method の素拾い): 8
 - Navigator.push 等: 0
@@ -25,25 +25,25 @@
 - L33 `toJson()`
 
 
-### `lib/models/galaxy_cycle.dart` (149 行)
+### `lib/models/galaxy_cycle.dart` (156 行)
 
-**imports:** dart=0 / package=0 / relative=1
+**imports:** dart=0 / package=0 / relative=2
 
-- relative: `daily_reading.dart`
+- relative: `../utils/solara_i18n.dart`, `daily_reading.dart`
 
 **型定義 (2):**
 
-- L3 `class ConstellationDot`
-- L41 `class GalaxyCycle`
+- L4 `class ConstellationDot`
+- L42 `class GalaxyCycle`
 
 **関数 (2 public + 1 private):**
 
-- L20 `toJson()`
-- L110 `toJson()`
+- L21 `toJson()`
+- L117 `toJson()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L102 `_monthName()`
+  - L109 `_monthName()`
 
   </details>
 
@@ -73,9 +73,13 @@ Represents a user's chosen intention for a lunar cycle.
 - L94 `toJson()`
 
 
-### `lib/models/tarot_card.dart` (72 行)
+### `lib/models/tarot_card.dart` (88 行)
+
+**imports:** dart=0 / package=0 / relative=1
+
+- relative: `../utils/solara_i18n.dart`
 
 **型定義 (1):**
 
-- L1 `class TarotCard`
+- L3 `class TarotCard`
 

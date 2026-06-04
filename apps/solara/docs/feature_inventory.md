@@ -1850,6 +1850,32 @@ forecast_screen 112 / galaxy_screen 105 / map_fortune_sheet 96 / map_daily_trans
 - **横断スキャン結果 (残5箇所修正)**: `main.dart` サインインSnackBar を EN化、日付範囲の全角 `〜` を EN `-`/JA `〜` に (consultation 入力/履歴・forecast/life_periods)。
 - 多言語アーキ知見を memory `project_solara_multilang_arch.md` に保存 (層1 slang=スケール / 層2 インライン isEnLocale 2択=新言語で要作り替え)。
 
+### 0.2.66 英語化 仕上げ群 (法務配信/ストア併記/UI漏れ一掃/言語切替即時反映/タロットkeywordEN) (2026-06-05)
+
+> §0.2.65 の続き。実機(端末フォント2倍・EN)E2E で見つかった残課題を一掃。analyze クリーン / test 全319件green / worker test 360green / audit HARD7維持(新規ゼロ)/重複20(構造的)/未使用0 / extract `+0 -0 ~21`。
+
+**■ 法務/ストア (doc・既コミット)**: 英語法務HTML 6枚を配信パス `legal/solara/en/`+`ja/` へ設置 (GitHub Pages `main` 配信・本番13URL 200検証)。ストア申請テキスト(Apple/Google)を日英併記化 (説明EN 3,976字等・i18n_glossary 正典準拠・NGワード回避)。
+
+**■ 英語UI漏れ一掃 (永続ツリーの取り残し)**
+- **アスペクト天体名**: `map_aspect_chip`(Daily Transitチップ+詳細)/`horo_panel_shared.horoPlanetOrAngleName`(Horoアスペクト一覧)/`map_line_narrative_sheet`/`consult_entry_popup` の `.jp`/`planetNamesJP` 直参照 → `planetName`/`planetLabel`(ロケール連動)へ。
+- **タロットカード情報** (`observe_card_widgets.ObserveCardInfo`): カード名 `nameJP`→`localName`、惑星 `planetInfo[..][1]`→`observePlanetName`、JP名の金ラベルはEN時非表示。
+- **HISTORY称号名** (`observe_history`/`_past`): `cycle.nameJP`/`card.nameJP` 固定 → モデルに `localName` getter 追加し連動 (`galaxy_cycle`/`tarot_card`)。古い記録で未保存側は他方へフォールバック。
+
+**■ レイアウト (英語=実効~2x の崩れ)**
+- **LOCATIONS**: HOMEバッジ列 48→60+スケール固定 / アイコン↔方角の隙間拡大+emojiスケール固定 / カテゴリ選択を等分Row→横スクロール。
+- **FORECAST**: 「By category」バー左端を `TextPainter` 実測の固定ラベル列幅で揃え+文字フル表示(縮小せずバーが幅を譲る方針) / 星サイクル名も実測固定幅 / 見出しⓘを `Expanded` で文字直後に配置し見切れ解消(`forecast_section_header`)。
+- **Galaxy**: 右上月齢バッジ内の ⓘ アイコン削除 (バッジ全体タップで案内が出るため重複)。
+- **称号診断**: 質問カードを最大2列に (3枚=上2/下1中央・4枚2x2・6枚2x3、`Wrap`+center)。
+
+**■ 言語切替の即時反映 (`main.dart`)**
+- `AppLocale.notifier` を listen し表示言語が変わったら `_screens` を作り直す `_onLocaleChanged`。GlobalKey付き画面は State保持で build だけ再実行=地図位置等を失わず文言だけ更新。
+- 🔴 **const widget 取り残し**: const は祖先再ビルドでスキップされ言語切替で旧ロケールが残る。永続ツリーの該当は `SanctuaryAccountSection`+`AiDisclaimerFooter`×2(Horo/Observe) のみ→const除去 (push遷移/sheet/dialog内は開く時再ビルドで無害)。
+
+**■ タロット keywordEN (78枚・データ拡張+Worker)**
+- `assets/tarot_planet_map.json` 全78カードに `keywordEN` 追加 (標準タロット英語・例「希望と導き→Hope and Guidance」)。`TarotCard` に `keywordEN`+`localKeyword` getter。`fetchTarotReading` に配線→Worker `tarot.js` が英語モードで `keywordEN||keyword` 使用 (EN鑑定本文へのJPキーワード混入を解消)。**Worker deploy 済 (Version `fdccb48a`・health 200)**。
+
+**■ ジオコーディング誤認の整理**: §0.2.64 で resolvedCode 連動済。実機が「英語UIだが地名が日本語」だったのは古いビルド(§0.2.64前)で動いていたため=再ビルドで解消 (コードは修正済)。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を

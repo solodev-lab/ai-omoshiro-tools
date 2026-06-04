@@ -1,3 +1,4 @@
+import '../utils/solara_i18n.dart' show isEnLocale;
 import 'daily_reading.dart';
 
 class ConstellationDot {
@@ -92,6 +93,12 @@ class GalaxyCycle {
     }
     return cycleStart;
   }
+
+  /// 表示言語に応じた星座名 (en=英語名 / 他=日本語名)。HISTORY 等の表示で使う。
+  /// 旧データで未保存側が空のときは他方へフォールバック (崩さない)。
+  String get localName => isEnLocale()
+      ? (nameEN.isNotEmpty ? nameEN : nameJP)
+      : (nameJP.isNotEmpty ? nameJP : nameEN);
 
   String get dateRangeLabel {
     final s = cycleStart;

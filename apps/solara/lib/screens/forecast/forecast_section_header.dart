@@ -28,32 +28,42 @@ class ForecastSectionHeader extends StatelessWidget {
         ),
       ),
       const SizedBox(width: 8),
-      Flexible(
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFFEAD9A8),
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-          ),
+      // ラベル + ⓘ を 1 グループにして Expanded で左側いっぱいに広げる。
+      // ⓘ は「文字の直後」に付き、ラベルは折返さず最後まで表示される
+      // (旧実装は Flexible(label) と Spacer() がフリースペースを 50/50 で
+      //  奪い合い、英語の長い見出しが "Highlights To…" に見切れていた)。
+      Expanded(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFFEAD9A8),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+            if (onInfo != null)
+              GestureDetector(
+                onTap: onInfo,
+                behavior: HitTestBehavior.opaque,
+                child: const Padding(
+                  padding: EdgeInsets.all(3),
+                  child: Icon(Icons.info_outline,
+                      size: 14, color: Color(0xCCAAAAAA)),
+                ),
+              ),
+          ],
         ),
       ),
-      if (onInfo != null)
-        GestureDetector(
-          onTap: onInfo,
-          behavior: HitTestBehavior.opaque,
-          child: const Padding(
-            padding: EdgeInsets.all(3),
-            child: Icon(Icons.info_outline, size: 14, color: Color(0xCCAAAAAA)),
-          ),
-        ),
-      if (trailing != null) ...[
-        const Spacer(),
-        trailing!,
-      ],
+      // trailing (例: 年表示) は右端へ。Expanded が間を埋めるので Spacer 不要。
+      ?trailing,
     ]);
   }
 }

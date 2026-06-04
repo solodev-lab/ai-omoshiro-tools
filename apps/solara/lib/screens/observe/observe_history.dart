@@ -285,7 +285,7 @@ class _ObserveHistoryPanelState extends State<ObserveHistoryPanel> {
                   // 過去サイクル側 (observe_history_past) と同じく Flexible+ellipsis で
                   // 長いカード名でも横 overflow しないようにする。
                   Flexible(
-                    child: Text(card.nameJP,
+                    child: Text(card.localName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 14, color: Color(0xFFE8E0D0), fontWeight: FontWeight.w500)),

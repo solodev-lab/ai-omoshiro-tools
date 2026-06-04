@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 32 / 総行数: 11079
+- ファイル数: 32 / 総行数: 11160
 - class/mixin/extension/enum: 100
 - 関数 (top-level + method の素拾い): 286
 - Navigator.push 等: 0
@@ -863,7 +863,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   </details>
 
 
-### `lib/screens/forecast/forecast_life_periods.dart` (201 行)
+### `lib/screens/forecast/forecast_life_periods.dart` (223 行)
 
 **imports:** dart=0 / package=1 / relative=6
 
@@ -880,8 +880,8 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 
   <details><summary>private 関数 2 件</summary>
 
-  - L77 `_periodRow()`
-  - L135 `_showLifePeriodsInfo()`
+  - L98 `_periodRow()`
+  - L157 `_showLifePeriodsInfo()`
 
   </details>
 
@@ -890,7 +890,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/forecast/forecast_section_header.dart` (59 行)
+### `lib/screens/forecast/forecast_section_header.dart` (69 行)
 
 **imports:** dart=0 / package=1 / relative=0
 
@@ -933,7 +933,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/forecast_screen.dart` (1059 行)
+### `lib/screens/forecast_screen.dart` (1093 行)
 
 **imports:** dart=0 / package=1 / relative=12
 
@@ -944,7 +944,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - L18 `class ForecastScreen : StatefulWidget`
   - Forecast 画面 — 1年予測（ヒートマップ + 選択日詳細 + 強運Top5）
 - L36 `class _ForecastScreenState : State`
-- L1030 `class _DayStepperButton : StatelessWidget`
+- L1064 `class _DayStepperButton : StatelessWidget`
   - 選択日詳細パネルの △ ボタン (左右で 1 日前後に動かす)。
 
 **関数 (4 public + 30 private):**
@@ -952,7 +952,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - L33 `createState()`
 - L68 `initState()`
 - L165 `build()`
-- L1041 `build()`
+- L1075 `build()`
 
   <details><summary>private 関数 30 件</summary>
 
@@ -981,11 +981,11 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   - L715 `_canShiftSelectedDay()`
   - L726 `_shiftSelectedDay()`
   - L733 `_buildSelectedDayDetail()`
-  - L798 `_metric()`
-  - L806 `_catBar()`
-  - L843 `_buildFetchInfo()`
-  - L857 `_showForecastUsageGuide()`
-  - L960 `_showHeatmapInfo()`
+  - L823 `_metric()`
+  - L831 `_catBar()`
+  - L877 `_buildFetchInfo()`
+  - L891 `_showForecastUsageGuide()`
+  - L994 `_showHeatmapInfo()`
 
   </details>
 
@@ -1030,7 +1030,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   </details>
 
 
-### `lib/screens/locations_screen.dart` (744 行)
+### `lib/screens/locations_screen.dart` (759 行)
 
 **imports:** dart=1 / package=2 / relative=10
 
@@ -1041,7 +1041,7 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
 - L17 `class LocationsScreen : StatefulWidget`
   - Locations 一覧画面 — 登録済み拠点を16方位スコア付きで管理。
 - L40 `class _LocationsScreenState : State`
-- L650 `class _SlotStats`
+- L665 `class _SlotStats`
 
 **関数 (3 public + 18 private):**
 
@@ -1063,12 +1063,12 @@ showInfoPopup 経由で表示する (widgets/info_popup.dart、popup 統一規�
   - L247 `_rename()`
   - L360 `_buildRefPointSelector()`
   - L440 `_buildCategorySelector()`
-  - L484 `_emptyState()`
-  - L509 `_buildList()`
-  - L518 `_buildRow()`
-  - L608 `_scoreBar()`
-  - L644 `_fmtKm()`
-  - L660 `_showLocationsUsageGuide()`
+  - L491 `_emptyState()`
+  - L516 `_buildList()`
+  - L525 `_buildRow()`
+  - L623 `_scoreBar()`
+  - L659 `_fmtKm()`
+  - L675 `_showLocationsUsageGuide()`
 
   </details>
 

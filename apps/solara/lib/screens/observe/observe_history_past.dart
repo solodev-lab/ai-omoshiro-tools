@@ -98,9 +98,7 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
                       children: [
                         Flexible(
                           child: Text(
-                            cycle.nameJP.isNotEmpty
-                                ? cycle.nameJP
-                                : cycle.nameEN,
+                            cycle.localName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -202,7 +200,7 @@ class _ObserveHistoryPastPanelState extends State<ObserveHistoryPastPanel> {
                   children: [
                     Row(children: [
                       Flexible(
-                        child: Text(card.nameJP,
+                        child: Text(card.localName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(

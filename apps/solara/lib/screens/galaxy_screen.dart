@@ -620,7 +620,8 @@ class GalaxyScreenState extends State<GalaxyScreen>
 
   Widget _buildDayBadge() {
     // 2026-06-03: タップで「月のイベント」案内 popup を開けるようにした
-    // (新月/満月/刻星化 の説明 + 通知の勧め)。右下に ⓘ ヒントを添える。
+    // (新月/満月/刻星化 の説明 + 通知の勧め)。バッジ全体がタップ領域。
+    // 2026-06-05: ⓘ ボタンは削除 (バッジタップと同じ popup を出すだけで重複・オーナー要望)。
     return GestureDetector(
       onTap: () => _showMoonEventsGuide(context),
       behavior: HitTestBehavior.opaque,
@@ -641,13 +642,8 @@ class GalaxyScreenState extends State<GalaxyScreen>
           Text('$_currentDayIndex', style: GoogleFonts.cinzel(
             fontSize: 22, fontWeight: FontWeight.w700,
             color: const Color(0xFFF9D976), height: 1)),
-          Row(mainAxisSize: MainAxisSize.min, children: [
-            Text('of $_totalDays', style: GoogleFonts.cinzel(
-              fontSize: 13, color: const Color(0xA6F9D976), letterSpacing: 1.5)),
-            const SizedBox(width: 3),
-            const Icon(Icons.info_outline,
-                size: 11, color: Color(0xA6F9D976)),
-          ]),
+          Text('of $_totalDays', style: GoogleFonts.cinzel(
+            fontSize: 13, color: const Color(0xA6F9D976), letterSpacing: 1.5)),
         ]),
       ),
     );
