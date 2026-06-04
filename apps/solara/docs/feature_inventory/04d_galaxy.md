@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 10 / 総行数: 3770
+- ファイル数: 10 / 総行数: 3801
 - class/mixin/extension/enum: 22
 - 関数 (top-level + method の素拾い): 84
 - Navigator.push 等: 0
@@ -14,7 +14,7 @@
 
 ## ファイル別
 
-### `lib/screens/galaxy/constellation_share_card_page.dart` (416 行)
+### `lib/screens/galaxy/constellation_share_card_page.dart` (438 行)
 
 **ファイル先頭コメント:**
 
@@ -38,26 +38,26 @@
     "Common/Rare" 名称なしで表示 (Star Atlas カードと同方針 2026-05-17)
 ```
 
-**imports:** dart=2 / package=5 / relative=4
+**imports:** dart=2 / package=5 / relative=5
 
-- relative: `../../i18n/strings.g.dart`, `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../widgets/constellation_painter.dart`
+- relative: `../../i18n/strings.g.dart`, `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../utils/solara_i18n.dart`, `../../widgets/constellation_painter.dart`
 
 **型定義 (2):**
 
-- L35 `class ConstellationShareCardPage : StatefulWidget`
-- L388 `class _ShareCardRarityStars : StatelessWidget`
+- L36 `class ConstellationShareCardPage : StatefulWidget`
+- L410 `class _ShareCardRarityStars : StatelessWidget`
 
 **関数 (3 public + 3 private):**
 
-- L51 `createState()`
-- L98 `build()`
-- L394 `build()`
+- L52 `createState()`
+- L103 `build()`
+- L416 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L60 `_share()`
-  - L179 `_buildShareImage()`
-  - L193 `_buildShareImageInner()`
+  - L61 `_share()`
+  - L184 `_buildShareImage()`
+  - L198 `_buildShareImageInner()`
 
   </details>
 
@@ -155,7 +155,7 @@ Galaxy Archive フィルタバーのサブウィジェット — C2 (柱 3)
 - relative: `../../models/daily_reading.dart`, `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../utils/moon_phase.dart`, `../../utils/tarot_data.dart`
 
 
-### `lib/screens/galaxy/galaxy_cycle_actions_sheet.dart` (243 行)
+### `lib/screens/galaxy/galaxy_cycle_actions_sheet.dart` (250 行)
 
 **ファイル先頭コメント:**
 
@@ -174,46 +174,46 @@ Star Atlas のカード長押しで表示される bottom sheet。
 (オーナー指示)。全項目 Free。
 ```
 
-**imports:** dart=1 / package=2 / relative=5
+**imports:** dart=1 / package=2 / relative=6
 
-- relative: `../../i18n/strings.g.dart`, `../../models/galaxy_cycle.dart`, `../../models/lunar_intention.dart`, `../../theme/solara_colors.dart`, `../../utils/galaxy_cycle_export.dart`
+- relative: `../../i18n/strings.g.dart`, `../../models/galaxy_cycle.dart`, `../../models/lunar_intention.dart`, `../../theme/solara_colors.dart`, `../../utils/galaxy_cycle_export.dart`, `../../utils/solara_i18n.dart`
 
 **型定義 (2):**
 
-- L50 `class _CycleActionsSheet : StatelessWidget`
-- L165 `class _ActionTile : StatelessWidget`
+- L51 `class _CycleActionsSheet : StatelessWidget`
+- L172 `class _ActionTile : StatelessWidget`
 
 **関数 (4 public + 1 private):**
 
-- L30 `showGalaxyCycleActionsSheet()` — [GalaxyCycle] に対する Pro メニューを bottom sheet で表示する。
-- L35 `Function()`
-- L83 `build()`
-- L180 `build()`
+- L31 `showGalaxyCycleActionsSheet()` — [GalaxyCycle] に対する Pro メニューを bottom sheet で表示する。
+- L36 `Function()`
+- L84 `build()`
+- L187 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L63 `_exportText()`
+  - L64 `_exportText()`
 
   </details>
 
 
-### `lib/screens/galaxy/galaxy_replay_overlay.dart` (215 行)
+### `lib/screens/galaxy/galaxy_replay_overlay.dart` (216 行)
 
-**imports:** dart=2 / package=2 / relative=3
+**imports:** dart=2 / package=2 / relative=4
 
-- relative: `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../widgets/constellation_painter.dart`
+- relative: `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../utils/solara_i18n.dart`, `../../widgets/constellation_painter.dart`
 
 **型定義 (1):**
 
-- L17 `class GalaxyReplayOverlay : StatelessWidget`
+- L18 `class GalaxyReplayOverlay : StatelessWidget`
 
 **関数 (1 public + 1 private):**
 
-- L50 `build()`
+- L51 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L41 `_handleTap()`
+  - L42 `_handleTap()`
 
   </details>
 
@@ -235,33 +235,33 @@ Star Atlas のカード長押しで表示される bottom sheet。
   </details>
 
 
-### `lib/screens/galaxy/galaxy_star_atlas.dart` (448 行)
+### `lib/screens/galaxy/galaxy_star_atlas.dart` (449 行)
 
-**imports:** dart=1 / package=2 / relative=6
+**imports:** dart=1 / package=2 / relative=7
 
-- relative: `../../i18n/strings.g.dart`, `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../widgets/constellation_painter.dart`, `../horoscope/horo_antique_icons.dart`, `galaxy_archive_filter.dart`
+- relative: `../../i18n/strings.g.dart`, `../../models/galaxy_cycle.dart`, `../../utils/constellation_namer.dart`, `../../utils/solara_i18n.dart`, `../../widgets/constellation_painter.dart`, `../horoscope/horo_antique_icons.dart`, `galaxy_archive_filter.dart`
 
 **型定義 (7):**
 
-- L28 `class GalaxyStarAtlasTab : StatefulWidget`
+- L29 `class GalaxyStarAtlasTab : StatefulWidget`
   - STAR ATLAS タブ本体。HTML の `.atlas-content` と中のグリッドを描画する。
-- L48 `class _GalaxyStarAtlasTabState : State`
-- L148 `class _AtlasHeader : StatelessWidget`
-- L182 `class _ConstellationCard : StatelessWidget`
-- L353 `class _RarityStarRow : StatelessWidget`
+- L49 `class _GalaxyStarAtlasTabState : State`
+- L149 `class _AtlasHeader : StatelessWidget`
+- L183 `class _ConstellationCard : StatelessWidget`
+- L354 `class _RarityStarRow : StatelessWidget`
   - 5 つの星アイコンで rarity を表示する Row。
-- L384 `class _NoMatchState : StatelessWidget`
-- L409 `class _EmptyState : StatelessWidget`
+- L385 `class _NoMatchState : StatelessWidget`
+- L410 `class _EmptyState : StatelessWidget`
 
 **関数 (7 public + 0 private):**
 
-- L45 `createState()`
-- L52 `build()`
-- L152 `build()`
-- L196 `build()`
-- L359 `build()`
-- L388 `build()`
-- L411 `build()`
+- L46 `createState()`
+- L53 `build()`
+- L153 `build()`
+- L197 `build()`
+- L360 `build()`
+- L389 `build()`
+- L412 `build()`
 
 
 ### `lib/screens/galaxy/galaxy_stella_messages.dart` (288 行)

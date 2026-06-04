@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../utils/constellation_namer.dart';
+import '../../utils/solara_i18n.dart';
 import '../../widgets/constellation_painter.dart';
 
 // ══════════════════════════════════════════════════
@@ -81,8 +82,8 @@ class GalaxyReplayOverlay extends StatelessWidget {
                         child:
                             Column(mainAxisSize: MainAxisSize.min, children: [
                   // replay title — 端末言語でEN or JP を1つだけ表示
-                  Opacity(opacity: fadeT, child: Builder(builder: (ctx) {
-                    final isJP = Localizations.localeOf(ctx).languageCode == 'ja';
+                  Opacity(opacity: fadeT, child: Builder(builder: (_) {
+                    final isJP = !isEnLocale();
                     final rawName = isJP && cycle.nameJP.isNotEmpty
                         ? cycle.nameJP : cycle.nameEN;
                     final name = rawName.startsWith('The ')

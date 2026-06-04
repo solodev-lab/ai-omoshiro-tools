@@ -28,6 +28,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../i18n/strings.g.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../utils/constellation_namer.dart';
+import '../../utils/solara_i18n.dart';
 import '../../widgets/constellation_painter.dart';
 
 const double _kTargetWidthPx = 1080.0;
@@ -76,9 +77,13 @@ class _ConstellationShareCardPageState
       final file = await File('${tmpDir.path}/solara_constellation.png').create();
       await file.writeAsBytes(byteData.buffer.asUint8List());
 
-      final name = widget.cycle.nameJP.isNotEmpty
-          ? widget.cycle.nameJP
-          : widget.cycle.nameEN;
+      final rawName = isEnLocale()
+          ? widget.cycle.nameEN
+          : (widget.cycle.nameJP.isNotEmpty
+              ? widget.cycle.nameJP
+              : widget.cycle.nameEN);
+      final name =
+          rawName.startsWith('The ') ? rawName.substring(4) : rawName;
       await SharePlus.instance.share(ShareParams(
         files: [XFile(file.path)],
         text: t.shareConstellation.shareText(name: name),
@@ -331,35 +336,52 @@ class _ConstellationShareCardPageState
                     ),
                   ),
                   // ── 下段: 星座名 + 星 + 日付 ──
+                  // EN ロケールは英名のみを主役に (日本語名/副題は非表示)。
+                  // 月の儀式オーバーレイと同じ「EN主・JP非表示」方針 (英語化Phase 2)。
                   SizedBox(
                     height: bottomH,
                     child: Column(
                       children: [
-                        Text(
-                          displayJP,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: const Color(0xFFEAEAEA),
-                            fontSize: fsNameJP,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 3,
+                        if (isEnLocale())
+                          Text(
+                            rawEN,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.cinzel(
+                              color: const Color(0xFFEAEAEA),
+                              fontSize: fsNameJP * 0.92,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        else ...[
+                          Text(
+                            displayJP,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: const Color(0xFFEAEAEA),
+                              fontSize: fsNameJP,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 3,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: w * 0.008),
-                        Text(
-                          rawEN,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.cinzel(
-                            color: readable.withValues(alpha: 0.85),
-                            fontSize: fsNameEN,
-                            letterSpacing: 2.5,
-                            fontStyle: FontStyle.italic,
+                          SizedBox(height: w * 0.008),
+                          Text(
+                            rawEN,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.cinzel(
+                              color: readable.withValues(alpha: 0.85),
+                              fontSize: fsNameEN,
+                              letterSpacing: 2.5,
+                              fontStyle: FontStyle.italic,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        ],
                         SizedBox(height: w * 0.030),
                         // 星 5 つ Icon ベース (Star Atlas カードと統一、textScaler 不変)
                         _ShareCardRarityStars(rarity: cycle.rarity, size: w * 0.048),

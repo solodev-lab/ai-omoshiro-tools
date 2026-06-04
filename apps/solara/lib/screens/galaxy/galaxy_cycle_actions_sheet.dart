@@ -21,6 +21,7 @@ import '../../models/galaxy_cycle.dart';
 import '../../models/lunar_intention.dart';
 import '../../theme/solara_colors.dart';
 import '../../utils/galaxy_cycle_export.dart';
+import '../../utils/solara_i18n.dart';
 
 /// [GalaxyCycle] に対する Pro メニューを bottom sheet で表示する。
 ///
@@ -81,7 +82,13 @@ class _CycleActionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = cycle.nameJP.isNotEmpty ? cycle.nameJP : cycle.nameEN;
+    // 端末ロケールで星座名を選択 (en=英語名 / それ以外=日本語名)。
+    // 既存データの "The " プレフィックスは表示時に除去 (後方互換)。
+    final rawName = isEnLocale()
+        ? cycle.nameEN
+        : (cycle.nameJP.isNotEmpty ? cycle.nameJP : cycle.nameEN);
+    final displayName =
+        rawName.startsWith('The ') ? rawName.substring(4) : rawName;
 
     return SafeArea(
       child: Padding(

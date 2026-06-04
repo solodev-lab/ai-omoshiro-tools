@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../i18n/strings.g.dart';
 import '../../models/galaxy_cycle.dart';
 import '../../utils/constellation_namer.dart';
+import '../../utils/solara_i18n.dart';
 import '../../widgets/constellation_painter.dart';
 import '../horoscope/horo_antique_icons.dart';
 import 'galaxy_archive_filter.dart';
@@ -271,8 +272,8 @@ class _ConstellationCard extends StatelessWidget {
             // 星座名 — 端末言語でEN/JP切替 (日本語=JP、それ以外=EN)
             // maxLines:2 で長い名前は "形容詞 / 名詞" に折り返し
             const SizedBox(height: 4),
-            Builder(builder: (ctx) {
-              final isJP = Localizations.localeOf(ctx).languageCode == 'ja';
+            Builder(builder: (_) {
+              final isJP = !isEnLocale();
               // 既存データの "The " プレフィックスは表示時に除去 (後方互換)
               final rawName = isJP && cycle.nameJP.isNotEmpty
                   ? cycle.nameJP : cycle.nameEN;
