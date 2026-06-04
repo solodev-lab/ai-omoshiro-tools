@@ -77,7 +77,7 @@ class HoroPlanetTable extends StatelessWidget {
           Container(height: 1, color: const Color(0x0AFFFFFF), margin: const EdgeInsets.symmetric(vertical: 4)),
         ],
         ...secondaryPlanets!.entries.map((e) => _planetRow(
-          planetNamesJP[e.key] ?? e.key,
+          planetLabel(e.key),
           e.key,
           e.value,
           color: _secondaryColor,
@@ -110,7 +110,7 @@ class HoroPlanetTable extends StatelessWidget {
         Container(height: 1, color: const Color(0x0AFFFFFF), margin: const EdgeInsets.symmetric(vertical: 4)),
       ],
       ...natalPlanets.entries.map((e) => _planetRow(
-        planetNamesJP[e.key] ?? e.key,
+        planetLabel(e.key),
         e.key,
         e.value)),
     ]);
@@ -138,7 +138,7 @@ class HoroPlanetTable extends StatelessWidget {
         Text('${deg.toStringAsFixed(1)}°', style: const TextStyle(
           color: Color(0xFFE8E0D0), fontFamily: 'Courier New', fontSize: 13)),
         const SizedBox(width: 4),
-        Expanded(child: Text(signNames[signIdx], style: TextStyle(
+        Expanded(child: Text(signLabel(signIdx), style: TextStyle(
           color: Color(signColors[signIdx]).withAlpha(180), fontSize: 13))),
         // ハウス番号 (右端、固定幅で揃える)
         SizedBox(

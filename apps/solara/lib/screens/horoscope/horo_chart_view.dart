@@ -174,16 +174,16 @@ extension _HoroChartView on HoroscopeScreenState {
       alignment: WrapAlignment.center,
       children: [
         // アスペクト線 (太バー表示)
-        const HoroLegendItem(color: Color(0xFFC9A84C), label: 'ソフト', shape: 'line'),
-        const HoroLegendItem(color: Color(0xFF6B5CE7), label: 'ハード', shape: 'line'),
-        const HoroLegendItem(color: Color(0xFF26D0CE), label: '中立', shape: 'line'),
+        HoroLegendItem(color: const Color(0xFFC9A84C), label: t.horoDisplay.legendSoft, shape: 'line'),
+        HoroLegendItem(color: const Color(0xFF6B5CE7), label: t.horoDisplay.legendHard, shape: 'line'),
+        HoroLegendItem(color: const Color(0xFF26D0CE), label: t.horoDisplay.neutral, shape: 'line'),
         // 惑星ドット (丸表示) — 2重モード時のみネイタル凡例を追加
         if (showSecondary) ...[
-          const HoroLegendItem(color: Color(0xFFFFD370), label: 'ネイタル', shape: 'dot'),
+          HoroLegendItem(color: const Color(0xFFFFD370), label: t.horoDisplay.legendNatal, shape: 'dot'),
           if (_chartMode == 'nt')
-            const HoroLegendItem(color: Color(0xFF6BB5FF), label: 'トランジット', shape: 'dot'),
+            HoroLegendItem(color: const Color(0xFF6BB5FF), label: t.horoDisplay.legendTransit, shape: 'dot'),
           if (_chartMode == 'np')
-            const HoroLegendItem(color: Color(0xFFB088FF), label: 'プログレス', shape: 'dot'),
+            HoroLegendItem(color: const Color(0xFFB088FF), label: t.horoDisplay.legendProgress, shape: 'dot'),
         ],
       ],
     );

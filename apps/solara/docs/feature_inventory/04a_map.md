@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 25 / 総行数: 14551
+- ファイル数: 25 / 総行数: 14562
 - class/mixin/extension/enum: 90
-- 関数 (top-level + method の素拾い): 322
+- 関数 (top-level + method の素拾い): 323
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 20
 - Worker URL リテラル: 0
@@ -680,36 +680,37 @@ A*C*G ライン (natal / transit) のタップ詳細 popup。
   </details>
 
 
-### `lib/screens/map/map_relocation_popup.dart` (711 行)
+### `lib/screens/map/map_relocation_popup.dart` (722 行)
 
-**imports:** dart=0 / package=3 / relative=9
+**imports:** dart=0 / package=3 / relative=11
 
-- relative: `../../utils/astro_glossary.dart`, `../../utils/astro_houses.dart`, `../../utils/astro_lines.dart`, `../../utils/solara_storage.dart`, `../../widgets/astro_term_label.dart`, `../horoscope/horo_constants.dart`, `../horoscope/horo_relocation_lines.dart`, `map_constants.dart`, `map_line_narrative_sheet.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/astro_glossary.dart`, `../../utils/astro_houses.dart`, `../../utils/astro_lines.dart`, `../../utils/solara_i18n.dart`, `../../utils/solara_storage.dart`, `../../widgets/astro_term_label.dart`, `../horoscope/horo_constants.dart`, `../horoscope/horo_relocation_lines.dart`, `map_constants.dart`, `map_line_narrative_sheet.dart`
 
 **型定義 (1):**
 
-- L44 `class MapRelocationPopup : StatelessWidget`
+- L54 `class MapRelocationPopup : StatelessWidget`
 
-**関数 (1 public + 14 private):**
+**関数 (1 public + 15 private):**
 
-- L109 `build()`
+- L119 `build()`
 
-  <details><summary>private 関数 14 件</summary>
+  <details><summary>private 関数 15 件</summary>
 
-  - L188 `_buildConsultCta()`
-  - L227 `_buildLineDeltaSection()`
-  - L265 `_buildLinesSection()`
-  - L308 `_buildLineRow()`
-  - L382 `_openLineSheet()`
-  - L399 `_buildTitleArea()`
-  - L432 `_buildHeader()`
-  - L526 `_buildAngleRow()`
-  - L588 `_buildPlanetGrid()`
-  - L597 `_buildPlanetRow()`
-  - L685 `_recoverBaselineAsc()`
-  - L690 `_signOf()`
-  - L695 `_fmtCoord()`
-  - L703 `_copyCoords()`
+  - L51 `_angleShort()`
+  - L198 `_buildConsultCta()`
+  - L237 `_buildLineDeltaSection()`
+  - L275 `_buildLinesSection()`
+  - L318 `_buildLineRow()`
+  - L392 `_openLineSheet()`
+  - L409 `_buildTitleArea()`
+  - L442 `_buildHeader()`
+  - L537 `_buildAngleRow()`
+  - L599 `_buildPlanetGrid()`
+  - L608 `_buildPlanetRow()`
+  - L696 `_recoverBaselineAsc()`
+  - L701 `_signOf()`
+  - L706 `_fmtCoord()`
+  - L714 `_copyCoords()`
 
   </details>
 

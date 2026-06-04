@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/solara_storage.dart';
 import '../sanctuary/sanctuary_profile_editor.dart' show DateSlashFormatter;
 import 'horo_antique_icons.dart';
@@ -148,7 +149,7 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
         Flexible(child: horoAntiqueHeader(AntiqueIcon.birth, 'BIRTH DATA')),
         const SizedBox(width: 8),
         if (widget.isEdited) Expanded(child: Text(
-          '※ Horo画面から離れるとBIRTH DATAは初期化されます',
+          t.horoPanel.birthDataNote,
           style: TextStyle(
             fontSize: 10,
             color: const Color(0xFFFF9E6B).withAlpha(220),
@@ -167,7 +168,7 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0x66F6BD60)),
               ),
-              child: Text('リセット',
+              child: Text(t.orbOverlay.reset,
                   style: GoogleFonts.cinzel(
                       fontSize: 10,
                       color: const Color(0xFFF6BD60),
@@ -179,13 +180,13 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
       const SizedBox(height: 10),
 
       // ── お名前 ──
-      _labeled('お名前 NAME', _textField(
+      _labeled(t.horoPanel.nameLabel, _textField(
         controller: _nameCtrl,
-        hint: '友人Aの名前 (任意)',
+        hint: t.horoPanel.nameHint,
       )),
 
       // ── 生年月日 ──
-      _labeled('生年月日 DATE', _textField(
+      _labeled(t.horoPanel.birthDateLabel, _textField(
         controller: _dateCtrl,
         hint: 'YYYY/MM/DD',
         keyboardType: TextInputType.number,
@@ -195,7 +196,7 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
       // ── 出生時刻 ──
       // 2026-05-07: BottomSheet の SanctuaryResetHourPicker を廃止し、
       // 時/分の独立プルダウン (HoroHourMinuteDropdown) に置換。
-      _labeled('出生時刻 TIME', Row(children: [
+      _labeled(t.horoPanel.birthTimeLabel, Row(children: [
         Expanded(child: HoroHourMinuteDropdown(
           hour: _hour,
           minute: _minute,
@@ -231,8 +232,8 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
                   : null,
             ),
             const SizedBox(width: 6),
-            const Text('不明',
-                style: TextStyle(fontSize: 11, color: Color(0xFFAAAAAA))),
+            Text(t.horoPanel.unknown,
+                style: const TextStyle(fontSize: 11, color: Color(0xFFAAAAAA))),
           ]),
         ),
       ])),
@@ -240,11 +241,11 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
       // ── 位置入力 (座標貼り付け + 緯度/経度横並び + 地名/TZ 自動) ──
       // 入力粒度の案内 (市区町村でOK・番地不要)。座標貼付式だが「正確な番地まで
       // 突き止めなくてよい」という意味は同じ。全幅 Text なので overflow しない。
-      const Padding(
-        padding: EdgeInsets.only(bottom: 6),
+      Padding(
+        padding: const EdgeInsets.only(bottom: 6),
         child: Text(
-          '出生地は市区町村レベルでOK・番地は不要です',
-          style: TextStyle(fontSize: 11, color: Color(0xFF9AA0A6), height: 1.4),
+          t.horoPanel.birthCityHint,
+          style: const TextStyle(fontSize: 11, color: Color(0xFF9AA0A6), height: 1.4),
         ),
       ),
       // key を profile に紐付け、リセット等で profile が差し替わったら再生成する。
@@ -256,7 +257,7 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
         initialLng: _lng,
         initialPlaceName: _place,
         initialTzName: _tz,
-        placeLabel: '出生地名 BIRTHPLACE',
+        placeLabel: t.horoPanel.birthplaceLabel,
         showTimezone: true,
         onChanged: (lat, lng, place, tz) {
           _lat = lat;
@@ -281,9 +282,9 @@ class _HoroBirthPanelState extends State<HoroBirthPanel> {
               colors: [Color(0xFFF6BD60), Color(0xFFE8A840)],
             ),
           ),
-          child: const Center(child: Text(
-            '✨ このデータで試算',
-            style: TextStyle(
+          child: Center(child: Text(
+            t.horoPanel.calcCta,
+            style: const TextStyle(
               color: Color(0xFF0A0A14),
               fontSize: 13,
               fontWeight: FontWeight.w600,

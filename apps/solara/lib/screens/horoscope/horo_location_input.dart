@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/reverse_geocode.dart';
 import '../../utils/solara_api.dart';
 
@@ -20,7 +21,8 @@ class HoroLocationInput extends StatefulWidget {
   final String? initialTzName;
 
   /// 地名欄のラベル (Birth='出生地名 BIRTHPLACE' / Transit='地名 PLACE' 等)。
-  final String placeLabel;
+  /// null なら build 側で t.horoPanel.placeLabel を使う。
+  final String? placeLabel;
 
   /// TZ 欄を表示するか (Birth=true / Transit=false)。
   final bool showTimezone;
@@ -35,7 +37,7 @@ class HoroLocationInput extends StatefulWidget {
     this.initialLng,
     this.initialPlaceName,
     this.initialTzName,
-    this.placeLabel = '地名 PLACE',
+    this.placeLabel,
     this.showTimezone = false,
     required this.onChanged,
   });
@@ -119,9 +121,9 @@ class _HoroLocationInputState extends State<HoroLocationInput> {
     }
     if (lat == null || lng == null || lat.abs() > 90 || lng.abs() > 180) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('クリップボードに有効な「緯度, 経度」がありません'),
-          duration: Duration(seconds: 2),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(t.horoPanel.clipboardInvalid),
+          duration: const Duration(seconds: 2),
         ));
       }
       return;
@@ -150,11 +152,11 @@ class _HoroLocationInputState extends State<HoroLocationInput> {
               border: Border.all(color: const Color(0x66F6BD60)),
               color: const Color(0x14F6BD60),
             ),
-            child: const Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.content_paste, size: 14, color: Color(0xFFF6BD60)),
-              SizedBox(width: 6),
-              Text('座標貼り付け',
-                  style: TextStyle(
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.content_paste, size: 14, color: Color(0xFFF6BD60)),
+              const SizedBox(width: 6),
+              Text(t.horoPanel.pasteCoords,
+                  style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFFF6BD60),
                       fontWeight: FontWeight.w600)),
@@ -162,10 +164,10 @@ class _HoroLocationInputState extends State<HoroLocationInput> {
           ),
         ),
         const SizedBox(width: 8),
-        const Expanded(
+        Expanded(
           child: Text(
-            'Map画面で地点をタップ→「座標取得」でコピーできます',
-            style: TextStyle(
+            t.horoPanel.copyHint,
+            style: const TextStyle(
                 fontSize: 10, color: Color(0x99888888), height: 1.3),
           ),
         ),
@@ -173,7 +175,7 @@ class _HoroLocationInputState extends State<HoroLocationInput> {
       const SizedBox(height: 10),
 
       // ── 地名 (緯度経度から自動取得・read-only) ──
-      _labeled(widget.placeLabel, _autoBox(
+      _labeled(widget.placeLabel ?? t.horoPanel.placeLabel, _autoBox(
         child: _loading
             ? const SizedBox(
                 width: 12, height: 12,
@@ -181,7 +183,7 @@ class _HoroLocationInputState extends State<HoroLocationInput> {
                     strokeWidth: 1.5, color: Color(0xFFC9A84C)),
               )
             : Text(
-                _placeName ?? '— (座標入力後に自動取得)',
+                _placeName ?? t.horoPanel.autoFetch,
                 style: TextStyle(
                   fontSize: 13,
                   color: _placeName == null
@@ -193,16 +195,16 @@ class _HoroLocationInputState extends State<HoroLocationInput> {
 
       // ── 緯度 (左) / 経度 (右) 横並び ──
       Row(children: [
-        Expanded(child: _labeled('緯度 LAT', _coordField(_latCtrl, '例: 35.6762'))),
+        Expanded(child: _labeled(t.horoPanel.latLabel, _coordField(_latCtrl, t.horoPanel.latHint))),
         const SizedBox(width: 8),
-        Expanded(child: _labeled('経度 LNG', _coordField(_lngCtrl, '例: 139.6503'))),
+        Expanded(child: _labeled(t.horoPanel.lngLabel, _coordField(_lngCtrl, t.horoPanel.lngHint))),
       ]),
 
       // ── タイムゾーン (緯度経度から自動取得・read-only) ──
       if (widget.showTimezone)
-        _labeled('タイムゾーン TZ', _autoBox(
+        _labeled(t.horoPanel.tzLabel, _autoBox(
           child: Text(
-            _tzName ?? '— (座標入力後に自動取得)',
+            _tzName ?? t.horoPanel.autoFetch,
             style: TextStyle(
               fontSize: 12,
               color: _tzName == null

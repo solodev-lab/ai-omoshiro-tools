@@ -13,6 +13,7 @@
 //   吉凶禁止 (強まる/やわらぐ・前に出る/落ち着く の中立表現のみ。good/bad/lucky を使わない)。
 
 import '../../utils/astro_houses.dart' show assignPlanetHouse;
+import '../../utils/solara_i18n.dart';
 
 /// 対象10天体 (表示順の素): 個人天体 → 社会天体 → トランスサタニアン。
 const List<String> relocationAnglePlanets = [
@@ -27,6 +28,17 @@ const Map<String, String> relocationAngleDomain = {
   'dsc': '対人・パートナーシップ',
   'ic': '家庭・心の拠り所',
 };
+const Map<String, String> _relocationAngleDomainEN = {
+  'asc': 'self and first impression',
+  'mc': 'social standing and career',
+  'dsc': 'relationships and partnership',
+  'ic': 'home and inner anchor',
+};
+
+/// アングルキー → ロケール別の領域ラベル (ja / en)。
+String relocationAngleDomainLabel(String angle) => isEnLocale()
+    ? (_relocationAngleDomainEN[angle] ?? '')
+    : (relocationAngleDomain[angle] ?? '');
 
 /// これ未満の度数差は「ほぼ変化なし」(same) とみなす。
 const double _kSameDeg = 0.15;

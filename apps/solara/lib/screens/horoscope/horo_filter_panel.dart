@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'horo_antique_icons.dart';
 import 'horo_panel_shared.dart';
+import '../../i18n/strings.g.dart';
 import '../../utils/solara_i18n.dart';
 
 // ══════════════════════════════════════════════════
@@ -52,14 +53,14 @@ class HoroFilterPanel extends StatelessWidget {
       const SizedBox(height: 10),
 
       // A: Aspect Quality
-      _filterSection('A', 'アスペクト性質', [
-        _filterChip('ソフト（調和）', 'soft', const Color(0xFFC9A84C), qualityFilters['soft']!, (v) => onQualityChanged('soft', v)),
-        _filterChip('ハード（緊張）', 'hard', const Color(0xFF6B5CE7), qualityFilters['hard']!, (v) => onQualityChanged('hard', v)),
-        _filterChip('中立', 'neutral', const Color(0xFF26D0CE), qualityFilters['neutral']!, (v) => onQualityChanged('neutral', v)),
+      _filterSection('A', t.horoDisplay.filterSecAspect, [
+        _filterChip(t.horoDisplay.filterSoft, 'soft', const Color(0xFFC9A84C), qualityFilters['soft']!, (v) => onQualityChanged('soft', v)),
+        _filterChip(t.horoDisplay.filterHard, 'hard', const Color(0xFF6B5CE7), qualityFilters['hard']!, (v) => onQualityChanged('hard', v)),
+        _filterChip(t.horoDisplay.neutral, 'neutral', const Color(0xFF26D0CE), qualityFilters['neutral']!, (v) => onQualityChanged('neutral', v)),
       ]),
 
       // B: Fortune Category
-      _filterSection('B', 'カテゴリ', [
+      _filterSection('B', t.horoDisplay.filterSecCategory, [
         _exclusiveChip(categoryLabel('healing'), 'healing', const Color(0xFF26D0CE)),
         _exclusiveChip(categoryLabel('money'), 'money', const Color(0xFFFFD370)),
         _exclusiveChip(categoryLabel('love'), 'love', const Color(0xFFFF6B9D)),
@@ -68,10 +69,10 @@ class HoroFilterPanel extends StatelessWidget {
       ]),
 
       // C: Planet Group
-      _filterSection('C', '惑星グループ', [
-        _filterChip('個人天体', 'personal', const Color(0xFFFFD370), pgroupFilters['personal']!, (v) => onPgroupChanged('personal', v)),
-        _filterChip('社会天体', 'social', const Color(0xFF6BB5FF), pgroupFilters['social']!, (v) => onPgroupChanged('social', v)),
-        _filterChip('世代天体', 'generational', const Color(0xFFB088FF), pgroupFilters['generational']!, (v) => onPgroupChanged('generational', v)),
+      _filterSection('C', t.horoDisplay.filterSecPlanetGroup, [
+        _filterChip(t.horoDisplay.filterPersonal, 'personal', const Color(0xFFFFD370), pgroupFilters['personal']!, (v) => onPgroupChanged('personal', v)),
+        _filterChip(t.horoDisplay.filterSocial, 'social', const Color(0xFF6BB5FF), pgroupFilters['social']!, (v) => onPgroupChanged('social', v)),
+        _filterChip(t.horoDisplay.filterGenerational, 'generational', const Color(0xFFB088FF), pgroupFilters['generational']!, (v) => onPgroupChanged('generational', v)),
       ]),
     ]);
   }

@@ -1,20 +1,37 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/solara_i18n.dart';
+
 // ══════════════════════════════════════════════════
 // Shared constants for Horoscope screen
 // ══════════════════════════════════════════════════
 
 const signs = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
 const signNames = ['牡羊','牡牛','双子','蟹','獅子','乙女','天秤','蠍','射手','山羊','水瓶','魚'];
+const signNamesEN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio',
+  'Sagittarius','Capricorn','Aquarius','Pisces'];
+
+/// 星座インデックス (0=牡羊…11=魚) → ロケール別表示名 (ja=漢字 / en=英名)。
+String signLabel(int idx) =>
+    isEnLocale() ? signNamesEN[idx % 12] : signNames[idx % 12];
+
 const signColors = [0xFFFF4444,0xFF4CAF50,0xFFFFD700,0xFFC0C0C0,0xFFFF8C00,0xFF8BC34A,
   0xFFE91E63,0xFF9C27B0,0xFF9C27B0,0xFF607D8B,0xFF00BCD4,0xFF3F51B5];
 const planetGlyphs = {'sun':'☉','moon':'☽','mercury':'☿','venus':'♀','mars':'♂',
   'jupiter':'♃','saturn':'♄','uranus':'♅','neptune':'♆','pluto':'♇'};
 const planetNamesJP = {'sun':'太陽','moon':'月','mercury':'水星','venus':'金星','mars':'火星',
   'jupiter':'木星','saturn':'土星','uranus':'天王星','neptune':'海王星','pluto':'冥王星'};
+const planetNamesEN = {'sun':'Sun','moon':'Moon','mercury':'Mercury','venus':'Venus','mars':'Mars',
+  'jupiter':'Jupiter','saturn':'Saturn','uranus':'Uranus','neptune':'Neptune','pluto':'Pluto'};
+
+/// 惑星キー → ロケール別表示名 (ja=漢字 / en=英名)。horoscope 系画面で再利用。
+String planetLabel(String key) =>
+    isEnLocale() ? (planetNamesEN[key] ?? key) : (planetNamesJP[key] ?? key);
 
 // HTML: FORTUNE_CATEGORIES (L2748-2773)
 // 'score' / 'direction' は 2026-04 に未使用となり削除済（数値スコア表示廃止に伴う）。
+// 表示ラベルは categoryLabel(id) (utils/solara_i18n) でロケール連動。
+// nameJP はレガシー (現状 UI からは categoryLabel 経由で参照され直接使用なし)。
 const fortuneCategories = [
   {'id':'overall','icon':'✦','nameJP':'総合','color':0xFFF6BD60,'bg':0x14F6BD60,'border':0x33F6BD60},
   {'id':'love','icon':'💕','nameJP':'恋愛','color':0xFFFF6B9D,'bg':0x14FF6B9D,'border':0x33FF6B9D},
@@ -106,6 +123,10 @@ const patternStyles = {
   'tsquare': {'label': 'T-Square', 'labelJP': 'Tスクエア', 'color': 0xFF6B5CE7},
   'yod': {'label': 'Yod', 'labelJP': 'ヨッド', 'color': 0xFF26D0CE},
 };
+
+/// patternStyles の 1 エントリ → ロケール別ラベル (ja=labelJP / en=label)。
+String patternLabel(Map style) =>
+    (isEnLocale() ? style['label'] : style['labelJP']) as String;
 
 // HTML: IDX_FORTUNE_PLANETS (L1139-1145)
 // ⚠️ UIフィルタ用 (Horo絞込チップ「癒し/金運/恋愛/仕事/対話」で使用)

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
 import '../sanctuary/sanctuary_profile_editor.dart' show DateSlashFormatter;
 import 'horo_antique_icons.dart';
 import 'horo_location_input.dart' show HoroLocationInput;
@@ -76,7 +77,7 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final label = widget.chartMode == 'np' ? 'プログレス更新' : 'トランジット更新';
+    final label = widget.chartMode == 'np' ? t.horoPanel.progressUpdate : t.horoPanel.transitUpdate;
     final btnColor = widget.chartMode == 'np'
         ? const Color(0xFFB088FF)
         : const Color(0xFF6BB5FF);
@@ -91,8 +92,8 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
       Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('日付 DATE',
-              style: TextStyle(fontSize: 11, color: Color(0xFF888888), letterSpacing: 1)),
+          Text(t.horoPanel.dateLabel,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF888888), letterSpacing: 1)),
           const SizedBox(height: 3),
           Container(
             width: double.infinity,
@@ -133,8 +134,8 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
       Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('時刻 TIME',
-              style: TextStyle(fontSize: 11, color: Color(0xFF888888), letterSpacing: 1)),
+          Text(t.horoPanel.timeLabel,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF888888), letterSpacing: 1)),
           const SizedBox(height: 3),
           HoroHourMinuteDropdown(
             hour: _hour,
@@ -151,7 +152,7 @@ class _HoroTransitPanelState extends State<HoroTransitPanel> {
         initialLat: widget.initialLat,
         initialLng: widget.initialLng,
         initialPlaceName: widget.initialPlaceName,
-        placeLabel: '地名 PLACE',
+        placeLabel: t.horoPanel.placeLabel,
         showTimezone: false,
         onChanged: (lat, lng, place, tz) {
           _lat = lat;

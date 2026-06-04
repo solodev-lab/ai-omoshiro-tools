@@ -5,9 +5,9 @@
 
 ## サマリ
 
-- ファイル数: 15 / 総行数: 5140
+- ファイル数: 15 / 総行数: 5161
 - class/mixin/extension/enum: 20
-- 関数 (top-level + method の素拾い): 49
+- 関数 (top-level + method の素拾い): 52
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 1
 - Worker URL リテラル: 0
@@ -30,16 +30,21 @@ Aspect Description Data
 - L94 `buildAspectDescription()` — アスペクト説明を生成 (3セクション)
 
 
-### `lib/screens/horoscope/horo_constants.dart` (119 行)
+### `lib/screens/horoscope/horo_constants.dart` (140 行)
 
-**imports:** dart=0 / package=1 / relative=0
+**imports:** dart=0 / package=1 / relative=1
 
-**関数 (4 public + 0 private):**
+- relative: `../../utils/solara_i18n.dart`
 
-- L81 `applyHoroOrbSettings()` — Sanctuary のオーブ設定を適用する。horoscope_screen から呼ばれる。
-- L87 `horoAspectOrb()` — アスペクト種別キー (conjunction/trine/...) の有効 orb。
-- L91 `horoPatternOrb()` — パターン orb キー (grandtrine/tsquare_opp/...) の有効 orb。
-- L97 `horoOrbSignature()` — 現在のオーブ override の状態を表す署名文字列。
+**関数 (7 public + 0 private):**
+
+- L15 `signLabel()` — 星座インデックス (0=牡羊…11=魚) → ロケール別表示名 (ja=漢字 / en=英名)。
+- L28 `planetLabel()` — 惑星キー → ロケール別表示名 (ja=漢字 / en=英名)。horoscope 系画面で再利用。
+- L98 `applyHoroOrbSettings()` — Sanctuary のオーブ設定を適用する。horoscope_screen から呼ばれる。
+- L104 `horoAspectOrb()` — アスペクト種別キー (conjunction/trine/...) の有効 orb。
+- L108 `horoPatternOrb()` — パターン orb キー (grandtrine/tsquare_opp/...) の有効 orb。
+- L114 `horoOrbSignature()` — 現在のオーブ override の状態を表す署名文字列。
+- L128 `patternLabel()` — patternStyles の 1 エントリ → ロケール別ラベル (ja=labelJP / en=label)。
 
 
 ### `lib/screens/map/daily_transit_data.dart` (1078 行)

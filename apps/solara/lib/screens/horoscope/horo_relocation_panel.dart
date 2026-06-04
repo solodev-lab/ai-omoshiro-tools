@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/fortune_api.dart'
     show RelocationAngleNarrative, fetchRelocationAngleNarrative;
-import 'horo_constants.dart' show planetGlyphs, planetNamesJP;
+import 'horo_constants.dart' show planetGlyphs, planetLabel;
 import 'horo_relocation_angles.dart';
 
 // ══════════════════════════════════════════════════
@@ -188,12 +189,12 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
               const SizedBox(height: 14),
             ],
             if (_angleChanges.isNotEmpty) ...[
-              _buildSectionTitle('アングルの星座が変わる'),
+              _buildSectionTitle(t.relocPanel.secAngleSign),
               const SizedBox(height: 8),
               ..._angleChanges.map(_buildAngleChangeCard),
               const SizedBox(height: 14),
             ],
-            _buildSectionTitle('10天体とアングルの近さ'),
+            _buildSectionTitle(t.relocPanel.secPlanetAngle),
             const SizedBox(height: 8),
             ..._deltas.map(_buildPlanetCard),
             const SizedBox(height: 10),
@@ -206,10 +207,10 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
 
   Widget _buildHeader() {
     final from = (widget.birthPlaceName == null || widget.birthPlaceName!.isEmpty)
-        ? '出生地'
+        ? t.profileEdit.birthPlace
         : widget.birthPlaceName!;
     final to = (widget.homeName == null || widget.homeName!.isEmpty)
-        ? '現住所'
+        ? t.locations.currentAddress
         : widget.homeName!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +226,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
         ),
         const SizedBox(height: 4),
         Text(
-          '$from → $to で、星がアングルに近づく・遠ざかる',
+          t.relocPanel.headerSub(from: from, to: to),
           style: GoogleFonts.notoSansJp(
             fontSize: 11,
             color: const Color(0xCCCCCCCC),
@@ -283,7 +284,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Stella がこの地の星を読み解いています…',
+              t.relocPanel.loading,
               style: GoogleFonts.notoSansJp(
                 fontSize: 11.5,
                 color: const Color(0xFFB8B2A6),
@@ -307,7 +308,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '解説の取得に失敗しました。',
+            t.relocPanel.failTitle,
             style: GoogleFonts.notoSansJp(
               fontSize: 13,
               color: const Color(0xFFE8E0D0),
@@ -316,7 +317,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
           ),
           const SizedBox(height: 6),
           Text(
-            '通信状況を確認して、もう一度お試しください。',
+            t.relocPanel.failBody,
             style: GoogleFonts.notoSansJp(
               fontSize: 12,
               color: const Color(0xFFB8B2A6),
@@ -337,7 +338,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
                 ),
               ),
               child: Text(
-                '再試行',
+                t.common.tryAgain,
                 style: GoogleFonts.notoSansJp(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
@@ -365,7 +366,9 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${c.angle.toUpperCase()}（${relocationAngleDomain[c.angle] ?? ''}）',
+            t.relocPanel.angleHead(
+                angle: c.angle.toUpperCase(),
+                domain: relocationAngleDomainLabel(c.angle)),
             style: GoogleFonts.notoSansJp(
               fontSize: 13,
               color: const Color(0xFFE8E0D0),
@@ -391,7 +394,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
   /// 惑星 1枚 (ハウス移動=金色強調 / 近=金色 / 遠=控えめ / ほぼ変化なし=灰)。
   Widget _buildPlanetCard(RelocationAngleDelta d) {
     final glyph = planetGlyphs[d.planet] ?? '';
-    final planet = planetNamesJP[d.planet] ?? d.planet;
+    final planet = planetLabel(d.planet);
     final angle = d.nearestAngle.toUpperCase();
     final narrative = _narrative?.planetNarratives[d.planet] ?? '';
 
@@ -413,7 +416,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
               child: Text(
                 d.houseChanged && d.reloHouse != null
                     ? '$glyph $planet · ${d.reloHouse}H'
-                    : '$glyph $planet · $angle軸',
+                    : '$glyph $planet · ${t.relocPanel.axisLabel(angle: angle)}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.notoSansJp(
@@ -453,7 +456,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
   (String, Color, Color, Color) _styleFor(RelocationAngleDelta d) {
     if (d.houseChanged) {
       return (
-        '◆ ハウス移動',
+        t.relocPanel.tagHouseShift,
         const Color(0xFFF6BD60),
         const Color(0x1FF6BD60),
         const Color(0x44F6BD60),
@@ -462,21 +465,21 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
     switch (d.direction) {
       case 'closer':
         return (
-          '▲ 近づく',
+          t.relocPanel.tagCloser,
           const Color(0xFFF6BD60),
           const Color(0x14F6BD60),
           const Color(0x33F6BD60),
         );
       case 'farther':
         return (
-          '▽ 遠ざかる',
+          t.relocPanel.tagFarther,
           const Color(0xFF9FB4C7),
           const Color(0x0AFFFFFF),
           const Color(0x1FFFFFFF),
         );
       default:
         return (
-          '・ ほぼ変化なし',
+          t.relocPanel.tagSame,
           const Color(0xFF888888),
           const Color(0x08FFFFFF),
           const Color(0x14FFFFFF),
@@ -493,7 +496,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
         border: Border.all(color: const Color(0x1FFFFFFF)),
       ),
       child: Text(
-        '出生時刻と現住所を設定すると、星がどのアングルに近づく地かを読み解けます。',
+        t.relocPanel.needChart,
         style: GoogleFonts.notoSansJp(
           fontSize: 12,
           color: const Color(0xFFB8B2A6),
@@ -512,7 +515,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
         border: Border.all(color: const Color(0x1FFFFFFF)),
       ),
       child: Text(
-        '出生地と現住所がほぼ同じ場所です。遠くへ移るほど、星とアングルの距離がはっきり変わります。',
+        t.relocPanel.samePlace,
         style: GoogleFonts.notoSansJp(
           fontSize: 12,
           color: const Color(0xFFB8B2A6),
@@ -524,8 +527,7 @@ class _HoroRelocationPanelState extends State<HoroRelocationPanel> {
 
   Widget _buildFootnote() {
     return Text(
-      '※ 星がアングル(ASC/MC/DSC/IC)に近いほど、その星のテーマがその土地で前に出ます。'
-      '吉凶ではなく「強まる／やわらぐ」の傾きです。',
+      t.relocPanel.footnote,
       style: GoogleFonts.notoSansJp(
         fontSize: 10,
         color: const Color(0xFF888888),

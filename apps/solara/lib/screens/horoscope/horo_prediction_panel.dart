@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../widgets/info_popup.dart';
 import 'horo_antique_icons.dart';
 import 'horo_aspect_description.dart';
@@ -38,10 +39,10 @@ class HoroPredictionPanel extends StatelessWidget {
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       horoAntiqueHeader(AntiqueIcon.pattern, 'PATTERN PREDICTIONS'),
-      const Padding(
-        padding: EdgeInsets.only(top: 2, bottom: 6),
-        child: Text('左チェック＝ON/OFF切替 ／ 右ラベル＝解説を開く',
-          style: TextStyle(fontSize: 11, color: Color(0x80888888), fontStyle: FontStyle.italic)),
+      Padding(
+        padding: const EdgeInsets.only(top: 2, bottom: 6),
+        child: Text(t.horoDisplay.filterHint,
+          style: const TextStyle(fontSize: 11, color: Color(0x80888888), fontStyle: FontStyle.italic)),
       ),
 
       // Active patterns
@@ -88,15 +89,15 @@ class HoroPredictionPanel extends StatelessWidget {
                 fontWeight: FontWeight.w600)),
           ),
           const SizedBox(height: 18),
-          HoroDescSection('配置の特徴', data['summary'] ?? '', color),
+          HoroDescSection(t.horoDisplay.secPlacement, data['summary'] ?? '', color),
           const SizedBox(height: 14),
-          HoroDescSection('ネイタル成立時 (N)', data['N'] ?? '',
+          HoroDescSection(t.horoDisplay.secNatal, data['N'] ?? '',
             const Color(0xFFFFD370)),
           const SizedBox(height: 14),
-          HoroDescSection('トランジット活性時 (T)', data['T'] ?? '',
+          HoroDescSection(t.horoDisplay.secTransit, data['T'] ?? '',
             const Color(0xFF6BB5FF)),
           const SizedBox(height: 14),
-          HoroDescSection('プログレス成立時 (P)', data['P'] ?? '',
+          HoroDescSection(t.horoDisplay.secProgress, data['P'] ?? '',
             const Color(0xFFB088FF)),
         ]),
     );
@@ -147,12 +148,12 @@ class HoroPredictionPanel extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(color: color.withAlpha(80)),
                 ),
-                child: Text(style['labelJP'] as String,
+                child: Text(patternLabel(style),
                   style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
               ),
             ),
             const SizedBox(width: 4),
-            const Text('成立中', style: TextStyle(fontSize: 11, color: Color(0xFFC9A84C))),
+            Text(t.horoDisplay.active, style: const TextStyle(fontSize: 11, color: Color(0xFFC9A84C))),
           ]),
         )),
       ]),
@@ -165,7 +166,7 @@ class HoroPredictionPanel extends StatelessWidget {
     final color = Color(style['color'] as int);
     final days = pred['daysUntil'] as int;
     final date = (pred['dateEstimate'] as DateTime).toLocal();
-    final timeLabel = days < 1 ? 'まもなく' : '$days日後';
+    final timeLabel = days < 1 ? t.horoDisplay.soon : t.horoDisplay.daysLater(days: days);
     final dateStr = '${date.month}/${date.day}';
     final p1 = pred['natalPair'][0] as String;
     final p2 = pred['natalPair'][1] as String;
@@ -216,7 +217,7 @@ class HoroPredictionPanel extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(color: color.withAlpha(80)),
                 ),
-                child: Text(style['labelJP'] as String,
+                child: Text(patternLabel(style),
                   style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
               ),
             ),

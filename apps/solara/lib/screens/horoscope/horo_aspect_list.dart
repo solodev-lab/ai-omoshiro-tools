@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../widgets/info_popup.dart';
 import 'horo_antique_icons.dart';
 import 'horo_aspect_description.dart';
@@ -76,17 +77,17 @@ class HoroAspectList extends StatelessWidget {
                 fontWeight: FontWeight.w600)),
           ),
           const SizedBox(height: 6),
-          Text('オーブ ${diff.toStringAsFixed(2)}°',
+          Text(t.horoDisplay.orb(deg: diff.toStringAsFixed(2)),
             style: const TextStyle(fontSize: 12, color: Color(0xFF888888))),
           const SizedBox(height: 18),
           // Quality summary
-          HoroDescSection('性質', desc['summary'] ?? '', color),
+          HoroDescSection(t.horoDisplay.aspNature, desc['summary'] ?? '', color),
           const SizedBox(height: 14),
           // Theme
-          HoroDescSection('テーマ', desc['theme'] ?? '', const Color(0xFFF6BD60)),
+          HoroDescSection(t.horoDisplay.aspTheme, desc['theme'] ?? '', const Color(0xFFF6BD60)),
           const SizedBox(height: 14),
           // Reading
-          HoroDescSection('読み解き', desc['reading'] ?? '', const Color(0xFFF6BD60)),
+          HoroDescSection(t.horoDisplay.aspReading, desc['reading'] ?? '', const Color(0xFFF6BD60)),
         ]),
     );
   }
@@ -94,17 +95,17 @@ class HoroAspectList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (filteredAspects.isEmpty) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('アスペクトなし', style: TextStyle(color: Color(0xFF888888), fontSize: 13)),
+      return Center(child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(t.horoDisplay.noAspects, style: const TextStyle(color: Color(0xFF888888), fontSize: 13)),
       ));
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       horoAntiqueHeader(AntiqueIcon.aspects, 'ASPECTS (${filteredAspects.length})'),
-      const Padding(
-        padding: EdgeInsets.only(top: 2, bottom: 6),
-        child: Text('左チェック＝ON/OFF切替 ／ 右ラベル＝解説を開く',
-          style: TextStyle(fontSize: 11, color: Color(0x80888888), fontStyle: FontStyle.italic)),
+      Padding(
+        padding: const EdgeInsets.only(top: 2, bottom: 6),
+        child: Text(t.horoDisplay.filterHint,
+          style: const TextStyle(fontSize: 11, color: Color(0x80888888), fontStyle: FontStyle.italic)),
       ),
       ...filteredAspects.take(15).map((a) {
         final key = '${a['type']}_${a['p1']}_${a['p2']}';
@@ -177,7 +178,7 @@ class HoroAspectList extends StatelessWidget {
       }),
       if (filteredAspects.length > 15)
         Padding(padding: const EdgeInsets.only(top: 4),
-          child: Text('... 他${filteredAspects.length - 15}件',
+          child: Text(t.horoDisplay.moreAspects(n: filteredAspects.length - 15),
             style: const TextStyle(color: Color(0x99888888), fontSize: 13))),
     ]);
   }

@@ -40,6 +40,11 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$horoDisplay$ja horoDisplay = Translations$horoDisplay$ja.internal(_root);
+	late final Translations$horoPanel$ja horoPanel = Translations$horoPanel$ja.internal(_root);
+	late final Translations$horoScreen$ja horoScreen = Translations$horoScreen$ja.internal(_root);
+	late final Translations$relocPanel$ja relocPanel = Translations$relocPanel$ja.internal(_root);
+	late final Translations$mapReloc$ja mapReloc = Translations$mapReloc$ja.internal(_root);
 	late final Translations$mapSearch$ja mapSearch = Translations$mapSearch$ja.internal(_root);
 	late final Translations$mapDir$ja mapDir = Translations$mapDir$ja.internal(_root);
 	late final Translations$aiReport$ja aiReport = Translations$aiReport$ja.internal(_root);
@@ -74,6 +79,369 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$disclaimer$ja disclaimer = Translations$disclaimer$ja.internal(_root);
 	late final Translations$common$ja common = Translations$common$ja.internal(_root);
 	late final Translations$aiConsent$ja aiConsent = Translations$aiConsent$ja.internal(_root);
+}
+
+// Path: horoDisplay
+class Translations$horoDisplay$ja {
+	Translations$horoDisplay$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '左チェック＝ON/OFF切替 ／ 右ラベル＝解説を開く'
+	String get filterHint => '左チェック＝ON/OFF切替 ／ 右ラベル＝解説を開く';
+
+	/// ja: '配置の特徴'
+	String get secPlacement => '配置の特徴';
+
+	/// ja: 'ネイタル成立時 (N)'
+	String get secNatal => 'ネイタル成立時 (N)';
+
+	/// ja: 'トランジット活性時 (T)'
+	String get secTransit => 'トランジット活性時 (T)';
+
+	/// ja: 'プログレス成立時 (P)'
+	String get secProgress => 'プログレス成立時 (P)';
+
+	/// ja: '成立中'
+	String get active => '成立中';
+
+	/// ja: 'まもなく'
+	String get soon => 'まもなく';
+
+	/// ja: '$days日後'
+	String daysLater({required Object days}) => '${days}日後';
+
+	/// ja: 'ソフト'
+	String get legendSoft => 'ソフト';
+
+	/// ja: 'ハード'
+	String get legendHard => 'ハード';
+
+	/// ja: '中立'
+	String get neutral => '中立';
+
+	/// ja: 'ネイタル'
+	String get legendNatal => 'ネイタル';
+
+	/// ja: 'トランジット'
+	String get legendTransit => 'トランジット';
+
+	/// ja: 'プログレス'
+	String get legendProgress => 'プログレス';
+
+	/// ja: 'SANCTUARYで設定すると、あなた専用のホロスコープも表示されます'
+	String get backdropSub => 'SANCTUARYで設定すると、あなた専用のホロスコープも表示されます';
+
+	/// ja: 'オーブ $deg°'
+	String orb({required Object deg}) => 'オーブ ${deg}°';
+
+	/// ja: '性質'
+	String get aspNature => '性質';
+
+	/// ja: 'テーマ'
+	String get aspTheme => 'テーマ';
+
+	/// ja: '読み解き'
+	String get aspReading => '読み解き';
+
+	/// ja: 'アスペクトなし'
+	String get noAspects => 'アスペクトなし';
+
+	/// ja: '... 他$n件'
+	String moreAspects({required Object n}) => '... 他${n}件';
+
+	/// ja: '$date のホロスコープ'
+	String horoOfDate({required Object date}) => '${date} のホロスコープ';
+
+	/// ja: 'ホロスコープのアスペクトやハウスからStellaが解釈の１つとして本内容を表示しています。内容に違和感がある場合はホロスコープにStella解釈の元となるエビデンスがあるので、ぜひご自身での解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。'
+	String get stellaNote => 'ホロスコープのアスペクトやハウスからStellaが解釈の１つとして本内容を表示しています。内容に違和感がある場合はホロスコープにStella解釈の元となるエビデンスがあるので、ぜひご自身での解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。';
+
+	/// ja: '星読みは元の出生情報のみ反映されます。 BIRTH DATAの編集は星読みに反映されません。'
+	String get birthDataNote => '星読みは元の出生情報のみ反映されます。\nBIRTH DATAの編集は星読みに反映されません。';
+
+	/// ja: 'Cosmic Pro で $name の読みも開きます'
+	String proOpenReading({required Object name}) => 'Cosmic Pro で ${name} の読みも開きます';
+
+	/// ja: 'アスペクト性質'
+	String get filterSecAspect => 'アスペクト性質';
+
+	/// ja: 'ソフト（調和）'
+	String get filterSoft => 'ソフト（調和）';
+
+	/// ja: 'ハード（緊張）'
+	String get filterHard => 'ハード（緊張）';
+
+	/// ja: 'カテゴリ'
+	String get filterSecCategory => 'カテゴリ';
+
+	/// ja: '惑星グループ'
+	String get filterSecPlanetGroup => '惑星グループ';
+
+	/// ja: '個人天体'
+	String get filterPersonal => '個人天体';
+
+	/// ja: '社会天体'
+	String get filterSocial => '社会天体';
+
+	/// ja: '世代天体'
+	String get filterGenerational => '世代天体';
+}
+
+// Path: horoPanel
+class Translations$horoPanel$ja {
+	Translations$horoPanel$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '誕生'
+	String get tabBirth => '誕生';
+
+	/// ja: '進行'
+	String get tabProgress => '進行';
+
+	/// ja: '経過'
+	String get tabTransit => '経過';
+
+	/// ja: '天体'
+	String get tabPlanets => '天体';
+
+	/// ja: '拠点'
+	String get tabRelocate => '拠点';
+
+	/// ja: '絞込'
+	String get tabFilter => '絞込';
+
+	/// ja: '相'
+	String get tabAspects => '相';
+
+	/// ja: 'プログレス更新'
+	String get progressUpdate => 'プログレス更新';
+
+	/// ja: 'トランジット更新'
+	String get transitUpdate => 'トランジット更新';
+
+	/// ja: '日付 DATE'
+	String get dateLabel => '日付 DATE';
+
+	/// ja: '時刻 TIME'
+	String get timeLabel => '時刻 TIME';
+
+	/// ja: '地名 PLACE'
+	String get placeLabel => '地名 PLACE';
+
+	/// ja: '時'
+	String get hourSuffix => '時';
+
+	/// ja: '分'
+	String get minuteSuffix => '分';
+
+	/// ja: '※ Horo画面から離れるとBIRTH DATAは初期化されます'
+	String get birthDataNote => '※ Horo画面から離れるとBIRTH DATAは初期化されます';
+
+	/// ja: 'お名前 NAME'
+	String get nameLabel => 'お名前 NAME';
+
+	/// ja: '友人Aの名前 (任意)'
+	String get nameHint => '友人Aの名前 (任意)';
+
+	/// ja: '生年月日 DATE'
+	String get birthDateLabel => '生年月日 DATE';
+
+	/// ja: '出生時刻 TIME'
+	String get birthTimeLabel => '出生時刻 TIME';
+
+	/// ja: '不明'
+	String get unknown => '不明';
+
+	/// ja: '出生地は市区町村レベルでOK・番地は不要です'
+	String get birthCityHint => '出生地は市区町村レベルでOK・番地は不要です';
+
+	/// ja: '出生地名 BIRTHPLACE'
+	String get birthplaceLabel => '出生地名 BIRTHPLACE';
+
+	/// ja: '✨ このデータで試算'
+	String get calcCta => '✨ このデータで試算';
+
+	/// ja: 'クリップボードに有効な「緯度, 経度」がありません'
+	String get clipboardInvalid => 'クリップボードに有効な「緯度, 経度」がありません';
+
+	/// ja: '座標貼り付け'
+	String get pasteCoords => '座標貼り付け';
+
+	/// ja: 'Map画面で地点をタップ→「座標取得」でコピーできます'
+	String get copyHint => 'Map画面で地点をタップ→「座標取得」でコピーできます';
+
+	/// ja: '— (座標入力後に自動取得)'
+	String get autoFetch => '— (座標入力後に自動取得)';
+
+	/// ja: '緯度 LAT'
+	String get latLabel => '緯度 LAT';
+
+	/// ja: '例: 35.6762'
+	String get latHint => '例: 35.6762';
+
+	/// ja: '経度 LNG'
+	String get lngLabel => '経度 LNG';
+
+	/// ja: '例: 139.6503'
+	String get lngHint => '例: 139.6503';
+
+	/// ja: 'タイムゾーン TZ'
+	String get tzLabel => 'タイムゾーン TZ';
+}
+
+// Path: horoScreen
+class Translations$horoScreen$ja {
+	Translations$horoScreen$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'このテーマ'
+	String get thisTheme => 'このテーマ';
+
+	/// ja: '$name の Stella の読み'
+	String proReadLabel({required Object name}) => '${name} の Stella の読み';
+
+	/// ja: '今日の星配置から「$name」のテーマで Stella が読み解きます。全 5 カテゴリの読みと、より深い読み解きは Cosmic Pro で解放されます。'
+	String proReadDesc({required Object name}) => '今日の星配置から「${name}」のテーマで Stella が読み解きます。全 5 カテゴリの読みと、より深い読み解きは Cosmic Pro で解放されます。';
+
+	/// ja: 'Fortune API に接続できませんでした'
+	String get fortuneApiError => 'Fortune API に接続できませんでした';
+
+	/// ja: '1重 NATAL'
+	String get modeNatal => '1重 NATAL';
+
+	/// ja: '2重 N+T'
+	String get modeNT => '2重 N+T';
+
+	/// ja: '2重 N+P'
+	String get modeNP => '2重 N+P';
+
+	/// ja: '✦ 星読み'
+	String get modeAstro => '✦ 星読み';
+
+	/// ja: '本質'
+	String get houseEssence => '本質';
+
+	/// ja: '出生地ベースのハウス'
+	String get houseEssenceTip => '出生地ベースのハウス';
+
+	/// ja: '現実'
+	String get houseReality => '現実';
+
+	/// ja: '現住所ベースのハウス(リロケーション)'
+	String get houseRealityTipHome => '現住所ベースのハウス(リロケーション)';
+
+	/// ja: 'サンクチュアリで現住所を設定してください'
+	String get houseRealityTipNoHome => 'サンクチュアリで現住所を設定してください';
+}
+
+// Path: relocPanel
+class Translations$relocPanel$ja {
+	Translations$relocPanel$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: '$from → $to で、星がアングルに近づく・遠ざかる'
+	String headerSub({required Object from, required Object to}) => '${from} → ${to} で、星がアングルに近づく・遠ざかる';
+
+	/// ja: 'Stella がこの地の星を読み解いています…'
+	String get loading => 'Stella がこの地の星を読み解いています…';
+
+	/// ja: '解説の取得に失敗しました。'
+	String get failTitle => '解説の取得に失敗しました。';
+
+	/// ja: '通信状況を確認して、もう一度お試しください。'
+	String get failBody => '通信状況を確認して、もう一度お試しください。';
+
+	/// ja: 'アングルの星座が変わる'
+	String get secAngleSign => 'アングルの星座が変わる';
+
+	/// ja: '10天体とアングルの近さ'
+	String get secPlanetAngle => '10天体とアングルの近さ';
+
+	/// ja: '$angle（$domain）'
+	String angleHead({required Object angle, required Object domain}) => '${angle}（${domain}）';
+
+	/// ja: '$angle軸'
+	String axisLabel({required Object angle}) => '${angle}軸';
+
+	/// ja: '◆ ハウス移動'
+	String get tagHouseShift => '◆ ハウス移動';
+
+	/// ja: '▲ 近づく'
+	String get tagCloser => '▲ 近づく';
+
+	/// ja: '▽ 遠ざかる'
+	String get tagFarther => '▽ 遠ざかる';
+
+	/// ja: '・ ほぼ変化なし'
+	String get tagSame => '・ ほぼ変化なし';
+
+	/// ja: '出生時刻と現住所を設定すると、星がどのアングルに近づく地かを読み解けます。'
+	String get needChart => '出生時刻と現住所を設定すると、星がどのアングルに近づく地かを読み解けます。';
+
+	/// ja: '出生地と現住所がほぼ同じ場所です。遠くへ移るほど、星とアングルの距離がはっきり変わります。'
+	String get samePlace => '出生地と現住所がほぼ同じ場所です。遠くへ移るほど、星とアングルの距離がはっきり変わります。';
+
+	/// ja: '※ 星がアングル(ASC/MC/DSC/IC)に近いほど、その星のテーマがその土地で前に出ます。吉凶ではなく「強まる／やわらぐ」の傾きです。'
+	String get footnote => '※ 星がアングル(ASC/MC/DSC/IC)に近いほど、その星のテーマがその土地で前に出ます。吉凶ではなく「強まる／やわらぐ」の傾きです。';
+}
+
+// Path: mapReloc
+class Translations$mapReloc$ja {
+	Translations$mapReloc$ja.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// ja: 'この場所で相談する'
+	String get consultHere => 'この場所で相談する';
+
+	/// ja: '$baseと比べて、この地点で動く星のライン'
+	String deltaTitle({required Object base}) => '${base}と比べて、この地点で動く星のライン';
+
+	/// ja: 'ライン上の地点 (近接$n本)'
+	String linesTitle({required Object n}) => 'ライン上の地点 (近接${n}本)';
+
+	/// ja: '他$n本'
+	String moreLines({required Object n}) => '他${n}本';
+
+	/// ja: '統合 — $coord'
+	String titleIntegrated({required Object coord}) => '統合 — ${coord}';
+
+	/// ja: '引越しレイヤー — $coord'
+	String titleRelocate({required Object coord}) => '引越しレイヤー — ${coord}';
+
+	/// ja: 'タップ地点 — $coord'
+	String titleTapped({required Object coord}) => 'タップ地点 — ${coord}';
+
+	/// ja: '座標取得'
+	String get getCoords => '座標取得';
+
+	/// ja: '$base → タップ地点'
+	String baseToTap({required Object base}) => '${base} → タップ地点';
+
+	/// ja: '変化なし'
+	String get noChange => '変化なし';
+
+	/// ja: '個人天体'
+	String get personalPlanet => '個人天体';
+
+	/// ja: '座標をコピーしました'
+	String get coordsCopied => '座標をコピーしました';
+
+	/// ja: '$sign座'
+	String signSuffix({required Object sign}) => '${sign}座';
 }
 
 // Path: mapSearch
@@ -3996,6 +4364,112 @@ class Translations$paywall$faq$resubscribe$ja {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'horoDisplay.filterHint' => '左チェック＝ON/OFF切替 ／ 右ラベル＝解説を開く',
+			'horoDisplay.secPlacement' => '配置の特徴',
+			'horoDisplay.secNatal' => 'ネイタル成立時 (N)',
+			'horoDisplay.secTransit' => 'トランジット活性時 (T)',
+			'horoDisplay.secProgress' => 'プログレス成立時 (P)',
+			'horoDisplay.active' => '成立中',
+			'horoDisplay.soon' => 'まもなく',
+			'horoDisplay.daysLater' => ({required Object days}) => '${days}日後',
+			'horoDisplay.legendSoft' => 'ソフト',
+			'horoDisplay.legendHard' => 'ハード',
+			'horoDisplay.neutral' => '中立',
+			'horoDisplay.legendNatal' => 'ネイタル',
+			'horoDisplay.legendTransit' => 'トランジット',
+			'horoDisplay.legendProgress' => 'プログレス',
+			'horoDisplay.backdropSub' => 'SANCTUARYで設定すると、あなた専用のホロスコープも表示されます',
+			'horoDisplay.orb' => ({required Object deg}) => 'オーブ ${deg}°',
+			'horoDisplay.aspNature' => '性質',
+			'horoDisplay.aspTheme' => 'テーマ',
+			'horoDisplay.aspReading' => '読み解き',
+			'horoDisplay.noAspects' => 'アスペクトなし',
+			'horoDisplay.moreAspects' => ({required Object n}) => '... 他${n}件',
+			'horoDisplay.horoOfDate' => ({required Object date}) => '${date} のホロスコープ',
+			'horoDisplay.stellaNote' => 'ホロスコープのアスペクトやハウスからStellaが解釈の１つとして本内容を表示しています。内容に違和感がある場合はホロスコープにStella解釈の元となるエビデンスがあるので、ぜひご自身での解釈を広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。',
+			'horoDisplay.birthDataNote' => '星読みは元の出生情報のみ反映されます。\nBIRTH DATAの編集は星読みに反映されません。',
+			'horoDisplay.proOpenReading' => ({required Object name}) => 'Cosmic Pro で ${name} の読みも開きます',
+			'horoDisplay.filterSecAspect' => 'アスペクト性質',
+			'horoDisplay.filterSoft' => 'ソフト（調和）',
+			'horoDisplay.filterHard' => 'ハード（緊張）',
+			'horoDisplay.filterSecCategory' => 'カテゴリ',
+			'horoDisplay.filterSecPlanetGroup' => '惑星グループ',
+			'horoDisplay.filterPersonal' => '個人天体',
+			'horoDisplay.filterSocial' => '社会天体',
+			'horoDisplay.filterGenerational' => '世代天体',
+			'horoPanel.tabBirth' => '誕生',
+			'horoPanel.tabProgress' => '進行',
+			'horoPanel.tabTransit' => '経過',
+			'horoPanel.tabPlanets' => '天体',
+			'horoPanel.tabRelocate' => '拠点',
+			'horoPanel.tabFilter' => '絞込',
+			'horoPanel.tabAspects' => '相',
+			'horoPanel.progressUpdate' => 'プログレス更新',
+			'horoPanel.transitUpdate' => 'トランジット更新',
+			'horoPanel.dateLabel' => '日付 DATE',
+			'horoPanel.timeLabel' => '時刻 TIME',
+			'horoPanel.placeLabel' => '地名 PLACE',
+			'horoPanel.hourSuffix' => '時',
+			'horoPanel.minuteSuffix' => '分',
+			'horoPanel.birthDataNote' => '※ Horo画面から離れるとBIRTH DATAは初期化されます',
+			'horoPanel.nameLabel' => 'お名前 NAME',
+			'horoPanel.nameHint' => '友人Aの名前 (任意)',
+			'horoPanel.birthDateLabel' => '生年月日 DATE',
+			'horoPanel.birthTimeLabel' => '出生時刻 TIME',
+			'horoPanel.unknown' => '不明',
+			'horoPanel.birthCityHint' => '出生地は市区町村レベルでOK・番地は不要です',
+			'horoPanel.birthplaceLabel' => '出生地名 BIRTHPLACE',
+			'horoPanel.calcCta' => '✨ このデータで試算',
+			'horoPanel.clipboardInvalid' => 'クリップボードに有効な「緯度, 経度」がありません',
+			'horoPanel.pasteCoords' => '座標貼り付け',
+			'horoPanel.copyHint' => 'Map画面で地点をタップ→「座標取得」でコピーできます',
+			'horoPanel.autoFetch' => '— (座標入力後に自動取得)',
+			'horoPanel.latLabel' => '緯度 LAT',
+			'horoPanel.latHint' => '例: 35.6762',
+			'horoPanel.lngLabel' => '経度 LNG',
+			'horoPanel.lngHint' => '例: 139.6503',
+			'horoPanel.tzLabel' => 'タイムゾーン TZ',
+			'horoScreen.thisTheme' => 'このテーマ',
+			'horoScreen.proReadLabel' => ({required Object name}) => '${name} の Stella の読み',
+			'horoScreen.proReadDesc' => ({required Object name}) => '今日の星配置から「${name}」のテーマで Stella が読み解きます。全 5 カテゴリの読みと、より深い読み解きは Cosmic Pro で解放されます。',
+			'horoScreen.fortuneApiError' => 'Fortune API に接続できませんでした',
+			'horoScreen.modeNatal' => '1重 NATAL',
+			'horoScreen.modeNT' => '2重 N+T',
+			'horoScreen.modeNP' => '2重 N+P',
+			'horoScreen.modeAstro' => '✦ 星読み',
+			'horoScreen.houseEssence' => '本質',
+			'horoScreen.houseEssenceTip' => '出生地ベースのハウス',
+			'horoScreen.houseReality' => '現実',
+			'horoScreen.houseRealityTipHome' => '現住所ベースのハウス(リロケーション)',
+			'horoScreen.houseRealityTipNoHome' => 'サンクチュアリで現住所を設定してください',
+			'relocPanel.headerSub' => ({required Object from, required Object to}) => '${from} → ${to} で、星がアングルに近づく・遠ざかる',
+			'relocPanel.loading' => 'Stella がこの地の星を読み解いています…',
+			'relocPanel.failTitle' => '解説の取得に失敗しました。',
+			'relocPanel.failBody' => '通信状況を確認して、もう一度お試しください。',
+			'relocPanel.secAngleSign' => 'アングルの星座が変わる',
+			'relocPanel.secPlanetAngle' => '10天体とアングルの近さ',
+			'relocPanel.angleHead' => ({required Object angle, required Object domain}) => '${angle}（${domain}）',
+			'relocPanel.axisLabel' => ({required Object angle}) => '${angle}軸',
+			'relocPanel.tagHouseShift' => '◆ ハウス移動',
+			'relocPanel.tagCloser' => '▲ 近づく',
+			'relocPanel.tagFarther' => '▽ 遠ざかる',
+			'relocPanel.tagSame' => '・ ほぼ変化なし',
+			'relocPanel.needChart' => '出生時刻と現住所を設定すると、星がどのアングルに近づく地かを読み解けます。',
+			'relocPanel.samePlace' => '出生地と現住所がほぼ同じ場所です。遠くへ移るほど、星とアングルの距離がはっきり変わります。',
+			'relocPanel.footnote' => '※ 星がアングル(ASC/MC/DSC/IC)に近いほど、その星のテーマがその土地で前に出ます。吉凶ではなく「強まる／やわらぐ」の傾きです。',
+			'mapReloc.consultHere' => 'この場所で相談する',
+			'mapReloc.deltaTitle' => ({required Object base}) => '${base}と比べて、この地点で動く星のライン',
+			'mapReloc.linesTitle' => ({required Object n}) => 'ライン上の地点 (近接${n}本)',
+			'mapReloc.moreLines' => ({required Object n}) => '他${n}本',
+			'mapReloc.titleIntegrated' => ({required Object coord}) => '統合 — ${coord}',
+			'mapReloc.titleRelocate' => ({required Object coord}) => '引越しレイヤー — ${coord}',
+			'mapReloc.titleTapped' => ({required Object coord}) => 'タップ地点 — ${coord}',
+			'mapReloc.getCoords' => '座標取得',
+			'mapReloc.baseToTap' => ({required Object base}) => '${base} → タップ地点',
+			'mapReloc.noChange' => '変化なし',
+			'mapReloc.personalPlanet' => '個人天体',
+			'mapReloc.coordsCopied' => '座標をコピーしました',
+			'mapReloc.signSuffix' => ({required Object sign}) => '${sign}座',
 			'mapSearch.results' => ({required Object n}) => '検索結果 (${n})',
 			'mapSearch.rankDistance' => '中心点',
 			'mapSearch.rankRelevance' => '知名度',
@@ -4402,6 +4876,8 @@ extension on Translations {
 			'forecast.cycles.s3Body' => '「いつ動くか」の長期計画に。\nその期間の中で具体的な 1 日を Map 画面で確認すると、\nその地点・時刻での方角と時間が見えます。',
 			'forecast.cycles.footer' => '※ 同じ期間のスコアでも Map で開いた数字とは別の指標です\n(場所・時刻に依存しない計算)。\n詳細は画面上部 ❓ ボタンの「Map 画面の数字との関係」へ。',
 			'forecast.top5.title' => 'ハイライトTop5',
+			_ => null,
+		} ?? switch (path) {
 			'forecast.top5.year' => ({required Object year}) => '${year}年',
 			'forecast.top5.infoTitle' => 'ハイライト Top5 の読み方',
 			'forecast.top5.s1Title' => '【表示の意味】',
@@ -4508,8 +4984,6 @@ extension on Translations {
 			'consultResult.block.proSyncBody' => 'Cosmic Pro の課金状態をストアと再確認しています。クレジットは消費されていません。数十秒待ってからもう一度お試しください。',
 			'consultResult.block.exhaustedTitle' => '相談クレジットを使い切りました',
 			'consultResult.block.exhaustedBody' => '無料の Stella 相談は週ごとに補充されます。すぐ続けるなら、追加クレジットの購入か、回数無制限の Cosmic Pro が選べます。',
-			_ => null,
-		} ?? switch (path) {
 			'consultResult.block.buyCredits' => '追加クレジットを購入',
 			'consultResult.block.goUnlimited' => '✦ Cosmic Pro で無制限にする',
 			'consultResult.block.seePro' => '✦ Cosmic Pro を見る',

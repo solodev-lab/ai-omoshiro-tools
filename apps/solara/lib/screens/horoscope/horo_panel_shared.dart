@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../i18n/strings.g.dart';
 import 'horo_antique_icons.dart';
 import 'horo_astro_glyphs.dart';
 import 'horo_constants.dart';
@@ -243,7 +244,7 @@ class HoroHourMinuteDropdown extends StatelessWidget {
         child: _dropdownBox(
           value: hour,
           count: 24,
-          suffix: '時',
+          suffix: t.horoPanel.hourSuffix,
           onChanged: enabled ? onHourChanged : null,
         ),
       ),
@@ -252,7 +253,7 @@ class HoroHourMinuteDropdown extends StatelessWidget {
         child: _dropdownBox(
           value: minute,
           count: 60,
-          suffix: '分',
+          suffix: t.horoPanel.minuteSuffix,
           onChanged: enabled ? onMinuteChanged : null,
         ),
       ),

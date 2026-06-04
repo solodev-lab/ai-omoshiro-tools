@@ -39,6 +39,11 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	TranslationsEn $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEn(meta: meta ?? this.$meta);
 
 	// Translations
+	@override late final _Translations$horoDisplay$en horoDisplay = _Translations$horoDisplay$en._(_root);
+	@override late final _Translations$horoPanel$en horoPanel = _Translations$horoPanel$en._(_root);
+	@override late final _Translations$horoScreen$en horoScreen = _Translations$horoScreen$en._(_root);
+	@override late final _Translations$relocPanel$en relocPanel = _Translations$relocPanel$en._(_root);
+	@override late final _Translations$mapReloc$en mapReloc = _Translations$mapReloc$en._(_root);
 	@override late final _Translations$mapSearch$en mapSearch = _Translations$mapSearch$en._(_root);
 	@override late final _Translations$mapDir$en mapDir = _Translations$mapDir$en._(_root);
 	@override late final _Translations$aiReport$en aiReport = _Translations$aiReport$en._(_root);
@@ -73,6 +78,157 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$disclaimer$en disclaimer = _Translations$disclaimer$en._(_root);
 	@override late final _Translations$common$en common = _Translations$common$en._(_root);
 	@override late final _Translations$aiConsent$en aiConsent = _Translations$aiConsent$en._(_root);
+}
+
+// Path: horoDisplay
+class _Translations$horoDisplay$en extends Translations$horoDisplay$ja {
+	_Translations$horoDisplay$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get filterHint => 'Left check = toggle ON/OFF / Right label = open description';
+	@override String get secPlacement => 'Placement features';
+	@override String get secNatal => 'When natal (N)';
+	@override String get secTransit => 'When transit-active (T)';
+	@override String get secProgress => 'When progressed (P)';
+	@override String get active => 'Active';
+	@override String get soon => 'Soon';
+	@override String daysLater({required Object days}) => 'in ${days} days';
+	@override String get legendSoft => 'Soft';
+	@override String get legendHard => 'Hard';
+	@override String get neutral => 'Neutral';
+	@override String get legendNatal => 'Natal';
+	@override String get legendTransit => 'Transit';
+	@override String get legendProgress => 'Progress';
+	@override String get backdropSub => 'Set it up in SANCTUARY to also see your own personal horoscope';
+	@override String orb({required Object deg}) => 'Orb ${deg}°';
+	@override String get aspNature => 'Nature';
+	@override String get aspTheme => 'Theme';
+	@override String get aspReading => 'Reading';
+	@override String get noAspects => 'No aspects';
+	@override String moreAspects({required Object n}) => '... ${n} more';
+	@override String horoOfDate({required Object date}) => 'Horoscope for ${date}';
+	@override String get stellaNote => 'Stella shows this as one interpretation, drawn from the aspects and houses of your horoscope. If something feels off, the evidence behind Stella\'s reading is right there in your horoscope — please feel free to expand on it with your own interpretation. What\'s shown here is only one of many readings.';
+	@override String get birthDataNote => 'Star readings reflect only your original birth details.\nEdits to BIRTH DATA are not reflected in star readings.';
+	@override String proOpenReading({required Object name}) => 'Cosmic Pro also opens ${name}\'s reading';
+	@override String get filterSecAspect => 'Aspect nature';
+	@override String get filterSoft => 'Soft (harmony)';
+	@override String get filterHard => 'Hard (tension)';
+	@override String get filterSecCategory => 'Category';
+	@override String get filterSecPlanetGroup => 'Planet group';
+	@override String get filterPersonal => 'Personal planets';
+	@override String get filterSocial => 'Social planets';
+	@override String get filterGenerational => 'Generational planets';
+}
+
+// Path: horoPanel
+class _Translations$horoPanel$en extends Translations$horoPanel$ja {
+	_Translations$horoPanel$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get tabBirth => 'Birth';
+	@override String get tabProgress => 'Progress';
+	@override String get tabTransit => 'Transit';
+	@override String get tabPlanets => 'Planets';
+	@override String get tabRelocate => 'Base';
+	@override String get tabFilter => 'Filter';
+	@override String get tabAspects => 'Aspects';
+	@override String get progressUpdate => 'Update progression';
+	@override String get transitUpdate => 'Update transit';
+	@override String get dateLabel => 'DATE';
+	@override String get timeLabel => 'TIME';
+	@override String get placeLabel => 'PLACE';
+	@override String get hourSuffix => 'h';
+	@override String get minuteSuffix => 'm';
+	@override String get birthDataNote => '* BIRTH DATA resets when you leave the Horo screen';
+	@override String get nameLabel => 'NAME';
+	@override String get nameHint => 'Friend A\'s name (optional)';
+	@override String get birthDateLabel => 'DATE';
+	@override String get birthTimeLabel => 'TIME';
+	@override String get unknown => 'Unknown';
+	@override String get birthCityHint => 'City/town level is fine for the birthplace — no street address needed';
+	@override String get birthplaceLabel => 'BIRTHPLACE';
+	@override String get calcCta => '✨ Calculate with this data';
+	@override String get clipboardInvalid => 'No valid "latitude, longitude" on the clipboard';
+	@override String get pasteCoords => 'Paste coordinates';
+	@override String get copyHint => 'Tap a point on the Map → "Copy coords" to copy';
+	@override String get autoFetch => '— (auto-fetched after you enter coordinates)';
+	@override String get latLabel => 'LAT';
+	@override String get latHint => 'e.g. 35.6762';
+	@override String get lngLabel => 'LNG';
+	@override String get lngHint => 'e.g. 139.6503';
+	@override String get tzLabel => 'TZ';
+}
+
+// Path: horoScreen
+class _Translations$horoScreen$en extends Translations$horoScreen$ja {
+	_Translations$horoScreen$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get thisTheme => 'this theme';
+	@override String proReadLabel({required Object name}) => 'Stella\'s reading of ${name}';
+	@override String proReadDesc({required Object name}) => 'Stella reads today\'s star positions through the theme of "${name}". All 5 categories and deeper readings are unlocked with Cosmic Pro.';
+	@override String get fortuneApiError => 'Couldn\'t connect to the Fortune API';
+	@override String get modeNatal => 'NATAL';
+	@override String get modeNT => 'N+T';
+	@override String get modeNP => 'N+P';
+	@override String get modeAstro => '✦ Star reading';
+	@override String get houseEssence => 'Essence';
+	@override String get houseEssenceTip => 'Houses based on your birthplace';
+	@override String get houseReality => 'Reality';
+	@override String get houseRealityTipHome => 'Houses based on your current address (relocation)';
+	@override String get houseRealityTipNoHome => 'Please set your current address in the Sanctuary';
+}
+
+// Path: relocPanel
+class _Translations$relocPanel$en extends Translations$relocPanel$ja {
+	_Translations$relocPanel$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String headerSub({required Object from, required Object to}) => 'From ${from} to ${to}: how the planets near and leave the angles';
+	@override String get loading => 'Stella is reading the stars of this place…';
+	@override String get failTitle => 'Couldn\'t load the reading.';
+	@override String get failBody => 'Please check your connection and try again.';
+	@override String get secAngleSign => 'The angles\' signs change';
+	@override String get secPlanetAngle => 'How close the 10 planets are to the angles';
+	@override String angleHead({required Object angle, required Object domain}) => '${angle} (${domain})';
+	@override String axisLabel({required Object angle}) => '${angle} axis';
+	@override String get tagHouseShift => '◆ House shift';
+	@override String get tagCloser => '▲ Approaching';
+	@override String get tagFarther => '▽ Receding';
+	@override String get tagSame => '・ Almost no change';
+	@override String get needChart => 'Set your birth time and current address to read which angle the planets draw near here.';
+	@override String get samePlace => 'Your birthplace and current address are almost the same spot. The farther you move, the more clearly the distance between planets and angles changes.';
+	@override String get footnote => '* The closer a planet is to an angle (ASC/MC/DSC/IC), the more that planet\'s theme comes forward in that land. Not a good/bad verdict, but a leaning toward "stronger / gentler".';
+}
+
+// Path: mapReloc
+class _Translations$mapReloc$en extends Translations$mapReloc$ja {
+	_Translations$mapReloc$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get consultHere => 'Consult about this place';
+	@override String deltaTitle({required Object base}) => 'Star lines that shift here, compared with your ${base}';
+	@override String linesTitle({required Object n}) => 'Points on lines (nearby ${n})';
+	@override String moreLines({required Object n}) => '${n} more';
+	@override String titleIntegrated({required Object coord}) => 'Integrated — ${coord}';
+	@override String titleRelocate({required Object coord}) => 'Relocation layer — ${coord}';
+	@override String titleTapped({required Object coord}) => 'Tapped point — ${coord}';
+	@override String get getCoords => 'Copy coords';
+	@override String baseToTap({required Object base}) => '${base} → tapped point';
+	@override String get noChange => 'No change';
+	@override String get personalPlanet => 'Personal planet';
+	@override String get coordsCopied => 'Coordinates copied';
+	@override String signSuffix({required Object sign}) => '${sign}';
 }
 
 // Path: mapSearch
@@ -2296,6 +2452,112 @@ class _Translations$paywall$faq$resubscribe$en extends Translations$paywall$faq$
 extension on TranslationsEn {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
+			'horoDisplay.filterHint' => 'Left check = toggle ON/OFF / Right label = open description',
+			'horoDisplay.secPlacement' => 'Placement features',
+			'horoDisplay.secNatal' => 'When natal (N)',
+			'horoDisplay.secTransit' => 'When transit-active (T)',
+			'horoDisplay.secProgress' => 'When progressed (P)',
+			'horoDisplay.active' => 'Active',
+			'horoDisplay.soon' => 'Soon',
+			'horoDisplay.daysLater' => ({required Object days}) => 'in ${days} days',
+			'horoDisplay.legendSoft' => 'Soft',
+			'horoDisplay.legendHard' => 'Hard',
+			'horoDisplay.neutral' => 'Neutral',
+			'horoDisplay.legendNatal' => 'Natal',
+			'horoDisplay.legendTransit' => 'Transit',
+			'horoDisplay.legendProgress' => 'Progress',
+			'horoDisplay.backdropSub' => 'Set it up in SANCTUARY to also see your own personal horoscope',
+			'horoDisplay.orb' => ({required Object deg}) => 'Orb ${deg}°',
+			'horoDisplay.aspNature' => 'Nature',
+			'horoDisplay.aspTheme' => 'Theme',
+			'horoDisplay.aspReading' => 'Reading',
+			'horoDisplay.noAspects' => 'No aspects',
+			'horoDisplay.moreAspects' => ({required Object n}) => '... ${n} more',
+			'horoDisplay.horoOfDate' => ({required Object date}) => 'Horoscope for ${date}',
+			'horoDisplay.stellaNote' => 'Stella shows this as one interpretation, drawn from the aspects and houses of your horoscope. If something feels off, the evidence behind Stella\'s reading is right there in your horoscope — please feel free to expand on it with your own interpretation. What\'s shown here is only one of many readings.',
+			'horoDisplay.birthDataNote' => 'Star readings reflect only your original birth details.\nEdits to BIRTH DATA are not reflected in star readings.',
+			'horoDisplay.proOpenReading' => ({required Object name}) => 'Cosmic Pro also opens ${name}\'s reading',
+			'horoDisplay.filterSecAspect' => 'Aspect nature',
+			'horoDisplay.filterSoft' => 'Soft (harmony)',
+			'horoDisplay.filterHard' => 'Hard (tension)',
+			'horoDisplay.filterSecCategory' => 'Category',
+			'horoDisplay.filterSecPlanetGroup' => 'Planet group',
+			'horoDisplay.filterPersonal' => 'Personal planets',
+			'horoDisplay.filterSocial' => 'Social planets',
+			'horoDisplay.filterGenerational' => 'Generational planets',
+			'horoPanel.tabBirth' => 'Birth',
+			'horoPanel.tabProgress' => 'Progress',
+			'horoPanel.tabTransit' => 'Transit',
+			'horoPanel.tabPlanets' => 'Planets',
+			'horoPanel.tabRelocate' => 'Base',
+			'horoPanel.tabFilter' => 'Filter',
+			'horoPanel.tabAspects' => 'Aspects',
+			'horoPanel.progressUpdate' => 'Update progression',
+			'horoPanel.transitUpdate' => 'Update transit',
+			'horoPanel.dateLabel' => 'DATE',
+			'horoPanel.timeLabel' => 'TIME',
+			'horoPanel.placeLabel' => 'PLACE',
+			'horoPanel.hourSuffix' => 'h',
+			'horoPanel.minuteSuffix' => 'm',
+			'horoPanel.birthDataNote' => '* BIRTH DATA resets when you leave the Horo screen',
+			'horoPanel.nameLabel' => 'NAME',
+			'horoPanel.nameHint' => 'Friend A\'s name (optional)',
+			'horoPanel.birthDateLabel' => 'DATE',
+			'horoPanel.birthTimeLabel' => 'TIME',
+			'horoPanel.unknown' => 'Unknown',
+			'horoPanel.birthCityHint' => 'City/town level is fine for the birthplace — no street address needed',
+			'horoPanel.birthplaceLabel' => 'BIRTHPLACE',
+			'horoPanel.calcCta' => '✨ Calculate with this data',
+			'horoPanel.clipboardInvalid' => 'No valid "latitude, longitude" on the clipboard',
+			'horoPanel.pasteCoords' => 'Paste coordinates',
+			'horoPanel.copyHint' => 'Tap a point on the Map → "Copy coords" to copy',
+			'horoPanel.autoFetch' => '— (auto-fetched after you enter coordinates)',
+			'horoPanel.latLabel' => 'LAT',
+			'horoPanel.latHint' => 'e.g. 35.6762',
+			'horoPanel.lngLabel' => 'LNG',
+			'horoPanel.lngHint' => 'e.g. 139.6503',
+			'horoPanel.tzLabel' => 'TZ',
+			'horoScreen.thisTheme' => 'this theme',
+			'horoScreen.proReadLabel' => ({required Object name}) => 'Stella\'s reading of ${name}',
+			'horoScreen.proReadDesc' => ({required Object name}) => 'Stella reads today\'s star positions through the theme of "${name}". All 5 categories and deeper readings are unlocked with Cosmic Pro.',
+			'horoScreen.fortuneApiError' => 'Couldn\'t connect to the Fortune API',
+			'horoScreen.modeNatal' => 'NATAL',
+			'horoScreen.modeNT' => 'N+T',
+			'horoScreen.modeNP' => 'N+P',
+			'horoScreen.modeAstro' => '✦ Star reading',
+			'horoScreen.houseEssence' => 'Essence',
+			'horoScreen.houseEssenceTip' => 'Houses based on your birthplace',
+			'horoScreen.houseReality' => 'Reality',
+			'horoScreen.houseRealityTipHome' => 'Houses based on your current address (relocation)',
+			'horoScreen.houseRealityTipNoHome' => 'Please set your current address in the Sanctuary',
+			'relocPanel.headerSub' => ({required Object from, required Object to}) => 'From ${from} to ${to}: how the planets near and leave the angles',
+			'relocPanel.loading' => 'Stella is reading the stars of this place…',
+			'relocPanel.failTitle' => 'Couldn\'t load the reading.',
+			'relocPanel.failBody' => 'Please check your connection and try again.',
+			'relocPanel.secAngleSign' => 'The angles\' signs change',
+			'relocPanel.secPlanetAngle' => 'How close the 10 planets are to the angles',
+			'relocPanel.angleHead' => ({required Object angle, required Object domain}) => '${angle} (${domain})',
+			'relocPanel.axisLabel' => ({required Object angle}) => '${angle} axis',
+			'relocPanel.tagHouseShift' => '◆ House shift',
+			'relocPanel.tagCloser' => '▲ Approaching',
+			'relocPanel.tagFarther' => '▽ Receding',
+			'relocPanel.tagSame' => '・ Almost no change',
+			'relocPanel.needChart' => 'Set your birth time and current address to read which angle the planets draw near here.',
+			'relocPanel.samePlace' => 'Your birthplace and current address are almost the same spot. The farther you move, the more clearly the distance between planets and angles changes.',
+			'relocPanel.footnote' => '* The closer a planet is to an angle (ASC/MC/DSC/IC), the more that planet\'s theme comes forward in that land. Not a good/bad verdict, but a leaning toward "stronger / gentler".',
+			'mapReloc.consultHere' => 'Consult about this place',
+			'mapReloc.deltaTitle' => ({required Object base}) => 'Star lines that shift here, compared with your ${base}',
+			'mapReloc.linesTitle' => ({required Object n}) => 'Points on lines (nearby ${n})',
+			'mapReloc.moreLines' => ({required Object n}) => '${n} more',
+			'mapReloc.titleIntegrated' => ({required Object coord}) => 'Integrated — ${coord}',
+			'mapReloc.titleRelocate' => ({required Object coord}) => 'Relocation layer — ${coord}',
+			'mapReloc.titleTapped' => ({required Object coord}) => 'Tapped point — ${coord}',
+			'mapReloc.getCoords' => 'Copy coords',
+			'mapReloc.baseToTap' => ({required Object base}) => '${base} → tapped point',
+			'mapReloc.noChange' => 'No change',
+			'mapReloc.personalPlanet' => 'Personal planet',
+			'mapReloc.coordsCopied' => 'Coordinates copied',
+			'mapReloc.signSuffix' => ({required Object sign}) => '${sign}',
 			'mapSearch.results' => ({required Object n}) => 'Results (${n})',
 			'mapSearch.rankDistance' => 'Nearby',
 			'mapSearch.rankRelevance' => 'Popular',
@@ -2702,6 +2964,8 @@ extension on TranslationsEn {
 			'forecast.cycles.s3Body' => 'For longer-term "when to act" planning.\nCheck a specific day within the stretch on the Map screen,\nand you\'ll see the direction and timing at that place and hour.',
 			'forecast.cycles.footer' => '* Even for the same stretch\'s score, this is a different measure from the number you\'d open on the Map\n(a calculation independent of place and time).\nFor details, see "How this relates to the Map numbers" under the ❓ button at the top.',
 			'forecast.top5.title' => 'Highlights Top 5',
+			_ => null,
+		} ?? switch (path) {
 			'forecast.top5.year' => ({required Object year}) => '${year}',
 			'forecast.top5.infoTitle' => 'How to read Highlights — Top 5',
 			'forecast.top5.s1Title' => '[What it means]',
@@ -2808,8 +3072,6 @@ extension on TranslationsEn {
 			'consultResult.block.proSyncBody' => 'We\'re re-checking your Cosmic Pro billing status with the store. No credits have been used. Please wait a moment, then try again.',
 			'consultResult.block.exhaustedTitle' => 'You\'ve used up your consultation credits',
 			'consultResult.block.exhaustedBody' => 'Free Stella consultations refill each week. To keep going right away, you can buy extra credits, or go unlimited with Cosmic Pro.',
-			_ => null,
-		} ?? switch (path) {
 			'consultResult.block.buyCredits' => 'Buy extra credits',
 			'consultResult.block.goUnlimited' => '✦ Go unlimited with Cosmic Pro',
 			'consultResult.block.seePro' => '✦ See Cosmic Pro',

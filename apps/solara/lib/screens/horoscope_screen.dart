@@ -8,6 +8,7 @@ import '../utils/pro_status.dart';
 import '../utils/solara_storage.dart';
 import '../utils/fortune_api.dart';
 import '../utils/fortune_cache.dart';
+import '../i18n/strings.g.dart';
 import '../utils/solara_i18n.dart';
 import '../widgets/pro_unlock_dialog.dart';
 import '../widgets/tap_to_unfocus.dart';
@@ -259,13 +260,11 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
   void _showFortuneProUnlock(Map<String, dynamic> category) {
     final nameJP = category['id'] != null
         ? categoryLabel(category['id'] as String)
-        : 'このテーマ';
+        : t.horoScreen.thisTheme;
     showProUnlockDialog(
       context,
-      featureLabel: '$nameJP の Stella の読み',
-      description: '今日の星配置から「$nameJP」のテーマで Stella が読み解きます。'
-          '全 5 カテゴリの読みと、より深い読み解きは '
-          'Cosmic Pro で解放されます。',
+      featureLabel: t.horoScreen.proReadLabel(name: nameJP),
+      description: t.horoScreen.proReadDesc(name: nameJP),
     );
   }
 
@@ -718,7 +717,7 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
         _fortuneLoading = false;
         // 全てnullなら失敗扱い
         if (results.every((e) => e.value == null)) {
-          _fortuneError = 'Fortune API に接続できませんでした';
+          _fortuneError = t.horoScreen.fortuneApiError;
         }
       });
       // 永続キャッシュに保存 (次回コールドスタートで即表示 + Gemini 節約)。
@@ -796,10 +795,10 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
                     side: const BorderSide(color: Color(0x33F6BD60)),
                   ),
                   itemBuilder: (_) => [
-                    _menuItem('single', '1重 NATAL'),
-                    _menuItem('nt', '2重 N+T'),
-                    _menuItem('np', '2重 N+P'),
-                    _menuItem('astrology', '✦ 星読み'),
+                    _menuItem('single', t.horoScreen.modeNatal),
+                    _menuItem('nt', t.horoScreen.modeNT),
+                    _menuItem('np', t.horoScreen.modeNP),
+                    _menuItem('astrology', t.horoScreen.modeAstro),
                   ],
                   child: Container(
                     width: 40, height: 40,
@@ -880,16 +879,16 @@ class HoroscopeScreenState extends State<HoroscopeScreen>
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         _toggleSegment(
-          label: '本質',
-          tooltip: '出生地ベースのハウス',
+          label: t.horoScreen.houseEssence,
+          tooltip: t.horoScreen.houseEssenceTip,
           active: !_relocateMode,
           enabled: true,
           onTap: () => _setRelocateMode(false),
         ),
         Container(width: 1, height: 20, color: const Color(0x4DF6BD60)),
         _toggleSegment(
-          label: '現実',
-          tooltip: hasHome ? '現住所ベースのハウス(リロケーション)' : 'サンクチュアリで現住所を設定してください',
+          label: t.horoScreen.houseReality,
+          tooltip: hasHome ? t.horoScreen.houseRealityTipHome : t.horoScreen.houseRealityTipNoHome,
           active: _relocateMode,
           enabled: hasHome,
           onTap: () => _setRelocateMode(true),

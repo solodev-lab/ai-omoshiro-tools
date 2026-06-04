@@ -5,32 +5,32 @@
 
 ## サマリ
 
-- ファイル数: 23 / 総行数: 6055
+- ファイル数: 23 / 総行数: 6119
 - class/mixin/extension/enum: 33
-- 関数 (top-level + method の素拾い): 161
+- 関数 (top-level + method の素拾い): 165
 - Navigator.push 等: 0
 - Popup/Dialog 呼出: 2
 - Worker URL リテラル: 0
 
 ## ファイル別
 
-### `lib/screens/horoscope/horo_aspect_list.dart` (184 行)
+### `lib/screens/horoscope/horo_aspect_list.dart` (185 行)
 
-**imports:** dart=0 / package=2 / relative=6
+**imports:** dart=0 / package=2 / relative=7
 
-- relative: `../../widgets/info_popup.dart`, `horo_antique_icons.dart`, `horo_aspect_description.dart`, `horo_desc_section.dart`, `horo_constants.dart`, `horo_panel_shared.dart`
+- relative: `../../i18n/strings.g.dart`, `../../widgets/info_popup.dart`, `horo_antique_icons.dart`, `horo_aspect_description.dart`, `horo_desc_section.dart`, `horo_constants.dart`, `horo_panel_shared.dart`
 
 **型定義 (1):**
 
-- L16 `class HoroAspectList : StatelessWidget`
+- L17 `class HoroAspectList : StatelessWidget`
 
 **関数 (1 public + 1 private):**
 
-- L95 `build()`
+- L96 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L22 `_showAspectDescription()`
+  - L23 `_showAspectDescription()`
 
   </details>
 
@@ -80,31 +80,31 @@
   </details>
 
 
-### `lib/screens/horoscope/horo_birth_panel.dart` (345 行)
+### `lib/screens/horoscope/horo_birth_panel.dart` (346 行)
 
-**imports:** dart=0 / package=3 / relative=5
+**imports:** dart=0 / package=3 / relative=6
 
-- relative: `../../utils/solara_storage.dart`, `../sanctuary/sanctuary_profile_editor.dart`, `horo_antique_icons.dart`, `horo_location_input.dart`, `horo_panel_shared.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/solara_storage.dart`, `../sanctuary/sanctuary_profile_editor.dart`, `horo_antique_icons.dart`, `horo_location_input.dart`, `horo_panel_shared.dart`
 
 **型定義 (2):**
 
-- L27 `class HoroBirthPanel : StatefulWidget`
-- L53 `class _HoroBirthPanelState : State`
+- L28 `class HoroBirthPanel : StatefulWidget`
+- L54 `class _HoroBirthPanelState : State`
 
 **関数 (5 public + 4 private):**
 
-- L50 `createState()`
-- L67 `initState()`
-- L73 `didUpdateWidget()`
-- L97 `dispose()`
-- L141 `build()`
+- L51 `createState()`
+- L68 `initState()`
+- L74 `didUpdateWidget()`
+- L98 `dispose()`
+- L142 `build()`
 
   <details><summary>private 関数 4 件</summary>
 
-  - L81 `_initFromProfile()`
-  - L104 `_apply()`
-  - L300 `_labeled()`
-  - L315 `_textField()`
+  - L82 `_initFromProfile()`
+  - L105 `_apply()`
+  - L301 `_labeled()`
+  - L316 `_textField()`
 
   </details>
 
@@ -236,83 +236,83 @@ ignore_for_file: invalid_use_of_protected_member
 - L21 `build()`
 
 
-### `lib/screens/horoscope/horo_filter_panel.dart` (135 行)
+### `lib/screens/horoscope/horo_filter_panel.dart` (136 行)
 
-**imports:** dart=0 / package=2 / relative=3
+**imports:** dart=0 / package=2 / relative=4
 
-- relative: `horo_antique_icons.dart`, `horo_panel_shared.dart`, `../../utils/solara_i18n.dart`
+- relative: `horo_antique_icons.dart`, `horo_panel_shared.dart`, `../../i18n/strings.g.dart`, `../../utils/solara_i18n.dart`
 
 **型定義 (1):**
 
-- L13 `class HoroFilterPanel : StatelessWidget`
+- L14 `class HoroFilterPanel : StatelessWidget`
 
 **関数 (1 public + 3 private):**
 
-- L34 `build()`
+- L35 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L79 `_filterSection()`
-  - L105 `_filterChip()`
-  - L120 `_exclusiveChip()`
+  - L80 `_filterSection()`
+  - L106 `_filterChip()`
+  - L121 `_exclusiveChip()`
 
   </details>
 
 
-### `lib/screens/horoscope/horo_fortune_cards.dart` (337 行)
+### `lib/screens/horoscope/horo_fortune_cards.dart` (335 行)
 
-**imports:** dart=0 / package=2 / relative=6
+**imports:** dart=0 / package=2 / relative=7
 
-- relative: `horo_constants.dart`, `horo_antique_icons.dart`, `../../utils/fortune_api.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`, `../../utils/solara_i18n.dart`
+- relative: `horo_constants.dart`, `horo_antique_icons.dart`, `../../i18n/strings.g.dart`, `../../utils/fortune_api.dart`, `../../widgets/ai_disclaimer_footer.dart`, `../../widgets/ai_report_button.dart`, `../../utils/solara_i18n.dart`
 
 **型定義 (1):**
 
-- L21 `class HoroAstrologyView : StatelessWidget`
+- L22 `class HoroAstrologyView : StatelessWidget`
 
 **関数 (1 public + 6 private):**
 
-- L63 `build()`
+- L64 `build()`
 
   <details><summary>private 関数 6 件</summary>
 
-  - L174 `_birthEditedBanner()`
-  - L191 `_loadingBanner()`
-  - L208 `_errorBanner()`
-  - L231 `_skeletonLine()`
-  - L239 `_skeletonBar()`
-  - L251 `_lockedTeaserCard()`
+  - L172 `_birthEditedBanner()`
+  - L189 `_loadingBanner()`
+  - L206 `_errorBanner()`
+  - L229 `_skeletonLine()`
+  - L237 `_skeletonBar()`
+  - L249 `_lockedTeaserCard()`
 
   </details>
 
 
-### `lib/screens/horoscope/horo_location_input.dart` (271 行)
+### `lib/screens/horoscope/horo_location_input.dart` (273 行)
 
-**imports:** dart=1 / package=2 / relative=2
+**imports:** dart=1 / package=2 / relative=3
 
-- relative: `../../utils/reverse_geocode.dart`, `../../utils/solara_api.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/reverse_geocode.dart`, `../../utils/solara_api.dart`
 
 **型定義 (2):**
 
-- L16 `class HoroLocationInput : StatefulWidget`
-- L47 `class _HoroLocationInputState : State`
+- L17 `class HoroLocationInput : StatefulWidget`
+- L49 `class _HoroLocationInputState : State`
 
 **関数 (4 public + 8 private):**
 
-- L44 `createState()`
-- L56 `initState()`
-- L70 `dispose()`
-- L139 `build()`
+- L46 `createState()`
+- L58 `initState()`
+- L72 `dispose()`
+- L141 `build()`
 
   <details><summary>private 関数 8 件</summary>
 
-  - L66 `_fmtInit()`
-  - L80 `_notify()`
-  - L84 `_onManualEdit()`
-  - L90 `_runGeoLookup()`
-  - L109 `_pasteCoords()`
-  - L218 `_labeled()`
-  - L231 `_autoBox()`
-  - L244 `_coordField()`
+  - L68 `_fmtInit()`
+  - L82 `_notify()`
+  - L86 `_onManualEdit()`
+  - L92 `_runGeoLookup()`
+  - L111 `_pasteCoords()`
+  - L220 `_labeled()`
+  - L233 `_autoBox()`
+  - L246 `_coordField()`
 
   </details>
 
@@ -341,41 +341,41 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_panel_shared.dart` (309 行)
+### `lib/screens/horoscope/horo_panel_shared.dart` (310 行)
 
-**imports:** dart=1 / package=2 / relative=3
+**imports:** dart=1 / package=2 / relative=4
 
-- relative: `horo_antique_icons.dart`, `horo_astro_glyphs.dart`, `horo_constants.dart`
+- relative: `../../i18n/strings.g.dart`, `horo_antique_icons.dart`, `horo_astro_glyphs.dart`, `horo_constants.dart`
 
 **型定義 (6):**
 
-- L17 `class PlanetVectorIcon : StatelessWidget`
+- L18 `class PlanetVectorIcon : StatelessWidget`
   - 惑星ベクターグリフ (チャートと同じデザイン)
-- L46 `class _PlanetGlyphPainter : CustomPainter`
-- L73 `class ZodiacImageIcon : StatelessWidget`
+- L47 `class _PlanetGlyphPainter : CustomPainter`
+- L74 `class ZodiacImageIcon : StatelessWidget`
   - 星座画像シンボル (assets/zodiac-symbols/*.webp + 黒透過)
-- L144 `class HoroAspectCheckmark : StatelessWidget`
-- L157 `class _CheckmarkPainter : CustomPainter`
-- L223 `class HoroHourMinuteDropdown : StatelessWidget`
+- L145 `class HoroAspectCheckmark : StatelessWidget`
+- L158 `class _CheckmarkPainter : CustomPainter`
+- L224 `class HoroHourMinuteDropdown : StatelessWidget`
 
 **関数 (12 public + 1 private):**
 
-- L26 `build()`
-- L51 `paint()`
-- L68 `shouldRepaint()`
-- L78 `build()`
-- L100 `horoAntiqueHeader()` — Helper: antique-style panel header row (icon + label).
-- L116 `horoPlanetOrAngleName()` — Helper: 名前解決 (planet/angle両対応)
-- L121 `horoActivePatternKey()` — アクティブパターン (detectPatterns の結果) 1件を一意に識別するキー。
-- L131 `horoPredictionKey()` — 予測 (predictPatternCompletions の結果) 1件を一意に識別するキー。
-- L149 `build()`
-- L162 `paint()`
-- L211 `shouldRepaint()`
-- L240 `build()`
+- L27 `build()`
+- L52 `paint()`
+- L69 `shouldRepaint()`
+- L79 `build()`
+- L101 `horoAntiqueHeader()` — Helper: antique-style panel header row (icon + label).
+- L117 `horoPlanetOrAngleName()` — Helper: 名前解決 (planet/angle両対応)
+- L122 `horoActivePatternKey()` — アクティブパターン (detectPatterns の結果) 1件を一意に識別するキー。
+- L132 `horoPredictionKey()` — 予測 (predictPatternCompletions の結果) 1件を一意に識別するキー。
+- L150 `build()`
+- L163 `paint()`
+- L212 `shouldRepaint()`
+- L241 `build()`
 
   <details><summary>private 関数 1 件</summary>
 
-  - L262 `_dropdownBox()`
+  - L263 `_dropdownBox()`
 
   </details>
 
@@ -416,26 +416,26 @@ ignore_for_file: invalid_use_of_protected_member
   </details>
 
 
-### `lib/screens/horoscope/horo_prediction_panel.dart` (235 行)
+### `lib/screens/horoscope/horo_prediction_panel.dart` (236 行)
 
-**imports:** dart=0 / package=2 / relative=6
+**imports:** dart=0 / package=2 / relative=7
 
-- relative: `../../widgets/info_popup.dart`, `horo_antique_icons.dart`, `horo_aspect_description.dart`, `horo_desc_section.dart`, `horo_constants.dart`, `horo_panel_shared.dart`
+- relative: `../../i18n/strings.g.dart`, `../../widgets/info_popup.dart`, `horo_antique_icons.dart`, `horo_aspect_description.dart`, `horo_desc_section.dart`, `horo_constants.dart`, `horo_panel_shared.dart`
 
 **型定義 (1):**
 
-- L20 `class HoroPredictionPanel : StatelessWidget`
+- L21 `class HoroPredictionPanel : StatelessWidget`
   - Prediction panel widget
 
 **関数 (1 public + 3 private):**
 
-- L35 `build()`
+- L36 `build()`
 
   <details><summary>private 関数 3 件</summary>
 
-  - L58 `_showPatternDescription()`
-  - L105 `_activeItem()`
-  - L162 `_predictionItem()`
+  - L59 `_showPatternDescription()`
+  - L106 `_activeItem()`
+  - L163 `_predictionItem()`
 
   </details>
 
@@ -444,7 +444,7 @@ ignore_for_file: invalid_use_of_protected_member
 - 集計: `showInfoPopup`×1
 
 
-### `lib/screens/horoscope/horo_relocation_angles.dart` (184 行)
+### `lib/screens/horoscope/horo_relocation_angles.dart` (196 行)
 
 **ファイル先頭コメント:**
 
@@ -464,32 +464,33 @@ ignore_for_file: invalid_use_of_protected_member
   吉凶禁止 (強まる/やわらぐ・前に出る/落ち着く の中立表現のみ。good/bad/lucky を使わない)。
 ```
 
-**imports:** dart=0 / package=0 / relative=1
+**imports:** dart=0 / package=0 / relative=2
 
-- relative: `../../utils/astro_houses.dart`
+- relative: `../../utils/astro_houses.dart`, `../../utils/solara_i18n.dart`
 
 **型定義 (2):**
 
-- L45 `class RelocationAngleDelta`
+- L57 `class RelocationAngleDelta`
   - 1惑星のアングル近接デルタ。
-- L87 `class RelocationAngleSignChange`
+- L99 `class RelocationAngleSignChange`
   - アングル自身の星座変化 (ASC/MC/DSC/IC)。引越の印象的なヘッドライン。
 
-**関数 (4 public + 1 private):**
+**関数 (5 public + 1 private):**
 
-- L76 `toPayload()` — Worker /relocation へ渡す構造化ファクト (Gemini はこれを文章化するだけ)。
-- L98 `toPayload()`
-- L107 `computeRelocationAngleDeltas()` — 出生地/現住所のチャート (ハウスカスプ12・ASC・MC) と惑星黄経から、10天体の
-- L163 `computeRelocationAngleSignChanges()` — ASC/MC/DSC/IC の星座が出生地→現住所で変わったものだけ返す。
+- L39 `relocationAngleDomainLabel()` — アングルキー → ロケール別の領域ラベル (ja / en)。
+- L88 `toPayload()` — Worker /relocation へ渡す構造化ファクト (Gemini はこれを文章化するだけ)。
+- L110 `toPayload()`
+- L119 `computeRelocationAngleDeltas()` — 出生地/現住所のチャート (ハウスカスプ12・ASC・MC) と惑星黄経から、10天体の
+- L175 `computeRelocationAngleSignChanges()` — ASC/MC/DSC/IC の星座が出生地→現住所で変わったものだけ返す。
 
   <details><summary>private 関数 1 件</summary>
 
-  - L38 `_angularDist()`
+  - L50 `_angularDist()`
 
   </details>
 
 
-### `lib/screens/horoscope/horo_relocation_lines.dart` (139 行)
+### `lib/screens/horoscope/horo_relocation_lines.dart` (184 行)
 
 **ファイル先頭コメント:**
 
@@ -509,122 +510,130 @@ ignore_for_file: invalid_use_of_protected_member
   外惑星(天王星/海王星/冥王星)とアスペクト線は重い/抽象的なため初版では除外。
 ```
 
-**imports:** dart=0 / package=1 / relative=2
+**imports:** dart=0 / package=1 / relative=3
 
-- relative: `../../utils/astro_lines.dart`, `horo_constants.dart`
+- relative: `../../utils/astro_lines.dart`, `../../utils/solara_i18n.dart`, `horo_constants.dart`
 
 **型定義 (1):**
 
-- L52 `class RelocationLineDelta`
+- L86 `class RelocationLineDelta`
   - 1本のラインについて、出生地→現住所での距離変化。
 
-**関数 (4 public + 0 private):**
+**関数 (4 public + 3 private):**
 
-- L79 `computeRelocationLineDeltas()` — 出生地・現住所の座標から、7惑星×4アングル=28本の距離デルタを計算し
-- L110 `relocationMagnitudeAdverb()` — |delta| (km) を 3 段階の副詞に。閾値は実機チューニング可。
-- L117 `relocationLineDeltaSentence()` — ライン近接デルタの 1 文 (中立表現)。
-- L132 `relocationHouseChangeComment()` — ハウス変化の 1 文 (変化があった惑星のみ・中立表現)。
+- L113 `computeRelocationLineDeltas()` — 出生地・現住所の座標から、7惑星×4アングル=28本の距離デルタを計算し
+- L144 `relocationMagnitudeAdverb()` — |delta| (km) を 3 段階の副詞に。閾値は実機チューニング可。
+- L151 `relocationLineDeltaSentence()` — ライン近接デルタの 1 文 (中立表現)。
+- L173 `relocationHouseChangeComment()` — ハウス変化の 1 文 (変化があった惑星のみ・中立表現)。
 
+  <details><summary>private 関数 3 件</summary>
 
-### `lib/screens/horoscope/horo_relocation_panel.dart` (536 行)
-
-**imports:** dart=0 / package=2 / relative=3
-
-- relative: `../../utils/fortune_api.dart`, `horo_constants.dart`, `horo_relocation_angles.dart`
-
-**型定義 (2):**
-
-- L22 `class HoroRelocationPanel : StatefulWidget`
-- L50 `class _HoroRelocationPanelState : State`
-
-**関数 (4 public + 14 private):**
-
-- L47 `createState()`
-- L77 `initState()`
-- L85 `didUpdateWidget()`
-- L169 `build()`
-
-  <details><summary>private 関数 14 件</summary>
-
-  - L98 `_recompute()`
-  - L121 `_buildFetchKey()`
-  - L126 `_maybeFetch()`
-  - L163 `_retry()`
-  - L207 `_buildHeader()`
-  - L239 `_buildSectionTitle()`
-  - L251 `_buildSummary()`
-  - L270 `_buildLoadingBlock()`
-  - L298 `_buildFailureBlock()`
-  - L354 `_buildAngleChangeCard()`
-  - L392 `_buildPlanetCard()`
-  - L487 `_buildNeedChartHint()`
-  - L506 `_buildSamePlaceHint()`
-  - L525 `_buildFootnote()`
+  - L46 `_planetNature()`
+  - L63 `_angleDomain()`
+  - L81 `_houseDomain()`
 
   </details>
 
 
-### `lib/screens/horoscope/horo_transit_panel.dart` (188 行)
+### `lib/screens/horoscope/horo_relocation_panel.dart` (538 行)
 
-**imports:** dart=0 / package=1 / relative=4
+**imports:** dart=0 / package=2 / relative=4
 
-- relative: `../sanctuary/sanctuary_profile_editor.dart`, `horo_antique_icons.dart`, `horo_location_input.dart`, `horo_panel_shared.dart`
+- relative: `../../i18n/strings.g.dart`, `../../utils/fortune_api.dart`, `horo_constants.dart`, `horo_relocation_angles.dart`
 
 **型定義 (2):**
 
-- L20 `class HoroTransitPanel : StatefulWidget`
-- L46 `class _HoroTransitPanelState : State`
+- L23 `class HoroRelocationPanel : StatefulWidget`
+- L51 `class _HoroRelocationPanelState : State`
+
+**関数 (4 public + 14 private):**
+
+- L48 `createState()`
+- L78 `initState()`
+- L86 `didUpdateWidget()`
+- L170 `build()`
+
+  <details><summary>private 関数 14 件</summary>
+
+  - L99 `_recompute()`
+  - L122 `_buildFetchKey()`
+  - L127 `_maybeFetch()`
+  - L164 `_retry()`
+  - L208 `_buildHeader()`
+  - L240 `_buildSectionTitle()`
+  - L252 `_buildSummary()`
+  - L271 `_buildLoadingBlock()`
+  - L299 `_buildFailureBlock()`
+  - L355 `_buildAngleChangeCard()`
+  - L395 `_buildPlanetCard()`
+  - L490 `_buildNeedChartHint()`
+  - L509 `_buildSamePlaceHint()`
+  - L528 `_buildFootnote()`
+
+  </details>
+
+
+### `lib/screens/horoscope/horo_transit_panel.dart` (189 行)
+
+**imports:** dart=0 / package=1 / relative=5
+
+- relative: `../../i18n/strings.g.dart`, `../sanctuary/sanctuary_profile_editor.dart`, `horo_antique_icons.dart`, `horo_location_input.dart`, `horo_panel_shared.dart`
+
+**型定義 (2):**
+
+- L21 `class HoroTransitPanel : StatefulWidget`
+- L47 `class _HoroTransitPanelState : State`
 
 **関数 (4 public + 0 private):**
 
-- L43 `createState()`
-- L57 `initState()`
-- L72 `dispose()`
-- L78 `build()`
+- L44 `createState()`
+- L58 `initState()`
+- L73 `dispose()`
+- L79 `build()`
 
 
-### `lib/screens/horoscope_screen.dart` (946 行)
+### `lib/screens/horoscope_screen.dart` (945 行)
 
-**imports:** dart=2 / package=2 / relative=17
+**imports:** dart=2 / package=2 / relative=18
 
-- relative: `../utils/astro_houses.dart`, `../utils/astro_math.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/fortune_api.dart`, `../utils/fortune_cache.dart`, `../utils/solara_i18n.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/tap_to_unfocus.dart`, `horoscope/horo_constants.dart`, `horoscope/horo_chart_painter.dart`, `horoscope/horo_fortune_cards.dart`, `horoscope/horo_bottom_panels.dart`, `horoscope/horo_ornament_painter.dart`, `horoscope/horo_antique_icons.dart`, `horoscope/horo_relocation_panel.dart`, `map/map_astro.dart`
+- relative: `../utils/astro_houses.dart`, `../utils/astro_math.dart`, `../utils/pro_status.dart`, `../utils/solara_storage.dart`, `../utils/fortune_api.dart`, `../utils/fortune_cache.dart`, `../i18n/strings.g.dart`, `../utils/solara_i18n.dart`, `../widgets/pro_unlock_dialog.dart`, `../widgets/tap_to_unfocus.dart`, `horoscope/horo_constants.dart`, `horoscope/horo_chart_painter.dart`, `horoscope/horo_fortune_cards.dart`, `horoscope/horo_bottom_panels.dart`, `horoscope/horo_ornament_painter.dart`, `horoscope/horo_antique_icons.dart`, `horoscope/horo_relocation_panel.dart`, `map/map_astro.dart`
 
 **型定義 (2):**
 
-- L31 `class HoroscopeScreen : StatefulWidget`
-- L44 `class HoroscopeScreenState : State`
+- L32 `class HoroscopeScreen : StatefulWidget`
+- L45 `class HoroscopeScreenState : State`
 
 **関数 (7 public + 19 private):**
 
-- L35 `createState()`
-- L217 `initState()`
-- L273 `dispose()`
-- L304 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
-- L318 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
-- L349 `loadProfile()`
-- L743 `build()`
+- L36 `createState()`
+- L218 `initState()`
+- L272 `dispose()`
+- L303 `wakeAnimations()` — 「再覚醒」: anim 再開 + 30s タイマー再起動。
+- L317 `pauseAnimations()` — main.dart からタブ離脱時に呼ばれる。Anim + 寿命タイマー両方停止 = raster 0%。
+- L348 `loadProfile()`
+- L742 `build()`
 
   <details><summary>private 関数 19 件</summary>
 
-  - L161 `_planetHouse()`
-  - L180 `_currentCacheKey()`
-  - L199 `_refreshCacheKey()`
-  - L243 `_onProStatusChanged()`
-  - L259 `_showFortuneProUnlock()`
-  - L285 `_resetAnimLifeTimer()`
-  - L295 `_stopAnimations()`
-  - L327 `_startRotTimer()`
-  - L340 `_syncRotationByMode()`
-  - L374 `_onTransitUpdate()`
-  - L390 `_applyWorkingProfile()`
-  - L411 `_fetchRealChart()`
-  - L550 `_resetWorkingProfile()`
-  - L557 `_profilesEqual()`
-  - L586 `_loadFortunes()`
-  - L860 `_menuItem()`
-  - L873 `_buildHouseModeToggle()`
-  - L901 `_toggleSegment()`
-  - L936 `_setRelocateMode()`
+  - L162 `_planetHouse()`
+  - L181 `_currentCacheKey()`
+  - L200 `_refreshCacheKey()`
+  - L244 `_onProStatusChanged()`
+  - L260 `_showFortuneProUnlock()`
+  - L284 `_resetAnimLifeTimer()`
+  - L294 `_stopAnimations()`
+  - L326 `_startRotTimer()`
+  - L339 `_syncRotationByMode()`
+  - L373 `_onTransitUpdate()`
+  - L389 `_applyWorkingProfile()`
+  - L410 `_fetchRealChart()`
+  - L549 `_resetWorkingProfile()`
+  - L556 `_profilesEqual()`
+  - L585 `_loadFortunes()`
+  - L859 `_menuItem()`
+  - L872 `_buildHouseModeToggle()`
+  - L900 `_toggleSegment()`
+  - L935 `_setRelocateMode()`
 
   </details>
 

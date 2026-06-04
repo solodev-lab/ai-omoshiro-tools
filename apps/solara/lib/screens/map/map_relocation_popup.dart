@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../utils/astro_glossary.dart' show showAstroGlossaryDialog;
 import '../../utils/astro_houses.dart';
 import '../../utils/astro_lines.dart';
+import '../../utils/solara_i18n.dart';
 import '../../utils/solara_storage.dart';
 import '../../widgets/astro_term_label.dart';
-import '../horoscope/horo_constants.dart' show planetGlyphs, planetNamesJP, signNames;
+import '../horoscope/horo_constants.dart' show planetGlyphs, planetLabel, signLabel;
 import '../horoscope/horo_relocation_lines.dart'
     show RelocationLineDelta, relocationLineDeltaSentence;
 import 'map_constants.dart' show planetMeta;
@@ -40,6 +42,14 @@ const _angleShortJp = {
   'dsc': '対人・パートナー',
   'ic': '家庭・心の拠り所',
 };
+const _angleShortEn = {
+  'asc': 'self and first impression',
+  'mc': 'career and society',
+  'dsc': 'relationships and partners',
+  'ic': 'home and inner anchor',
+};
+String _angleShort(String angle) =>
+    (isEnLocale() ? _angleShortEn[angle] : _angleShortJp[angle]) ?? '';
 
 class MapRelocationPopup extends StatelessWidget {
   /// タップ地点
@@ -204,7 +214,7 @@ class MapRelocationPopup extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'この場所で相談する',
+                t.mapReloc.consultHere,
                 style: GoogleFonts.notoSansJp(
                   fontSize: 13,
                   color: const Color(0xFFF9D976),
@@ -234,7 +244,7 @@ class MapRelocationPopup extends StatelessWidget {
           const SizedBox(width: 6),
           Flexible(
             child: Text(
-              '$baselineLabelと比べて、この地点で動く星のライン',
+              t.mapReloc.deltaTitle(base: baselineLabel),
               style: GoogleFonts.notoSansJp(
                 fontSize: 13,
                 color: const Color(0xFFF6BD60),
@@ -276,7 +286,7 @@ class MapRelocationPopup extends StatelessWidget {
               iconSize: 16,
               spacing: 2,
               child: Text(
-                'ライン上の地点 (近接${lines.length}本)',
+                t.mapReloc.linesTitle(n: lines.length),
                 style: GoogleFonts.notoSansJp(
                   fontSize: 13,
                   color: const Color(0xFFB088FF),
@@ -294,7 +304,7 @@ class MapRelocationPopup extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 2, left: 18),
             child: Text(
-              '他${lines.length - 5}本',
+              t.mapReloc.moreLines(n: lines.length - 5),
               style: GoogleFonts.notoSansJp(
                 fontSize: 13,
                 color: const Color(0xFF666666),
@@ -308,9 +318,9 @@ class MapRelocationPopup extends StatelessWidget {
   Widget _buildLineRow(BuildContext context, NearbyAstroLine n) {
     final meta = planetMeta[n.line.planet];
     final glyph = planetGlyphs[n.line.planet] ?? '';
-    final pName = planetNamesJP[n.line.planet] ?? n.line.planet;
+    final pName = planetLabel(n.line.planet);
     final aLabel = n.line.angle.toUpperCase();
-    final shortJp = _angleShortJp[n.line.angle] ?? '';
+    final shortJp = _angleShort(n.line.angle);
     final color = meta?.color ?? const Color(0xFFE8E0D0);
     final dist = n.distanceKm;
     final distStr = dist < 10
@@ -434,14 +444,15 @@ class MapRelocationPopup extends StatelessWidget {
     // タイトルは状況に応じて変える
     final String title;
     final String? termKey;
+    final coord = _fmtCoord(tapLat, tapLng);
     if (showHouses && hasLines) {
-      title = '統合 — ${_fmtCoord(tapLat, tapLng)}';
+      title = t.mapReloc.titleIntegrated(coord: coord);
       termKey = null; // 統合表示は専用辞書なし
     } else if (showHouses) {
-      title = '引越しレイヤー — ${_fmtCoord(tapLat, tapLng)}';
+      title = t.mapReloc.titleRelocate(coord: coord);
       termKey = 'relocate_layer';
     } else {
-      title = 'タップ地点 — ${_fmtCoord(tapLat, tapLng)}';
+      title = t.mapReloc.titleTapped(coord: coord);
       termKey = 'aspect_lines';
     }
 
@@ -487,11 +498,11 @@ class MapRelocationPopup extends StatelessWidget {
                   border: Border.all(color: const Color(0x66C9A84C)),
                   color: const Color(0x14C9A84C),
                 ),
-                child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.copy, size: 11, color: Color(0xFFC9A84C)),
-                  SizedBox(width: 4),
-                  Text('座標取得',
-                      style: TextStyle(
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.copy, size: 11, color: Color(0xFFC9A84C)),
+                  const SizedBox(width: 4),
+                  Text(t.mapReloc.getCoords,
+                      style: const TextStyle(
                           fontSize: 10,
                           color: Color(0xFFC9A84C),
                           fontWeight: FontWeight.w600)),
@@ -510,7 +521,7 @@ class MapRelocationPopup extends StatelessWidget {
           // タイトルテキストの左端と揃える。
           padding: const EdgeInsets.only(left: 20, top: 2),
           child: Text(
-            '$baselineLabel → タップ地点',
+            t.mapReloc.baseToTap(base: baselineLabel),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.notoSansJp(
@@ -550,7 +561,7 @@ class MapRelocationPopup extends StatelessWidget {
           ),
         ),
         Text(
-          '${signNames[signFrom]}座',
+          t.mapReloc.signSuffix(sign: signLabel(signFrom)),
           style: GoogleFonts.notoSansJp(
             fontSize: 13,
             color: const Color(0xFFAAAAAA),
@@ -564,7 +575,7 @@ class MapRelocationPopup extends StatelessWidget {
               : const Color(0xFF555555),
         ),
         Text(
-          '${signNames[signTo]}座',
+          t.mapReloc.signSuffix(sign: signLabel(signTo)),
           style: GoogleFonts.notoSansJp(
             fontSize: 13,
             color: changed
@@ -575,7 +586,7 @@ class MapRelocationPopup extends StatelessWidget {
         ),
         if (!changed)
           Text(
-            '変化なし',
+            t.mapReloc.noChange,
             style: GoogleFonts.notoSansJp(
               fontSize: 13,
               color: const Color(0xFF555555),
@@ -627,7 +638,7 @@ class MapRelocationPopup extends StatelessWidget {
           SizedBox(
             width: 64,
             child: Text(
-              planetNamesJP[planet] ?? planet,
+              planetLabel(planet),
               style: GoogleFonts.notoSansJp(fontSize: 13, color: dimColor),
               softWrap: false,
               maxLines: 1,
@@ -661,7 +672,7 @@ class MapRelocationPopup extends StatelessWidget {
                 border: Border.all(color: const Color(0x55FFD370)),
               ),
               child: Text(
-                '個人天体',
+                t.mapReloc.personalPlanet,
                 style: GoogleFonts.notoSansJp(
                   fontSize: 13,
                   color: const Color(0xFFFFD370),
@@ -703,9 +714,9 @@ class MapRelocationPopup extends StatelessWidget {
   void _copyCoords(BuildContext context) {
     Clipboard.setData(ClipboardData(
         text: '${tapLat.toStringAsFixed(6)}, ${tapLng.toStringAsFixed(6)}'));
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('座標をコピーしました'),
-      duration: Duration(seconds: 2),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(t.mapReloc.coordsCopied),
+      duration: const Duration(seconds: 2),
     ));
   }
 }

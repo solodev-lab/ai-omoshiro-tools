@@ -15,7 +15,8 @@
 import 'package:latlong2/latlong.dart';
 
 import '../../utils/astro_lines.dart' show buildAstroLines, minDistanceKmToLine;
-import 'horo_constants.dart' show planetNamesJP;
+import '../../utils/solara_i18n.dart';
+import 'horo_constants.dart' show planetLabel;
 
 /// ライン近接デルタの対象惑星 (表示順)。
 const List<String> relocationLinePlanets = [
@@ -23,6 +24,7 @@ const List<String> relocationLinePlanets = [
 ];
 
 /// 惑星の性質 (中立表現)。ライン文・ハウス変化文の合成に使う。
+/// computeRelocationLineDeltas の対象惑星判定 (key-set) にも使うため ja を正とする。
 const Map<String, String> relocationPlanetNature = {
   'sun': '自己表現と人生の主軸',
   'moon': '感情と心の基盤',
@@ -32,6 +34,18 @@ const Map<String, String> relocationPlanetNature = {
   'jupiter': '拡大とおおらかさ',
   'saturn': '構築と責任',
 };
+const Map<String, String> _relocationPlanetNatureEN = {
+  'sun': "self-expression and your life's core",
+  'moon': 'emotion and your inner foundation',
+  'mercury': 'thought and dialogue',
+  'venus': 'love, harmony and joy',
+  'mars': 'passion and drive',
+  'jupiter': 'expansion and generosity',
+  'saturn': 'structure and responsibility',
+};
+String _planetNature(String p) => isEnLocale()
+    ? (_relocationPlanetNatureEN[p] ?? '')
+    : (relocationPlanetNature[p] ?? '');
 
 /// アングルの領域 (map_relocation_popup の _angleShortJp と整合)。
 const Map<String, String> relocationAngleDomain = {
@@ -40,6 +54,15 @@ const Map<String, String> relocationAngleDomain = {
   'asc': '自我・第一印象',
   'dsc': '対人・パートナーシップ',
 };
+const Map<String, String> _relocationAngleDomainEN = {
+  'mc': 'social standing and career',
+  'ic': 'home and inner anchor',
+  'asc': 'self and first impression',
+  'dsc': 'relationships and partnership',
+};
+String _angleDomain(String a) => isEnLocale()
+    ? (_relocationAngleDomainEN[a] ?? '')
+    : (relocationAngleDomain[a] ?? '');
 
 /// ハウスの領域 (ハウス変化コメント用)。
 const Map<int, String> relocationHouseDomain = {
@@ -47,6 +70,17 @@ const Map<int, String> relocationHouseDomain = {
   5: '恋愛・創造・楽しみ', 6: '日常・健康・役割', 7: 'パートナーシップ', 8: '共有・深い変容',
   9: '探求・遠方・学問', 10: 'キャリア・社会的立場', 11: '仲間・ネットワーク', 12: '内面・癒し・秘密',
 };
+const Map<int, String> _relocationHouseDomainEN = {
+  1: 'self and first impression', 2: 'possessions, talents and income',
+  3: 'dialogue, learning and the near', 4: 'home and inner anchor',
+  5: 'love, creativity and play', 6: 'daily life, health and roles',
+  7: 'partnership', 8: 'sharing and deep transformation',
+  9: 'exploration, the distant and study', 10: 'career and social standing',
+  11: 'companions and networks', 12: 'inner life, healing and secrets',
+};
+String _houseDomain(int h) => isEnLocale()
+    ? (_relocationHouseDomainEN[h] ?? '${h}H')
+    : (relocationHouseDomain[h] ?? '${h}H');
 
 /// 1本のラインについて、出生地→現住所での距離変化。
 class RelocationLineDelta {
@@ -108,18 +142,25 @@ List<RelocationLineDelta> computeRelocationLineDeltas({
 
 /// |delta| (km) を 3 段階の副詞に。閾値は実機チューニング可。
 String relocationMagnitudeAdverb(double absKm) {
-  if (absKm < 150) return 'わずかに';
-  if (absKm < 600) return 'はっきりと';
-  return '大きく';
+  if (absKm < 150) return isEnLocale() ? 'slightly' : 'わずかに';
+  if (absKm < 600) return isEnLocale() ? 'clearly' : 'はっきりと';
+  return isEnLocale() ? 'greatly' : '大きく';
 }
 
 /// ライン近接デルタの 1 文 (中立表現)。
 String relocationLineDeltaSentence(RelocationLineDelta d) {
-  final planet = planetNamesJP[d.planet] ?? d.planet;
-  final nature = relocationPlanetNature[d.planet] ?? '';
-  final domain = relocationAngleDomain[d.angle] ?? '';
+  final planet = planetLabel(d.planet);
+  final nature = _planetNature(d.planet);
+  final domain = _angleDomain(d.angle);
   final angle = d.angle.toUpperCase();
   final adv = relocationMagnitudeAdverb(d.deltaKm.abs());
+  if (isEnLocale()) {
+    return d.closer
+        ? "You've moved $adv closer to your $planet $angle line. "
+            'Your $nature in $domain will grow stronger in this place.'
+        : "You've moved $adv farther from your $planet $angle line. "
+            'Your $nature in $domain will feel gentler in this place.';
+  }
   if (d.closer) {
     return '$planetの$angleラインに$adv近づきました。'
         '$domainにおける$natureが、この地で強まるでしょう。';
@@ -130,10 +171,14 @@ String relocationLineDeltaSentence(RelocationLineDelta d) {
 
 /// ハウス変化の 1 文 (変化があった惑星のみ・中立表現)。
 String relocationHouseChangeComment(String planet, int fromHouse, int toHouse) {
-  final p = planetNamesJP[planet] ?? planet;
-  final nature = relocationPlanetNature[planet] ?? '';
-  final from = relocationHouseDomain[fromHouse] ?? '${fromHouse}H';
-  final to = relocationHouseDomain[toHouse] ?? '${toHouse}H';
+  final p = planetLabel(planet);
+  final nature = _planetNature(planet);
+  final from = _houseDomain(fromHouse);
+  final to = _houseDomain(toHouse);
+  if (isEnLocale()) {
+    return "Your $p's domain shifts from \"$from\" to \"$to\". "
+        'In this place, the focus of your $nature turns toward $to.';
+  }
   return '$pの領域が「$from」から「$to」へ移ります。'
       'この地では$natureの置き所が$toに向かいます。';
 }

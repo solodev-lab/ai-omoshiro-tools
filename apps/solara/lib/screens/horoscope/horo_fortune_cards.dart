@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'horo_constants.dart';
 import 'horo_antique_icons.dart';
+import '../../i18n/strings.g.dart';
 import '../../utils/fortune_api.dart';
 import '../../widgets/ai_disclaimer_footer.dart';
 import '../../widgets/ai_report_button.dart';
@@ -75,7 +76,7 @@ class HoroAstrologyView extends StatelessWidget {
         ]),
         const SizedBox(height: 4),
         Text(
-          '${DateTime.now().month}/${DateTime.now().day} のホロスコープ',
+          t.horoDisplay.horoOfDate(date: '${DateTime.now().month}/${DateTime.now().day}'),
           style: const TextStyle(fontSize: 11, color: Color(0xFF888888)),
         ),
         const SizedBox(height: 16),
@@ -152,11 +153,8 @@ class HoroAstrologyView extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                 ),
                 // 解釈は 1 つに過ぎない旨の注記 (ホロスコープにエビデンスがある旨)。
-                const StellaInterpretationNote(
-                  text: 'ホロスコープのアスペクトやハウスからStellaが解釈の１つとして'
-                      '本内容を表示しています。内容に違和感がある場合はホロスコープに'
-                      'Stella解釈の元となるエビデンスがあるので、ぜひご自身での解釈を'
-                      '広げてみてください。あくまでここでの表示は解釈の１つに過ぎません。',
+                StellaInterpretationNote(
+                  text: t.horoDisplay.stellaNote,
                 ),
                 // disclaimer footer — 報告ボタンの直下に常時。
                 const AiDisclaimerFooter(padding: EdgeInsets.zero),
@@ -179,12 +177,12 @@ class HoroAstrologyView extends StatelessWidget {
       color: const Color(0x22FF9E6B),
       border: Border.all(color: const Color(0x66FF9E6B)),
     ),
-    child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Icon(Icons.info_outline, size: 16, color: Color(0xFFFF9E6B)),
-      SizedBox(width: 10),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Icon(Icons.info_outline, size: 16, color: Color(0xFFFF9E6B)),
+      const SizedBox(width: 10),
       Expanded(child: Text(
-        '星読みは元の出生情報のみ反映されます。\nBIRTH DATAの編集は星読みに反映されません。',
-        style: TextStyle(fontSize: 12, color: Color(0xFFFF9E6B), height: 1.5))),
+        t.horoDisplay.birthDataNote,
+        style: const TextStyle(fontSize: 12, color: Color(0xFFFF9E6B), height: 1.5))),
     ]),
   );
 
@@ -196,12 +194,12 @@ class HoroAstrologyView extends StatelessWidget {
       color: const Color(0x14F6BD60),
       border: Border.all(color: const Color(0x33F6BD60)),
     ),
-    child: const Row(children: [
-      SizedBox(width: 16, height: 16,
+    child: Row(children: [
+      const SizedBox(width: 16, height: 16,
         child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF6BD60))),
-      SizedBox(width: 10),
-      Expanded(child: Text('Stella が読み解いています…',
-        style: TextStyle(fontSize: 12, color: Color(0xFFF6BD60)))),
+      const SizedBox(width: 10),
+      Expanded(child: Text(t.consultResult.loading,
+        style: const TextStyle(fontSize: 12, color: Color(0xFFF6BD60)))),
     ]),
   );
 
@@ -216,13 +214,13 @@ class HoroAstrologyView extends StatelessWidget {
     child: Row(children: [
       const Icon(Icons.cloud_off, size: 14, color: Color(0xFFFF9E9E)),
       const SizedBox(width: 8),
-      const Expanded(child: Text('解説の取得に失敗しました。通信状況を確認して、もう一度お試しください。',
-        style: TextStyle(fontSize: 11, color: Color(0xFFFF9E9E), height: 1.5))),
+      Expanded(child: Text(t.disclaimer.fetchFailed,
+        style: const TextStyle(fontSize: 11, color: Color(0xFFFF9E9E), height: 1.5))),
       if (onRetry != null)
         GestureDetector(
           onTap: onRetry,
-          child: const Text('再試行',
-            style: TextStyle(fontSize: 11, color: Color(0xFFF6BD60),
+          child: Text(t.common.tryAgain,
+            style: const TextStyle(fontSize: 11, color: Color(0xFFF6BD60),
               decoration: TextDecoration.underline)),
         ),
     ]),
@@ -320,7 +318,7 @@ class HoroAstrologyView extends StatelessWidget {
             const SizedBox(height: 12),
             // 静かな誘導文
             Text(
-              'Cosmic Pro で $nameJP の読みも開きます',
+              t.horoDisplay.proOpenReading(name: nameJP),
               style: TextStyle(
                 fontSize: 12,
                 color: color.withAlpha(140),

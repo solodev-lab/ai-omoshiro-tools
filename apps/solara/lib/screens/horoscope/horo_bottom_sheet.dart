@@ -110,15 +110,15 @@ extension _HoroBottomSheet on HoroscopeScreenState {
         && _relocateHouses.length == 12;
     // HTML: bs-tab — 5 tabs (fortune has no tab button in HTML mobile)
     final tabs = <(String, AntiqueIcon, String)>[
-      ('birth', AntiqueIcon.birth, '誕生'),
+      ('birth', AntiqueIcon.birth, t.horoPanel.tabBirth),
       if (showTransit)
         ('transit', _chartMode == 'np' ? AntiqueIcon.progressed : AntiqueIcon.transit,
-         _chartMode == 'np' ? '進行' : '経過'),
-      ('planets', AntiqueIcon.planets, '天体'),
+         _chartMode == 'np' ? t.horoPanel.tabProgress : t.horoPanel.tabTransit),
+      ('planets', AntiqueIcon.planets, t.horoPanel.tabPlanets),
       if (showRelocate)
-        ('relocate', AntiqueIcon.cycle, '拠点'),
-      ('filter', AntiqueIcon.filter, '絞込'),
-      ('aspects', AntiqueIcon.aspects, '相'),
+        ('relocate', AntiqueIcon.cycle, t.horoPanel.tabRelocate),
+      ('filter', AntiqueIcon.filter, t.horoPanel.tabFilter),
+      ('aspects', AntiqueIcon.aspects, t.horoPanel.tabAspects),
     ];
 
     return Container(
