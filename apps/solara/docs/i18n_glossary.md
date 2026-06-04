@@ -228,3 +228,7 @@
 - 多言語ターゲット確定：ES / PT / FR / DE / KO（将来）。本 v2 で「声・哲学・手順」を正典化。
 - 月の儀式ストーリー（新月/満月/刻星化）の**全文**を ES/PT/FR/DE/KO で書き起こし（`cycle_story_texts.dart`・日本語マスターから・性別中立・区切り数一致）。あわせて**英語版が落としていたニュアンス**（新月「いつも見守っている」／刻星化「未来のあなたがこの苦しい物語を書き換えられる」）を日本語マスターから復元（2026-06-03）。⚠️ 表示の活性化（`supportedLocales` 登録）は未／de・ko は出荷前にネイティブ確認推奨。
 - カテゴリ（総合/癒し/豊かさ/恋愛/仕事/話す/変化）＋トーン禁止語を ES/PT/FR/DE/KO で確定（§2）。`STYLE_VOICE_ES/PT/FR/DE/KO`（各言語ネイティブの光源の声）を作成し、fortune/tarot/consultation_v2 を**出力言語ディレクティブ方式**で全言語対応（§8.1 注記）。worker test 44件 green（2026-06-03）。
+- **英語化 Phase 1 (UI chrome) 完了 → Phase 2 (content/data) 完了 → Phase 3 (lang活性化) 実施**（2026-06-04・ブランチ `feat/solara-en-localization` push 済）。
+  - Phase 2: 純データ = ja const 保全 → `xEN` 併設（大物は別ファイル並列）→ `isEnLocale()` で選択。完了 = celestial_event_meanings / consultation_share / astro_zenith_messages / horo_aspect_description / Galaxy星座名 / planet_intro / title_data(+称号表示配線) / astro_glossary / daily_transit_data(728・最大)。**吉凶回避**の定型: 「良い・悪い」の判定でない → *"not a verdict of good or bad … you choose"*、始動=beginnings / 顕在化=coming into the open / 対峙=facing / 浸透=settling inward、money→**Abundance**。
+  - Phase 3: 完成度ゲートを system 連動へ解除（端末英語→en）。AI 4経路（fortune/tarot/relocation/consultation）に `lang: currentLang()` を配線（従来 ja 固定）。Worker は EN 実装済を確認し `npx wrangler deploy` で本番反映（Version `a3b57063`）。
+  - 残: 英語 E2E（実機/AAB）→ ストア英語化（Phase 4）→ 申請（Phase 5）。de/ko ネイティブ確認は出荷前。

@@ -1780,6 +1780,32 @@ forecast_screen 112 / galaxy_screen 105 / map_fortune_sheet 96 / map_daily_trans
 #### 検証 (本セッション末・全 green)
 `flutter analyze` クリーン / `flutter test` **全319件green** / `slang analyze` = `en:{}`(未訳0) / `audit.py` = **HARD7(英語化で新規ゼロ)/WARN35(+1=consultation_result_card 581行・国名表追加で500超=許容)/NOTICE43/重複20(全て `),`/`],`/`style:` の構造的誤検出)/TODO4/print1/未使用0** / `check_unused.py`=0 / `find_unused_code.py`=3候補(`BuildContextTranslationsExtension`=slang生成 / `GalaxyArchiveSortLabel`=`.jp`実使用 / `DominantFortuneKindToCategoryIcon`=`.toCategoryIcon()`実使用)すべて誤検出=**削除対象ゼロ** / `check_file_split.py`=HARD7変化なし(galaxy 1460→1416・forecast 1092→1057・map_daily_transit 2029→2004 と縮小)。
 
+### 0.2.62 英語化 Phase 1 完了 + Phase 2 (content/data) 完了 + Phase 3 (lang活性化) (2026-06-04)
+
+> §0.2.61 の続き。**Phase 1 (UI chrome) を完走 → Phase 2 (コンテンツ/データ英訳) を完走 → Phase 3 (lang配線活性化) を実施**。ブランチ `feat/solara-en-localization` (push 済・origin=`0c98d37`)。各コミットで analyze クリーン / test 全319件green / slang analyze 未訳0 / audit 退行ゼロ。
+
+#### Phase 1 残り chrome (完了)
+- sanctuary 全部 / map 全部 (map_screen 3643行含む) / horoscope chrome / observe・tarot / Pro案内ダイアログ・Paywall / Map・Galaxy・widgets/utils の小物。**残る日本語リテラルは debug専用 / content-data(Phase 2) / bilingual helper の ja-source側 のみ**。
+
+#### Phase 2 コンテンツ/データ英訳 (完了)
+- 確立パターン: **純データ = ja const map を一字一句保全 → `xEN` 併設 (大物は別ファイル並列) → helper が `isEnLocale()` で選択 (JP フォールバック)**。chrome 寄り(共有/テンプレ文)= slang 名前空間。
+- 完了ファイル: `celestial_event_meanings`(23・`localDescDisplay`半英語バグ修正) / `consultation_share`(slang) / `astro_zenith_messages`(20) / `horo_aspect_description`(惑星13/アスペクト8/特殊3) / Galaxy星座名表示連動 / `planet_intro`(10惑星) / `title_data`(light一言144 + 称号表示フル配線6ファイル=EN主JP非表示・履歴スキーマに lightEN/shadowEN) / `astro_glossary`(46用語・別ファイル `astro_glossary_en.dart` 並列+分割でHARD7維持) / **`daily_transit_data`(728=最大・EN を `daily_transit_data_en.dart` 393 + `daily_transit_data_en2.dart` 644 に2分割・typedef+`*For`アクセサ9個=新HARDゼロ)**。
+- 既訳判明 (対象外): `galaxy_stella_messages`/`cycle_story_texts`/`solara_manifesto`/`constellation_namer` は既にバイリンガル。scan_jp の数字は ja-source 側カウント (着手前に grep 確認必須)。
+- 罠: ① 大物EN併設は1000行超HARD化 → 別ファイル分割で回避。② `cond ? mapEN[k]?[a] : null` は null-aware index `?[` が三項 `?` と衝突 → then枝を `(…)` で括る。③ Editツールで JP old_string に紛れた非JP1文字でマッチ失敗 → 別ファイル並列+プログラム分割が最安全。
+
+#### Phase 3 lang配線活性化 (実施・commit `0c98d37`)
+- **完成度ゲートを system 連動へ解除** (`app_locale.dart` `_syncSlang`): 前提充足 (slang analyze 未訳0 + Phase 2 完了) を確認し、override が null (端末設定) のとき `AppLocaleUtils.findDeviceLocale()` で端末ロケール追従 (英語端末→en / 他→ja・base=ja)。`'ja'`/`'en'` は固定。`supportedLocales=[ja,en]`・`locale:null` と整合し **device-en で slang/Localizations.localeOf/isEnLocale が全て en で一致** (旧ゲート不一致を根治)。言語スイッチャは `sanctuary_profile_editor` の3択 (端末設定/日本語/English)。
+- **AI 4経路に `lang: currentLang()` を配線** (従来は全経路 `'ja'` 固定 = 英語が出なかった): `fetchFortune`(horoscope_screen) / `fetchTarotReading`(observe_screen) / `fetchRelocationAngleNarrative`(horo_relocation_panel) / `ConsultationRequest.fromProfile`(consultation_input_logic)。consultation の lang は copyWith/toJson/fromJson で再取得・復元時も保持済。
+- **Worker (EN実装済・確認のみ)**: `fortune.js`/`tarot.js`/`consultation_v2.js`(`buildConsultationPromptEN`)/`relocation.js` すべて `lang!=='ja'`/`lang==='en'` 分岐 + `styleVoiceFor(lang)`/`outputLangDirective(lang)`。⚠️ `style_voice.js` の「consultation_v2 は ja 専用」コメントは古い (実際は EN 対応済)。**2026-06-04 `npx wrangler deploy` で本番反映** (Version `a3b57063`・`/public/health` 200)。
+
+#### 残り (Phase 4-5)
+- **英語 E2E (実機/AAB)**: 端末英語で UI全画面 英語 + 星読み/タロット/相談/拠点 が英語応答。A101FC で (AAB ビルド要)。
+- **Phase 4 (ストア英語化)**: 英語ストア文言 + 英語UIスクショ撮り直し + コンソール (英語=デフォルト + 日本語ローカライズ併記)。
+- **Phase 5 (ビルド+申請)**: AAB/iOS + A101FC(英/日) + 両ストア申請。
+
+#### 検証 (本セッション末・全 green)
+`flutter analyze` クリーン / `flutter test` **全319件green** / `slang analyze` = `en:{}`(未訳0) / worker `node --test` **360件green** / `audit.py` = **HARD7(英語化で新規ゼロ・daily_transit_data は既HARD)/WARN38/NOTICE44/重複20(全て構造的 `),`/`],`)/TODO4/print1/未使用0** / `check_unused.py`=0 / `find_unused_code.py`=3候補すべて誤検出(slang生成/`.label`/`.toCategoryIcon()` 実使用)=削除対象ゼロ / `check_file_split.py`=HARD7変化なし。
+
 ### 0.3 Horo「今日の占い」1 日 1 回固定 + プロンプト刷新 (2026-05-27)
 
 > **設計の柱**: 「30 回までは OK」のような曖昧な防衛をやめ、「**1 日 1 回・変更しない**」を
