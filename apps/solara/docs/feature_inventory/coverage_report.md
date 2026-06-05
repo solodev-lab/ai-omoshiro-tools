@@ -55,9 +55,9 @@
 ## #1 / #2 機械抽出 ↔ feature_inventory.md (人手版) の対整合
 
 - 機械抽出した class/mixin/extension/enum: **479**
-- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **295**
+- inventory に登場する識別子 (大文字始まり ``backtick``囲み): **297**
 
-### #1 機械にあるが Doc に書かれていない (276)
+### #1 機械にあるが Doc に書かれていない (275)
 
 - `AppAttestClient`
 - `AppTextScale`
@@ -97,7 +97,6 @@
 - `PurchasesService`
 - `RelocationLineDelta`
 - `ReverseGeocodeResult`
-- `SanctuaryAccountSection`
 - `SolaraAuth`
 - `SolaraAuthAccount`
 - `SolaraAuthException`
@@ -259,9 +258,10 @@
 - `_PlanetDef`
 - `_PlanetGlyphPainter`
 - `_PlanetIntroBody`
-- … 残り 76 省略
+- `_PlanetSub`
+- … 残り 75 省略
 
-### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (92)
+### #2 Doc に書いてあるがコードに存在しない (ゴースト記述) (93)
 
 > 注: Flutter SDK や外部ライブラリの型もここに乗る (誤検出)。
 > 真のゴーストはアプリ独自型のみ。実際の Doc 修正対象は手で絞り込む。
@@ -358,6 +358,7 @@
 - `UNUserNotificationCenter`
 - `ValueListenableBuilder`
 - `WhenInUse`
+- `Wrap`
 
 ## #4 画面 ↔ 機能集合
 
@@ -474,20 +475,15 @@
 > 各ソースの SHA1 を `_stamps.json` に記録し、差分を検出。
 > 変更されたファイルが属する層は、人手版インベントリ章の見直し対象。
 
-- 追加: **0** / 削除: **0** / 変更: **21**
+- 追加: **1** / 削除: **0** / 変更: **4**
 
 ### 変更されたファイル (層別)
 
-- **層 0**: `worker/src/tarot.js`
-- **層 1b**: `lib/utils/fortune_api.dart`
-- **層 1c**: `lib/models/galaxy_cycle.dart`, `lib/models/tarot_card.dart`
-- **層 4a**: `lib/screens/map/consult_entry_popup.dart`, `lib/screens/map/map_aspect_chip.dart`, `lib/screens/map/map_line_narrative_sheet.dart`
-- **層 4b**: `lib/screens/horoscope/horo_fortune_cards.dart`, `lib/screens/horoscope/horo_panel_shared.dart`
-- **層 4c**: `lib/screens/observe/observe_card_widgets.dart`, `lib/screens/observe/observe_history.dart`, `lib/screens/observe/observe_history_past.dart`, `lib/screens/observe_screen.dart`
-- **層 4d**: `lib/screens/galaxy_screen.dart`
-- **層 4e**: `lib/screens/sanctuary/sanctuary_title_diagnosis.dart`, `lib/screens/sanctuary_screen.dart`
-- **層 4f**: `lib/screens/forecast/forecast_life_periods.dart`, `lib/screens/forecast/forecast_section_header.dart`, `lib/screens/forecast_screen.dart`, `lib/screens/locations_screen.dart`
-- **層 5**: `lib/main.dart`
+- **層 0**: `worker/src/consultation_v2.js`, `worker/src/fortune.js`, `worker/src/style_voice.js`, `worker/src/tarot.js`
+
+### 追加されたファイル
+
+- `worker/src/cliche_guard.js` (層 0)
 
 ## #7 astro_glossary 用語辞書対整合
 

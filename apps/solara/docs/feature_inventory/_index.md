@@ -8,7 +8,7 @@
 
 | 層 | 名称 | ファイル数 | Markdown |
 | --- | --- | --- | --- |
-| 0 | Worker (バックエンド計算式) | 27 | [00_worker.md](00_worker.md) |
+| 0 | Worker (バックエンド計算式) | 28 | [00_worker.md](00_worker.md) |
 | 1a | 純計算ユーティリティ | 10 | [01a_pure_calc.md](01a_pure_calc.md) |
 | 1b | 静的データ辞書 | 15 | [01b_static_data.md](01b_static_data.md) |
 | 1c | モデルクラス | 4 | [01c_models.md](01c_models.md) |
@@ -29,7 +29,7 @@
 ## 全体統計
 
 - Dart ファイル: 205
-- Worker JS ファイル: 27
+- Worker JS ファイル: 28
 - Worker エンドポイント総数: 34
 - Dart class/mixin/extension/enum 総数: 489
 - Dart 関数総数 (素拾い): 1669

@@ -27,6 +27,7 @@
 import { callGemini } from './fortune.js';
 import { runConsultationPipeline, _internal as engineInternal } from './consultation_engine.js';
 import { STYLE_VOICE_JP, styleVoiceFor, outputLangDirective } from './style_voice.js';
+import { clichesIn, clicheRetryDirective } from './cliche_guard.js';
 
 const { PLANET_JP, SIGN_JP, BUCKET_JP } = engineInternal;
 
@@ -595,7 +596,7 @@ ${styleVoiceFor(lang)}${outputLangDirective(lang)}
   "candidate": {
     "characterHeadline": "<a feature headline, aim for ~6 words>",
     "energyLabels": ["<planet angle · character>", ...],
-    "narrative": "<160-230 words. Observation (plain) + address (gentle), hybrid. Centered on the nearest 1-2 factors, with a Soft+Hard span if possible. No km. Lay the inner season over it. No mind-reading>"${deltaSchemaLine}
+    "narrative": "<180-210 words — do NOT go under 180; develop BOTH the Soft and the Hard factor, each with its own concrete moment, plus a sentence laying the inner season over them. Observation (plain) + address (gentle), hybrid. Centered on the nearest 1-2 factors, with a Soft+Hard span if possible. No km. No mind-reading>"${deltaSchemaLine}
   }
 }`;
 }
@@ -715,6 +716,26 @@ export async function handleConsultationV2(body, env, deps = {}) {
     catch { parsed = JSON.parse(raw.replace(/^```json\s*|\s*```$/g, '').trim()); }
   } catch (_) {
     return { ...base, ...(isNonJa ? staticFallbackEN(pipe) : staticFallback(pipe)), model: 'fallback' };
+  }
+
+  // 英語クリシェ・ガード: 全テキスト欄を集約し、禁止語が残っていた時だけ 1 回だけ再生成。
+  if (isNonJa && parsed) {
+    const c = parsed.candidate || {};
+    const text = [c.narrative, c.characterHeadline, c.deltaAfter, parsed.innerSeason, parsed.intro, parsed.outro]
+      .concat(Array.isArray(c.energyLabels) ? c.energyLabels : [])
+      .filter((x) => typeof x === 'string').join(' ');
+    const hits = clichesIn(text, lang);
+    if (hits.length) {
+      try {
+        const raw2 = await callGeminiFn(env.GEMINI_API_KEY, prompt + clicheRetryDirective(hits), models, {
+          thinkingBudget: 0, maxOutputTokens: 4096, retries: 1,
+        });
+        let p2;
+        try { p2 = JSON.parse(raw2); }
+        catch { p2 = JSON.parse(raw2.replace(/^```json\s*|\s*```$/g, '').trim()); }
+        if (p2 && p2.candidate) parsed = p2;
+      } catch { /* 再生成失敗時は初回結果を使う */ }
+    }
   }
 
   const ai = (parsed && parsed.candidate) || {};

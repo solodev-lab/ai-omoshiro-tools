@@ -5,7 +5,7 @@
 
 ## サマリ
 
-- ファイル数: 27
+- ファイル数: 28
 - エンドポイント総数: 34
 - Gemini 呼出箇所: 2
 - KV 使用: 4 行 / Durable Object 使用: 12 行
@@ -364,6 +364,28 @@ RC 公式ホスト (固定)。
 **export (4):** `_setFetchForTest`, `_resetRcRestCacheForTest`, `reverifyEntitlementViaRC`, `deleteSubscriberViaRC`
 
 
+### `worker/src/cliche_guard.js` (78 行)
+
+**ファイル先頭コメント:**
+
+```
+英語生成のクリシェ・ガード (B案・2026-06-05)。
+
+背景: 英語 (lang !== 'ja') の Gemini 生成は、英語の学習データがホロスコープ
+自己啓発/グリーティングカードのクリシェ語彙で飽和しているため、プロンプトの
+禁止リストだけでは ~95% が天井 (毎回 1〜2 個の別のクリシェがすり抜ける)。
+→ 生成後に禁止語を検出し、見つかった時だけ「その語を使うな」と名指しして
+1 回だけ再生成する (detect → retry once)。クリーンなら追加生成なし＝コスト増なし。
+
+禁止語の正典はここ (プロンプト側は register 指示＋少数の手本だけに減量し、
+列挙はこのコードに集約 = 毎回の入力トークンを節約)。日本語には適用しない。
+
+各パターンは単語境界つき・大文字小文字無視。label は再生成ディレクティブで名指しする用。
+```
+
+**export (2):** `clichesIn`, `clicheRetryDirective`
+
+
 ### `worker/src/consultation.js` (332 行)
 
 **ファイル先頭コメント:**
@@ -446,7 +468,7 @@ Soft (trine/sextile) と Hard (square) は独立 2 エネルギー。total/吉�
 **export (2):** `runConsultationPipeline`, `_internal`
 
 
-### `worker/src/consultation_v2.js` (757 行)
+### `worker/src/consultation_v2.js` (778 行)
 
 **ファイル先頭コメント:**
 
@@ -508,7 +530,7 @@ astronomy-engine API:
 **export (1):** `computeDailyTransits`
 
 
-### `worker/src/fortune.js` (459 行)
+### `worker/src/fortune.js` (475 行)
 
 **ファイル先頭コメント:**
 
@@ -528,7 +550,7 @@ GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定
 
 **Gemini API 呼出 (1):**
 
-- L109: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
+- L110: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
 **Durable Object 使用 (4 行):**
 
@@ -694,7 +716,7 @@ Nominatim: https://nominatim.openstreetmap.org/search
 **export (1):** `searchPlace`
 
 
-### `worker/src/style_voice.js` (108 行)
+### `worker/src/style_voice.js` (115 行)
 
 **ファイル先頭コメント:**
 
@@ -715,7 +737,7 @@ Stella相談 / Horo星読み / タロット の日本語プロンプトに共通
 **export (10):** `STYLE_VOICE_JP`, `STYLE_VOICE_EN`, `STYLE_VOICE_ES`, `STYLE_VOICE_PT`, `STYLE_VOICE_FR`, `STYLE_VOICE_DE`, `STYLE_VOICE_KO`, `STYLE_VOICE_BY_LANG`, `styleVoiceFor`, `outputLangDirective`
 
 
-### `worker/src/tarot.js` (300 行)
+### `worker/src/tarot.js` (315 行)
 
 **ファイル先頭コメント:**
 
@@ -735,7 +757,7 @@ GEMINI_API_KEY は wrangler secret put GEMINI_API_KEY で設定済み
 
 **Gemini API 呼出 (1):**
 
-- L66: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
+- L67: `generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;`
 
 **export (1):** `handleTarot`
 

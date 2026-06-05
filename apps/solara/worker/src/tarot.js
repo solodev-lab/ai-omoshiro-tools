@@ -13,6 +13,7 @@
  */
 
 import { STYLE_VOICE_JP, styleVoiceFor, outputLangDirective } from './style_voice.js';
+import { clichesIn, clicheRetryDirective } from './cliche_guard.js';
 
 const PLANET_JP = {
   sun: '太陽', moon: '月', mercury: '水星', venus: '金星', mars: '火星',
@@ -185,7 +186,7 @@ ${styleVoiceFor(lang)}${outputLangDirective(lang)}
 
 Return ONLY a JSON object with this exact field (no markdown, no extra text):
 {
-  "reading": "<3-5 sentences, ~150-250 chars. Do NOT begin with the card name or the querent's name; open with imagery or meaning. Reference keyword and orientation${cleanQuestion ? ", weave the querent's theme naturally" : ''}>"
+  "reading": "<85-110 words (write fully — English needs the room). Do NOT begin with the card name or the querent's name; open with imagery or meaning. Reference keyword and orientation${cleanQuestion ? ", weave the querent's theme naturally" : ''}>"
 }`;
   }
 
@@ -288,6 +289,20 @@ export async function handleTarot(body, env) {
     try { parsed = JSON.parse(cleaned); }
     catch {
       throw new Error(`Gemini returned non-JSON: ${raw.slice(0, 200)}`);
+    }
+  }
+
+  // 英語クリシェ・ガード: 禁止語が残っていた時だけ 1 回だけ再生成 (cliche_guard)。
+  if (lang !== 'ja') {
+    const hits = clichesIn(parsed.reading || '', lang);
+    if (hits.length) {
+      try {
+        const raw2 = await callGemini(env.GEMINI_API_KEY, prompt + clicheRetryDirective(hits), models, { thinkingBudget: 0 });
+        let p2;
+        try { p2 = JSON.parse(raw2); }
+        catch { p2 = JSON.parse(raw2.replace(/^```json\s*|\s*```$/g, '').trim()); }
+        if (p2 && p2.reading) parsed = p2;
+      } catch { /* 再生成失敗時は初回結果を使う */ }
     }
   }
 

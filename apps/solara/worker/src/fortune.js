@@ -13,6 +13,7 @@
  */
 
 import { STYLE_VOICE_JP, styleVoiceFor, outputLangDirective } from './style_voice.js';
+import { clichesIn, clicheRetryDirective } from './cliche_guard.js';
 
 // ── Fortune カテゴリ定義 ──
 // houses: そのカテゴリで重視する伝統占星術のハウス番号
@@ -260,8 +261,7 @@ ${patternLines.join('\n') || '(none)'}
 - The CORE of the writing is the concrete description of how today's transits activate the natal planets.
   Example: "Mercury opposes natal Mars — sparks fly in words." Always put today's movement concretely into the body.
 - 🔴 Naming rule (important): In the prose, do NOT prefix transiting planets with "transit/transiting" — use the bare planet name (e.g., "the Moon", "Mars"). Since today's sky is the default subject, an unlabeled planet name means the transit. Never put the literal word "transit"/"transiting" in the body. DO label natal planets ("natal Moon") and progressed planets ("progressed Venus") to distinguish them from transits.
-- House references are OPTIONAL and limited to AT MOST ONCE in the body. Phrasings like "(planet) activates the (N)th house" are fine — keep it light.
-  Do not repeat house numbers (5H, 7H, etc.) or life-area names (romance/home/career/marriage) more than once.
+- 🔴 House references are OPTIONAL and limited to AT MOST ONCE in the whole body. When you do touch one, render it ONLY as the felt LIFE-AREA in plain words (e.g. "your sense of partnership", "what you earn and value", "your public standing") — NEVER as a bare house number or abbreviation. Do NOT write "5H", "the 5th house", "7th house", "2H", etc. anywhere. Name at most one life-area and do not repeat it.
 - Innate natal aspects are background context — at most one mention, one sentence.
 - Add progressions lightly as the slow current life-chapter / inner season — at most one sentence.
 - For any layer marked "(no notable ...)" or "(none)", do not force it or invent data.
@@ -272,8 +272,8 @@ ${styleVoiceFor(lang)}${outputLangDirective(lang)}
 
 Return ONLY a JSON object with exactly these fields (no markdown, no extra text):
 {
-  "reading": "<3-5 sentence poetic reading focused on ${catName}, led by today's transits. ~200-300 chars>",
-  "advice": "<1-2 sentence practical advice. ~130-180 chars>"
+  "reading": "<poetic reading focused on ${catName}, led by today's transits. 100-125 words (~5-7 sentences). Write fully — English needs the room; don't crowd the imagery>",
+  "advice": "<practical advice. 40-50 words>"
 }`;
   }
 
@@ -441,6 +441,22 @@ export async function handleFortune(body, env, deps = {}) {
     try { parsed = JSON.parse(cleaned); }
     catch {
       throw new Error(`Gemini returned non-JSON: ${raw.slice(0, 200)}`);
+    }
+  }
+
+  // 4b. 英語クリシェ・ガード: 禁止語が残っていた時だけ 1 回だけ再生成 (cliche_guard)。
+  if (lang !== 'ja') {
+    const hits = clichesIn(`${parsed.reading || ''} ${parsed.advice || ''}`, lang);
+    if (hits.length) {
+      try {
+        const raw2 = await callGemini(env.GEMINI_API_KEY, prompt + clicheRetryDirective(hits), models, {
+          thinkingBudget: 0, maxOutputTokens: 4096,
+        });
+        let p2;
+        try { p2 = JSON.parse(raw2); }
+        catch { p2 = JSON.parse(raw2.replace(/^```json\s*|\s*```$/g, '').trim()); }
+        if (p2 && (p2.reading || p2.advice)) parsed = p2;
+      } catch { /* 再生成失敗時は初回結果を使う (機能を壊さない) */ }
     }
   }
 
