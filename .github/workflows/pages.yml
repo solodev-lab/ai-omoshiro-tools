@@ -23,12 +23,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Stage public site (denylist — exclude source & internal only)
+        # 🔒 公開Webアプリ(apps/tarot-reading 等)とサイト(legal/blog/psychology/index 等)は
+        # そのまま配信し、ソース・内部だけを配信対象から除外する。
+        # 除外対象 = モバイルアプリ/WIPソース (apps/solara=Geminiプロンプト本体, apps/diet_app,
+        #   apps/US-Quantum-Life-Map, apps/naura, apps/insta-reels, apps/tarot-v2) と
+        #   ルートの内部物 (worker/ tools/ docs/ logs/ sns-templates/ と *.md)。
+        # ⚠️ apps/ 配下の新規ディレクトリは既定で「配信される」。公開したくない新ソースを
+        #   足したら、この exclude 一覧に必ず追記すること。
+        run: |
+          mkdir -p _site
+          rsync -a \
+            --exclude='/.git' --exclude='/.github' --exclude='/_site' \
+            --exclude='/apps/solara' --exclude='/apps/diet_app' \
+            --exclude='/apps/US-Quantum-Life-Map' --exclude='/apps/naura' \
+            --exclude='/apps/insta-reels' --exclude='/apps/tarot-v2' \
+            --exclude='/worker' --exclude='/tools' --exclude='/docs' \
+            --exclude='/logs' --exclude='/sns-templates' \
+            --exclude='*.md' \
+            ./ _site/
+          touch _site/.nojekyll
+          echo "=== published top-level ===" && ls _site
+          echo "=== published apps/ (should NOT contain solara/diet_app) ===" && ls _site/apps
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
