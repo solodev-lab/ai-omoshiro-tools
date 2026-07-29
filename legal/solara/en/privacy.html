@@ -78,7 +78,9 @@
         <div class="content">
             <p>Solara is an app that presents the vast data of the cosmos to users as material for reflection, and generates interpretive text using Gemini AI. The reading results in this app are offered as one example of interpretation derived from evidence (astrological data).</p>
 
-            <p>This Privacy Policy (the "Policy") sets out how user personal information is handled in the astrology application "Solara" (the "App") provided by Arrayu.Inc ("we," "us," or "our").</p>
+            <p>This Privacy Policy (the "Policy") sets out how user personal information is handled in the astrology application "Solara" (the "App") and on the website <a href="https://solaramap.com/">solaramap.com</a> (the "Site"), both provided by Arrayu.Inc ("we," "us," or "our").</p>
+
+            <p>The App and the Site differ in what they collect and in how it is stored. <strong>Matters specific to the Site are set out in Sections 1-4 and 3-3.</strong> In particular, unlike the App, some information relating to paid reports is stored on our servers (Section 3-3).</p>
 
             <h2>1. Information We Collect</h2>
             <p>The App may collect the following information.</p>
@@ -119,6 +121,23 @@
                 <li>The App does not embed Google Analytics, Firebase Analytics, or any advertising SDK.</li>
             </ul>
 
+            <h3>1-4. Information collected on the Site (solaramap.com)</h3>
+            <p>The Site may collect the following information. There is no sign-in, and no account is required.</p>
+            <table>
+                <tr><th>Item</th><th>Purpose</th></tr>
+                <tr><td>Date of birth, time of birth, place of birth (latitude/longitude)</td><td>Astrological calculation (the free map, horoscope and directions, and the creation of paid reports)</td></tr>
+                <tr><td>The country and city/area where you live now (optional)<br>* paid reports only</td><td>Narrowing the pool of candidate places used in the report</td></tr>
+                <tr><td>Your name (optional)<br>* paid reports only</td><td>Displaying it inside the report</td></tr>
+                <tr><td>Email address<br>* paid reports only</td><td>Delivering the private link to your report, and responding to requests to resend it</td></tr>
+                <tr><td>How far you get through the purchase page</td><td>Understanding where the form is confusing, in order to improve it</td></tr>
+            </table>
+            <ul>
+                <li><strong>We do not collect your credit card details.</strong> Payment takes place on a payment page provided by Stripe, Inc.; card numbers, expiry dates and security codes never pass through our servers. After payment we receive only whether the purchase succeeded, the product, the amount, and your email address.</li>
+                <li>The <strong>purchase-page progress</strong> we receive consists only of the identifier of the furthest step reached, the product identifier, the display language, the currency, whether the screen is a desktop or a phone (judged from screen width), and the number of seconds since the page opened. <strong>No entered content is transmitted, and no cookie or identifying ID is created.</strong></li>
+                <li>The Site does not collect GPS location from your device. Places on the map are determined solely by your searches and by how you move the map.</li>
+                <li>The Site does not use Google Analytics or any advertising technology. Analytics is limited to Cloudflare Web Analytics, which uses no cookies and does not identify individual visitors.</li>
+            </ul>
+
             <h2>2. Purposes of Use</h2>
             <p>We use the information we collect for the following purposes.</p>
             <ol>
@@ -127,6 +146,10 @@
                 <li>Authorizing the "Cosmic Pro" subscription and restoring purchases</li>
                 <li>Preventing fraudulent use and the unauthorized unlocking of paid features through device tampering</li>
                 <li>Investigating and improving malfunctions of the App</li>
+                <li>Displaying astrological calculation results on the Site</li>
+                <li>Creating and delivering paid reports on the Site, and responding to requests to resend them</li>
+                <li>Carrying out payment on the Site and confirming what was purchased</li>
+                <li>Understanding where the Site's form is confusing, in order to improve it</li>
                 <li>Complying with this Policy, the Terms of Service, and the disclosure based on the Specified Commercial Transactions Act</li>
             </ol>
 
@@ -151,22 +174,51 @@
             </ul>
 
             <div class="note">
-                <strong>Our server retention policy:</strong><br>
-                The Cloudflare Workers server we operate does not permanently store the content described above. Aside from a cache of subscription identifiers (up to 5 minutes) and an edge cache of map tiles (up to 24 hours), no personal information or reading results are recorded on our servers.
+                <strong>Our server retention policy (the App):</strong><br>
+                For the App, the Cloudflare Workers server we operate does not permanently store the content described above. Aside from a cache of subscription identifiers (up to 5 minutes) and an edge cache of map tiles (up to 24 hours), no personal information or reading results are recorded on our servers.<br>
+                <strong>Paid reports on the Site are an exception.</strong> Please see Section 3-3 below.
             </div>
+
+            <h3>3-3. Where information is stored on the Site (solaramap.com)</h3>
+
+            <p><strong>(1) Stored only in your browser</strong></p>
+            <p>So that you do not have to type them again, the following are stored in your browser (localStorage). They are not sent to our servers.</p>
+            <ul>
+                <li>Date of birth, time of birth, place of birth (name and latitude/longitude)</li>
+                <li>Your choice of display language</li>
+            </ul>
+            <p>While anything is stored, the page shows "Saved on this device," and you can remove it at any time from the "Delete" link beside it. Clearing your browser's site data also removes it. <strong>Your name and email address are never stored in the browser.</strong> If you are using a shared device, we recommend deleting it when you have finished.</p>
+
+            <p><strong>(2) Stored on our servers (paid reports only)</strong></p>
+            <p>For the free map, horoscope and directions, we do not store what is sent to us. For paid reports, so that you can read the book you bought at any time, we store the following on our servers (Cloudflare Workers KV).</p>
+            <table>
+                <tr><th>What is stored</th><th>Retention</th></tr>
+                <tr><td>What you entered during purchase (birth information, where you live, your name, etc.)</td><td>60 days</td></tr>
+                <tr><td>The order record (including generation progress)</td><td>60 days</td></tr>
+                <tr><td>The link between the payment session and the order</td><td>30 days</td></tr>
+                <tr><td>The finished report itself (including the birth information, name and email address used to create it)</td><td><strong>No fixed period</strong> (so that the private link keeps working)</td></tr>
+                <tr><td>An index used for resending (your email address is turned into a SHA-256 value and used as the key)</td><td><strong>No fixed period</strong></td></tr>
+            </table>
+            <p>A report can be read only by someone who knows the hard-to-guess identifier in its URL (reports are not indexed by search engines). If you would like yours deleted, please contact us at the address in Section 9.</p>
 
             <h2>4. Sharing with Third Parties</h2>
             <p>We do not provide your personal information to third parties except in the following cases.</p>
             <ol>
                 <li>When you have consented</li>
                 <li>When there is a disclosure request based on law (court order, inquiry from an investigative authority, etc.)</li>
-                <li>When we entrust information to the following third-party services to the extent necessary to provide the App's features:
+                <li>When we entrust information to the following third-party services to the extent necessary to provide the features of the App or the Site:
                     <ul>
                         <li>Apple Inc. (device attestation via App Attest [iOS edition]; subscription processing via StoreKit [iOS edition])</li>
-                        <li>Google LLC (device attestation via Play Integrity [Android edition]; subscription processing via Google Play Billing [Android edition]; generation of reading-interpretation text via the Gemini API [Stella consultations, tarot, star readings, relocation interpretations])</li>
+                        <li>Google LLC (device attestation via Play Integrity [Android edition]; subscription processing via Google Play Billing [Android edition]; generation of reading-interpretation text via the Gemini API [Stella consultations, tarot, star readings, relocation interpretations]; generation of the text of paid reports on the Site via the Gemini API)</li>
                         <li>RevenueCat, Inc. (management of subscription status)</li>
-                        <li>Cloudflare, Inc. (API relay via Workers and map-tile delivery)</li>
-                        <li>OpenStreetMap Foundation / Humanitarian OpenStreetMap Team (provision of map tiles)</li>
+                        <li>Cloudflare, Inc. (API relay via Workers and map-tile delivery; hosting of the Site [Cloudflare Pages]; storage of paid reports [Workers KV]; analytics for the Site [Cloudflare Web Analytics, which uses no cookies])</li>
+                        <li>OpenStreetMap Foundation / Humanitarian OpenStreetMap Team (provision of map tiles, and address/place search via Nominatim)</li>
+                        <li>Geospatial Information Authority of Japan (address search within Japan on the Site; the address text is sent via our servers)</li>
+                        <li>Stripe, Inc. (payment processing on the Site; card details are collected directly by Stripe and are not received by us)</li>
+                        <li>Anthropic PBC (generation of the text of paid reports on the Site via the Claude API)</li>
+                        <li>Plus Five Five, Inc. (the email service "Resend"; delivery of the email containing the private link to a paid report)</li>
+                        <li>CARTO (delivery of map tiles on the Site; because your browser requests them directly, your IP address is sent to CARTO)</li>
+                        <li>unpkg (a CDN that serves the map library on some pages of the Site; because your browser requests it directly, your IP address is sent)</li>
                     </ul>
                 </li>
             </ol>
@@ -178,6 +230,8 @@
                 <li><strong>Unlinking sign-in</strong>: You can sign out from the Account section of the Sanctuary screen. Signing out removes the link between this device and RevenueCat.</li>
                 <li><strong>Canceling your subscription</strong>: On iOS, cancel from the "Settings" app → Apple ID → Subscriptions; on Android, cancel from the Google Play Store menu → Subscriptions.</li>
                 <li><strong>Request to delete personal information</strong>: As a rule, we do not retain your personal information on our servers (see Section 3). If you wish to delete any information that may remain with our partner services (such as RevenueCat), please contact us at the address in Section 9.</li>
+                <li><strong>Deleting the Site's browser data</strong>: The date, time and place of birth remembered by the Site can be removed by you at any time, from the "Delete" link beside "Saved on this device." Clearing your browser's site data also removes it.</li>
+                <li><strong>Request to delete a paid report or order information</strong>: The finished report (including the birth information, name and email address) and the resend index are stored on our servers with no fixed period (Section 3-3). If you would like them deleted, please contact us at the address in Section 9. After deletion, the private link will no longer open and the report can no longer be resent.</li>
             </ul>
 
             <h2>6. Your Rights</h2>
@@ -207,7 +261,7 @@
                 <li><strong>Phone:</strong> +81-90-9207-6232 (Hours: weekdays 13:00–15:00 JST; email inquiries are preferred)</li>
             </ul>
 
-            <p class="meta">Effective date: May 18, 2026<br>Last updated: May 18, 2026</p>
+            <p class="meta">Effective date: May 18, 2026<br>Last updated: July 29, 2026 (added the sections covering the website solaramap.com)</p>
         </div>
 
         <footer>
