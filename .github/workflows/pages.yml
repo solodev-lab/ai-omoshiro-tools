@@ -45,6 +45,19 @@ jobs:
           touch _site/.nojekyll
           echo "=== published top-level ===" && ls _site
           echo "=== published apps/ (should NOT contain solara/diet_app) ===" && ls _site/apps
+      - name: legal/solara のルートは ja/ の写し（二重管理を作らない）
+        # 🔴 2026-07-29: legal/solara/ の日本語版が「ルート」と「ja/」に同じ内容で2つ在り、
+        #    直すたびに両方を手で直す状態だった(6ファイルとも改行以外は完全一致だった)。
+        #    正典を ja/ の1本に決め、ルート側の実ファイルはリポジトリから削除した。
+        #    ルートURL(https://solodev-lab.com/legal/solara/privacy.html 等)は、
+        #    Play Console 等に古い形で登録されている可能性があるので生かしておく必要がある。
+        #    → ここで ja/ から配信時に写す＝URLは生きたまま、直す場所は1つだけになる。
+        #    リダイレクトにしないのは、審査に提出しているURLで白画面を挟みたくないため。
+        # 🔴 ルートに手で .html を戻しても、このステップが ja/ の内容で上書きするので
+        #    本番に版ズレは出ない(記憶ではなく仕組みで守る)。index.html は ja/ に無いので触れない。
+        run: |
+          cp legal/solara/ja/*.html _site/legal/solara/
+          echo "=== published legal/solara ===" && ls _site/legal/solara
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
