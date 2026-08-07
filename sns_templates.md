@@ -181,7 +181,7 @@ https://solodev-lab.com/apps/naming-generator/
 
 ---
 
-## 【投稿12】AIタロット占い（目玉・課金アプリ）
+## 【投稿12】AIタロット占い
 
 ```
 AIタロット占い、作りました🔮
