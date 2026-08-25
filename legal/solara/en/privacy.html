@@ -189,6 +189,8 @@
             </ul>
             <p>While anything is stored, the page shows "Saved on this device," and you can remove it at any time from the "Delete" link beside it. Clearing your browser's site data also removes it. <strong>Your name and email address are never stored in the browser.</strong> If you are using a shared device, we recommend deleting it when you have finished.</p>
 
+            <p>In addition, on the sun-sign and moon-sign self-knowledge pages, so that you are not asked to type them again if you go on to buy a report, your date of birth, time of birth and sign combination are held <strong>only within the tab you have open</strong> (sessionStorage). They are discarded when you close the tab. While they are held there they are not sent to our servers (they are sent when you proceed to checkout, as the information needed to write the report). Your name and email address are not held.</p>
+
             <p><strong>(2) Stored on our servers (paid reports only)</strong></p>
             <p>For the free map, horoscope and directions, we do not store what is sent to us. For paid reports, so that you can read the book you bought at any time, we store the following on our servers (Cloudflare Workers KV).</p>
             <table>
@@ -266,7 +268,7 @@
             <p>Our use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Google's handling of information is governed by the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.</p>
             <p>The only data this integration handles is the OAuth authorization on our own Google Account and the responses returned when uploading our own videos. We do not store any YouTube user data on our servers. This authorization can be revoked at any time at <a href="https://myaccount.google.com/permissions">Google Account permissions</a>.</p>
 
-            <p class="meta">Effective date: May 18, 2026<br>Last updated: August 2, 2026 (added Section 10, YouTube API Services)</p>
+            <p class="meta">Effective date: May 18, 2026<br>Last updated: August 24, 2026 (added the tab-scoped temporary hold (sessionStorage) to Section 3-3)</p>
         </div>
 
         <footer>
