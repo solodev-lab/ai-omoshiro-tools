@@ -1,0 +1,2342 @@
+/* style.css — 車庫証明 所在図・配置図メーカー
+ * 業務ツールなので装飾は抑えめ。文字と押せる物がはっきり見えることを優先する。 */
+
+:root {
+  --bd: #d5d9e0;
+  --bd-strong: #b6bdc8;
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --ink: #1a1d23;
+  --mut: #6b7280;
+  --acc: #1a56c4;
+  --acc-ink: #ffffff;
+  --warn: #c0392b;
+  --ok: #1e7a46;
+  /* 作図中（確定前）の線。🔒 §18-ai: 航空写真の上でも淡色地図の上でも沈まない
+   * 明るいオレンジ。青（--acc）だと下敷きに紛れて見えないとの実機指摘（2026-08-22） */
+  --draft: #ff7a00;
+  --head-h: 46px;
+  /* 🔒 §25-2: 図の種類の色。所在図＝青（--acc と同系）／配置図＝緑。
+     どちらの図を作っているか画面のどこを見ても分かるようにするための色分け */
+  --kind-s: #1a56c4;
+  --kind-h: #1e7a46;
+  --kind-line: var(--kind-s);
+  --kind-bg: #eef3fd;
+}
+
+/* 編集中の図の種類でシート帯・タブの色が切り替わる（app.js が data-kind を書く） */
+#editorView[data-kind="shozaizu"] { --kind-line: var(--kind-s); --kind-bg: #eef3fd; }
+#editorView[data-kind="haichizu"] { --kind-line: var(--kind-h); --kind-bg: #ecf6f0; }
+
+* { box-sizing: border-box; }
+
+/* 🔴 hidden 属性は何があっても勝つ（2026-08-19 §16-13b）。
+ * .ex-preview 等の display:flex が [hidden] の UA 既定(display:none)を打ち消し、
+ * 縮尺の3択が全ブラウザで常時表示される事故が起きた。個別の #id[hidden] 対応は
+ * 漏れる（実際 #scaleBox で漏れた）ので、全要素に効く恒久ルールにする。 */
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font: 14px/1.6 "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+h1, h2 { margin: 0; font-weight: 700; }
+
+button, input, select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  padding: 6px 13px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+button:hover:not(:disabled) { background: #eef2f8; }
+button:disabled { opacity: .45; cursor: default; }
+
+button.primary {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: var(--acc-ink);
+  font-weight: 700;
+}
+button.primary:hover:not(:disabled) { background: #1749a8; }
+
+button.ghost { border-color: transparent; background: transparent; color: var(--acc); }
+button.ghost:hover { background: #e8eefb; }
+
+/* 検索欄（§19-2）も文字入力と同じ見た目にする */
+input[type=text], input[type=search] {
+  padding: 6px 9px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+}
+input[type=text]:focus,
+input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
+
+.spacer { flex: 1 1 auto; }
+
+/* ================= 画面が狭い時 ================= */
+#narrowNotice {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: var(--bg);
+  place-items: center;
+  text-align: center;
+  padding: 24px;
+}
+#narrowNotice h1 { font-size: 20px; margin-bottom: 10px; }
+#narrowNotice p { color: var(--mut); }
+
+@media (max-width: 999px) {
+  #narrowNotice { display: grid; }
+  #app { display: none; }
+}
+
+/* ================= 全体 ================= */
+#app { height: 100%; }
+.view { height: 100%; }
+
+/* ================= 案件一覧 ================= */
+#caseListView { overflow: auto; }
+
+.cl-wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+}
+
+.cl-head h1 { font-size: 21px; }
+.cl-sub {
+  color: var(--mut);
+  font-size: 13px;
+  margin: 8px 0 0;
+  line-height: 1.7;
+}
+
+.cl-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 26px 0 14px;
+}
+/* ---- ゲート（🔒 §27-12-2 ①②・非対応）----
+   案件フォルダを開くまでは**この1枚だけ**を出す。パソコン操作に不慣れな人でも
+   迷わないよう、中央に大きめのカードを1枚置き、押せるボタンだけを見せる。 */
+.cl-gate {
+  max-width: 560px;
+  margin: 56px auto;
+  padding: 32px 30px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--bd-strong);
+  border-radius: 10px;
+}
+.cl-gate-title { font-size: 18px; line-height: 1.6; margin: 0; }
+.cl-gate-text {
+  color: var(--mut);
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 14px 0 0;
+}
+.cl-gate-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 22px;
+}
+.cl-gate-btns button { font-size: 15px; padding: 11px 26px; }
+/* ［別のフォルダを選ぶ］は小さく添える（主役は［開く］） */
+.cl-gate-btns .ghost { font-size: 12.5px; padding: 7px 14px; }
+
+/* ---- いま開いている案件フォルダ（🔒 §27-12-2 ③ の上段）---- */
+.cl-folder {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 22px 0 0;
+  font-size: 12.5px;
+}
+.cl-folder-label { color: var(--mut); flex: 0 0 auto; }
+.cl-folder-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  font-weight: 600;
+}
+.cl-folder button { font-size: 12.5px; padding: 5px 12px; }
+
+/* ---- 絞り込み（🔒 §19-2 検索 / §19-3 タブ / §19-4 並び替え） ---- */
+.cl-filter {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0 0 14px;
+}
+.cl-tabs { flex: 0 0 auto; }
+.cl-tabs button { font-size: 12.5px; padding: 5px 15px; }
+.cl-search { flex: 1 1 auto; min-width: 0; }
+.cl-sort {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+  font-size: 12.5px;
+}
+
+.cl-empty {
+  background: var(--panel);
+  border: 1px dashed var(--bd-strong);
+  border-radius: 8px;
+  padding: 34px;
+  text-align: center;
+  color: var(--mut);
+}
+
+.cl-list { list-style: none; margin: 0; padding: 0; }
+
+.cl-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 9px;
+}
+.cl-item:hover { border-color: var(--bd-strong); }
+
+.cl-item-main { flex: 1 1 auto; min-width: 0; cursor: pointer; }
+.cl-item-name {
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cl-item-meta { color: var(--mut); font-size: 12px; margin-top: 3px; }
+.cl-item-meta .flag { color: var(--ok); }
+.cl-item-meta .flag-off { color: var(--mut); }
+
+/* 案件番号（🔒 §19-1）。桁が揃うよう等幅で、名前より前に出す */
+.cl-no {
+  font-family: ui-monospace, Consolas, "Courier New", monospace;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--mut);
+  margin-right: 9px;
+}
+/* 同じ番号が2件以上ある時だけ警告色（止めはしない・気づけるだけ） */
+.cl-no.is-dup { color: var(--warn); font-weight: 700; }
+
+/* 完了した案件（🔒 §19-3）。薄く見せて名前の前に✓を出す */
+.cl-item.is-done { opacity: .58; }
+.cl-item.is-done:hover { opacity: .8; }
+.cl-item.is-done .cl-nm::before { content: '✓ '; color: var(--ok); }
+/* 🔒 2026-08-31: 案件名を空のまま作れるようにしたので、空の行は薄く出す（表示だけ） */
+.cl-nm.is-empty { color: var(--mut); font-weight: 400; }
+
+/* ================= エディタ ================= */
+#editorView {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🔒 2026-08-31: 旧 .ed-search（住所欄の2行目）は上部バーへ吸収して廃止した */
+.ed-head,
+.ed-tabs,
+.ed-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--bd);
+  flex: 0 0 auto;
+}
+
+/* 🔒 2026-08-31: 上部バーは1行。`flex-wrap` は付けない（.ed-tabs の教訓と同じ）ので、
+   狭い画面では**折り返さずに縮む**ように、伸び縮みするものへ min-width: 0 を入れておく。
+   縮む順は「検索メッセージ → タイトル → 住所欄 → 案件名」。 */
+.ed-title {
+  font-size: 14px;
+  white-space: nowrap;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ed-name, .ed-no, .ed-addr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--mut);
+  white-space: nowrap;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.ed-name input { width: 150px; min-width: 90px; }
+/* 🔒 §19-1: 案件番号は案件名の左に幅狭で置く（YYYY-NNN が入るだけの幅） */
+.ed-no { flex: 0 0 auto; }
+.ed-no input { width: 84px; font-family: ui-monospace, Consolas, "Courier New", monospace; }
+
+.save-state { font-size: 12px; color: var(--mut); min-width: 5.5em; flex: 0 0 auto; }
+.save-state.saved { color: var(--ok); }
+.save-state.dirty { color: var(--mut); }
+.save-state.error { color: var(--warn); font-weight: 700; }
+
+/* 使用の本拠の住所欄（正典 §18-2）。駐車場側は撤去した（🔒 §28-14 ①-1） */
+.ed-addr input { width: 165px; min-width: 90px; }
+/* 1行に詰めた分、部品どうしの間は少し詰める（他のバーは 10px のまま） */
+.ed-head { gap: 8px; }
+/* 欄ごとの［検索］（正典 §18-2）。欄にくっつけて「この欄を検索する」と分かるように */
+.ed-head .go { padding: 5px 11px; font-size: 12px; flex: 0 0 auto; }
+/* 🔒 2026-08-31: 空の時は残り幅を食う＝旧 .spacer の代わり。
+   長い説明文は省略記号で畳む（全文は title 属性で読める） */
+.search-msg {
+  font-size: 12px;
+  color: var(--mut);
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-msg.err { color: var(--warn); font-weight: 700; }
+
+/* 🔒 §18-al / §30-1: 誘導の入口。所在図／配置図タブのすぐ右に**2つ**並べる
+   （［🧭 所在図ガイダンス］［🧭 配置図ガイダンス］）。 */
+/* 🔴 2つに増えた分、上部バーが狭い画面で押し出される。文字は正典の名前のまま
+   （§30-1）にして、余白と字の大きさだけ詰める。🙋 1024px では依然として
+   はみ出す（1つの時から既にはみ出していた）＝バーの並べ方は別途 Fable 判断。 */
+.guide-btn { margin-left: 10px; font-size: 12.5px; padding: 6px 9px; }
+.guide-btn + .guide-btn { margin-left: 5px; }
+.auto-btn { font-size: 13.5px; padding: 6px 16px; }
+.undo-group { display: flex; gap: 5px; margin-left: 10px; }
+.undo-group button { padding: 6px 12px; font-size: 12.5px; }
+
+/* 🔒 §18-ai: 下敷きの注意書き（.under-tip）は上部バーから地図の上へはみ出す。
+ * .ed-stage は DOM で後ろ＝既定では上に描かれるので、バー側に重なり順を立てておく */
+.ed-tabs { position: relative; z-index: 20; }
+/* 🔴 §18-al で `flex-wrap: wrap` を試したが**採用しない**。
+ * `.spacer { flex: 1 1 auto }` が折り返し時に1行を丸ごと占有してしまい、
+ * 1280px で 5 行・高さ 94px になった（実測）。1 行のまま縮める方が良い。 */
+
+/* 下敷きの濃さ（上部メニュー） */
+.opacity-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1px solid var(--bd);
+  font-size: 12px;
+  color: var(--mut);
+  white-space: nowrap;
+  /* 🔒 §18-ai: 下敷き選択を抱えたので、狭い画面では縮んで隣を押し出さないようにする */
+  min-width: 0;
+}
+.opacity-group #opacity { width: 96px; }
+.opacity-group #opacityVal {
+  font-variant-numeric: tabular-nums;
+  min-width: 3.2em;
+  color: var(--ink);
+}
+/* 🔒 §22-ad: 上部バーの「画像の濃さ」（画像を取り込んだ時だけ出る）。
+   地図の［下敷きの濃さ］と同じ見た目・同じ幅にそろえる */
+.img-opacity-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.img-opacity-group #imgOpacityTop { width: 96px; }
+.img-opacity-group #imgOpacityTopVal {
+  font-variant-numeric: tabular-nums;
+  min-width: 3.2em;
+  color: var(--ink);
+}
+/* 🔒 2026-08-31 オーナー指示: ［地図OFF］チェック → 「表示／非表示」トグルスイッチ。
+   ・つまみ（□）が**選んでいる側の上に乗る**（＝二択のセグメントに見える）ので、
+     どちらを選んでいるかが一目で分かる
+   ・🔴 中身のチェックボックスは `underlayOff` のまま（**checked ＝ 非表示**）。
+     見た目だけを変えたので JS の意味は反転していない（§18-ak の教訓）
+   ・チェックボックスは display:none にしない（キーボードで届かなくなる）。
+     透明にして重ね、:focus-visible で枠を出す */
+.mapsw { position: relative; display: inline-flex; flex: 0 0 auto; }
+.mapsw-in {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.mapsw-track {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 92px;
+  height: 24px;
+  padding: 2px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 6px;
+  background: #eef1f6;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+}
+.mapsw-txt {
+  position: relative;      /* つまみより手前に置く（z-index は要らない） */
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  line-height: 1;
+  color: var(--mut);
+  transition: color .12s ease;
+}
+/* つまみ。左＝表示（既定）／右＝非表示。checked（＝地図を消す）で右へ動く */
+.mapsw-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
+  height: calc(100% - 4px);
+  border: 1px solid var(--bd-strong);
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+  transition: transform .14s ease;
+}
+.mapsw-in:checked ~ .mapsw-track .mapsw-knob { transform: translateX(100%); }
+/* 選ばれている側の文字をはっきりさせる（つまみの位置と二重に伝える） */
+.mapsw-in:not(:checked) ~ .mapsw-track .mapsw-show { color: var(--ink); font-weight: 700; }
+.mapsw-in:checked ~ .mapsw-track .mapsw-hide { color: var(--warn); font-weight: 700; }
+.mapsw-in:focus-visible ~ .mapsw-track { outline: 2px solid var(--acc); outline-offset: 1px; }
+/* 🔴 カーソルは透明な input に当たるので、:hover は入れ物の側で見る */
+.mapsw:hover .mapsw-track { border-color: var(--acc); }
+
+.chk-off { font-size: 12px; gap: 4px; }
+/* 🔒 §22-af（2026-08-28 オーナー実機報告）: 上部バーのチェックボックスが
+   1段下がって中央ぞろえにならない不具合の修正。
+   🔴 真因は .chk の `margin-top: 10px`。あれは**右パネルで縦に積む時**の間隔で、
+   横1列に並ぶ上部バーでは下方向のズレにしかならない。
+   .opacity-group の中だけ打ち消す（ヘッダの☑完了など他の .chk は触らない）。 */
+.opacity-group .chk { margin-top: 0; }
+.auto-status { font-size: 12px; color: var(--acc); font-weight: 700; min-width: 8em; }
+
+.tabs { display: flex; gap: 0; }
+.tab {
+  border-radius: 0;
+  border-right-width: 0;
+  font-weight: 700;
+  padding: 6px 22px;
+}
+.tab:first-child { border-radius: 5px 0 0 5px; }
+.tab:last-child { border-radius: 0 5px 5px 0; border-right-width: 1px; }
+.tab.is-active { background: var(--acc); border-color: var(--acc); color: #fff; }
+.tab.is-active:hover { background: #1749a8; }
+/* 🔒 §25-2: 所在図と配置図で**色を変える**。タブの色とシート帯の色をそろえて、
+   どちらを作っているかを画面のどこを見ても取り違えないようにする */
+.tab[data-kind="haichizu"].is-active { background: var(--kind-h); border-color: var(--kind-h); }
+.tab[data-kind="haichizu"].is-active:hover { background: #166036; }
+
+/* ---- シート帯（🔒 §24-1 シート制 ＋ §25-2 完全分離） ---- */
+.ed-sheetbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--bd);
+  /* 図の種類で色が変わる（--kind-bg / --kind-line は #editorView[data-kind] で切り替え） */
+  background: var(--kind-bg);
+  border-left: 6px solid var(--kind-line);
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--mut);
+  white-space: nowrap;
+  position: relative;
+  z-index: 19;
+}
+/* 一目で分かる大きさで「所在図」「配置図」と出す（オーナー指摘への直接の答え） */
+.sb-now {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kind-line);
+  letter-spacing: 0.04em;
+}
+.sb-lead { margin-right: 4px; }
+.sb-chips { display: flex; gap: 4px; margin-left: 4px; }
+.sb-chip {
+  min-width: 34px;
+  padding: 4px 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.sb-chip.is-active {
+  background: var(--kind-line);
+  border-color: var(--kind-line);
+  color: #fff;
+}
+.sb-btn { padding: 4px 10px; font-size: 12px; }
+/* 枠を決定中はボタンを塗って「いま固定されている」と分かるようにする（§24-2-3） */
+.sb-btn.is-on {
+  background: var(--kind-line);
+  border-color: var(--kind-line);
+  color: #fff;
+}
+.sb-move { display: flex; gap: 3px; }
+.sb-move .sb-btn { padding: 4px 8px; }
+.sb-orient { margin-left: 6px; }
+.sb-orient button { padding: 4px 10px; font-size: 12px; }
+.sb-orient button.is-active {
+  background: var(--kind-line);
+  border-color: var(--kind-line);
+  color: #fff;
+}
+.sb-note { color: var(--mut); overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- 地図 ---- */
+.ed-stage {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+
+.map-wrap { position: relative; flex: 1 1 auto; min-width: 0; }
+
+#map {
+  position: absolute;
+  inset: 0;
+  background: #e8eaee;
+  overflow: hidden;
+}
+
+.map-attr {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  z-index: 5;
+  font-size: 11px;
+  color: #222;
+  background: rgba(255, 255, 255, .82);
+  padding: 2px 7px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* ズーム操作 */
+.map-ctrl {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.map-ctrl button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  background: rgba(255, 255, 255, .95);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .22);
+}
+
+/* スケールバー */
+.map-scale {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  z-index: 6;
+  pointer-events: none;
+  font-size: 11px;
+  color: #1a1d23;
+}
+.scale-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  background: rgba(255, 255, 255, .84);
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+.scale-bar span {
+  display: block;
+  height: 7px;
+  border: 2px solid #1a1d23;
+  border-top: none;
+}
+.scale-bar b { font-size: 11.5px; }
+.scale-meta {
+  margin-top: 3px;
+  display: flex;
+  gap: 8px;
+  background: rgba(255, 255, 255, .84);
+  padding: 1px 7px;
+  border-radius: 3px;
+  width: fit-content;
+}
+#overzoomNote { color: #a4530b; font-weight: 700; }
+
+/* 塊スタンプのパネル */
+.stamp-panel {
+  position: absolute;
+  /* 🔒 2026-08-20 オーナー指示: 小さいウィンドウ類は左側に置く（右→左）。
+     ズーム操作(.map-ctrl)だけが右に残る */
+  left: 12px;
+  top: 56px;
+  z-index: 8;
+  width: 236px;
+  /* 項目が増えても地図からはみ出さない（はみ出すとボタンが押せなくなる） */
+  max-height: calc(100% - 70px);
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--bd-strong);
+  border-radius: 7px;
+  padding: 12px 13px 13px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .17);
+}
+.stamp-panel h3 { margin: 0 0 9px; font-size: 13px; }
+.sp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  margin-bottom: 7px;
+  color: var(--mut);
+}
+.sp-row .num { width: 54px; }
+/* 🔒 §18-ad: プリセット選択中の幅・奥行は「入力欄に見えない表示」にする。
+   値は読めるが枠線・背景を消して、入れるのは台数だけだと分かるようにする */
+.sp-row .num.is-fixed {
+  border-color: transparent;
+  background: transparent;
+  padding-left: 0;
+  padding-right: 0;
+  color: var(--ink);
+  font-weight: 700;
+  cursor: default;
+}
+.sp-row .num.is-fixed:focus { outline: none; box-shadow: none; }
+.sp-row input[type="range"] { flex: 1 1 auto; min-width: 0; }
+.sp-row select { flex: 1 1 auto; min-width: 0; }
+.sp-seg { flex: 1 1 auto; }
+.sp-seg button { padding: 4px 0; font-size: 12px; }
+/* 並べ方を図で選ぶ（2択） */
+.sp-pick { display: block; margin: 4px 0 5px; }
+.stamp-choices { display: flex; gap: 8px; margin: 0 0 8px; }
+.stamp-choice {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 4px 5px;
+  background: #f7f9fc;
+  border: 2px solid var(--bd);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.stamp-choice:hover { border-color: var(--bd-strong); background: #eef2f8; }
+.stamp-choice.is-active {
+  border-color: var(--acc);
+  background: #eef4ff;
+}
+.sc-fig { display: block; width: 100%; height: 84px; overflow: hidden; }
+.sc-fig svg { display: block; margin: 0 auto; }
+.sc-cap { font-size: 11.5px; color: var(--mut); }
+.stamp-choice.is-active .sc-cap { color: var(--acc); font-weight: 700; }
+.sp-total { margin: 0 0 9px; font-size: 12px; font-weight: 700; }
+.sp-btns { display: flex; gap: 7px; }
+.sp-btns button { flex: 1 1 0; }
+
+/* 書き出し範囲の枠（正典 §4-10） */
+.frame-mask { fill: rgba(20, 24, 32, .42); pointer-events: none; }
+/* 🔒 §24-4-d: 枠を決める前（場所を探している間）は覆いを薄く。
+   紙の縁は常に見えるが、作図・下敷きの見やすさを損なわない。🙋 仮値 .14 */
+.frame-mask.is-soft { fill: rgba(20, 24, 32, .14); }
+.frame-rect {
+  fill: none;
+  stroke: var(--acc);
+  stroke-width: 2;
+  stroke-dasharray: 8 5;
+  pointer-events: none;
+}
+/* 🔒 §24-6: 他のシートの枠（見えるだけ・掴めない）＋番号の札。
+   🔒 2026-09-06 オーナー指示「薄すぎて見えない。編集していない枠は赤色にする」
+   → 薄い青（#8fb4f5・1.2）をやめ、赤（#d92b2b）・太さ 2 に。編集中の枠は青のまま＝色で区別。🙋 仮値 */
+.frame-rect.is-sibling {
+  fill: none;
+  stroke: #d92b2b;
+  stroke-width: 2;
+  stroke-dasharray: 8 5;
+  pointer-events: none;
+}
+/* 🔴 .mv-overlay は既定 pointer-events:none（§16 の当たり判定方式）。
+   .hit と同様に、札だけは明示して当たり判定を戻す（§24-6 規則6） */
+.frame-badge { cursor: pointer; pointer-events: auto; }
+/* 編集していない枠の札＝白地に赤（枠と同じ色） */
+.frame-badge rect { fill: #fff; stroke: #d92b2b; stroke-width: 1.6; }
+.frame-badge text {
+  fill: #d92b2b;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+}
+/* 編集中の枠の札＝塗りつぶしの青（§24-6 規則2） */
+.frame-badge.is-active rect { fill: var(--acc); stroke: var(--acc); }
+.frame-badge.is-active text { fill: #fff; }
+/* Ctrl を押している間の表示 */
+.ctrl-badge {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  z-index: 7;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(26, 86, 196, .92);
+  padding: 4px 13px;
+  border-radius: 14px;
+  pointer-events: none;
+}
+/* 🔒 §23-7-b: スペースを押している間の表示。Ctrl バッジ（中央）と同時に出ても
+   重ならないよう左端に置き、色も変えて別物だと分かるようにする */
+.space-badge {
+  left: 12px;
+  transform: none;
+  background: rgba(26, 122, 84, .92);
+}
+.tool.is-temp {
+  background: #dbe6fb;
+  border-color: var(--acc);
+  color: var(--acc);
+}
+
+.frame-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 7;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(26, 86, 196, .9);
+  padding: 4px 12px;
+  border-radius: 14px;
+  pointer-events: none;
+}
+
+/* 書き出し */
+.ex-panel { width: 258px; }
+.ex-sheet {
+  font-size: 12px;
+  border: 1px solid var(--bd);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  background: #f7f9fc;
+}
+.ex-sheet b { display: block; margin-bottom: 2px; }
+/* 🔒 §24-3: 紙は1枚1行で並べる（何枚出るかが一目で分かるように） */
+.ex-sheet .mut { display: block; color: var(--mut); line-height: 1.5; }
+
+/* プレビューは画面全体にかぶせる。
+ * 地図の中だけに置くと、ズームボタン等と場所を取り合って
+ * 「閉じるが押せない」の原因になる。 */
+#exPreviewBox[hidden] { display: none; }
+.ex-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(20, 24, 32, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.ex-preview-inner {
+  background: #eef1f5;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+  display: flex;
+  flex-direction: column;
+  max-width: 1100px;
+  max-height: 100%;
+  width: 100%;
+}
+.ex-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px 10px 16px;
+  border-bottom: 1px solid var(--bd);
+  background: var(--panel);
+  border-radius: 10px 10px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+#exPreviewClose {
+  padding: 8px 18px;
+  font-weight: 700;
+  border-color: var(--bd-strong);
+}
+.ex-preview-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.ex-preview-body figure { margin: 0; text-align: center; }
+.ex-preview-body figcaption { font-size: 12px; margin-bottom: 5px; font-weight: 700; }
+.ex-preview-body img {
+  background: #fff;
+  border: 1px solid var(--bd-strong);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  max-height: 68vh;
+  max-width: 100%;
+}
+.ex-preview-hintline { font-weight: 400; color: var(--mut); font-size: 11.5px; }
+/* 🔒 §30-13-3: 所在図プレビューの下部（ガイダンス⑧から出した時だけ出る）。
+   文1行＋ボタン5つ（PDF保存／画像保存／配置図ガイダンスへ進む／案件一覧に戻る／戻る）。 */
+#exPreviewFoot[hidden] { display: none; }
+.ex-preview-foot {
+  flex: 0 0 auto;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--bd);
+  background: var(--panel);
+  border-radius: 0 0 10px 10px;
+}
+.ex-preview-foot-say { margin: 0 0 8px; font-size: 12.5px; font-weight: 700; }
+.ex-preview-foot-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.ex-preview-foot-btns button { padding: 8px 14px; font-weight: 700; }
+.ex-preview-foot-msg {
+  margin: 7px 0 0;
+  font-size: 11.5px;
+  color: var(--mut);
+  min-height: 1em;
+}
+/* 🔒 §18-f ④⑫: ガイダンスから出したプレビューは**左面（ガイダンス）を隠さない**。
+   ⑫の下部ボタン（PDF・画像）を押しながら紙面を見られるようにする。
+   🔒 §29 Step 7: 空ける幅（--nav-gap）は**地図領域の左端**の実測値を JS が入れる
+   （器が小ウィンドウから左面へ移ったので、基準も左面の右端＝地図の左端になった）。 */
+.ex-preview.is-nav { padding-left: var(--nav-gap, 340px); }
+/* 幅が狭くなるので、2枚は折り返さずに縮めて横に並べる */
+.ex-preview.is-nav .ex-preview-body { flex-wrap: nowrap; }
+.ex-preview.is-nav .ex-preview-body figure { min-width: 0; }
+/* かぶせ（z-index 60）より左面を前に出す。JS が付け外しする（sideFront） */
+.side.is-front { position: relative; z-index: 61; }
+
+/* ---- 提出前チェック（正典 §16-5 B）。止めない確認ダイアログ ---- */
+#chkBox[hidden] { display: none; }
+/* 多角形ツールの使い方動画（🔒 §22-ah）。提出前チェックと同じかぶせ方。
+   🔒 §30-14-3（2026-09-10 オーナー指示）: 「動画をもっと画面いっぱいに」。
+   かぶせの外余白も詰める（.ex-preview の 24px だと 96vw に届かない）。 */
+#vidBox { padding: 12px; }
+.vid-inner {
+  background: var(--panel);
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+  padding: 12px 14px 12px;
+  max-width: 96vw;      /* 🔒 §30-14-3 */
+  width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.vid-inner h3 { margin: 0 0 8px; font-size: 15px; }
+/* 動画そのもの。縦に長い画面でもボタンが画面外へ出ないよう高さを抑える
+   （🔒 §30-14-3: 見出しと［閉じる］だけになったので 190px → 110px） */
+.vid-player {
+  width: 100%;
+  min-height: 0;
+  max-height: calc(100vh - 110px);
+  background: #000;
+  border-radius: 6px;
+}
+/* 🔒 §30-14-3: 中身は見出しと［閉じる］だけ（「次からは再生しない」は廃止） */
+.vid-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+.vid-foot button { padding: 7px 18px; }
+
+.chk-inner {
+  background: var(--panel);
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+  padding: 18px 22px 20px;
+  width: 460px;
+  max-width: 100%;
+}
+.chk-inner h3 { margin: 0 0 8px; font-size: 15px; }
+.chk-lead { font-size: 12.5px; margin: 0 0 8px; color: var(--mut); }
+.chk-list { margin: 0 0 10px; padding-left: 20px; font-size: 13px; line-height: 1.9; }
+.chk-list li { color: #8a4b00; }
+.chk-btns { margin-top: 12px; }
+.chk-btns button { padding: 7px 14px; }
+
+
+/* ---- 画像の下敷き（正典 §16-3 Step 7A） ---- */
+.img-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.img-layer img { position: absolute; transform-origin: 50% 50%; user-select: none; }
+/* 位置合わせ中の外枠は目印だけ（当たり判定を持たせない＝地図を動かせる） */
+.img-frame { fill: none; stroke: var(--acc); stroke-width: 1.5; stroke-dasharray: 7 5; }
+.img-h { fill: #fff; stroke: var(--acc); stroke-width: 2; cursor: nwse-resize; }
+.img-move { cursor: move; }
+.img-move-icon { stroke: var(--acc); stroke-width: 2; pointer-events: none; }
+.img-rot { fill: var(--acc); stroke: #fff; cursor: grab; }
+.img-stem { stroke: var(--acc); stroke-width: 1.5; }
+.img-legal {
+  border-top: 1px solid var(--bd);
+  padding-top: 8px;
+  margin-top: 4px;
+  line-height: 1.7;
+}
+.map-wrap.is-dropping::after {
+  content: "画像をここに落とすと下敷きになります";
+  position: absolute;
+  inset: 8px;
+  border: 3px dashed var(--acc);
+  border-radius: 8px;
+  background: rgba(26, 86, 196, .07);
+  color: var(--acc);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* 🔒 §29 Step 7（2026-09-08）: 📷 写真ウィザード（.guide-panel / .wz-*）と
+   案件の誘導ウィンドウ（.nav-panel / .nav-head / .nav-steps / .nav-big / .nav-find /
+   .nav-tips / .nav-lead / .nav-guide / .nav-foot / .map-wrap.has-nav …）の CSS は、
+   どちらの器も全廃したので削除した。ガイダンスの見た目は .side-guide（.sg-*）1系統。
+   🔴 残してあるのは .nav-lb / .nav-add（駐車位置ラベルの入力行）だけ＝
+      ガイダンス⑪と道具メニューの小ウィンドウ #plPanel の**両方**が使っている。 */
+
+/* 駐車位置ラベルの凡例（チェック＋数値＋固定単位）。⑪と #plPanel の共通部品 */
+.nav-lb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+  color: var(--mut);
+}
+.nav-lb .lb-k { flex: 1 1 auto; min-width: 0; }
+.nav-lb .num { width: 52px; flex: 0 0 auto; }
+.nav-lb .unit { flex: 0 0 auto; width: 1.6em; }
+.nav-lb .lb-name { flex: 1 1 0; min-width: 0; width: 100%; }
+.nav-lb .lb-val { flex: 0 0 74px; width: 74px; }
+.nav-lb .lb-del { flex: 0 0 auto; padding: 1px 5px; font-size: 11px; color: var(--mut); }
+.nav-add { width: 100%; margin: 2px 0 9px; font-size: 12px; padding: 4px 0; }
+/* 🔴 §18-r の3択（.lm-pick）は 2026-09-03 の再構成で全部 .sz-row ＋ .gr5 の
+   5段階に置き換わり、使う場所が無くなったので CSS も外した（履歴は正典 §18-r/§18-s）。 */
+
+/* ===== 所在図の設定盤（🔒 2026-09-03 オーナー指示）=====
+   要求は「**全項目が一覧で見えて、見ながら切り替えられる**（折りたたまない）」。
+   パネル幅は 236px（中身は 210px）しか無いので、
+   ・1項目＝1行（見出しは左の固定幅・操作部は右の残り幅）
+   ・操作部の高さを 24px にそろえる（5段階も2択も同じ高さ＝表として読める）
+   ・段の表示は2文字まで（全文は title）
+   にして、後半タスクで6項目足しても同じ作法で積めるようにしてある。 */
+.sz-set { margin: 0 0 9px; }
+.sz-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.sz-k {
+  flex: 0 0 60px;
+  width: 60px;
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 1.2;
+  color: var(--mut);
+  cursor: help;
+}
+/* 2択（§22-ai の地図トグルと同じ作法）。幅だけ残り幅いっぱいに伸ばす */
+.sz-sw { flex: 1 1 0; min-width: 0; }
+.sz-sw .mapsw-track { width: 100%; }
+.sz-sw .mapsw-txt { font-size: 11px; }
+/* 🔴 地図トグルの .mapsw-show/.mapsw-hide は「非表示＝警告色」という専用の色分け。
+   設定盤の2択はどちらを選んでも警告ではないので、選んだ側を濃くするだけにする */
+.sz-sw .mapsw-in:not(:checked) ~ .mapsw-track .sw-a,
+.sz-sw .mapsw-in:checked ~ .mapsw-track .sw-b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* 5段階のセグメント。§18-r の件数選択と同じ「押して選ぶ」作法を、
+   つまみ（白い区画）が動く見た目にして .mapsw と統一した */
+.gr5 {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 24px;
+  padding: 2px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 6px;
+  background: #eef1f6;
+  overflow: hidden;
+}
+/* 🔴 display:none にするとキーボードで届かなくなる（.mapsw-in と同じ理由）。
+   透明にして畳んでおき、:focus-visible で選択中の区画に枠を出す */
+.gr5-in {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.gr5-lb {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--mut);
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+}
+.gr5-lb:hover { color: var(--ink); }
+.gr5-in:checked + .gr5-lb {
+  background: #fff;
+  border: 1px solid var(--bd-strong);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+  color: var(--ink);
+  font-weight: 700;
+}
+.gr5-in:focus-visible + .gr5-lb { outline: 2px solid var(--acc); outline-offset: -2px; }
+.gr5:hover { border-color: var(--acc); }
+
+/* 🔒 §22-ak-3（裁定）③: 生成件数は残すが**1行に圧縮**する。
+   後半の6項目（+180px）を足すと 1280×800 で溢れるため、
+   説明文を削り・結果は1行にした（全文は title で読める）。 */
+.sz-res {
+  margin: 0 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: help;
+}
+.sz-res:empty { margin: 0; }
+/* ボタンは「作る」を主役に。プレビューはその右（🔒 2026-09-03） */
+.sz-run { flex: 1.5 1 0; }
+.sz-prev { flex: 1 1 0; }
+
+/* 作図中の操作ヒント帯（正典 §4-5） */
+.draw-badge {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 7;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(26, 29, 35, .88);
+  padding: 5px 14px;
+  border-radius: 14px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.draw-badge.is-up { bottom: 44px; }
+.draw-badge[hidden] { display: none; }
+
+/* 認識に使った白線の可視化（正典 §16-10-b-6） */
+.recog-layer { pointer-events: none; }
+/* 白線根拠＝緑・車両在駐根拠＝橙（正典 §16-10-c-5） */
+.recog-line {
+  stroke: #197a3d;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: .9;
+  stroke-dasharray: 9 4;
+}
+.recog-veh {
+  fill: rgba(232, 89, 12, .12);
+  stroke: #e8590c;
+  stroke-width: 2.5;
+  stroke-dasharray: 6 4;
+}
+
+/* 項目が多いパネルは、実行ボタンを下端に貼り付けて隠れないようにする */
+#fillPanel .sp-btns:last-of-type {
+  position: sticky;
+  bottom: -13px;
+  background: var(--panel);
+  padding: 6px 0 4px;
+  margin-bottom: 0;
+  box-shadow: 0 -6px 8px -6px rgba(0, 0, 0, .18);
+}
+
+/* 列の向き（正典 §16-5 C） */
+.fill-dirs { margin-bottom: 6px; }
+.fill-dirs .chk { margin-top: 5px; }
+.fill-dirs .num { width: 46px; }
+.tool-row > button.wide { flex: 1 1 100%; }
+
+/* 依頼文からの住所抽出 */
+.paste-panel { width: 330px; left: 50%; right: auto; transform: translateX(-50%); top: 40px; }
+.paste-panel textarea {
+  width: 100%;
+  font: 12.5px/1.6 "Yu Gothic UI", "Meiryo", sans-serif;
+  padding: 7px 9px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  resize: vertical;
+}
+.paste-found { margin: 8px 0; font-size: 12.5px; }
+.paste-found .row {
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+  padding: 4px 0;
+  border-top: 1px solid var(--bd);
+}
+.paste-found .k { color: var(--mut); flex: 0 0 4.5em; }
+.paste-found .v { font-weight: 700; word-break: break-all; }
+.paste-found .none { color: var(--mut); }
+
+/* テキストのその場入力 */
+.text-input {
+  position: absolute;
+  z-index: 9;
+  transform: translate(-50%, -50%);
+  min-width: 150px;
+  padding: 5px 8px;
+  border: 2px solid var(--acc);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.zoom-btns { display: flex; gap: 6px; margin: 9px 0 0; }
+.zoom-btns button { flex: 1 1 0; font-size: 12px; padding: 5px 0; }
+
+.map-hint {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  transform: translateX(-50%);
+  z-index: 5;
+  font-size: 12.5px;
+  background: rgba(26, 29, 35, .84);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.map-hint.show { opacity: 1; }
+
+/* MapView 内部 */
+.mv-root { position: relative; overflow: hidden; cursor: grab; touch-action: none; }
+.mv-root.mv-dragging { cursor: grabbing; }
+.mv-underlay { position: absolute; inset: 0; }
+.mv-tilepane { position: absolute; inset: 0; }
+.mv-tile {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+}
+/* Google 下敷きの器（§17 で削除 → §17-b 2026-08-19 で復活）。
+   MapView が幅・高さ・位置・scale を直に書き込むので、ここは置き方だけ決める */
+.mv-gmap { position: absolute; left: 0; top: 0; }
+/* 🔒 §23-2: なぞり出しの「曇り下書き層」。下敷きと描画レイヤー(SVG)の間に入る。
+   🔴 掴めてはいけない（下書きはただの絵）ので pointer-events は none 固定。
+   🔴 これは画面だけの層で、書き出し(export.js)は図形モデルから描き直すので
+      PNG/PDF には一切写らない。 */
+.reveal-fog { position: absolute; inset: 0; pointer-events: none; }
+.mv-overlay { position: absolute; inset: 0; pointer-events: none; }
+.mv-overlay .hit { pointer-events: auto; }
+
+/* ピン */
+.pin { cursor: grab; }
+.pin.dragging { cursor: grabbing; }
+/* 🔒 §18-ab: 所在図に◎一式（役割オブジェクト）がある時は、画面ピンは
+   「掴むための当たり判定」だけになる。見た目は◎・名前・結線・距離が担う。
+   🔴 fill を none にすると掴めなくなる（visiblePainted の判定から外れる）ので
+      transparent で塗り、pointer-events も明示して当たり判定を残す。 */
+.pin.is-quiet .pin-body,
+.pin.is-quiet .pin-core,
+.pin.is-quiet .pin-box,
+.pin.is-quiet .pin-hatch {
+  fill: transparent;
+  stroke: transparent;
+  pointer-events: all;
+}
+.pin.is-quiet .pin-label { display: none; }
+.pin-body { fill: #fff; stroke: #111; stroke-width: 2.4; }
+.pin-core { fill: #111; }
+.pin-home .pin-core { fill: var(--acc); }
+.pin-lot .pin-core { fill: #b8460e; }
+/* 🔒 §28-14 ①-4: マーカーの形が「■ 四角に斜線」の時の画面の姿
+   （紙の主役マーク＝四角＋45°斜線ハッチと同じ見た目）。
+   🔴 色は app.js の syncPinLook が Editor.MARK.colors から入れる（表は1か所）。 */
+.pin-box { fill: #fff; stroke: #111; stroke-width: 2.4; }
+.pin-hatch { fill: none; stroke: #111; stroke-width: 1.4; }
+.pin-label {
+  font: 700 13px "Yu Gothic UI", "Meiryo", sans-serif;
+  fill: #111;
+  stroke: #fff;
+  stroke-width: 3.5;
+  paint-order: stroke;
+  text-anchor: middle;
+}
+.dist-line { stroke: #111; stroke-width: 2.2; stroke-dasharray: 9 7; fill: none; }
+.dist-line.over { stroke: var(--warn); }
+.dist-label {
+  font: 700 14px "Yu Gothic UI", "Meiryo", sans-serif;
+  fill: #111;
+  stroke: #fff;
+  stroke-width: 4;
+  paint-order: stroke;
+  text-anchor: middle;
+}
+.dist-label.over { fill: var(--warn); }
+
+/* ---- 描画オブジェクト（editor.js） ---- */
+.obj-layer { pointer-events: none; }   /* 当たり判定はモデル計算側で行う */
+
+.obj-line.is-sel, .obj-rect.is-sel { stroke: var(--acc); }
+
+.dim-label {
+  font: 700 12px "Yu Gothic UI", "Meiryo", sans-serif;
+  fill: #111;
+  stroke: #fff;
+  stroke-width: 3.2;
+  paint-order: stroke;   /* 航空写真の上でも読めるよう白フチ（正典 §4 共通） */
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.rect-number {
+  font: 700 15px "Yu Gothic UI", "Meiryo", sans-serif;
+  fill: #111; stroke: #fff; stroke-width: 3.5;
+  paint-order: stroke; text-anchor: middle;
+}
+
+/* 保管場所マーク（正典 §16-5 A）。太枠＋白フチ付きの文字 */
+.obj-storage { stroke: #111; stroke-width: 5; stroke-linejoin: round; }
+.storage-label {
+  font: 700 13px "Yu Gothic UI", "Meiryo", sans-serif;
+  fill: #111; stroke: #fff; stroke-width: 4;
+  paint-order: stroke; text-anchor: middle; dominant-baseline: middle;
+}
+.handle {
+  fill: #fff;
+  stroke: var(--acc);
+  stroke-width: 2;
+}
+.handle-rot { fill: var(--acc); stroke: #fff; }
+
+/* 🔒 §30-14-5 3（2026-09-10 オーナー指示）: 図形の中心に置く「移動の十字（✥）」。
+   四角（主役マーク以外）と塊に出る。ドラッグ＝図形ごと移動。
+   当たり判定は editor.js の hitHandle（半径 MOVE_HIT）が持つので絵はクリックを取らない。 */
+.move-cross { cursor: move; }
+.move-cross-bg {
+  fill: #fff;
+  fill-opacity: .9;
+  stroke: var(--acc);
+  stroke-width: 1.4;
+  pointer-events: none;
+}
+.move-cross-icon {
+  fill: none;
+  stroke: var(--acc);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* 選択中の図形の脇に出す「複製 / 削除」 */
+.act-group { cursor: pointer; }
+.act-btn {
+  fill: #fff;
+  stroke: var(--acc);
+  stroke-width: 2;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .3));
+}
+.act-btn.act-del { stroke: var(--warn); }
+.act-icon {
+  stroke: var(--acc);
+  stroke-width: 2;
+  stroke-linecap: round;
+  fill: none;
+  pointer-events: none;
+}
+.act-icon-del { stroke: var(--warn); stroke-width: 1.6; }
+.act-btn.act-stagger { stroke: #7a5199; }
+.act-icon-stagger { stroke: #7a5199; stroke-width: 1.9; }
+/* 階段モードが有効な間は色を反転して分かるようにする */
+.act-btn.act-stagger.is-on { fill: #7a5199; stroke: #7a5199; }
+.act-icon-stagger.is-on { stroke: #fff; }
+.obj-rect.is-skew { stroke-dasharray: none; }
+
+.skew-badge {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  z-index: 7;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(122, 81, 153, .93);
+  padding: 4px 13px;
+  border-radius: 14px;
+  pointer-events: none;
+}
+.act-group:hover .act-btn { fill: #eef3fd; }
+.rot-stem { stroke: var(--acc); stroke-width: 1.5; stroke-dasharray: 3 3; }
+/* 🔒 §18-t: 回転つまみの「曲がった↔」。航空写真の上でも見えるよう白フチ付き。
+   当たり判定は●（.handle-rot）が持つので、この絵はクリックを取らない */
+.rot-icon-halo {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.rot-icon {
+  fill: none;
+  stroke: #16223a;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* 🔒 §25-7: 塊の四方に出す「矢羽（＜ ＞ ∧ ∨）＋ ＋/−」。
+   航空写真の上でも読めるよう、矢羽は白フチの上に本体を重ねる（回転つまみと同じ作法）。
+   当たり判定は editor.js の hitStampNav が持つので、絵はクリックを取らない */
+.nav-group { cursor: pointer; }
+/* 🔒 §30-14-5 1: 記号を小さくしたので線も比例して細く（halo 7.5→5・本体 3.4→2.4） */
+.nav-chev-halo {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.nav-chev {
+  fill: none;
+  stroke: var(--acc);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+/* その向きには伸ばせない（並びの向きが決まっている）時は薄く出す */
+.nav-chev.is-off { stroke: #9aa3b0; opacity: .45; }
+.nav-chev-halo.is-off { opacity: .45; }
+/* 🔒 §30-14-5 1: 丸が NAV_R 9→6 になったので線も比例（2→1.5 / 2.2→1.7） */
+.nav-btn {
+  fill: #fff;
+  stroke: var(--acc);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .3));
+}
+.nav-btn-icon {
+  stroke: var(--acc);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  fill: none;
+  pointer-events: none;
+}
+.nav-group:hover .nav-btn { fill: #eef3fd; }
+
+/* 🔒 §25-8: 回転の＋／−（0.5°ずつ）。回転つまみの両脇に置く */
+.rotbtn-group { cursor: pointer; }
+.rotbtn {
+  fill: #fff;
+  stroke: var(--acc);
+  stroke-width: 1.6;      /* 🔒 §30-14-5 1: ROTBTN_R 10→8 に比例（2→1.6） */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .3));
+}
+/* 🔒 §25-8 修正2（2026-08-30）: 回転ボタンの記号は「曲線の矢印」。
+   増減の ＋/− と紛らわしいのでやめ、回転つまみ（.rot-icon）と同じ意匠に揃えた。
+   白フチ→本体の二重描きも回転つまみと同じ作法（航空写真の上でも読める）。 */
+.rotbtn-arrow-halo {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.9;      /* 🔒 §30-14-5 1: ROTBTN_R 10→8 に比例（3.6→2.9） */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.rotbtn-arrow {
+  fill: none;
+  stroke: var(--acc);
+  stroke-width: 1.5;      /* 🔒 §30-14-5 1: 同上（1.8→1.5） */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.rotbtn-group:hover .rotbtn { fill: #eef3fd; }
+
+.obj-text {
+  font-family: "Yu Gothic UI", "Meiryo", sans-serif;
+  font-weight: 700;
+  fill: #111;
+  stroke: #fff;
+  stroke-width: 3.2;
+  paint-order: stroke;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.obj-text.is-sel { fill: var(--acc); }
+/* 駐車位置ラベルの塊は左揃え（正典 §18-f ⑧・見本 assets/guide/label.png） */
+.obj-text.is-lb { text-anchor: start; }
+/* 目標物の●と引き出し線（正典 §18-8）。●は文字を動かしても動かない */
+.anno-dot { fill: #111; stroke: #fff; stroke-width: 1.3; }
+.anno-dot.is-sel { fill: var(--acc); }
+/* 🔒 §18-r: 自宅・駐車場は二重丸（◎）。外の輪は白抜きなので写真の上でも見える */
+.anno-ring { fill: #fff; stroke: #111; stroke-width: 2.2; }
+.anno-core { fill: #111; stroke: none; }
+.anno-ring.is-sel { stroke: var(--acc); }
+.anno-core.is-sel { fill: var(--acc); }
+/* 🔒 2026-09-02 オーナー指示: 交差点名の印は信号機（横長の角丸矩形＋3灯）。
+   §23-9「線だけで描く」に従い**矩形は塗らない**（塗るのは3つの灯だけ）。
+   太さは Editor.SIGNAL.lw（属性で入る）ので、ここでは色だけ決める。 */
+.anno-signal { fill: none; stroke: #111; }
+.anno-signal.is-sel { stroke: var(--acc); }
+.anno-signal-lamp { fill: #111; stroke: none; }
+.anno-signal-lamp.is-sel { fill: var(--acc); }
+/* 🔒 2026-09-04 オーナー指示: バス停の印は標識アイコン（角丸矩形の板＋ポール＋足）。
+   §23-9「線だけで描く」に従い塗りは一切なし（板の中に灯は入れない＝信号機と区別）。
+   太さは Editor.BUSSTOP.lw（属性で入る）ので、ここでは色だけ決める。 */
+.anno-bus { fill: none; stroke: #111; stroke-linecap: round; }
+.anno-bus.is-sel { stroke: var(--acc); }
+/* 🔒 §22-am-2: 名前と●をつなぐ引き出し線。太さ・破線は Editor.LEAD が唯一の出どころで、
+   editor.js が style 属性で入れる（CSS は表示属性に勝つので、ここに書くと二重管理になる）。
+   下の値は保険（editor.js を通らない経路で描かれた時の見た目）。 */
+.anno-lead { stroke: #6b7280; stroke-width: 1.1; stroke-dasharray: 3 2; fill: none; }
+/* 🔒 §22-av: 路線番号の印（国道＝逆三角形／都道府県道＝六角形）。
+   白で塗るのは、下を通る道路の線が数字に被らないようにするため（白黒印刷が前提）。 */
+.route-badge { fill: #fff; stroke: #111; stroke-width: 1.6; stroke-linejoin: round; }
+.route-badge.is-sel { stroke: var(--acc); }
+/* 🔒 §28-3: 方位記号の部品（針＋N）。旧 export.js drawNorth と同じ見た目＝
+   針は黒のべた塗り。太さは Editor.COMPASS.lw（属性で入る）ので色だけ決める。 */
+.compass-needle { fill: #111; stroke: #111; stroke-linejoin: round; }
+.compass-needle.is-sel { fill: var(--acc); stroke: var(--acc); }
+.compass-n { stroke-width: 2.4; }
+
+.sel-box { stroke: var(--acc); stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+/* 幅矢印の値（正典 §4-6 → §25-5 再改定）
+   🔒 §25-5: 自動計算した距離も**手入力と同じ見た目**（.dim-label）で出す。
+   見分けを付ける必要は無い（オーナー指示）ので、旧 .dim-label.auto は復活させない */
+
+/* 🔒 §25-4: 使用の本拠・駐車場の主役マーク（四角＋45°斜線ハッチ）。
+   塗り（ハッチのパターン）は editor.js が fill 属性で色ごとに指定する。
+   選択中だけ輪郭を選択色にする（ハッチの色はそのまま＝どの色か分かる） */
+.obj-mark { stroke-linejoin: miter; }
+.obj-mark.is-sel { stroke: var(--acc); stroke-width: 2.6; }
+
+/* 自動下書きで生成した図形は少し細く薄く（手描きと見分ける） */
+.obj-rect.is-auto { opacity: .82; }
+
+/* 敷地候補（法務省の筆界） */
+.cand-layer { pointer-events: none; }
+.cand {
+  fill: rgba(26, 86, 196, .07);
+  stroke: #1a56c4;
+  stroke-width: 1.4;
+  stroke-dasharray: 5 3;
+}
+.cand-label {
+  font: 700 11px "Yu Gothic UI", "Meiryo", sans-serif;
+  fill: #1a56c4;
+  stroke: #fff;
+  stroke-width: 3;
+  paint-order: stroke;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.sp-note { margin: 0 0 9px; font-size: 11.5px; color: var(--mut); line-height: 1.6; }
+.df-clear {
+  width: 100%;
+  margin-top: 8px;
+  font-size: 12px;
+  padding: 5px 0;
+  color: var(--warn);
+}
+
+/* 番号割付の開始枠 */
+.num-from { fill: rgba(26, 86, 196, .22); stroke: var(--acc); stroke-width: 2; }
+
+/* 作図中の途中経過（🔒 §18-ai）。多角形・直線・曲線・四角で色を揃える。
+ * 片方だけ橙にすると「橙は多角形」と誤読されるので必ず一緒に変える */
+.draft-line { stroke: var(--draft); stroke-width: 2.4; stroke-dasharray: 6 5; }
+.draft-rect {
+  fill: rgba(255, 122, 0, .10);
+  stroke: var(--draft);
+  stroke-width: 2.4;
+  stroke-dasharray: 6 5;
+}
+
+/* ---- 右パネル ---- */
+.side {
+  flex: 0 0 252px;
+  order: -1;  /* 🔒 2026-08-20 オーナー指示: 道具メニューを地図の左側へ */
+  background: var(--panel);
+  border-right: 1px solid var(--bd);
+  padding: 12px 14px 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+/* 🔒 §28-1 ②（2026-09-06 オーナー承認）: ガイダンス中は左面が**ガイダンス面**になる。
+   幅は 252px → 340px（説明文が1行 18〜20 字で読める幅）。閉じると道具メニューに戻る。
+   🔴 中身は「入れ替える」だけ＝道具メニューの DOM は消さない（閉じたらそのまま戻る）。 */
+.side.is-guide { flex-basis: 340px; }
+.side.is-guide > *:not(#sideNav) { display: none !important; }
+
+.side-guide { display: flex; flex-direction: column; gap: 0; }
+.sg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--bd);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.sg-brand { font-size: 13px; font-weight: 700; color: var(--acc); }
+.sg-x {
+  width: 24px; height: 24px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--mut);
+}
+/* 足跡。済んだ段だけ押せる（§28-6 ⑦）。
+   🔒 §29-1: **2段**にする（上＝所在図①〜④／下＝配置図⑤〜⑫）。
+   🔴 行を分けるのは幅の都合ではなく「どちらの図の段か」という意味の区切り。 */
+.sg-steps { margin-bottom: 10px; }
+.sg-srow { display: flex; gap: 4px; flex-wrap: wrap; align-items: stretch; }
+.sg-srow + .sg-srow { margin-top: 5px; }
+/* 行の見出し（所在図／配置図）。押せない・数えない、ただの札 */
+.sg-sk {
+  flex: 0 0 auto;
+  align-self: center;
+  font-size: 10px;
+  color: var(--mut);
+  padding: 0 2px 0 0;
+  white-space: nowrap;
+}
+.sg-steps span[data-step] {
+  flex: 1 1 0;
+  min-width: 52px;
+  text-align: center;
+  font-size: 10.5px;
+  padding: 5px 2px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--mut);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sg-steps span.is-done { color: var(--acc); border-color: var(--acc); cursor: pointer; }
+.sg-steps span.is-done:hover { background: #eef3fd; }
+.sg-steps span.is-now { background: var(--acc); border-color: var(--acc); color: #fff; font-weight: 700; }
+
+/* 🔒 §30-12-1: ガイダンスの目指す所。足あとの直下・全段で常に出す1行
+   （オーナー: 「青色に強調されたボタンを順に押していくと、所在図が出来上がります。」）。 */
+.sg-aim {
+  margin: 0 0 10px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: #eef3fd;
+  border: 1px solid #c9daf6;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #17408f;
+}
+
+.sg-title { font-size: 14.5px; margin: 0 0 6px; }
+.sg-text { font-size: 12.5px; line-height: 1.7; color: var(--ink); margin: 0 0 12px; }
+.sg-note { font-size: 12px; line-height: 1.7; color: var(--mut); margin: 10px 0; }
+.sg-lb { display: block; font-size: 11.5px; color: var(--mut); margin: 10px 0 4px; }
+.sg-find { display: flex; gap: 6px; }
+.sg-find input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  font-size: 12.5px;
+}
+.sg-pins { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+/* 🔒 §28-14 ①-4: マーカーの種類（使用の本拠／駐車場の2行・形2種×色3種）。
+   中身は app.js sgRenderMarks が Editor.MARK から組み立てる。 */
+.sg-marks { display: flex; flex-direction: column; gap: 5px; }
+.sg-mk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  background: #fff;
+}
+.sg-mk-k { font-size: 12px; font-weight: 700; flex: 1 1 auto; min-width: 0; }
+.sg-mk-sh { display: flex; gap: 4px; }
+.mk-shape {
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  line-height: 1;
+  font-size: 13px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+  cursor: pointer;
+}
+.mk-shape.is-on {
+  border-color: var(--acc);
+  background: #eaf0fb;
+  box-shadow: 0 0 0 2px rgba(26, 86, 196, .18);
+}
+.sg-mk .mark-colors { margin-left: 0; }
+.sg-pick { display: flex; gap: 8px; }
+.sg-pick label {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  padding: 7px 8px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+  cursor: pointer;
+}
+.sg-pick input { margin: 0; }
+.sg-wide { width: 100%; margin-top: 8px; }
+/* 🔒 §30-13-2 1: 2行のボタン（1行目＝名前／2行目＝「いま: A4 縦 → 押すと A4 横」）。
+   ▼の「こんな時に押すボタン」ではなく、押すとその場で切り替わる普通のボタン。 */
+.sg-two {
+  display: block;
+  text-align: left;
+  white-space: normal;
+  line-height: 1.45;
+  padding: 8px 10px;
+}
+.sg-two b { display: block; font-size: 12.5px; font-weight: 700; }
+.sg-two i {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--mut);
+}
+/* 青（次に押す物）になった時は2行目も白字（#sideNav の next の規則と揃える） */
+#sideNav button[data-sgstate="next"]:not(:disabled).sg-two i { color: inherit; }
+/* 🔒 §29-1: 1行に「見出し＋つまみ／欄＋単位」を並べる行（⑤の写真の濃さ・⑦の台数） */
+.sg-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+.sg-row input[type="range"] { flex: 1 1 auto; min-width: 0; }
+/* 数値の欄は共通の .num（幅・右寄せ）をそのまま使う＝見た目を1か所に保つ */
+.sg-row-k { flex: 0 0 auto; color: var(--mut); }
+.sg-row-v { flex: 0 0 auto; color: var(--mut); font-size: 11.5px; }
+.sg-status {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  border-radius: 5px;
+  padding: 7px 9px;
+  margin: 12px 0 0;
+  min-height: 16px;
+}
+.sg-foot { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.sg-foot button { flex: 1 1 auto; padding: 9px 8px; font-size: 12.5px; }
+.sg-foot .sg-back { flex: 0 0 auto; }
+.sg-why { font-size: 11.5px; line-height: 1.6; color: var(--warn); margin: 6px 0 0; }
+
+/* ---- ③ 文字の量（🔒 §28-4）: 設定盤を内蔵する ----
+   🔴 中身（.sz-set）は右の浮き窓から**部品ごと移ってくる**ので、ここでは
+      入れ物の余白と「描き直し中は触らせない」見た目だけを持つ。 */
+.sg-sz { margin: 10px 0 4px; }
+/* 🔒 §28-4 / §28-6 ③: 生成中は設定盤を灰色にして触らせない
+   （何も起きないように見える時間が一番不安）。 */
+.sg-sz.is-busy { opacity: .45; pointer-events: none; }
+.sg-busy {
+  font-size: 12px;
+  color: var(--acc);
+  background: #eef3fd;
+  border-radius: 5px;
+  padding: 6px 9px;
+  margin: 8px 0 0;
+}
+
+/* ---- ④ 描き足しの道具（🔒 §28-5 A・用途つき・〇で選択中を示す） ----
+   🔴 ボタンは class="tool" ＝ 道具メニューと同じ共通ハンドラ／同じ is-active。 */
+.sg-tools { display: flex; flex-direction: column; gap: 5px; margin: 4px 0 0; }
+.sg-tk {
+  font-size: 11px;
+  color: var(--mut);
+  margin-top: 7px;
+  letter-spacing: .04em;
+}
+.sg-tk:first-child { margin-top: 0; }
+.sg-tool {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 9px;
+  line-height: 1.4;
+}
+.sg-tool b { display: block; font-size: 12.5px; font-weight: 700; }
+.sg-tool i {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--mut);
+  margin-top: 2px;
+}
+.sg-tool.is-active i { color: inherit; }
+/* ③の小さな道具の段（選択・消しゴム・文字だけ横並び） */
+.sg-tools.is-row { flex-direction: row; flex-wrap: wrap; }
+.sg-tools.is-row .sg-tool-s { flex: 1 1 0; min-width: 0; font-size: 12px; padding: 7px 4px; }
+.sg-use {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--mut);
+  background: var(--bg);
+  border-radius: 5px;
+  padding: 6px 9px;
+  margin: 9px 0 0;
+}
+
+/* ---- ④ 表示切替（🔒 §28-5 B・Step 3）: 下敷きを選ぶ〇 ----
+   🔴 一番上（地図なし）だけ「下敷きを隠す」・残りは #underlaySel の値そのもの。
+      Google だけは〇でなく<a>（ボタンの見た目・別タブ・§17）。見た目は .sg-tool と揃える。 */
+.sg-unders { display: flex; flex-direction: column; gap: 5px; margin: 4px 0 0; }
+.sg-under {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 7px 9px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+.sg-under:hover { border-color: var(--acc); }
+.sg-under input[type="radio"] { margin: 3px 0 0; flex: 0 0 auto; }
+.sg-under b { display: block; font-size: 12.5px; font-weight: 700; }
+.sg-under i {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--mut);
+  margin-top: 2px;
+}
+/* 🔒 §29-5 決定2: 各〇の説明行の末尾に撮影時期を小さく足す（sgSyncEra が textContent
+   を書く。「・」から始めて元の文に続くので、空の時は何も見えない）。 */
+.sg-era { font-weight: 600; }
+/* 🔒 §30-7 A(3): PLATEAU の範囲外の一言（説明行の下に赤で足す）。 */
+.sg-warn { display: block; color: var(--warn); font-weight: 700; margin-top: 3px; }
+/* 🔒 §28-14 ④: Google も**下敷きの〇**になったので、別タブ用の .sg-under-btn
+   （破線の a 要素）は使う場所が無くなった＝ §29 Step 7 で削除した。 */
+
+/* ---- ④ 交差点名・バス停名の重ね表示（🔒 §28-13 決定3）----
+   下敷きの〇（.sg-under）とは**別の軸**（どの地図の上にも重ねられる）ので、
+   〇の枠から離して薄い地色の帯に置く＝「選ぶ」ではなく「足す」に見せる。 */
+.sg-ov {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 7px 9px;
+  margin: 8px 0 0;
+  border: 1px solid var(--bd);
+  border-radius: 5px;
+  background: var(--bg);
+  cursor: pointer;
+}
+.sg-ov:hover { border-color: var(--acc); }
+.sg-ov input[type="checkbox"] { margin: 2px 0 0; flex: 0 0 auto; }
+.sg-ov b { display: block; font-size: 12.5px; font-weight: 700; }
+.sg-ov i {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--mut);
+  margin-top: 2px;
+}
+.sg-ov-st { font-size: 11px; color: var(--mut); margin: 4px 0 0 4px; }
+
+/* ---- ⑨⑩⑪ の見本画像（🔒 §29 Step 7・assets/guide/ のオーナー提供の線画） ----
+   小さい線画なので**引き伸ばさない**（にじむ）。原寸〜面の幅まで。 */
+.sg-guide {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  margin: 0 auto 10px;
+  border: 1px solid var(--bd);
+  border-radius: 5px;
+  background: #fff;
+}
+
+/* ---- ⑦［詳しい設定］（🔒 §29-3 裁定6・旧📷ウィザードの上級オプション）----
+   既定は閉じたまま。開くと枠の大きさ・車路幅・向きが出る。 */
+.sg-adv { margin-top: 10px; border-top: 1px solid var(--bd); padding-top: 8px; }
+.sg-adv summary {
+  font-size: 11.5px;
+  color: var(--mut);
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+.sg-adv .sg-row { margin: 6px 0; }
+.sg-adv select { flex: 1 1 0; min-width: 0; font-size: 12px; padding: 4px 5px; }
+.sg-adv .fill-dirs { margin-top: 6px; }
+
+/* ---- 「こんな時に押すボタン」（🔒 §30-12-4・2026-09-09 オーナー指示）----
+   折りたたみ（<details>）と「付録」の見出しは廃止した。
+   オーナー: 「クリックで展開する事がまったく分かりにくい。端に▲だけあって
+   押すイメージが湧かない」→ **見た目は本物のボタン**（横いっぱい・白地・灰枠・
+   角丸）。中は3行（名前＋「開く ▼」／どんな時に押すか／いま: …）。
+   🔴 中身は index.html の .sg-more-g（と単体の部品）を app.js sgBuildMore が
+      **移した**物。閉じている間も同期は動く（値を書くだけなので）。 */
+.sg-more-w { margin-top: 10px; }
+.sg-more {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 7px;
+  background: #fff;
+  line-height: 1.45;
+  /* 🔒 §30-13-6: button の既定は white-space:nowrap なので、長い説明文が
+     枠からはみ出していた（オーナー指摘「地図を変える の説明文が枠内に収まっていない」）。 */
+  white-space: normal;
+}
+.sg-more-w.is-open > .sg-more {
+  /* 開いている時は下の箱と枠線が繋がって見えるようにする（§30-12-4 3） */
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+  background: var(--bg);
+}
+.sg-more-h { display: flex; align-items: baseline; gap: 8px; }
+.sg-more-t { flex: 1 1 auto; font-size: 12.5px; font-weight: 700; }
+/* 「開く ▼」／「閉じる ▲」。印だけにせず**言葉で**書く（§30-12-4 1） */
+.sg-more-a {
+  flex: 0 0 auto;
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--acc);
+}
+.sg-more-when {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--mut);
+}
+/* 今の値（§30-12-4 2「閉じていても見える」）。撮影時期のように見て判断する情報 */
+.sg-more-now {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--fg);
+}
+.sg-more-warn { display: block; margin-top: 2px; color: #8a4b00; font-weight: 700; }
+/* 押すと真下に出る箱（薄い地色・ボタンと枠線が繋がる） */
+.sg-more-body {
+  border: 1px solid var(--bd-strong);
+  border-top: none;
+  border-radius: 0 0 7px 7px;
+  background: var(--bg);
+  padding: 4px 9px 9px;
+}
+.sg-more-body > .sg-lb:first-child,
+.sg-more-body > .sg-more-g > .sg-lb:first-child { margin-top: 6px; }
+.sg-more-body > .sg-wide { margin-top: 6px; }
+/* 箱の一番下にも小さく「閉じる ▲」（§30-12-4 3） */
+.sg-more-x {
+  display: block;
+  width: 100%;
+  margin-top: 9px;
+  padding: 5px 6px;
+  border-color: transparent;
+  background: transparent;
+  font-size: 11.5px;
+  color: var(--acc);
+}
+.sg-more-x:hover:not(:disabled) { background: #e8eefb; }
+
+/* ---- ⑫ 提出前チェック（🔒 §16-5 B・段の中に常時出す）---- */
+.sg-chk {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.sg-chk li.is-miss { color: #8a4b00; }
+.sg-chk li.is-ok { color: #197a3d; list-style: none; margin-left: -18px; }
+
+/* ---- 案内数字（🔒 §30-2・2026-09-08 オーナー指示）----
+   ガイダンス面の「押す部品」の**左肩**に番号のバッジを出す。
+   🔴 バッジは属性（data-sgnum）から ::before で出す＝部品の中身（textContent /
+      innerHTML）を書き換える所（マーカーのボタン・［枠を決定］・マーカーの種類）が
+      あるので、子要素を足す作りにすると消えてしまう。
+   状態（data-sgstate）:
+     next … 次に押すべき番号（青地・白字）
+     todo … まだの番号（白地・灰枠）
+     opt  … 押さなくても進める部品（薄く）
+     done … 済んだ番号（薄い✓） */
+[data-sgnum] { position: relative; }
+[data-sgnum]::before {
+  content: attr(data-sgnum);
+  position: absolute;
+  left: -6px;
+  top: -7px;
+  z-index: 3;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 2px;
+  box-sizing: border-box;
+  border: 1px solid var(--bd-strong);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--mut);
+  font-size: 11px;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 15px;
+  text-align: center;
+  pointer-events: none;
+}
+[data-sgstate="next"]::before {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(29, 91, 199, .18);
+}
+[data-sgstate="opt"]::before { opacity: .45; }
+[data-sgstate="done"]::before {
+  color: var(--ok);
+  border-color: #bcd9c6;
+  opacity: .6;
+}
+
+/* ---- 青いボタンは常に1つ（🔒 §30-12-2・2026-09-09 オーナー指示）----
+   「青色に強調されたボタンを順に押していくと、図が出来上がります。」
+   🔴 青の出どころは **data-sgstate="next" だけ**（固定の class="primary" は
+      ガイダンス面から外した＝ sgRenderFoot の spec・index.html の #sgSearchHome ほか）。
+   🔴 押せない時（disabled）は青にしない（青は「今押せる」物だけ・§30-12-2 4）。 */
+#sideNav button[data-sgstate="next"]:not(:disabled) {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: var(--acc-ink);
+}
+#sideNav button[data-sgstate="next"]:not(:disabled):hover { background: #1749a8; }
+/* 道具ボタン（.sg-tool）の中の説明文も白字にする（既定は var(--mut)） */
+#sideNav button[data-sgstate="next"]:not(:disabled) b,
+#sideNav button[data-sgstate="next"]:not(:disabled) i { color: inherit; }
+/* 青地の上でも番号バッジが見えるように、白い縁を回す（バッジ自体は青のまま） */
+#sideNav button[data-sgstate="next"]:not(:disabled)::before {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .85);
+}
+/* 🔒 §30-12-2 1「次に押す1つだけが青」: 選択中の道具（.tool.is-active）は
+   道具メニュー側では青地のままだが、**ガイダンス面では薄い青地＋青枠＋青字**にする。
+   🔴 青いボタン＝「次に押す物」を1つに保つため（選んだ道具と次の番号は別物）。
+   🔴 選択中の道具が同時に「次に押す物」の時は、上の next の規則が勝って青地になる。 */
+#sideNav .tool.is-active {
+  background: #eef3fd;
+  border-color: var(--acc);
+  color: var(--acc);
+}
+#sideNav .tool.is-active i { color: var(--acc); }
+
+/* ---- 字幕（🔒 §30-3 / §30-10・地図領域の上部中央・大きく）----
+   1行目＝次に押す番号／2行目＝その操作説明（§30-7 B）。
+   🔒 §30-10: 自動では消えない（タイマー・フェードは撤去）。字幕全体をつかんで
+   ドラッグできる（pointer-events は字幕だけ有効・押せない板ではなくなった）。
+   既定は上部中央固定（left:50%+transform）。動かすと .is-moved が付いて
+   left/top（px の inline style）を直接使う（js: sgCaptionInitDrag / sgCaptionShow）。 */
+.sg-caption {
+  position: absolute;
+  /* 🔒 §30-13-4: 全体を今より上へ（14px → 8px）。横向きは上・中央のまま横長に */
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 92%;
+  z-index: 12;
+  padding: 11px 34px 11px 18px;
+  border-radius: 12px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 6px 26px rgba(0, 0, 0, .3);
+  /* 🔒 §30-12-3: 左に大きく〇数字、右に指示文 */
+  display: flex;
+  align-items: center;
+  /* 🔒 §30-14-3: 文の下のボタンを次の行へ落とすため折り返しを許す */
+  flex-wrap: wrap;
+  gap: 13px;
+  text-align: left;
+  cursor: grab;
+}
+/* 🔒 §30-14-3: 字幕の箱の中・文の下に出す小さなボタン（［使い方動画を見る］）。
+   横並びの時は行いっぱいを取って**次の行**へ落とす。縦長の箱では普通に続けて置く。 */
+/* 🔴 display は指定しない。指定すると `hidden` 属性（UA の display:none）を
+   打ち消してしまい、ボタンの無い番号でも空の箱が出る。
+   flex の子は自動で block 化されるので指定は要らない。 */
+.sg-caption:not(.is-side) .sg-caption-btnrow { flex: 0 0 100%; }
+.sg-caption.is-side .sg-caption-btnrow { flex: 0 0 auto; }
+.sg-caption-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 6px 12px;
+  border: 1px solid var(--acc);
+  border-radius: 8px;
+  background: #eef3fd;
+  color: var(--acc);
+  cursor: pointer;
+}
+.sg-caption-btn:hover { background: #dfe9fb; }
+/* 🔒 §30-13-4: A4 縦のときは「左面と枠の間」の空きに**縦長の箱**で置く
+   （左 8px・上 8px・幅は JS が空き−24px で入れる＝sgCaptionPlace）。
+   〇数字の下に指示文（縦並び）。空きが 220px 未満・A4 横なら付かない。 */
+.sg-caption.is-side {
+  left: 8px;
+  transform: none;
+  max-width: 360px;    /* 🔒 §30-13-8 3: 縦長の箱は最大 360px */
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.sg-caption.is-moved { transform: none; }
+.sg-caption.is-dragging { cursor: grabbing; }
+.sg-caption b {
+  flex: 0 0 auto;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--acc);
+}
+.sg-caption i {
+  font-style: normal;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #111;
+}
+.sg-caption-x {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #888;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.sg-caption-x:hover { background: #eee; color: #222; }
+
+/* 🔒 §30-1: 図をまたぐ移動（配置図①の［所在図ガイダンスへ］）は
+   ［戻る］の代わりの**小さな文字リンク**にする（同じ図の中の移動と見分ける）。 */
+.sg-foot .sg-link {
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  padding: 9px 2px;
+  font-size: 11.5px;
+  color: var(--acc);
+  text-decoration: underline;
+}
+.sg-foot .sg-link:hover { background: none; color: #0d3f96; }
+
+/* 🔒 §28-13 決定3: 重ね表示の canvas。曇り下書き（.reveal-fog）と同じ場所
+   ＝下敷きと SVG の間。🔴 触れない（見るだけ・図形にならない）。 */
+.namelay { position: absolute; inset: 0; pointer-events: none; }
+
+.side h2 {
+  font-size: 11.5px;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin: 16px 0 7px;
+}
+.side h2:first-child { margin-top: 0; }
+
+.seg { display: flex; }
+.seg button { flex: 1 1 0; border-radius: 0; border-right-width: 0; }
+.seg button:first-child { border-radius: 5px 0 0 5px; }
+.seg button:last-child { border-radius: 0 5px 5px 0; border-right-width: 1px; }
+.seg button.is-active { background: var(--acc); border-color: var(--acc); color: #fff; }
+
+.under-sel {
+  width: 100%;
+  padding: 5px 7px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+  font-size: 12.5px;
+}
+
+/* ---- 下敷きの選択（上部バー・🔒 §18-ai） ---- */
+.under-wrap { position: relative; display: inline-flex; min-width: 0; }
+/* 上部バーでは中身の長さに合わせる（右パネルの width:100% を打ち消す）。
+ * 🔴 選択肢名が長い（「正射写真 PLATEAU（真上から・なぞる用）」等）ので、
+ *    上限を切ったうえで**縮む**ようにしておく。そうしないと 1280px 幅で
+ *    バーが溢れて［書き出し］が画面の端に張り付く（実測して踏んだ）。
+ *    名前が切れても、種類ごとの説明はホバーの吹き出しで読める */
+.under-wrap .under-sel {
+  width: auto;
+  flex: 0 1 auto;
+  min-width: 92px;
+  max-width: 190px;
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
+.under-tip {
+  position: absolute;
+  top: calc(100% + 7px);
+  /* 🔴 右端そろえ。プルダウンは上部バーの右寄りに居るので、left:0 で右へ伸ばすと
+   *    1120px 幅で吹き出しが画面外へ出た（実測）。右から左へ伸ばせば必ず収まる */
+  right: 0;
+  z-index: 30;
+  width: 330px;
+  max-width: calc(100vw - 32px);
+  padding: 9px 11px;
+  border-radius: 6px;
+  background: #1f2430;
+  color: #fff;
+  /* 🔴 .opacity-group が nowrap なので、ここで戻さないと1行に伸びて画面外へ出る */
+  white-space: normal;
+  font-size: 12px;
+  line-height: 1.6;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .28);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .12s ease;
+  pointer-events: none;   /* 吹き出しがカーソルを奪って点滅するのを防ぐ */
+}
+.under-wrap:hover .under-tip,
+.under-wrap:focus-within .under-tip { opacity: 1; visibility: visible; }
+/* 注意書きが空の下敷きでは出さない */
+.under-tip:empty { display: none; }
+
+.side-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--mut); margin: 12px 0 4px; }
+#opacity { width: 100%; }
+
+.chk { display: flex; align-items: center; gap: 6px; font-size: 12.5px; margin-top: 10px; cursor: pointer; }
+
+.side-link { display: inline-block; margin-top: 14px; font-size: 12.5px; color: var(--acc); }
+.side-note { font-size: 11.5px; color: var(--mut); line-height: 1.65; margin: 7px 0 0; }
+
+#propPanel {
+  border: 1px solid var(--acc);
+  border-radius: 6px;
+  padding: 9px 11px 11px;
+  margin-bottom: 14px;
+  background: #f5f8ff;
+}
+#propPanel h2 { color: var(--acc); }
+.prop-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+.prop-row input { width: 100%; flex: 1 1 auto; min-width: 0; }
+.prop-row > input[type=text] {
+  padding: 4px 7px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 4px;
+  text-align: right;
+}
+#propLabel { text-align: left !important; }
+
+/* 🔒 §25-4: 主役マークの色（赤／オレンジ／黄）。選択中の図形の欄に3つ並べるだけ */
+.mark-colors { display: flex; gap: 6px; margin-left: auto; }
+.mark-color {
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid var(--bd-strong);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.mark-color.is-on { border-color: var(--acc); box-shadow: 0 0 0 2px rgba(26, 86, 196, .22); }
+
+.prop-btns { display: flex; gap: 6px; margin-top: 9px; }
+.prop-btns button { flex: 1 1 0; padding: 5px 0; font-size: 12.5px; }
+
+.pt-list { list-style: none; margin: 0; padding: 0; font-size: 12.5px; }
+.pt-list li { display: flex; align-items: center; gap: 7px; padding: 3px 0; }
+.pt-list em { font-style: normal; color: var(--mut); margin-left: auto; text-align: right; }
+.pt-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #111; flex: 0 0 auto; }
+.pt-home { background: var(--acc); }
+.pt-lot { background: #b8460e; }
+
+.dist-info { font-size: 12.5px; margin: 9px 0 0; font-weight: 700; }
+.dist-info.over { color: var(--warn); }
+
+/* ---- 道具（右パネルにまとめる） ---- */
+.tools { margin-bottom: 16px; }
+.tool-block {
+  border-top: 1px solid var(--bd);
+  padding: 7px 0 8px;
+}
+.tool-block:first-of-type { border-top: none; padding-top: 0; }
+.tool-label {
+  display: block;
+  font-size: 11px;
+  color: var(--mut);
+  margin-bottom: 5px;
+  letter-spacing: .03em;
+}
+.tool-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+.tool-row:last-child { margin-bottom: 0; }
+.tool-row > button { flex: 1 1 0; min-width: 0; padding: 6px 4px; font-size: 12.5px; }
+.tool-row > select { flex: 1 1 0; min-width: 0; font-size: 12.5px; padding: 4px 5px; }
+.tool.is-active { background: var(--acc); border-color: var(--acc); color: #fff; }
+.tool.is-active:hover { background: #1749a8; }
+
+/* 🔒 2026-09-06: マーカー設置ボタン（道具メニューとガイダンス①の2か所・同じ見た目）。
+   押している間（次の地図クリックを待っている間）は .is-armed で色を変える。 */
+.pin-btn { padding: 9px 6px !important; font-size: 12.5px; font-weight: 700; }
+.pin-btn.is-armed {
+  border-color: var(--acc);
+  background: #eef4ff;
+  color: var(--acc);
+}
+.num {
+  width: 54px;
+  flex: 0 0 54px !important;
+  text-align: right;
+  padding: 5px 7px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 4px;
+}
+.unit { font-size: 11.5px; color: var(--mut); flex: 0 0 auto; }
+.chk-dim { margin-top: 7px; font-size: 12px; }
+/* 🔒 §23-3: ブラシの太さ3段（小・中・大）をワンクリック切替。
+   道具そのものではないので .tool クラスは付けない（付けると setTool が走る） */
+.rv-size.is-active {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: #fff;
+}
+.rv-size.is-active:hover { background: #1749a8; }
+/* 🔒 §23-5: 名称の分類チェック。ONにした分類だけが地図上のその場所に薄く出る */
+.rv-names { margin-top: 8px; }
+.rv-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-top: 4px;
+}
+.rv-cats label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rv-cats input { margin: 0; }
+.rv-cats .rv-all { font-weight: 700; }
+/* 取得の状態。🔴 §23-6 fail-soft の「今は名称が取れない」もここに出す */
+.rv-nstat {
+  margin-top: 5px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--mut);
+}
+.rv-nstat.is-warn { color: #b45309; }
+#rvNameRetry { margin-top: 5px; }
+.tool-note {
+  font-size: 11.5px;
+  color: var(--mut);
+  line-height: 1.6;
+  margin: 9px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--bd);
+}

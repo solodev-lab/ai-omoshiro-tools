@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>車庫証明 所在図・配置図メーカー</title>
+<!-- 🔒 §18-an: アイコンを宣言しておくとブラウザが /favicon.ico を取りに行かず、
+     唯一の本物 404 が消える（サイト直下に favicon.ico は置いていない） -->
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<meta name="description" content="車庫証明（自動車保管場所証明）の「保管場所の所在図・配置図」をブラウザだけで作成。所在図は自動生成、配置図は航空写真をなぞるだけ。データはお使いのパソコンの中で完結します。">
+<!-- 🔒 2026-09-13 友人テスト中は検索エンジンに載せない（URL を渡した人だけが使う）。
+     正式公開の時にこの1行を外す。 -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 画面が狭い時（PC専用・正典 §3） -->
+<div id="narrowNotice">
+  <div>
+    <h1>PC でご利用ください</h1>
+    <p>この道具はマウス操作を前提にしています。<br>画面幅 1000px 以上の PC でお開きください。</p>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ============ 案件一覧 ============ -->
+  <section id="caseListView" class="view">
+    <div class="cl-wrap">
+      <header class="cl-head">
+        <div>
+          <h1>車庫証明 所在図・配置図メーカー</h1>
+          <!-- 🔒 §27-12-2: 副題も「案件フォルダ1本」に合わせる -->
+          <p class="cl-sub">保管場所の所在図・配置図をブラウザだけで作成します。
+            案件はあなたが選んだフォルダにファイルとして保存され、外部へ送信されません。</p>
+        </div>
+      </header>
+
+      <!-- 🔒 §27-12-2: TOP ページは「ゲート1枚」か「本体」のどちらか。
+           ゲート ＝ ①案件フォルダがまだ無い／②覚えているがまだ開いていない／非対応。
+           見出し・本文・ボタンの出し分けは app.js の renderTop()。 -->
+      <div class="cl-gate" id="clGate" hidden>
+        <h2 class="cl-gate-title" id="gateTitle"></h2>
+        <p class="cl-gate-text" id="gateText"></p>
+        <div class="cl-gate-btns">
+          <button id="btnGatePick" class="primary" hidden>フォルダを選ぶ</button>
+          <button id="btnGateOpen" class="primary" hidden>開く</button>
+          <button id="btnGateOther" class="ghost" hidden>別のフォルダを選ぶ</button>
+        </div>
+      </div>
+
+      <!-- 🔒 §27-12-2 ③: 案件フォルダを開いている時だけ出る本体 -->
+      <div id="clMain" hidden>
+
+        <!-- 上段: いまどのフォルダを開いているか＋切り替え・読み直し -->
+        <div class="cl-folder">
+          <span class="cl-folder-label">📁 案件フォルダ</span>
+          <span class="cl-folder-name" id="clFolderName"></span>
+          <button id="btnOtherDir" class="ghost"
+                  title="別のフォルダに切り替えます（いまのフォルダの案件ファイルはそのまま残ります）">別のフォルダを開く</button>
+          <button id="btnReloadDir" class="ghost"
+                  title="フォルダの中の案件ファイルを読み直して一覧を作り直します（自動では見張りません）">再読み込み</button>
+        </div>
+
+        <div class="cl-actions">
+          <button id="btnNewCase" class="primary">＋ 新しい案件</button>
+          <!-- 🔒 §20-8: 拡張子 .shako 化に合わせ「JSON」の語をやめて「案件ファイル」に -->
+          <button id="btnImport" title="他のパソコンから貰った案件ファイル（.shako・旧 .shako.json も可）をこのフォルダに入れます">案件ファイルを読み込む</button>
+          <!-- 🔒 §20-8: 案件ファイルは .shako（独自拡張子）。旧 .shako.json / .json も受け続ける -->
+          <input type="file" id="fileImport" accept=".shako,.json,.shako.json" hidden>
+        </div>
+
+        <!-- 🔒 §19-2/19-3/19-4: 絞り込み（タブ・検索・並び替え）。
+             どれも**保存しない**画面の状態。開くたびに［進行中］＋検索空＋更新順に戻る -->
+        <div class="cl-filter">
+          <div class="seg cl-tabs" id="clTabs">
+            <button type="button" class="is-active" data-tab="active">進行中</button>
+            <button type="button" data-tab="done">完了</button>
+            <button type="button" data-tab="all">すべて</button>
+          </div>
+          <input type="search" id="clSearch" class="cl-search"
+                 placeholder="番号・案件名・住所で絞り込み">
+          <select id="clSort" class="cl-sort" title="並び順（保存されません）">
+            <option value="updated">更新が新しい順</option>
+            <option value="created">作成が新しい順</option>
+            <option value="caseNo">番号順（新しい番号が上）</option>
+          </select>
+        </div>
+
+        <div id="caseListEmpty" class="cl-empty" hidden>
+          案件がまだありません。「＋ 新しい案件」から始めてください。
+        </div>
+        <ul id="caseList" class="cl-list"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ エディタ ============ -->
+  <section id="editorView" class="view" hidden>
+
+    <!-- 🔒 2026-08-31 オーナー指示: 上部バーは**1行**にまとめる。
+         ・☑完了は外した（指定は案件一覧の行から＝§19-3 の2か所のうち片方を残す）
+         ・その位置に［保存］を新設（自動保存を待たずに確定できる）
+         ・駐車場の住所欄＋［検索］は撤去（🔒 §28-14 ①-1。検索は使用の本拠だけ）
+         ・［依頼文から］は外した（parse.js は残してあるので後から戻せる） -->
+    <header class="ed-head">
+      <button id="btnBackToList" class="ghost" title="案件一覧へ戻る">‹ 案件一覧</button>
+      <h1 class="ed-title">車庫証明 所在図・配置図メーカー</h1>
+      <!-- 🔒 §19-1: 案件番号（年-連番）。新規は自動で入るが**ただの文字列**なので、
+           事務所に自前の番号体系があれば上書きしてよい。書き出し3種のファイル名の
+           先頭にも付く -->
+      <label class="ed-no">
+        番号
+        <input type="text" id="caseNo" maxlength="20" placeholder="2026-001"
+               title="案件番号。書き出しファイル名の先頭に付きます（空欄でも構いません）">
+      </label>
+      <label class="ed-name">
+        案件名
+        <input type="text" id="caseName" maxlength="60" placeholder="案件名">
+      </label>
+      <!-- 🔒 2026-08-31: ☑完了があった位置に［保存］を新設。
+           自動保存（1秒 debounce）は従来どおり動いたままで、これは「いま確定させる」ボタン -->
+      <button id="btnSaveNow" class="primary go"
+              title="いま編集している内容をすぐ保存します（ふだんは自動で保存されます）">保存</button>
+      <span id="saveState" class="save-state">—</span>
+      <!-- 住所欄（正典 §18-2）。使用の本拠だけを上部バーに残す（§25-1 の呼び名に統一）。
+           片方だけ入れて押すと、駐車場の欄が空なら同じ住所を入れる（§18-3・向きは
+           使用の本拠→駐車場の一方通行だけ残した） -->
+      <label class="ed-addr"
+             title="使用の本拠（会社・自宅）の住所。検索すると地図がその場所へ動きます（マーカーは置きません）">
+        使用の本拠住所
+        <input type="text" id="addrHome" placeholder="使用の本拠の位置">
+        <button id="btnSearchHome" class="primary go"
+                title="使用の本拠の住所を検索して、その場所へ地図を動かします（マーカーは置きません。駐車場の欄が空なら同じ住所を入れます）">検索</button>
+      </label>
+      <span id="searchMsg" class="search-msg"></span>
+      <!-- 🔒 §27-12-1 ⑤: ［ファイルに保存］は**削除**した。案件の本体は案件フォルダの
+           .shako そのものなので、書き出す意味が無い（複製・受け渡しは OS のファイル操作で）。 -->
+    </header>
+
+    <div class="ed-tabs">
+      <!-- 🔒 §25-2: 所在図と配置図は完全に分離する。ここは「どちらの図か」だけを選ぶ。
+           何枚目かは下のシート帯（.ed-sheetbar）で選ぶ（§24-1 シート制） -->
+      <div class="tabs">
+        <button class="tab is-active" data-kind="shozaizu">所在図</button>
+        <button class="tab" data-kind="haichizu">配置図</button>
+      </div>
+      <!-- 🔒 §18-al: 誘導の入口。右パネルから**ここへ移設**した。
+           住所を入れても勝手には出さない＝出すのはこのボタンを押した時だけ。
+           🔒 §30-1（2026-09-08 オーナー承認）: 入口は**図ごとに2つ**にした
+           （タブ「所在図」「配置図」のすぐ右）。押した方の図のタブへ切り替え、
+           その図の①から始める（案件に段が保存してあればそこから）。
+           理由＝どちらを作るかは利用者が既に決めており、ボタンが2つなら
+           「いまどちらの案内か」が常に見える。 -->
+      <button id="btnNavSz" class="primary guide-btn"
+        title="所在図の案内（①マーカーから④描き足しまで）を左のメニューに出します"
+        >🧭 所在図ガイダンス</button>
+      <button id="btnNavHz" class="primary guide-btn"
+        title="配置図の案内（①下敷きと枠から⑧表示・保存まで）を左のメニューに出します"
+        >🧭 配置図ガイダンス</button>
+      <button id="btnAuto" class="primary auto-btn" title="住所から所在図と配置図の下書きをまとめて作ります">
+        ⚡ 一発生成
+      </button>
+      <div class="undo-group">
+        <button id="btnUndo" disabled title="元に戻す (Ctrl+Z / 作図中は Backspace で1点)">↶ 戻す</button>
+        <button id="btnRedo" disabled title="やり直す (Ctrl+Shift+Z)">↷ 進む</button>
+      </div>
+
+      <div class="opacity-group">
+        <!-- 🔒 §18-ai: 「下敷き」だけでは何のスライダーか分からないので用途を名前に入れる。
+             🔴 「下書き」（＝自動生成した図形）とは別物。この2語は厳密に使い分ける。
+             🔴 「透明度」ではなく「濃さ」。100% が**不透明**なので、透明度だと意味が逆になる
+                （🔒 §18-ak・2026-08-22 オーナー決定） -->
+        <label for="opacity" title="下敷き（地図・航空写真）の濃さ。下げると自分の線が見えやすくなります">下敷きの濃さ</label>
+        <input type="range" id="opacity" min="0" max="100" value="100">
+        <span id="opacityVal">100%</span>
+        <!-- 🔒 2026-08-31 オーナー指示: ［地図OFF］チェックを「表示／非表示」の
+             トグルスイッチにした。つまみ（□）が左右に動いて、いまどちらを選んで
+             いるかが一目で分かる形。
+             🔴 **意味は反転させていない**（§18-ak の教訓）。id も向きも従来のまま
+                `underlayOff` ＝ **checked が「非表示」**。つまみが左（既定・未チェック）
+                なら地図が出ている。JS 側（applyOpacity / setUnderlayOffState /
+                opacity スライダーとの同期）は 1 行も変えていない。 -->
+        <span class="mapsw">
+          <input type="checkbox" id="underlayOff" class="mapsw-in">
+          <label for="underlayOff" class="mapsw-track"
+                 title="下敷きの地図・航空写真を出す／消す（濃さ0%と同じ）">
+            <span class="mapsw-knob" aria-hidden="true"></span>
+            <span class="mapsw-txt mapsw-show">表示</span>
+            <span class="mapsw-txt mapsw-hide">非表示</span>
+          </label>
+        </span>
+        <!-- 🔒 §18-ai: 下敷きの選択を右パネルから**移設**（複製しない）。
+             濃さ・地図OFF と同じ場所に置いて、下敷きの操作を1か所にまとめる -->
+        <span class="under-wrap">
+          <select id="underlaySel" class="under-sel"></select>
+          <!-- 種類ごとの注意書き。カーソルを合わせた時だけ出す（§18-ai）。
+               id は据え置き＝app.js の代入箇所を触らない -->
+          <span class="under-tip" id="underlayNote"></span>
+        </span>
+        <!-- 🔒 §22-ad（2026-08-28 オーナー指示）: 画像を取り込んだ時だけ出る
+             「画像の濃さ」バー。地図の［下敷きの濃さ］と同じ場所・同じ作法で並べる。
+             🔴 値は右パネル(#imgOpacity)・ガイダンス⑤(#sgImgOpacity)と1つの値を共有する。 -->
+        <span class="img-opacity-group" id="imgOpacityWrap" hidden>
+          <label for="imgOpacityTop"
+                 title="取り込んだ画像の濃さ。下げると自分の線が見えやすくなります">画像の濃さ</label>
+          <input type="range" id="imgOpacityTop" min="10" max="100" value="70">
+          <span id="imgOpacityTopVal">70%</span>
+        </span>
+        <!-- 取り込み画像は地図とは独立に出し入れする（正典 §16-3 改）。
+             🔒 §22-af（2026-08-28 オーナー指示）: 名前を「画像」→「画像OFF」に変え、
+             一番右へ移した。
+             🔴 名前を OFF にしたので**チェックの意味も反転**させてある
+             （チェック＝画像を消す）。隣の［地図OFF］と同じ向きに揃えるため。
+             id も imgOn → imgOff に変えた（意味と名前がずれたままだと事故る）。 -->
+        <label class="chk chk-off img-toggle" id="imgToggleWrap" hidden
+               title="取り込んだ画像を消す（地図の下敷きとは独立）">
+          <input type="checkbox" id="imgOff"> 画像OFF
+        </label>
+      </div>
+
+      <span id="autoStatus" class="auto-status"></span>
+      <span class="spacer"></span>
+      <button id="btnExport" class="primary">書き出し</button>
+    </div>
+
+    <!-- 🔒 §24-1 シート制 ＋ §25-2 完全分離。
+         オーナー原文「ぐちゃぐちゃで、ユーザーがどっちを作っているのか分からなくなってしまう」
+         → **いま何の図の何枚目を作っているか**をこの帯で常時見せる。
+         色も図の種類で変える（所在図＝青／配置図＝緑）。 -->
+    <div class="ed-sheetbar" id="edSheetBar">
+      <span class="sb-now" id="sbNow">所在図</span>
+      <span class="sb-lead">を作っています</span>
+      <div class="sb-chips" id="sbChips"></div>
+      <button id="sbAdd" class="sb-btn"
+              title="この図に新しい紙を1枚足します（中身は空。紙ごとに縮尺も向きも別々です）">＋ 1枚追加</button>
+      <button id="sbDup" class="sb-btn"
+              title="いまの紙をそっくり写して新しい1枚にします（写したあとは別々に直せます）">複製</button>
+      <button id="sbDel" class="sb-btn"
+              title="いまの紙を削除します（元に戻せません）">削除</button>
+      <span class="sb-move">
+        <button id="sbLeft" class="sb-btn" title="この紙を1つ前へ動かします">◀</button>
+        <button id="sbRight" class="sb-btn" title="この紙を1つ後ろへ動かします">▶</button>
+      </span>
+      <!-- 🔒 §25-3: A4の向きは紙1枚ごと。枠の形がその場で変わる -->
+      <span class="seg sb-orient" id="sbOrient">
+        <button data-orient="portrait" title="この紙は A4 縦で出します">A4 縦</button>
+        <button data-orient="landscape" title="この紙は A4 横で出します">A4 横</button>
+      </span>
+      <!-- 🔒 §24-2-3: 決めるまでは「枠＝いま見えている範囲」（地図を動かせば枠も動く）。
+           決めると枠が地図に固定され、以後は地図だけ動かして中を仕上げられる -->
+      <button id="sbFix" class="sb-btn"
+              title="いま見えている枠でこの紙の範囲を決めます（決めたあとは地図だけ動かせます）">枠を決定</button>
+      <button id="sbGoFrame" class="sb-btn" hidden
+              title="決めた枠が画面いっぱいに入るところへ地図を戻します">枠へ移動</button>
+      <span class="sb-note" id="sbNote"></span>
+    </div>
+
+    <div class="ed-stage">
+      <div class="map-wrap">
+        <div id="map"></div>
+
+        <div class="map-ctrl">
+          <button id="btnZoomIn" title="拡大 (マウスホイールでも可)">＋</button>
+          <button id="btnZoomOut" title="縮小">−</button>
+        </div>
+
+        <div class="map-scale">
+          <div class="scale-bar"><span id="scaleBar"></span><b id="scaleText"></b></div>
+          <div class="scale-meta"><span id="zoomText"></span><span id="overzoomNote"></span></div>
+        </div>
+
+        <div id="ctrlBadge" class="ctrl-badge" hidden>Ctrl：選択モード</div>
+        <!-- 🔒 §23-7-b: スペース＝一時パン。Ctrl バッジと重ならないよう左端に出す -->
+        <div id="spaceBadge" class="ctrl-badge space-badge" hidden>スペース：地図を動かす</div>
+        <div id="skewBadge" class="skew-badge" hidden>
+          端の枠をドラッグすると階段状にずれます（もう一度アイコンを押すと解除）
+        </div>
+        <div id="frameHint" class="frame-hint" hidden>この枠の中が書き出されます</div>
+        <!-- 作図中の操作ヒント帯（正典 §4-5）。確定方法が分からない問題への対応 -->
+        <div id="drawBadge" class="draw-badge" hidden></div>
+        <div id="mapAttr" class="map-attr"></div>
+        <div id="mapHint" class="map-hint"></div>
+
+        <!-- 字幕（🔒 §30-12-3・2026-09-09 オーナー指示）。地図領域の**上部中央**に
+             **番号＋指示文**だけ: 左に大きく〇数字（#sgCapL1）／右に指示文（#sgCapL2）。
+             「次は」も「この段は終わりです」も言わない。
+             🔴 §30-10: 自動では消えない。［×］（#sgCapClose）で閉じる。
+                字幕全体をつかんでドラッグで動かせる（app.js sgCaptionInitDrag）。
+                次の字幕はまた既定位置（ここ・上部中央）に出る（sgCaptionShow が戻す）。
+             🔴 中身は app.js の SG_NUM[].say（指示文の表）1か所から出る。 -->
+        <div id="sgCaption" class="sg-caption" hidden aria-live="polite">
+          <button type="button" id="sgCapClose" class="sg-caption-x"
+                  title="閉じる" aria-label="閉じる">×</button>
+          <b id="sgCapL1"></b><i id="sgCapL2"></i>
+          <!-- 🔒 §30-14-3: 文の下の小さなボタン（持っている番号だけ・
+               中身は app.js の SG_NUM[].btn。押しても字幕のドラッグは始まらない）。 -->
+          <span class="sg-caption-btnrow" id="sgCapBtnRow" hidden>
+            <button type="button" id="sgCapBtn" class="sg-caption-btn"></button>
+          </span>
+        </div>
+
+        <!-- 塊スタンプ（正典 §4-4） -->
+        <div id="stampPanel" class="stamp-panel" hidden>
+          <h3>枠をまとめて置く</h3>
+          <label class="sp-row">枠サイズ
+            <select id="stampPreset"></select>
+          </label>
+          <label class="sp-row">1枠
+            <input type="text" id="stampW" class="num"><span class="unit">×</span>
+            <input type="text" id="stampH" class="num"><span class="unit">m</span>
+          </label>
+          <!-- 🔒 修正4（オーナー指示 2026-08-30）: 初期値は実テキストではなく影文字。
+               一度消してから打ち直す手間をなくす。空欄のままなら 5台（従来の初期値）。 -->
+          <label class="sp-row">台数
+            <input type="text" id="stampCount" class="num" inputmode="numeric"
+                   placeholder="例）5" title="空欄のままなら 5台で置きます">
+          </label>
+          <p class="sp-row sp-pick">並べ方（図をクリックで選ぶ）</p>
+          <div class="stamp-choices">
+            <button type="button" class="stamp-choice is-active" data-dir="row">
+              <span class="sc-fig" id="stampFigRow"></span>
+              <span class="sc-cap">横に並べる</span>
+            </button>
+            <button type="button" class="stamp-choice" data-dir="col">
+              <span class="sc-fig" id="stampFigCol"></span>
+              <span class="sc-cap">縦に並べる</span>
+            </button>
+          </div>
+          <p class="sp-total" id="stampTotal"></p>
+          <div class="sp-btns">
+            <button id="stampPlace" class="primary">配置</button>
+            <button id="stampCancel">やめる</button>
+          </div>
+        </div>
+
+        <!-- 駐車位置ラベル（🔒 §22-ab）。入力の構成はガイダンス⑪ と同じにそろえる。
+             🔴 ID は pl* にして⑪の lb* と分ける（同じ画面に両方あるので重複させられない）。
+             行の作り方と文字列の組み立ては labelRowsHTML()/labelLinesFrom() で共通化してある。 -->
+        <div id="plPanel" class="stamp-panel" hidden>
+          <h3>駐車位置ラベル作成</h3>
+          <p class="sp-note">図に出したい項目にチェックを入れ、数値を入れてください。</p>
+          <div id="plRows"></div>
+          <div id="plCustom"></div>
+          <button id="plAdd" class="nav-add">＋ 項目を追加</button>
+          <p class="sp-note" id="plHint">［配置］のあと、地図を2回クリックします。</p>
+          <div class="sp-btns">
+            <button id="plPlace" class="primary">配置</button>
+            <button id="plCancel">やめる</button>
+          </div>
+        </div>
+
+        <!-- 自動下書き（正典 §11-b レーンA：オープンデータのみ） -->
+        <div id="draftPanel" class="stamp-panel" hidden>
+          <h3>自動で下書きする</h3>
+          <p class="sp-note">写真をなぞるのではなく、公的なオープンデータから
+            図形を起こします。生成後はドラッグで直せます。</p>
+          <label class="chk"><input type="checkbox" id="dfRoads" checked> 道路縁（地理院・全国）</label>
+          <label class="chk"><input type="checkbox" id="dfBldg"> 建物の外形（地理院・全国）</label>
+          <label class="chk"><input type="checkbox" id="dfParcel" checked> 筆界と地番（法務省）</label>
+          <p class="sp-note" id="dfNote"></p>
+          <div class="sp-btns">
+            <button id="dfRun" class="primary">この範囲を下書き</button>
+            <button id="dfClose">閉じる</button>
+          </div>
+          <button id="dfClear" class="df-clear">自動生成した図形を消す</button>
+        </div>
+
+        <!-- 駐車枠の自動敷き詰め（正典 §9 Step 3.5 / §15-a） -->
+        <div id="fillPanel" class="stamp-panel" hidden>
+          <h3>駐車枠を自動で並べる</h3>
+          <p class="sp-note" id="fillTarget">敷地の外枠（多角形）を選んでから実行します。</p>
+          <label class="sp-row">枠サイズ
+            <select id="fillPreset"></select>
+          </label>
+          <label class="sp-row">1枠
+            <input type="text" id="fillW" class="num"><span class="unit">×</span>
+            <input type="text" id="fillH" class="num"><span class="unit">m</span>
+          </label>
+          <!-- 🔒 修正4: 車路幅・余白は「素の既定値が打ち込んであるだけ」の欄なので影文字に。
+               空欄＝従来の既定（車路幅 5m／余白 0.3m・app.js runFill の num(id, 既定)）。 -->
+          <label class="sp-row">車路幅
+            <input type="text" id="fillAisle" class="num" inputmode="decimal"
+                   placeholder="例）5" title="空欄のままなら 5m"><span class="unit">m</span>
+          </label>
+          <label class="sp-row">境界の余白
+            <input type="text" id="fillMargin" class="num" inputmode="decimal"
+                   placeholder="例）0.3" title="空欄のままなら 0.3m"><span class="unit">m</span>
+          </label>
+          <label class="sp-row">台数
+            <input type="text" id="fillCount" class="num" placeholder="自動"><span class="unit">台</span>
+          </label>
+          <p class="sp-note">空欄＝敷地いっぱい。台数を入れるとその数ちょうどに合わせます。</p>
+
+          <p class="sp-row sp-pick">列の向き</p>
+          <div class="fill-dirs">
+            <label class="chk"><input type="radio" name="fillDir" value="auto" checked> 自動（道路側）</label>
+            <label class="chk"><input type="radio" name="fillDir" value="edge"> 辺に沿わせる</label>
+            <label class="chk"><input type="radio" name="fillDir" value="manual"> 角度
+              <!-- 🔒 修正4: 空欄＝0°（従来の初期値。app.js fillAngleDeg が受ける） -->
+              <input type="text" id="fillAngle" class="num" inputmode="decimal"
+                     placeholder="例）0" title="空欄のままなら 0°"><span class="unit">°</span>
+            </label>
+          </div>
+          <p class="sp-note" id="fillDirNote"></p>
+
+          <label class="chk"><input type="checkbox" id="fillRecognize" checked>
+            画像の白線を読み取って描く（推奨）</label>
+          <label class="chk"><input type="checkbox" id="fillShowLines" disabled>
+            認識に使った線を表示</label>
+          <label class="chk"><input type="checkbox" id="fillNumber"> 連番を振る</label>
+          <label class="chk"><input type="checkbox" id="fillEntrance"> 出入口を推定して置く</label>
+          <label class="chk"><input type="checkbox" id="fillWidth"> 前面道路の幅員を入れる</label>
+          <p class="sp-note">番号は［№ 番号］でなぞって振ります。建物がある敷地は、
+            多めに置いて消しゴムで1枠ずつ消せます。</p>
+          <p class="sp-note" id="fillResult"></p>
+          <div class="sp-btns">
+            <button id="fillRun" class="primary">並べる</button>
+            <button id="fillClose">閉じる</button>
+          </div>
+        </div>
+
+        <!-- 画像下敷き（正典 §16-3 Step 7A）。画像は端末内だけに保存する -->
+        <div id="imgPanel" class="stamp-panel" hidden>
+          <h3>画像の下敷き</h3>
+          <p class="sp-note" id="imgNote">
+            駐車場の写真・図面を地図に重ねて位置合わせします。
+            画像は画面に貼り付き、地図の方を動かして合わせます。</p>
+          <div class="sp-btns">
+            <button id="imgPick" class="primary">画像を取り込む</button>
+          </div>
+          <div id="imgCtrls" hidden>
+            <label class="sp-row">濃さ
+              <input type="range" id="imgOpacity" min="10" max="100" value="70">
+              <span class="unit" id="imgOpacityVal">70%</span>
+            </label>
+            <label class="sp-row">幅
+              <input type="text" id="imgWidth" class="num"><span class="unit">m</span>
+            </label>
+            <label class="sp-row">角度
+              <input type="text" id="imgAngle" class="num"><span class="unit">°</span>
+            </label>
+            <label class="chk"><input type="checkbox" id="imgVisible" checked> 画像を表示する</label>
+            <label class="chk"><input type="checkbox" id="imgLocked"> 固定する（地図に合わせ終わったら）</label>
+            <p class="sp-note" id="imgHint">地図をドラッグして画像の下に合わせてください。
+              画像は中央の＋で微調整、四隅で拡大縮小、上のつまみで回転します。</p>
+            <div class="sp-btns">
+              <button id="imgReset" title="画像を画面の中央・画面幅6割に戻します">画面に戻す</button>
+              <button id="imgRemove">画像を外す</button>
+            </div>
+          </div>
+          <p class="sp-note img-legal">
+            <b>ご自身やお客様が撮影・権利をお持ちの画像</b> … なぞって作図して構いません。<br>
+            <b>Google マップ等の画面コピー</b> … 位置の確認のみ。なぞらないでください。<br>
+            画像はこのパソコンの中にのみ保存され、案件ファイルにも書き出す図面にも含まれません。
+          </p>
+          <div class="sp-btns">
+            <button id="imgClose">閉じる</button>
+          </div>
+          <input type="file" id="imgFile" accept="image/jpeg,image/png" hidden>
+        </div>
+
+        <!-- 所在図の自動生成（正典 §5） -->
+        <!-- 🔒 2026-09-03 オーナー指示（所在図パネルの再構成）:
+             **全項目が一覧で見えて、見ながら切り替えられる設定盤**にする。折りたたまない。
+             ・5段階の呼称は全項目共通で「なし / 主役の周りだけ / 標準 / 多め / 全部」
+               （幅が厳しいので段の表示は2文字に詰め、全文は title に入れてある）
+             ・2択は §22-ai の地図トグル（.mapsw）と同じ作法＝□が動いて状態が分かる
+             ・どれを変えても**その場で作り直す**（§23-10 のラジオ変更と同じ）
+             ・🔴 段の中身は 1〜5 の数字で持ち、表示文字では識別しない（§26-2 注意②） -->
+        <div id="szPanel" class="stamp-panel" hidden>
+          <!-- 🔒 §22-ak-3（裁定）: 後半の6項目を足すと高さが足りない。
+               **説明文を削って項目を優先する**（オーナー指示「全項目を見ながら
+               切り替えられる」が最優先）。削った案内文は見出しの title に退避した。
+               🔴 消したのは表示だけで、動作は何も変えていない。 -->
+          <h3 title="2地点の周りを国土地理院のデータで描き起こします。設定は変えるとその場で作り直します。">所在図を自動で作る</h3>
+
+          <!-- 🔒 §28-4（2026-09-07・Step 2）: 設定盤は**部品ごと左面のガイダンス③へ移す**
+               （複製しない）。ここはその「元の置き場」。ガイダンスを閉じると戻ってくる。
+               🔴 移すだけなので id も配線もそのまま＝値が2か所に割れる事故が起きない。 -->
+          <div id="szSetHome">
+          <div class="sz-set" id="szSet">
+            <!-- 🔒 §28-14 ①-4（2026-09-07 オーナー指示）: 「主役の印」（◎／四角＋斜線）は
+                 **ガイダンス①のマーカーの種類へ移した**（#sgMarks）。同じ値が2か所に
+                 出ないようにするため、ここからは撤去した（§18-r-4）。
+                 🔴 案件データ c.markStyle は**旧案件の後方互換のために残す**
+                    （points[key].mark が無い案件は、いままでどおりこの値で描かれる）。 -->
+
+            <!-- ② 川・山を入れる。🔴 szNature の意味は従来のまま（checked＝入れる） -->
+            <div class="sz-row">
+              <span class="sz-k" title="川・山を入れる">川・山</span>
+              <span class="mapsw sz-sw">
+                <input type="checkbox" id="szNature" class="mapsw-in" checked>
+                <label for="szNature" class="mapsw-track"
+                       title="川・山などの自然地名を図に入れます（標準は入れる）">
+                  <span class="mapsw-knob" aria-hidden="true"></span>
+                  <span class="mapsw-txt sw-a">入れない</span>
+                  <span class="mapsw-txt sw-b">入れる</span>
+                </label>
+              </span>
+            </div>
+
+            <!-- ③ 目標物（施設）の数（🔒 §18-r の厳選は維持したまま件数を段で変える）。
+                 誘導③の同じ段と常に同期する。 -->
+            <div class="sz-row">
+              <span class="sz-k" title="目標物（施設）の数">目標物</span>
+              <span class="gr5" role="group" aria-label="目標物（施設）の数">
+                <input type="radio" name="szLmLv" id="szLmLv1" value="1" class="gr5-in">
+                <label for="szLmLv1" class="gr5-lb" title="なし（目標物を入れない）">なし</label>
+                <input type="radio" name="szLmLv" id="szLmLv2" value="2" class="gr5-in">
+                <label for="szLmLv2" class="gr5-lb" title="主役の周りだけ（2件）">周り</label>
+                <input type="radio" name="szLmLv" id="szLmLv3" value="3" class="gr5-in" checked>
+                <label for="szLmLv3" class="gr5-lb" title="標準（4件）">標準</label>
+                <input type="radio" name="szLmLv" id="szLmLv4" value="4" class="gr5-in">
+                <label for="szLmLv4" class="gr5-lb" title="多め（12件）">多め</label>
+                <input type="radio" name="szLmLv" id="szLmLv5" value="5" class="gr5-in">
+                <label for="szLmLv5" class="gr5-lb" title="全部（件数の制限なし）">全部</label>
+              </span>
+            </div>
+
+            <!-- ④ 建物描画（🔒 §23-10-b・§26-4-c。中身は変更していない） -->
+            <div class="sz-row">
+              <span class="sz-k" title="建物描画">建物</span>
+              <span class="gr5" role="group" aria-label="建物描画">
+                <input type="radio" name="szBldgLv" id="szBldgLv1" value="1" class="gr5-in">
+                <label for="szBldgLv1" class="gr5-lb" title="なし（建物を描かない）">なし</label>
+                <input type="radio" name="szBldgLv" id="szBldgLv2" value="2" class="gr5-in">
+                <label for="szBldgLv2" class="gr5-lb" title="主役の周りだけ">周り</label>
+                <input type="radio" name="szBldgLv" id="szBldgLv3" value="3" class="gr5-in" checked>
+                <label for="szBldgLv3" class="gr5-lb" title="標準">標準</label>
+                <input type="radio" name="szBldgLv" id="szBldgLv4" value="4" class="gr5-in">
+                <label for="szBldgLv4" class="gr5-lb" title="多め">多め</label>
+                <input type="radio" name="szBldgLv" id="szBldgLv5" value="5" class="gr5-in">
+                <label for="szBldgLv5" class="gr5-lb" title="全部（枠の中の建物を全部）">全部</label>
+              </span>
+            </div>
+
+            <!-- ⑤ 道路描画（🔒 2026-09-03 新設）。段3「標準」＝従来の自動間引きそのもの -->
+            <div class="sz-row">
+              <span class="sz-k" title="道路描画">道路</span>
+              <span class="gr5" role="group" aria-label="道路描画">
+                <input type="radio" name="szRoadLv" id="szRoadLv1" value="1" class="gr5-in">
+                <label for="szRoadLv1" class="gr5-lb" title="なし（道路を描かない）">なし</label>
+                <input type="radio" name="szRoadLv" id="szRoadLv2" value="2" class="gr5-in">
+                <label for="szRoadLv2" class="gr5-lb" title="主役の周りだけ（主役の近くを通る道だけ・等級も上げる）">周り</label>
+                <input type="radio" name="szRoadLv" id="szRoadLv3" value="3" class="gr5-in" checked>
+                <label for="szRoadLv3" class="gr5-lb" title="標準（従来どおりの自動間引き）">標準</label>
+                <input type="radio" name="szRoadLv" id="szRoadLv4" value="4" class="gr5-in">
+                <label for="szRoadLv4" class="gr5-lb" title="多め（間引きの等級を1段下げる）">多め</label>
+                <input type="radio" name="szRoadLv" id="szRoadLv5" value="5" class="gr5-in">
+                <label for="szRoadLv5" class="gr5-lb" title="全部（間引きなし）">全部</label>
+              </span>
+            </div>
+
+            <!-- ⑥ 線 or 白帯（🔒 §23-9-a）。左＝線（標準）／右＝白帯＋黒縁 -->
+            <div class="sz-row">
+              <span class="sz-k" title="道路の描き方（線 or 白帯）">道路の線</span>
+              <span class="mapsw sz-sw">
+                <input type="checkbox" id="szRoadBand" class="mapsw-in">
+                <label for="szRoadBand" class="mapsw-track"
+                       title="道路を「黒い線1本（標準）」で描くか「白い帯＋黒の縁取り」で描くかを選びます">
+                  <span class="mapsw-knob" aria-hidden="true"></span>
+                  <span class="mapsw-txt sw-a">線</span>
+                  <span class="mapsw-txt sw-b">白帯＋黒縁</span>
+                </label>
+              </span>
+            </div>
+
+            <!-- ⑦〜⑫ 名称の6分類（🔒 2026-09-03・§23-5 / §22-ak-1）。
+                 データ源は OpenStreetMap（地理院に無い名称・§23-5 の実測）。
+                 🔴 段が**全部「なし」なら OSM を取りに行かない**（無駄な通信をしない）。
+                 🔴 地理院由来の目標物は上の「目標物」が担当＝二重に出さない。
+                 🔴 なぞり出し（ブラシ）は残してある。自動＝初期値／ブラシ＝足す。 -->
+            <div class="sz-row">
+              <span class="sz-k" title="交差点名（信号機のある交差点の名前。印は信号機のアイコン）">交差点名</span>
+              <span class="gr5" role="group" aria-label="交差点名">
+                <input type="radio" name="szNmCross" id="szNmCross1" value="1" class="gr5-in">
+                <label for="szNmCross1" class="gr5-lb" title="なし（交差点名を入れない）">なし</label>
+                <input type="radio" name="szNmCross" id="szNmCross2" value="2" class="gr5-in">
+                <label for="szNmCross2" class="gr5-lb" title="主役の周りだけ（近い順に3件まで）">周り</label>
+                <input type="radio" name="szNmCross" id="szNmCross3" value="3" class="gr5-in" checked>
+                <label for="szNmCross3" class="gr5-lb" title="標準（近い順に8件まで）">標準</label>
+                <input type="radio" name="szNmCross" id="szNmCross4" value="4" class="gr5-in">
+                <label for="szNmCross4" class="gr5-lb" title="多め（近い順に20件まで）">多め</label>
+                <input type="radio" name="szNmCross" id="szNmCross5" value="5" class="gr5-in">
+                <label for="szNmCross5" class="gr5-lb" title="全部（枠の中の交差点名を全部）">全部</label>
+              </span>
+            </div>
+
+            <div class="sz-row">
+              <span class="sz-k" title="大きなお店（規模の大きい店から先に出します）">お店</span>
+              <span class="gr5" role="group" aria-label="大きなお店">
+                <input type="radio" name="szNmShop" id="szNmShop1" value="1" class="gr5-in">
+                <label for="szNmShop1" class="gr5-lb" title="なし（お店を入れない）">なし</label>
+                <input type="radio" name="szNmShop" id="szNmShop2" value="2" class="gr5-in">
+                <label for="szNmShop2" class="gr5-lb" title="主役の周りだけ（3件まで）">周り</label>
+                <input type="radio" name="szNmShop" id="szNmShop3" value="3" class="gr5-in" checked>
+                <label for="szNmShop3" class="gr5-lb" title="標準（8件まで）">標準</label>
+                <input type="radio" name="szNmShop" id="szNmShop4" value="4" class="gr5-in">
+                <label for="szNmShop4" class="gr5-lb" title="多め（20件まで）">多め</label>
+                <input type="radio" name="szNmShop" id="szNmShop5" value="5" class="gr5-in">
+                <label for="szNmShop5" class="gr5-lb" title="全部（枠の中のお店を全部）">全部</label>
+              </span>
+            </div>
+
+            <div class="sz-row">
+              <span class="sz-k" title="会社名（事業所・オフィス）">会社名</span>
+              <span class="gr5" role="group" aria-label="会社名">
+                <input type="radio" name="szNmOffice" id="szNmOffice1" value="1" class="gr5-in">
+                <label for="szNmOffice1" class="gr5-lb" title="なし（会社名を入れない）">なし</label>
+                <input type="radio" name="szNmOffice" id="szNmOffice2" value="2" class="gr5-in">
+                <label for="szNmOffice2" class="gr5-lb" title="主役の周りだけ（3件まで）">周り</label>
+                <input type="radio" name="szNmOffice" id="szNmOffice3" value="3" class="gr5-in" checked>
+                <label for="szNmOffice3" class="gr5-lb" title="標準（8件まで）">標準</label>
+                <input type="radio" name="szNmOffice" id="szNmOffice4" value="4" class="gr5-in">
+                <label for="szNmOffice4" class="gr5-lb" title="多め（20件まで）">多め</label>
+                <input type="radio" name="szNmOffice" id="szNmOffice5" value="5" class="gr5-in">
+                <label for="szNmOffice5" class="gr5-lb" title="全部（枠の中の会社名を全部）">全部</label>
+              </span>
+            </div>
+
+            <div class="sz-row">
+              <span class="sz-k" title="バス停">バス停</span>
+              <span class="gr5" role="group" aria-label="バス停">
+                <input type="radio" name="szNmBus" id="szNmBus1" value="1" class="gr5-in">
+                <label for="szNmBus1" class="gr5-lb" title="なし（バス停を入れない）">なし</label>
+                <input type="radio" name="szNmBus" id="szNmBus2" value="2" class="gr5-in">
+                <label for="szNmBus2" class="gr5-lb" title="主役の周りだけ（3件まで）">周り</label>
+                <input type="radio" name="szNmBus" id="szNmBus3" value="3" class="gr5-in" checked>
+                <label for="szNmBus3" class="gr5-lb" title="標準（8件まで）">標準</label>
+                <input type="radio" name="szNmBus" id="szNmBus4" value="4" class="gr5-in">
+                <label for="szNmBus4" class="gr5-lb" title="多め（20件まで）">多め</label>
+                <input type="radio" name="szNmBus" id="szNmBus5" value="5" class="gr5-in">
+                <label for="szNmBus5" class="gr5-lb" title="全部（枠の中のバス停を全部）">全部</label>
+              </span>
+            </div>
+
+            <div class="sz-row">
+              <span class="sz-k" title="道路名（細い道の名前まで出ます。線に付く名前なので印は付けません）">道路名</span>
+              <span class="gr5" role="group" aria-label="道路名">
+                <input type="radio" name="szNmRoad" id="szNmRoad1" value="1" class="gr5-in">
+                <label for="szNmRoad1" class="gr5-lb" title="なし（道路名を入れない）">なし</label>
+                <input type="radio" name="szNmRoad" id="szNmRoad2" value="2" class="gr5-in">
+                <label for="szNmRoad2" class="gr5-lb" title="主役の周りだけ（3件まで）">周り</label>
+                <input type="radio" name="szNmRoad" id="szNmRoad3" value="3" class="gr5-in" checked>
+                <label for="szNmRoad3" class="gr5-lb" title="標準（8件まで）">標準</label>
+                <input type="radio" name="szNmRoad" id="szNmRoad4" value="4" class="gr5-in">
+                <label for="szNmRoad4" class="gr5-lb" title="多め（20件まで）">多め</label>
+                <input type="radio" name="szNmRoad" id="szNmRoad5" value="5" class="gr5-in">
+                <label for="szNmRoad5" class="gr5-lb" title="全部（枠の中の道路名を全部）">全部</label>
+              </span>
+            </div>
+
+            <div class="sz-row">
+              <span class="sz-k" title="他の目印（役所・学校・病院・寺社などの公共施設から先に出します）">他の目印</span>
+              <span class="gr5" role="group" aria-label="他の目印（公共施設・その他）">
+                <input type="radio" name="szNmPoi" id="szNmPoi1" value="1" class="gr5-in">
+                <label for="szNmPoi1" class="gr5-lb" title="なし（他の目印を入れない）">なし</label>
+                <input type="radio" name="szNmPoi" id="szNmPoi2" value="2" class="gr5-in">
+                <label for="szNmPoi2" class="gr5-lb" title="主役の周りだけ（公共性の高い順に3件まで）">周り</label>
+                <input type="radio" name="szNmPoi" id="szNmPoi3" value="3" class="gr5-in" checked>
+                <label for="szNmPoi3" class="gr5-lb" title="標準（公共性の高い順に8件まで）">標準</label>
+                <input type="radio" name="szNmPoi" id="szNmPoi4" value="4" class="gr5-in">
+                <label for="szNmPoi4" class="gr5-lb" title="多め（公共性の高い順に20件まで）">多め</label>
+                <input type="radio" name="szNmPoi" id="szNmPoi5" value="5" class="gr5-in">
+                <label for="szNmPoi5" class="gr5-lb" title="全部（枠の中の目印を全部。自販機や駐輪場も入ります）">全部</label>
+              </span>
+            </div>
+          </div>
+          </div><!-- /#szSetHome -->
+
+          <!-- 🔒 §18-ab: ［手で足した図形を残す］は廃止した。
+               手で描いた図形は source が違うので**どちらにしても消えない**。 -->
+          <!-- 🔒 §22-ak-3（裁定）③: 生成件数は実用情報なので**消さない**。
+               ただし1行に圧縮する（溢れた分は title で全文が読める＝JS が入れる）。 -->
+          <p class="sp-note sz-res" id="szResult"></p>
+          <!-- 🔒 §22-ak-3（裁定）②: ［標準の設定で作る］が設定を捨てることの注意文は
+               ボタンの title へ退避した。無言でリセットしないことは
+               **ボタンの文言そのもの**（「標準の設定で作る」）で伝わる。 -->
+          <div class="sp-btns">
+            <button id="szRun" class="primary sz-run"
+                    title="背景の地図を消し、上の設定を全部「標準」に戻してから所在図を作り直します（個別に変えた設定は失われます）">標準の設定で作る</button>
+            <button id="szPrev" class="sz-prev"
+                    title="いまの所在図を、書き出しと同じ A4 の紙面で確認します">プレビュー</button>
+          </div>
+          <div class="sp-btns">
+            <button id="szClose">閉じる</button>
+          </div>
+        </div>
+
+        <!-- 書き出し（正典 §7） -->
+        <div id="exPanel" class="stamp-panel ex-panel" hidden>
+          <h3>書き出し</h3>
+          <p class="sp-note"><b>紙1枚に図を1つ、A4で出します。</b>
+            所在図・配置図の<b>全部の紙</b>が出ます（縦・横が混ざっても大丈夫です）。
+            いま作っている紙は<b>画面に見えている範囲</b>、
+            ［枠を決定］した紙はその枠の中が出ます。
+            下敷きの地図・航空写真は含まれません。</p>
+          <div class="ex-sheet" id="exInfoShozaizu"></div>
+          <div class="ex-sheet" id="exInfoHaichizu"></div>
+          <div class="sp-btns">
+            <button id="exFitAll">図形が全部入るように</button>
+          </div>
+          <p class="sp-note" id="exResult"></p>
+          <div class="sp-btns">
+            <button id="exPdf" class="primary">PDF（1図1ページ）</button>
+            <button id="exPng">PNG（紙ごとに1枚）</button>
+          </div>
+          <div class="sp-btns">
+            <button id="exPreview">プレビュー</button>
+            <button id="exClose">閉じる</button>
+          </div>
+        </div>
+
+        <!-- 書き出しプレビュー -->
+
+        <!-- 依頼文からの住所抽出（正典 §9 Step 6・端末内処理のみ） -->
+        <div id="pastePanel" class="stamp-panel paste-panel" hidden>
+          <h3>依頼文から住所を拾う</h3>
+          <p class="sp-note">メールや依頼票をそのまま貼り付けてください。
+            <b>この処理はこのパソコンの中だけで行われ、外部には送信されません。</b></p>
+          <textarea id="pasteText" rows="7"
+            placeholder="例）&#10;お世話になります。&#10;使用の本拠：愛知県春日井市鳥居松町1-1&#10;保管場所：愛知県春日井市鳥居松町5-2 第2駐車場 12番&#10;車種 プリウス"></textarea>
+          <div id="pasteFound" class="paste-found"></div>
+          <div class="sp-btns">
+            <button id="pasteRun" class="primary">拾う</button>
+            <button id="pasteClose">閉じる</button>
+          </div>
+        </div>
+
+        <!-- テキストのその場入力（正典 §4-8） -->
+        <input type="text" id="textInput" class="text-input" hidden
+               placeholder="文字を入力して Enter">
+      </div>
+
+      <aside class="side">
+
+        <!-- 🔒 §28（2026-09-06 オーナー指示）: ガイダンス面。
+             ［🧭 所在図ガイダンス］［🧭 配置図ガイダンス］を押すと、**この左の道具メニューがそのまま
+             ガイダンスに切り替わる**（幅 252px → 340px・地図は縮む）。
+             🔒 §29（2026-09-07・Step 6）: 配置図の⑤〜⑧もこの面へ移した
+             （⑤「下敷きと枠」を新設し、従来の⑤〜⑪は⑥〜⑫へ1つ後ろへずれた）。
+             🔒 §29 Step 7（2026-09-08）: 残っていた⑨〜⑫もこの面へ移し、
+             **小ウィンドウ #navPanel と 📷 左ウィザード #guidePanel は全廃した**。
+             ガイダンスの器はこの1つだけ（12段すべてがここに出る）。
+             🔴 並びは毎段同じ（§28-1 ③）:
+                足跡 → 見出し → 説明文 → 操作部品 → 状態の一言 → ［戻る］［次へ］。
+                ［次へ］が押せない時は**理由をボタンの下に平文で**出す。 -->
+        <div id="sideNav" class="side-guide" hidden>
+          <div class="sg-head">
+            <span class="sg-brand">🧭 ガイダンス</span>
+            <button id="sgClose" class="sg-x"
+              title="ガイダンスを閉じて道具メニューに戻ります（描いた図・置いたマーカーは何も消えません）"
+              >×</button>
+          </div>
+          <!-- 足跡（🔒 §28-6 ⑦: 済んだ段だけ押せる） -->
+          <div class="sg-steps" id="sgSteps"></div>
+          <!-- 🔒 §30-12-1: ガイダンスの目指す所。足あとの直下・**全段で常に出す**
+               （文言は app.js sgRender が図ごとに入れる＝1か所） -->
+          <p class="sg-aim" id="sgAim"></p>
+          <h3 class="sg-title" id="sgTitle"></h3>
+          <p class="sg-text" id="sgText"></p>
+
+          <!-- ① マーカーを置く（🔒 §30-12-5 所在図①の並び:
+               ①住所検索 → ▼地図を変える → ②③マーカー → ▼マーカーの形と色） -->
+          <div class="sg-body" id="sgS1" hidden>
+            <label class="sg-lb" for="sgAddrHome">使用の本拠（会社・自宅）の住所</label>
+            <div class="sg-find">
+              <!-- 🔴 上部バーの #addrHome と**同じ値**（どちらを打っても両方に入る＝
+                   1つのデータ）。検索そのものは従来の doSearch()。
+                   🔒 §30-12-2 2: 青は data-sgstate="next" だけが出す＝class="primary" は付けない -->
+              <input type="text" id="sgAddrHome" placeholder="住所を入れて［検索］">
+              <button id="sgSearchHome" class="go"
+                title="その場所へ地図を動かします（マーカーは置きません）">検索</button>
+            </div>
+            <!-- 🔒 §28-14 ①-1（2026-09-07 オーナー指示）: **検索は使用の本拠だけ**。
+                 駐車場の住所欄（#addrLot / #btnSearch / #navSearchMsg）は撤去した。
+                 理由＝検索は地図を動かすだけ（マーカーは置かない・§18-ap）なので、
+                 2つ目の欄は「置く場所を決める」役に立たない。駐車場は地図を見て置く。 -->
+
+            <p class="sg-note">使用の本拠（会社・自宅）と駐車場の場所を、それぞれ地図の上に
+              置きます。住所で検索して地図をその場所へ動かし、ボタンを押してから地図を
+              クリックしてください。置いたマーカーはドラッグで動かせます。</p>
+
+            <!-- 🔒 §30-10: 地図の選択（〇2つ）。④の〇と**同じデータ**
+                 （上部バーの #underlaySel / #underlayOff を書き換えるだけ）。
+                 ①は場所を探す段なので地図でよい（航空写真は不要）。
+                 🔴 2つ目は Google のキーがある環境だけ「Google マップ」。
+                    無い環境では「地理院 地図（淡色）」に差し替える
+                    （app.js buildUnderlayOptions）。地図系なので撮影時期は出さない。 -->
+            <!-- 🔒 §30-12-4: ここから下の .sg-more-g は「こんな時に押すボタン」の中身。
+                 app.js の SG_MORE / sgBuildMore が、この器を1機能ずつ
+                 ［名前 ／ どんな時に押すか ／ いま: …］のボタンの真下へ**移す**。
+                 🔴 id・配線はそのままなので、閉じていても同期は従来どおり動く。 -->
+            <div class="sg-more-g" id="sgMoreSzMap">
+              <p class="sg-lb">下敷きの地図</p>
+              <div class="sg-unders" id="sgUnder1">
+                <label class="sg-under">
+                  <input type="radio" name="sgUnder1R" value="osmfj">
+                  <span><b>OpenStreetMap</b><i>道路名やバス停が分かる</i></span>
+                </label>
+                <label class="sg-under">
+                  <input type="radio" name="sgUnder1R" value="google-map" id="sgU1Map">
+                  <span><b id="sgU1MapName">Google マップ</b>
+                    <i id="sgU1MapNote">道路名・お店が一番詳しい</i></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="sg-pins">
+              <button id="sgPinHome" class="pin-btn wide"
+                title="押してから地図をクリックすると、使用の本拠のマーカーを置きます"
+                >使用の本拠マーカー設置</button>
+              <button id="sgPinLot" class="pin-btn wide"
+                title="押してから地図をクリックすると、駐車場のマーカーを置きます"
+                >駐車場マーカー設置</button>
+            </div>
+
+            <!-- 🔒 §28-14 ①-4: マーカーの種類（形2種 × 色3種）。
+                 🔴 中身は app.js が Editor.MARK（形・色の唯一の出どころ）から組み立てる。
+                    ここで色や形を書き足さない（値が2か所に割れる）。
+                 🔴 設定盤（#szSet）にあった「主役の印」はここへ移した（§18-r-4）。
+                 🔒 §30-12-5 所在図①-4: マーカーを置いた**後**に触りたくなるので
+                    ［使用の本拠マーカー設置］［駐車場マーカー設置］の下に置く。 -->
+            <div class="sg-more-g" id="sgMoreSzMark">
+              <p class="sg-lb">マーカーの種類</p>
+              <div class="sg-marks" id="sgMarks"></div>
+            </div>
+          </div>
+
+          <!-- ② 所在図の枠を決める（🔒 §28-3・新設） -->
+          <!-- 🔒 §30-13-2 所在図②の並び（§30-12-5 を差し替え）:
+               文 → ［紙の向きを変える］ → ［2つのマーカーが入るように地図を動かす］
+                 → ⑤［枠を決定］ → 方位記号の注記
+               🔴 §30-13-2 1: 紙の向きは「こんな時に押すボタン（▼）」をやめて、
+                  **押すとその場で縦↔横が切り替わる普通のボタン**にした
+                  （〇2つ #sgOrient は②から外した。🔒 §30-14-1 で配置図①も
+                  同じ作りの #sgOri5Toggle に揃え、〇2つ #sgOrient5 は廃止した）。 -->
+          <div class="sg-body" id="sgS2" hidden>
+            <p class="sg-note">青い破線の中が紙に印刷されます。使用の本拠と駐車場の
+              <b>2つが1枚に入る</b>ように地図を動かしてください。
+              （上級者向け: 複数の所在図を組み合わせることもできますが、
+              ここでは1枚だけを案内します）</p>
+            <!-- 🔒 §30-13-2 1: 2行（1行目＝名前／2行目＝いまの向きと押した結果）。
+                 2行目の文言は app.js sgSyncOrient が入れる（値の出どころはシートの orient 1か所）。 -->
+            <button id="sgOriToggle" class="sg-wide sg-two"
+              title="この紙の向きを A4 縦 ⇄ A4 横 で切り替えます"
+              ><b>紙の向きを変える</b><i id="sgOriToggleNow"></i></button>
+            <!-- 🔒 §30-12-4 8: 押した瞬間に動く物は普通のボタンのまま（「開く ▼」は付けない） -->
+            <button id="sgFit" class="sg-wide"
+              title="2つのマーカーが青い破線の中に収まるところまで地図を動かします"
+              >2つのマーカーが入るように地図を動かす</button>
+            <button id="sgFix" class="sg-wide"
+              title="いま見えている枠でこの紙の範囲を決めます（決めたあとは地図だけ動かせます）"
+              >枠を決定</button>
+            <p class="sg-note" id="sgFixNote">枠を決めると、方位記号（北の矢印）が
+              枠の右上に置かれます。あとからドラッグで動かせます。</p>
+          </div>
+
+          <!-- ③ 文字の量（🔒 §28-4・所在図の設定盤を内蔵）
+               🔴 設定盤（12項目）は #szSetHome から**この器へ部品ごと移ってくる**。
+                  複製ではないので、値・配線・作り直し（szSettingChanged）は1系統のまま。 -->
+          <div class="sg-body" id="sgS3" hidden>
+            <!-- 🔒 §30-13-2 所在図③の並び（§30-12-5 を差し替え）:
+                 文 → 設定盤（そのまま見せる）＋［標準に戻す］ → ⑦［決定］（下部）
+                 🔴 ▼「文字や線を1つずつ直す」（旧 #sgMoreSzTool）は §30-13-2 で削除した
+                    （1つずつの手直しは④の「文字や線を足す・消す・動かす」で行う）。 -->
+            <p class="sg-note">まずはここで、まとめて文字や線の量を決めます。
+              1つ1つの手直し（消す・動かす・文字を足す）は次の④でできます。</p>
+            <p class="sg-busy" id="sgSzBusy" hidden>描き直しています…</p>
+            <div class="sg-sz" id="sgSzSet"></div>
+            <button id="sgSzStd" class="sg-wide"
+              title="12項目すべてを標準の設定に戻して、所在図を作り直します（個別に変えた設定は失われます）"
+              >標準に戻す</button>
+          </div>
+
+          <!-- ④ 描き足し（🔒 §28-5 A・道具は用途の見出し付きで並べる＝§28-6 ④） -->
+          <div class="sg-body" id="sgS4" hidden>
+            <!-- B. 表示切替（🔒 §28-5 B・Step 3／🔒 §28-14 ④ で**道具の上**へ移した）。
+                 〇＝下敷きを選ぶ。並びは上部バーと同じ一覧（§28-14 ④）。
+                 🔴 上部バーの #underlaySel / #underlayOff と**同じ値**（1つのデータ）。
+                    どちらを触っても両方が追従する（app.js sgUnderlayPick / sgSyncUnderlay）。
+                    濃さのスライダーはここに置かない（上部バーのまま・1か所）。 -->
+            <div class="sg-more-g" id="sgMoreSzUnder">
+            <p class="sg-lb">下敷きの地図</p>
+            <div class="sg-unders" id="sgUnderlay">
+              <label class="sg-under">
+                <input type="radio" name="sgUnderR" value="off">
+                <span><b>所在図（地図なし）</b><i>紙に出る物だけ。仕上がりの確認に</i></span>
+              </label>
+              <!-- 🔒 §28-13 決定2: 案内文を事実に直した。交差点名は**どの OSM ラスタ
+                   スタイルにも描かれない**（描かれるのは店・施設名と路線番号）。
+                   交差点名は下の［重ねる］が Overpass のデータから重ねる。 -->
+              <label class="sg-under">
+                <input type="radio" name="sgUnderR" value="osmfj">
+                <span><b>OpenStreetMap</b><i>お店・施設の名前と路線番号が分かる。交差点名は下の切替で重ねられる</i></span>
+              </label>
+              <label class="sg-under">
+                <input type="radio" name="sgUnderR" value="gsi-pale">
+                <span><b>地理院 地図（淡色）</b><i>道路・建物の形。文字は少なめで見やすい</i></span>
+              </label>
+              <!-- 🔒 §30-4: ④も⑤と同じ撮影時期を出す（sgSyncEra が④でも書く・
+                   地図系の行には出さない）。id は⑤の sgEra* と別（同じ id は使えない）。 -->
+              <label class="sg-under">
+                <input type="radio" name="sgUnderR" value="gsi-photo">
+                <span><b>地理院 写真（航空写真／正射写真）</b><i>実際の建物・駐車場の見え方（なぞる用。配置図で主に使う）<span class="sg-era" id="sgEraGsiPhoto4"></span></i></span>
+              </label>
+              <!-- 🔒 §28-13 決定4 / §28-14 ④: Google は**下敷きとして後ろに写す**
+                   （別タブのボタンは④から外した。右パネルのリンクは従来どおり残る）。
+                   キーがある環境だけ〇に出す。出し入れは app.js buildUnderlayOptions が
+                   上部バーと**同じ判断**（googleAvailable）で行う＝1か所。 -->
+              <label class="sg-under gopt" id="sgUnderGoogle" hidden>
+                <input type="radio" name="sgUnderR" value="google-map">
+                <span><b>Google 地図（見る用）</b><i>道路名・お店が詳しい。
+                  🔴 Google の規約で、この地図から写し取る（なぞる）ことはできません。見て参考にするだけ。</i></span>
+              </label>
+              <label class="sg-under gopt" id="sgUnderGoogleP" hidden>
+                <input type="radio" name="sgUnderR" value="google-photo">
+                <span><b>Google 航空写真（見る用）</b><i>駐車場が目で見て分かる。
+                  🔴 Google の規約で、この地図から写し取る（なぞる）ことはできません。見て参考にするだけ。<span class="sg-era" id="sgEraGooglePhoto4"></span></i></span>
+              </label>
+            </div>
+            </div><!-- /#sgMoreSzUnder -->
+
+            <!-- 🔒 §28-13 決定3: 交差点名・バス停名の重ね表示。
+                 🔴 これは**見るだけ**の重ね。図形にならない・紙に出ない・案件に保存しない
+                    （画面の状態。案件を開き直すと OFF）。データは所在図生成と同じ OSM。 -->
+            <div class="sg-more-g" id="sgMoreSzName">
+              <label class="sg-ov" id="sgNameLayBox">
+                <input type="checkbox" id="sgNameLay">
+                <span><b>交差点名・バス停名を地図に重ねる</b>
+                  <i>いま見えている範囲の交差点名・バス停名を、地図の上に薄く重ねて見せます
+                    （見るだけ。図には入らず、書き出しにも出ません）</i></span>
+              </label>
+              <p class="sg-ov-st" id="sgNameLayStat" hidden></p>
+            </div>
+
+            <div class="sg-more-g" id="sgMoreSzTools">
+            <div class="sg-tools">
+              <span class="sg-tk">基本</span>
+              <button class="tool sg-tool" data-tool="select">
+                <b>選択</b><i>文字や線を掴んで動かす・大きさを変える。迷ったらこれ</i></button>
+              <button class="tool sg-tool" data-tool="eraser">
+                <b>消しゴム</b><i>いらない文字・線をクリックして消す</i></button>
+              <span class="sg-tk">線を引く</span>
+              <button class="tool sg-tool" data-tool="line">
+                <b>直線</b><i>道路や境界を1本引く（クリック→クリック）</i></button>
+              <button class="tool sg-tool" data-tool="curve">
+                <b>曲線</b><i>曲がった道路・川を引く（クリックで点を足し、Enter で確定）</i></button>
+              <button class="tool sg-tool" data-tool="polygon">
+                <b>多角形</b><i>建物・敷地の形を囲う（クリックで角、Enter で確定・自動では閉じない）</i></button>
+              <!-- 🔒 §30-13-2 所在図④-1: 四角（建物）を足す。
+                   🔴 所在図の四角は**ただの四角**（駐車枠の意味は持たない）。
+                      駐車枠の数え方・番号・保管場所マークはどれも objectsOf('haichizu')
+                      だけを見ているので、所在図に四角を描いても配置図側には影響しない。 -->
+              <button class="tool sg-tool" data-tool="rect">
+                <b>四角</b><i>建物を四角で描く（ドラッグ）</i></button>
+              <span class="sg-tk">印を置く</span>
+              <!-- 🔒 §28-5 A / §28-7: 新しい道具。中身は「印つき文字」（text＋anchor＋
+                   dotStyle）を手で置くだけ。**文字が空でも印だけ残る** -->
+              <button class="tool sg-tool" data-tool="signal">
+                <b>信号機</b><i>交差点の場所に信号機の印を置く。交差点名も入れられる（空でもよい）</i></button>
+              <button class="tool sg-tool" data-tool="bus">
+                <b>バス停</b><i>バス停の印を置く。停留所名も入れられる（空でもよい）</i></button>
+              <span class="sg-tk">文字</span>
+              <button class="tool sg-tool" data-tool="text">
+                <b>文字</b><i>道路名・建物名・目印を書き入れる（クリックした所に入力欄）</i></button>
+            </div>
+            <!-- 選択中の道具の「使い方1行」（🔒 §28-5 A 末尾）。
+                 🔴 class="js-toolhint" が付いた所は全部が同じ文（sgSyncToolHint が1か所で入れる）。 -->
+            <p class="sg-use js-toolhint" id="sgToolHint"></p>
+            </div><!-- /#sgMoreSzTools -->
+
+            <!-- 🔒 §30-13-2 所在図④-2: 本文にあった［所在図プレビュー］（旧 #sgPreview /
+                 #sgPrev）は削除した。⑧＝［所在図プレビュー］は**下部**（#sgFoot）に置く
+                 （app.js sgRenderFoot の n===4）。右パネルの #szPrev は従来どおり残る。 -->
+          </div>
+
+          <!-- ================= 配置図の段（🔒 §29・Step 6）=================
+               ⑤〜⑧も左面。⑤は**新設**（初心者が最初につまずくのは「どの写真の上に
+               描くのか」「どこが紙になるのか」）。従来の⑤〜⑪は⑥〜⑫へ1つ後ろへずれた。
+               🔴 部品は既存の関数をそのまま呼ぶ（§28-1 ④）。道具は class="tool" ＝
+                  道具メニューと同じ共通ハンドラ・同じ is-active（1か所）。 -->
+
+          <!-- ⑤ 下敷きと枠（🔒 §29-1・新設）
+               🔒 §30-14-1 配置図①の並び（§30-12-5 を差し替え）:
+                  文 → ［紙の向きを変える］ → ①枠を決定 → ▼下敷きの写真を変える →
+                  ▼自分で撮った写真・図面を使う → ［駐車場に寄る］
+               🔴 §30-14-1: 紙の向きは「こんな時に押すボタン（▼）」をやめて、
+                  所在図②（#sgOriToggle）と**同じ作り**の普通のボタンにした
+                  （〇2つ #sgOrient5 は廃止・値の出どころはシートの orient 1か所）。 -->
+          <div class="sg-body" id="sgS5" hidden>
+            <p class="sg-note">青い破線の中が紙に印刷されます。駐車場の全体が入る大きさに
+              地図を合わせてから［枠を決定］を押してください。
+              （配置図には方位記号を置きません。写真を回して合わせることがあり、
+              図の上が北とは限らないためです）</p>
+            <!-- 🔒 §30-14-1: 2行（1行目＝名前／2行目＝いまの向きと押した結果）。
+                 2行目の文言は app.js sgSyncOrient が入れる（所在図②と同じ関数）。 -->
+            <button id="sgOri5Toggle" class="sg-wide sg-two"
+              title="この紙の向きを A4 縦 ⇄ A4 横 で切り替えます"
+              ><b>紙の向きを変える</b><i id="sgOri5ToggleNow"></i></button>
+            <button id="sgFix5" class="sg-wide"
+              title="いま見えている枠でこの紙の範囲を決めます（決めたあとは地図だけ動かせます）"
+              >枠を決定</button>
+            <!-- 🔒 §29-5 決定1・決定4（2026-09-08・正典の文面をそのまま）:
+                 撮影時期が下敷きごとに違う問題の案内。2段落・文言は編集しない。 -->
+            <div class="sg-more-g" id="sgMoreHzUnder">
+            <p class="sg-note">写真は下敷きごとに撮影時期が違います。今の現地に合う方をなぞってください。
+              迷ったら Google 航空写真で今の様子を確かめ、同じ見え方の地理院の写真をなぞります。
+              どれも合わなければ、Google を見ながら自分で線を引きます。</p>
+            <p class="sg-note">駐車場が公道から離れている時は、公道から駐車場までの建物と通路を描きます。
+              Google を見ながら手で描いてかまいません（写し取りは不可）。</p>
+            <!-- 下敷きの〇。🔴 上部バーの #underlaySel / #underlayOff と**同じ値**
+                 （sgUnderlayPick / sgSyncUnderlay ＝ ①④と同じ唯一の出入口）。
+                 🔴 Google はキーがある環境だけ出す（buildUnderlayOptions が1か所で判断）。
+                 🔒 §29-5 決定2 / §29-5-a 裁定2: 各〇の説明行の末尾に撮影時期を出す
+                    （sgSyncEra が書く・空の <span class="sg-era"> がプレースホルダ・
+                    PLATEAU/Google/地理院 正射写真は固定文字列、地理院 写真だけ
+                    枠中心の z11 タイルから取る）。⑤の下敷きは4択（正射写真 地理院を追加）。 -->
+            <p class="sg-lb">下敷きの地図</p>
+            <div class="sg-unders" id="sgUnder5">
+              <label class="sg-under gopt" hidden>
+                <input type="radio" name="sgUnder5R" value="google-photo">
+                <span><b>Google 航空写真（見る用）</b><i>いちばん鮮明で駐車場が目で見て分かる。
+                  🔴 Google の規約で、この地図から写し取る（なぞる）ことはできません。見て確かめるだけ。<span class="sg-era" id="sgEraGooglePhoto"></span></i></span>
+              </label>
+              <label class="sg-under">
+                <input type="radio" name="sgUnder5R" value="gsi-photo">
+                <span><b>地理院 写真（航空写真）</b><i>全国の最新写真。なぞって作図してよい下敷きです<span class="sg-era" id="sgEraGsiPhoto"></span></i></span>
+              </label>
+              <label class="sg-under">
+                <input type="radio" name="sgUnder5R" value="gsi-ort">
+                <span><b>地理院 正射写真（真上から）</b><i>真上から見た形に補正済み・全国をカバー。なぞって作図してよい下敷きです<span class="sg-era" id="sgEraGsiOrt"></span></i></span>
+              </label>
+              <!-- 🔒 §30-7 A(3): 枠の範囲に PLATEAU の写真が無い時（既存 state.plateauOut の
+                   判定＝schedulePlateauCheck）だけ、この行に一言。勝手に切り替えない。 -->
+              <label class="sg-under">
+                <input type="radio" name="sgUnder5R" value="plateau">
+                <span><b>PLATEAU 正射（真上から）</b><i>建物が傾かない写真。なぞって作図してよい下敷きです
+                  （対象都市のみ・広域表示では出ません）<span class="sg-era" id="sgEraPlateau"></span></i>
+                  <!-- 🔒 §30-8 裁定（2026-09-08）: 飛島村のように市境の外にもタイルが
+                       ある（範囲は市域より広い）ので「名古屋市内のみ」とは言わない -->
+                  <b class="sg-warn" id="sgPlateauOutNote" hidden>この場所は PLATEAU の範囲外です（名古屋市とその周辺だけ）</b></span>
+              </label>
+            </div>
+            </div><!-- /#sgMoreHzUnder -->
+
+            <!-- お手元の写真（🔒 §29-1 ⑤「写真を取り込む」＝📷ウィザード①をここへ）。
+                 🔴 ボタンも濃さも**同じ関数**（importImage / setImgOpacity）を呼ぶ。
+                    📷 の左ウィザードは道具メニューから従来どおり使える（全廃は Step 7）。 -->
+            <div class="sg-more-g" id="sgMoreHzImg">
+              <p class="sg-lb">お手元の写真・図面を使う（任意）</p>
+              <button id="sgImgPick" class="sg-wide"
+                title="駐車場の写真・図面を取り込んで、その上に描けます">写真を取り込む</button>
+              <p class="sg-note">取り込むと画面いっぱいに置き、地図を消して写真だけにします。
+                そのあと<b>地図を動かして写真の位置を合わせて</b>ください。
+                ご自身・お客様が撮影した画像はなぞって作図して構いません
+                （Google マップ等の画面コピーは位置の確認のみ）。</p>
+              <label class="sg-row" id="sgImgOpWrap" hidden>
+                <span class="sg-row-k">写真の濃さ</span>
+                <input type="range" id="sgImgOpacity" min="10" max="100" value="70">
+                <span class="sg-row-v" id="sgImgOpacityVal">70%</span>
+              </label>
+            </div>
+
+            <!-- 🔒 §30-14-1: ▼「紙の向きを変える」（#sgMoreHzOri・〇2つ #sgOrient5）は
+                 廃止した。切替は上の［紙の向きを変える］（#sgOri5Toggle）1か所。 -->
+            <!-- 🔒 §30-12-4 8: 押した瞬間に動く物は普通のボタンのまま
+                 （🔒 §18-ag: 配置図には方位記号を置かない＝②の #sgFixNote は要らない） -->
+            <button id="sgFocusLot" class="sg-wide"
+              title="駐車場のマーカーを中心に、枠を描ける大きさまで地図を寄せます"
+              >駐車場に寄る</button>
+          </div>
+
+          <!-- ⑥ 土地の輪郭（🔒 §29-1・旧⑤） -->
+          <div class="sg-body" id="sgS6" hidden>
+            <div class="sg-tools">
+              <button class="tool sg-tool" data-tool="polygon">
+                <b>多角形（土地の輪郭）</b>
+                <i>駐車場の敷地の角を順にクリックして囲みます</i></button>
+            </div>
+            <!-- 🔒 §18-ai: 下敷きが濃いと自分の線が沈む、という実機の詰まりへの案内。
+                 🔴 §18-ak: 名前は「濃さ」。案内も「下げる」と書く。
+                 🔒 §30-11: 注記1本なので折りたたまない（裁定・2026-09-09）。 -->
+            <p class="sg-note">下敷きが濃くて自分の線が見えにくい時は、
+              上部にある［下敷きの濃さ］を下げてください。</p>
+            <!-- 🔒 §4-5 / §22-ac: Enter は閉じずに確定。閉じたい時だけ Shift+Enter -->
+            <p class="sg-use">クリックで角・Enter で確定（閉じません）・Shift+Enter で閉じて確定・
+              Backspace で1点戻す</p>
+          </div>
+
+          <!-- ⑦ 駐車枠（🔒 §29-1・旧⑥） -->
+          <div class="sg-body" id="sgS7" hidden>
+            <div class="sg-tools">
+              <button class="tool sg-tool" data-tool="rect">
+                <b>駐車枠（四角）</b><i>ドラッグで枠を1つ描きます</i></button>
+            </div>
+            <!-- 🔒 §30-12-5 配置図③-2: ［枠をまとめて］［台数を指定して置く…］は
+                 ▼［枠をまとめて置く］の中身（四角で1つずつ描けば図は出来る）。 -->
+            <div class="sg-more-g" id="sgMoreHzStamp">
+              <div class="sg-tools">
+                <!-- 🔒 §25-7: ［枠をまとめて］は道具にならず、押した瞬間に1枠置く
+                     （共通ハンドラが data-tool="stamp" を placeStampOne へ回す＝1か所） -->
+                <button class="tool sg-tool" data-tool="stamp">
+                  <b>枠をまとめて</b><i>押すと枠を1つ置きます。まわりに出る ＋ を押すと
+                    その向きに増えます（数えなくて大丈夫です）</i></button>
+              </div>
+              <button id="sgStampSpec" class="sg-wide"
+                title="台数・1枠の幅と奥行を数値で決めてまとめて置きます"
+                >台数を指定して置く…</button>
+            </div>
+
+            <!-- 写真から自動（🔒 §29-1 ⑦「台数を指定して置く…（写真から自動・§16）」
+                 ＝📷ウィザード③をここへ）。🔴 中身は同じ関数（wzRunFill → runFillSmart）。
+                 写真が無い時は従来どおり「均等割りで描きました」の案内が出る（§16-10-d-2）。 -->
+            <div class="sg-more-g" id="sgMoreHzFill">
+            <p class="sg-lb">写真から自動で描く</p>
+            <div class="sg-row">
+              <span class="sg-row-k">台数</span>
+              <input type="text" id="sgFillCount" class="num" inputmode="numeric"
+                     placeholder="例 12"><span class="sg-row-v">台</span>
+            </div>
+            <button id="sgFillRun" class="sg-wide"
+              title="取り込んだ写真の白線・停まっている車を読み取って、輪郭の中に枠を並べます"
+              >写真から枠を描く</button>
+            <p class="sg-note">台数は<b>読み取りの答え合わせ</b>に使います。
+              写真を取り込んでいない時は、輪郭と台数から均等割りで描きます。</p>
+            <p class="sg-use" id="sgFillNote" hidden></p>
+
+            <!-- 🔒 §29-3 裁定6（Step 7）: 📷ウィザードの「上級オプション」
+                 （枠の大きさ・車路幅・列の向き）はここへ移した。既定は**閉じたまま**。
+                 🔴 値は空欄＝従来の既定（枠 2.5×5.0m ／ 車路幅 5m ／ 余白 0.3m ／ 0°）。
+                    右パネルの「枠を並べる」（#fillPanel）と同じ物を書き写して使う
+                    ＝処理は runFillSmart 1本のまま（wzRunFill が写す）。 -->
+            <details class="sg-adv">
+              <summary>詳しい設定（枠の大きさ・車路幅・向き）</summary>
+              <label class="sg-row">
+                <span class="sg-row-k">枠サイズ</span>
+                <select id="sgFillPreset"></select>
+              </label>
+              <label class="sg-row">
+                <span class="sg-row-k">1枠</span>
+                <input type="text" id="sgFillW" class="num"><span class="sg-row-v">×</span>
+                <input type="text" id="sgFillH" class="num"><span class="sg-row-v">m</span>
+              </label>
+              <label class="sg-row">
+                <span class="sg-row-k">車路幅</span>
+                <input type="text" id="sgFillAisle" class="num" inputmode="decimal"
+                       placeholder="例）5" title="空欄のままなら 5m"><span class="sg-row-v">m</span>
+              </label>
+              <label class="sg-row">
+                <span class="sg-row-k">境界の余白</span>
+                <input type="text" id="sgFillMargin" class="num" inputmode="decimal"
+                       placeholder="例）0.3" title="空欄のままなら 0.3m"><span class="sg-row-v">m</span>
+              </label>
+              <div class="fill-dirs">
+                <label class="chk"><input type="radio" name="sgFillDir" value="auto" checked>
+                  向き: 自動</label>
+                <label class="chk"><input type="radio" name="sgFillDir" value="edge">
+                  辺に沿わせる</label>
+                <label class="chk"><input type="radio" name="sgFillDir" value="manual"> 角度
+                  <input type="text" id="sgFillAngle" class="num" inputmode="decimal"
+                         placeholder="例）0" title="空欄のままなら 0°"><span class="sg-row-v">°</span>
+                </label>
+              </div>
+              <p class="sg-use" id="sgFillDirNote"></p>
+            </details>
+            </div><!-- /#sgMoreHzFill -->
+
+            <!-- 🔒 §30-12-5 配置図③-4: 番号は ▼［枠に番号を付ける］の中身（付けなくても図は出来る） -->
+            <div class="sg-more-g" id="sgMoreHzNum">
+              <div class="sg-tools">
+                <button class="tool sg-tool" data-tool="number">
+                  <b>№ 番号</b><i>枠の上をなぞると通った順に連番が入ります</i></button>
+              </div>
+            </div>
+
+            <div class="sg-tools">
+              <span class="sg-tk">仕上げ</span>
+              <!-- 🔒 §16-5 A: 保管場所マーク（対象の枠がどれか分かる印） -->
+              <button class="tool sg-tool" data-tool="storage">
+                <b>保管場所マーク</b><i>対象の枠をクリックすると太枠＋「保管場所」が付きます
+                  （もう一度で外れます）</i></button>
+            </div>
+            <p class="sg-use js-toolhint"></p>
+          </div>
+
+          <!-- ⑧ 道路を描く（🔒 §29-1・旧⑦） -->
+          <div class="sg-body" id="sgS8" hidden>
+            <div class="sg-tools">
+              <button class="tool sg-tool" data-tool="line">
+                <b>直線</b><i>前面道路の縁を1本引く（始点と終点の2回クリック）</i></button>
+            </div>
+            <!-- 🔒 §30-12-5 配置図④-2: 曲線・多角形は ▼［曲がった道を描く］の中身（直線1本で図は出来る） -->
+            <div class="sg-more-g" id="sgMoreHzRoad">
+              <div class="sg-tools">
+                <button class="tool sg-tool" data-tool="curve">
+                  <b>曲線</b><i>角の丸い道・カーブした道（両端を2回クリック → ふくらみを決めて
+                    もう1回クリック）</i></button>
+                <!-- 🔒 §22-ag: 多角形は「何度も折れ曲がる縁を一筆で」。§22-ac で
+                     Enter が閉じずに確定になったので道路の縁として正しい形になる。 -->
+                <button class="tool sg-tool" data-tool="polygon">
+                  <b>多角形</b><i>歩道・中央分離帯など、何度も折れ曲がる縁を一筆で
+                    （角を順にクリック → Enter で確定・閉じません）</i></button>
+              </div>
+            </div>
+            <p class="sg-use js-toolhint"></p>
+          </div>
+
+          <!-- ⑨ 道路幅（🔒 §29-1・Step 7 で小ウィンドウ #navS9 からここへ）
+               🔒 §30-12-5 配置図⑤の並び: 文 → 道幅の欄＋⑨幅矢印 →
+                  ［「道路」の文字を置く］→ ▼見本を見る。
+               🔒 §4-6 / §25-5: 実測値は手入力、空欄なら地図から計算。 -->
+          <div class="sg-body" id="sgS9" hidden>
+            <p class="sg-note">道幅を入れてから［幅矢印］を押し、道路の端から端まで
+              ドラッグすると、見本のような幅の矢印が描かれます。
+              空欄のまま引くと、地図から計算した幅が入ります
+              （実測値が分かったら、矢印を選んで「表示」欄に入れ直せます）。</p>
+            <label class="sg-lb" for="sgRoadW">道幅</label>
+            <div class="sg-row">
+              <input type="text" id="sgRoadW" class="num" inputmode="decimal"
+                     placeholder="例）6"><span class="sg-row-v">m</span>
+            </div>
+            <button id="sgRoadArrow" class="sg-wide"
+              title="押してから、道路の端から端までドラッグします">幅矢印</button>
+            <!-- 🔒 §30-12-4 8: 押した瞬間に動く物は普通のボタン・名前は「何が起きるか」 -->
+            <button id="sgRoadText" class="sg-wide"
+              title="「道路」の文字を図の中央に置きます（ドラッグで動かせます）"
+              >「道路」の文字を置く</button>
+            <!-- 🔒 §30-12-4 7: 「見るだけ」の見本も同じ▼ボタン（app.js SG_MORE が移す） -->
+            <img class="sg-guide" id="sgGuideRoad" src="assets/guide/road.png"
+                 alt="前面道路の幅を矢印と数値で書き込んだ例">
+          </div>
+
+          <!-- ⑩ 出入口（🔒 §29-1・Step 7 で小ウィンドウ #navS10 からここへ・⑨と同じ作法） -->
+          <div class="sg-body" id="sgS10" hidden>
+            <p class="sg-note">出入口の幅を入れてから［幅矢印］を押し、出入口の端から端まで
+              ドラッグします。［「出入口」の文字を置く］で文字も置けます。
+              幅の欄は⑤（道路幅）とは別に入れ直してください（⑤の道幅がそのまま
+              入らないように、この段へ来た時に空にしています）。</p>
+            <label class="sg-lb" for="sgGateW">出入口の幅</label>
+            <div class="sg-row">
+              <input type="text" id="sgGateW" class="num" inputmode="decimal"
+                     placeholder="例）4"><span class="sg-row-v">m</span>
+            </div>
+            <button id="sgGateArrow" class="sg-wide"
+              title="押してから、出入口の端から端までドラッグします">幅矢印</button>
+            <button id="sgGateText" class="sg-wide"
+              title="「出入口」の文字を図の中央に置きます（ドラッグで動かせます）"
+              >「出入口」の文字を置く</button>
+            <img class="sg-guide" id="sgGuideGate" src="assets/guide/gate.png"
+                 alt="出入口の文字と幅の矢印を書き込んだ例">
+          </div>
+
+          <!-- ⑪ 駐車位置ラベル（🔒 §29-1・Step 7 で小ウィンドウ #navS11 からここへ）
+               🔒 §18-f: 単位は数値欄の右に出し、ラベルの文字列にも自動で付く。
+               🔴 行（4項目）は labelRowsHTML('lb') が組み立てる＝道具メニューの
+                  #plPanel（接頭辞 'pl'）と**同じ定義 LABEL_ROWS** の1か所から。
+               🔒 §22-ab: 置き方は［配置］→ ①対象の枠 ②置き場所 の2クリック。 -->
+          <!-- 🔒 §30-12-5 配置図⑦の並び: 文 → 項目の行（**隠さない**＝長さ・幅は
+               利用者が入れる値）→ ⑬配置 → ▼見本を見る -->
+          <div class="sg-body" id="sgS11" hidden>
+            <p class="sg-note">図に出したい項目にチェックを入れ、数値を入れてください。
+              ［配置］を押したあと、①矢印の先にする駐車枠 ②ラベルを置く場所 の順に
+              地図を2回クリックします。置いた塊はドラッグで動かせます。</p>
+            <div id="sgLbItems">
+              <div id="lbRows"></div>
+              <div id="lbCustom"></div>
+              <button id="lbAdd" class="nav-add">＋ 項目を追加</button>
+            </div>
+            <p class="sg-use" id="lbHint">［配置］のあと、地図を2回クリックします。</p>
+            <button id="sgLabelPlace" class="sg-wide"
+              title="押してから、対象の駐車枠 → 置き場所 の順に地図をクリックします"
+              >配置</button>
+            <img class="sg-guide" id="sgGuideLabel" src="assets/guide/label.png"
+                 alt="保管場所の長さ・幅・枠番号・入庫口の高さを並べたラベルの例">
+          </div>
+
+          <!-- ⑫ 表示・保存（🔒 §29-1・Step 7 で小ウィンドウ #navS12 からここへ）
+               🔒 §16-5 B: 提出前チェックは**この段に常時出す**（書き出し直前の
+                  ダイアログ #chkBox も従来どおり残す＝止めない確認）。
+               🔒 §24-3/§25-3: プレビューは1図1ページで所在図・配置図の全部の紙。 -->
+          <div class="sg-body" id="sgS12" hidden>
+            <!-- 🔒 §30-12-5 配置図⑧: 提出前チェックは**隠さない**（一覧をそのまま見せる）。
+                 やることは⑮［PDFにして保存］／［画像ファイルにして保存］だけ。 -->
+            <div id="sgChkBox">
+              <p class="sg-lb">提出前チェック</p>
+              <ul class="sg-chk" id="sgChkList"></ul>
+              <p class="sg-note" id="sgChkNote"></p>
+            </div>
+            <button id="sgPrevAll" class="sg-wide"
+              title="所在図・配置図の全部の紙を、書き出しと同じ見た目で確かめます"
+              >プレビュー（全部の紙）</button>
+          </div>
+
+          <!-- 状態の一言（毎段この位置） -->
+          <p class="sg-status" id="sgStatus"></p>
+          <!-- ［戻る］［次へ］は段ごとに JS が組み立てる（sgRenderFoot）。
+               押した先は data-act の委譲で受けるので、作り直しても配線が切れない -->
+          <div class="sg-foot" id="sgFoot"></div>
+          <!-- 🔒 §28-1 ③: 押せない理由を平文で出す -->
+          <p class="sg-why" id="sgWhy" hidden></p>
+        </div>
+
+        <!-- 描画の道具（正典 §4）。種類ごとにまとめる -->
+        <section class="tools">
+          <h2>描く</h2>
+
+          <!-- 🔒 2026-09-06 オーナー指示: 2つのマーカーは誘導①だけでなく
+               **道具メニューの一番上**からいつでも置けるようにする。
+               動きは誘導①のボタンと同じ navPinArm()（押す → 地図をクリック）。
+               🔴 id は誘導①の #navPinHome / #navPinLot と重複できないので別名にし、
+                  navRenderPins() が両方の見た目（✓印・押している間の色）を揃える。
+               🔴 class="tool" は付けない（.tool の共通ハンドラが data-tool を読んで
+                  道具を切り替えてしまうため）。 -->
+          <div class="tool-block">
+            <span class="tool-label">マーカー</span>
+            <div class="tool-row">
+              <button id="sidePinHome" class="pin-btn wide"
+                title="押してから地図をクリックすると、使用の本拠のマーカーを置きます"
+                >使用の本拠マーカー設置</button>
+            </div>
+            <div class="tool-row">
+              <button id="sidePinLot" class="pin-btn wide"
+                title="押してから地図をクリックすると、駐車場のマーカーを置きます"
+                >駐車場マーカー設置</button>
+            </div>
+          </div>
+
+          <div class="tool-block">
+            <span class="tool-label">基本</span>
+            <div class="tool-row">
+              <button class="tool is-active" data-tool="select">選択</button>
+              <button class="tool" data-tool="eraser">消しゴム</button>
+            </div>
+          </div>
+
+          <div class="tool-block">
+            <span class="tool-label">線</span>
+            <div class="tool-row">
+              <button class="tool" data-tool="line">直線</button>
+              <button class="tool" data-tool="curve">曲線</button>
+            </div>
+            <div class="tool-row">
+              <button class="tool" data-tool="polygon">多角形</button>
+            </div>
+          </div>
+
+          <!-- 🔒 §23（なぞり出し）: 曇りガラスの下に見えている地図の線を、
+               〇でなぞった所だけ本物の図形として浮き出させる道具。
+               下書きは書き出しに一切含まれない（§23-2）。 -->
+          <div class="tool-block">
+            <span class="tool-label">なぞり出し</span>
+            <div class="tool-row">
+              <button class="tool wide" data-tool="reveal"
+                title="地図の建物・道路が薄く見えるようになります。なぞった所だけが図形になります"
+                >なぞって写す</button>
+            </div>
+            <div class="tool-row rv-sizes" id="rvSizes" hidden>
+              <span class="unit">筆の太さ</span>
+              <button class="rv-size" data-rsize="small" title="小（[ ] キーでも変えられます）">小</button>
+              <button class="rv-size is-active" data-rsize="medium" title="中（[ ] キーでも変えられます）">中</button>
+              <button class="rv-size" data-rsize="large" title="大（[ ] キーでも変えられます）">大</button>
+            </div>
+            <!-- 🔒 §23-5（名称の分類なぞり出し）: どの分類を薄く出すかはユーザーが選ぶ。
+                 「今回この所在図では交差点名を入れよう」は提出する警察署で違うので、
+                 出すレベルをアプリが決めない（オーナー指示）。
+                 ONにした分類だけが**その場所に**薄く出て、なぞると1個まるごと図形になる。 -->
+            <div class="rv-names" id="rvNames" hidden>
+              <span class="unit">名称を薄く出す</span>
+              <div class="rv-cats">
+                <label><input type="checkbox" class="rv-cat" data-cat="public">公共的建物</label>
+                <label><input type="checkbox" class="rv-cat" data-cat="crossing">交差点名</label>
+                <label><input type="checkbox" class="rv-cat" data-cat="shop">大きなお店</label>
+                <label><input type="checkbox" class="rv-cat" data-cat="office">会社名</label>
+                <label><input type="checkbox" class="rv-cat" data-cat="bus">バス停</label>
+                <label><input type="checkbox" class="rv-cat" data-cat="road">道路名</label>
+                <label class="rv-all"><input type="checkbox" id="rvCatAll">全ての目印</label>
+              </div>
+              <div class="rv-nstat" id="rvNameStat" hidden></div>
+              <button id="rvNameRetry" class="wide" hidden>もう一度取りに行く</button>
+            </div>
+          </div>
+
+          <div class="tool-block">
+            <span class="tool-label">区画・敷地</span>
+            <div class="tool-row">
+              <!-- 🔒 §18-10: 「四角」は全UIで「駐車枠（四角）」に改名 -->
+              <button class="tool" data-tool="rect"
+                title="ドラッグで駐車枠を1つ描きます">駐車枠（四角）</button>
+              <!-- 🔒 §25-7: 押した瞬間に1枠置く。以降は矢羽の＋／矢印キーで増やす -->
+              <button class="tool" data-tool="stamp"
+                title="押すと枠を1つ置きます。まわりの＋で好きな向きに増やせます"
+                >枠をまとめて</button>
+            </div>
+            <div class="tool-row">
+              <button id="btnStampSpec" class="wide"
+                title="台数・1枠の幅と奥行を数値で決めてまとめて置きます"
+                >台数を指定して置く…</button>
+            </div>
+          </div>
+
+          <div class="tool-block">
+            <span class="tool-label">寸法・番号</span>
+            <div class="tool-row">
+              <button class="tool" data-tool="arrow">↔ 幅</button>
+              <input type="text" id="arrowWidth" class="num" placeholder="自動">
+              <span class="unit">m</span>
+            </div>
+            <div class="tool-row">
+              <button class="tool" data-tool="number">№ 番号</button>
+              <span class="unit">開始</span>
+              <input type="text" id="numStart" class="num" value="1">
+            </div>
+            <div class="tool-row">
+              <button class="tool" data-tool="storage"
+                title="枠をクリックすると太枠＋「保管場所」ラベルが付きます（もう一度で外れます）">保管場所マーク</button>
+            </div>
+            <!-- 🔒 2026-08-19 オーナー指示（正典 §16-10-d-4 / §9-j 注記）:
+                 「自動で m が付く機能は無し」。寸法は手入力（表示欄）か、
+                 図形を選んで［寸法(m)を図に出す］を押した時だけ出す。 -->
+            <p class="side-note chk-dim">寸法(m)は自動では入りません。
+              図形を選んで［寸法(m)を図に出す］か、「表示」欄に実測値を入れてください。</p>
+          </div>
+
+          <!-- 🔒 §22-ab（2026-08-28 オーナー指示）: ガイダンス⑪に閉じ込めていた
+               「駐車位置ラベル作成」を、道具メニューからも単独で使えるようにする。
+               入力欄は⑪と同じ構成（小ウィンドウ #plPanel）で、置き方はどちらも2クリック。 -->
+          <div class="tool-block">
+            <span class="tool-label">駐車位置ラベル</span>
+            <div class="tool-row">
+              <button id="btnLabelBlock" class="tool wide"
+                title="保管場所の長さ・幅などを1つの塊にして、対象の枠へ矢印付きで置きます">
+                駐車位置ラベル作成</button>
+            </div>
+          </div>
+
+          <div class="tool-block">
+            <span class="tool-label">文字</span>
+            <div class="tool-row">
+              <button class="tool" data-tool="text">テキスト</button>
+              <select id="textSize">
+                <option value="small">小</option>
+                <option value="medium" selected>中</option>
+                <option value="large">大</option>
+              </select>
+            </div>
+            <!-- 🔒 §28-5 A / §28-7（2026-09-07 Step 2）: 信号機・バス停は
+                 **印つき文字を手で置く道具**。ガイダンス④と同じ道具なので、
+                 ガイダンスを閉じていても使えるようにここにも置く（入口を揃える）。
+                 🔴 文字が空でも印だけ残る（Enter を空のまま／Esc） -->
+            <div class="tool-row">
+              <button class="tool" data-tool="signal"
+                title="交差点の場所をクリックすると信号機の印が置かれ、交差点名を入れられます（空でもよい）">🚦 信号機</button>
+              <button class="tool" data-tool="bus"
+                title="クリックした場所にバス停の印が置かれ、停留所名を入れられます（空でもよい）">🚏 バス停</button>
+            </div>
+            <div class="tool-row">
+              <select id="textPreset" title="よく使う文字">
+                <option value="">定型文…</option>
+                <option>出入口</option><option>道路</option><option>歩道</option>
+                <option>駐車場</option><option>保管場所</option><option>使用の本拠</option>
+                <option>隣家</option><option>店舗</option><option>建物</option>
+                <option>空地</option><option>月極駐車場</option><option>○○通り</option>
+                <option>幅員　m</option><option>入庫口の高さ　m</option>
+                <option>新規</option><option>増車</option><option>代替（ナンバー：　）</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="tool-block">
+            <span class="tool-label">自動</span>
+            <div class="tool-row">
+              <button class="tool" data-tool="parcel" title="筆界をクリックして敷地を取り込む">敷地を取り込む</button>
+            </div>
+            <div class="tool-row">
+              <button id="btnDraft">自動下書き</button>
+              <button id="btnFill">枠を並べる</button>
+            </div>
+            <div class="tool-row">
+              <button id="btnShozaizu">所在図を作る</button>
+              <button id="btnImage" title="お手持ちの写真・図面を地図に重ねます">画像を重ねる</button>
+            </div>
+            <!-- 🔒 §29 Step 7: 📷 の左ウィザード（#guidePanel）は全廃した。
+                 このボタンは**配置図ガイダンスを①（下敷きと枠）で開く入口**になった
+                 （①で写真を取り込み → ②で外周 → ③で台数から枠、と同じ流れが続く）。
+                 🔒 §30-1: 番号は図ごとになったので①〜③（中の段は⑤〜⑦のまま）。 -->
+            <div class="tool-row">
+              <button id="btnPhotoGuide" class="wide"
+                title="配置図ガイダンスの①（下敷きと枠）を開きます。写真を取り込んで、外周→駐車枠と進めます"
+                >📷 写真から配置図</button>
+            </div>
+            <!-- 🔒 §18-al / §30-1: 誘導の呼び出しは上部バーの
+                 ［🧭 所在図ガイダンス］［🧭 配置図ガイダンス］へ移設した
+                 （ここにあった［🧭 案内を出す］は削除。入口を増やさない） -->
+          </div>
+
+          <p class="tool-note" id="toolHint"></p>
+        </section>
+
+        <section id="propPanel" hidden>
+          <h2>選択中の図形</h2>
+          <div id="propRect" hidden>
+            <label class="prop-row">幅
+              <input type="text" id="propW" inputmode="decimal"><span class="unit">m</span>
+            </label>
+            <label class="prop-row">奥行
+              <input type="text" id="propH" inputmode="decimal"><span class="unit">m</span>
+            </label>
+            <label class="prop-row">角度
+              <input type="text" id="propAngle" inputmode="decimal"><span class="unit">°</span>
+            </label>
+            <label class="prop-row">表示
+              <input type="text" id="propLabel" placeholder="自動">
+            </label>
+            <label class="chk"><input type="checkbox" id="propShowDims"> 寸法(m)を図に出す</label>
+            <p class="side-note">実測値があれば数値で入れてください（実測優先）。
+              「表示」に文字を入れると、寸法チェックに関係なく必ず図に出ます。</p>
+          </div>
+          <!-- 🔒 §25-4: 使用の本拠・駐車場の主役マーク（四角＋斜線ハッチ）。
+               車両枠ではないので寸法は出さない（寸法の欄も置かない） -->
+          <div id="propMark" hidden>
+            <p class="side-note" id="propMarkWhat"></p>
+            <label class="prop-row">幅
+              <input type="text" id="propMarkW" inputmode="decimal"><span class="unit">m</span>
+            </label>
+            <label class="prop-row">奥行
+              <input type="text" id="propMarkH" inputmode="decimal"><span class="unit">m</span>
+            </label>
+            <label class="prop-row">角度
+              <input type="text" id="propMarkAngle" inputmode="decimal"><span class="unit">°</span>
+            </label>
+            <div class="prop-row">色
+              <span class="mark-colors" id="propMarkColors"></span>
+            </div>
+            <p class="side-note">白黒でコピーしても残るよう、塗りは斜線にしています。
+              小さすぎて見えなくならないよう、紙の上では一定の大きさを下回りません。</p>
+          </div>
+
+          <div id="propStamp" hidden>
+            <label class="prop-row">台数
+              <input type="text" id="propCount" inputmode="numeric">
+            </label>
+            <label class="prop-row">1枠 幅
+              <input type="text" id="propCellW" inputmode="decimal"><span class="unit">m</span>
+            </label>
+            <label class="prop-row">1枠 奥行
+              <input type="text" id="propCellH" inputmode="decimal"><span class="unit">m</span>
+            </label>
+            <label class="prop-row">角度
+              <input type="text" id="propStampAngle" inputmode="decimal"><span class="unit">°</span>
+            </label>
+            <label class="prop-row">ずらし
+              <input type="text" id="propStagger" inputmode="decimal"><span class="unit">m/枠</span>
+            </label>
+            <label class="chk"><input type="checkbox" id="propStampShowDims">
+              寸法(m)を図に出す</label>
+            <p class="side-note">「ずらし」は1枠ずつ横にずらす量です（階段状の配置）。
+              図形の脇の階段アイコンをドラッグしても変えられます。0 で真っすぐ。</p>
+            <p class="side-note">枠を1枚だけ消すには「消しゴム」でその枠をクリックします。</p>
+          </div>
+
+          <!-- 🔒 §25-5（2026-08-29・§4-6 再改定）: 空欄なら地図から計算した距離が出る。
+               実測できた所はここに入れて上書きする（手入力が優先） -->
+          <div id="propArrow" hidden>
+            <label class="prop-row">幅員
+              <input type="text" id="propArrowLabel" placeholder="空欄=地図から計算">
+            </label>
+            <p class="side-note">空欄のままだと、矢印の両端の距離を地図から計算して
+              表示します（小数1桁）。実測した値を入れると、そちらが優先されます。</p>
+          </div>
+
+          <div id="propText" hidden>
+            <label class="prop-row">文字
+              <input type="text" id="propTextValue">
+            </label>
+            <label class="prop-row">大きさ
+              <select id="propTextSize">
+                <option value="small">小</option>
+                <option value="medium">中</option>
+                <option value="large">大</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- 駐車位置ラベルの塊（正典 §18-f） -->
+          <div id="propLabelBlock" hidden>
+            <p class="side-note" id="propLbLines"></p>
+            <p class="side-note">塊はドラッグで移動、<b>右下のつまみ</b>で大きさを変えられます。
+              <b>矢印の先だけ</b>は別につまんで動かせます（対象の枠を指し直せます）。
+              文言を作り直すときは配置図ガイダンスの⑦（駐車位置ラベル）へ戻ってください。</p>
+          </div>
+
+          <p id="propMulti" class="side-note" hidden></p>
+          <div class="prop-btns">
+            <button id="propDup">複製</button>
+            <button id="propDel">削除</button>
+          </div>
+        </section>
+
+        <!-- 🔒 §18-ai: 下敷きの選択（旧 #underlaySel / #underlayNote）は上部バーへ移設した。
+             ここには「別タブで現地を見る」導線と三分法の注意書きだけを残す -->
+        <h2>下敷き</h2>
+        <p class="side-note">下敷きの種類・濃さは<b>画面上部</b>で切り替えます。</p>
+
+        <a id="linkGoogle" class="side-link" href="#" target="_blank" rel="noopener"
+           title="高精細な航空写真・ストリートビューはこちら（別タブの通常のGoogleマップ。アプリは何も送りません）">
+          Googleマップで開く ↗
+        </a>
+        <p class="side-note">ストリートビューや現地の様子は、別タブのGoogleマップでご確認ください。
+          なぞって作図してよい下敷きは国土地理院・PLATEAU のオープンデータです
+          （Google の下敷きは位置の確認のみ）。</p>
+
+        <h2>地点</h2>
+        <ul class="pt-list">
+          <li><span class="pt-dot pt-home"></span>使用の本拠 <em id="ptHome">未設定</em></li>
+          <li><span class="pt-dot pt-lot"></span>駐車場 <em id="ptLot">未設定</em></li>
+        </ul>
+        <p id="distInfo" class="dist-info"></p>
+        <div class="zoom-btns">
+          <button id="btnFocusLot">駐車場に寄る</button>
+          <button id="btnFitBoth">2地点を表示</button>
+        </div>
+        <p class="side-note">マーカーはドラッグで微調整できます。住所検索は街区までしか
+          合わないので、位置は地図を見て決めてください。</p>
+
+        <h2 id="underlaySrcTitle">下敷きの出典</h2>
+        <p class="side-note" id="underlaySrc"></p>
+      </aside>
+    </div>
+
+  </section>
+</div>
+
+<!-- 提出前チェック（正典 §16-5 B）。不足を並べるだけで、書き出しは止めない -->
+<div id="chkBox" class="ex-preview chk-box" hidden>
+  <div class="chk-inner">
+    <h3>提出前チェック（配置図）</h3>
+    <p class="chk-lead">次の項目が見つかりませんでした。よくある付け忘れです。</p>
+    <ul id="chkList" class="chk-list"></ul>
+    <p class="sp-note">この確認は目安です。足りていても内容は必ずご確認ください。</p>
+    <div class="sp-btns chk-btns">
+      <button id="chkGo" class="primary">このまま書き出す</button>
+      <button id="chkBack">戻って直す</button>
+    </div>
+  </div>
+</div>
+
+<!-- 多角形ツールの使い方動画（🔒 §22-ah → 🔒 §30-14-3 で出し方を変更）。
+     字幕の中の［多角形ツールの使い方動画を見る］を押した時だけ出す（自動再生はしない）。
+     🔒 §30-14-3: 中身は**見出しと［閉じる］だけ**（「次からは再生しない」は廃止）。
+        かぶせは画面いっぱいに近く（.vid-inner max-width: 96vw）。
+     🔴 preload="none" にして、開くまで 10MB を読みに行かせない。
+     🔴 muted を付けないとブラウザが自動再生をブロックする（音があるなら
+        controls から解除できる）。 -->
+<div id="vidBox" class="ex-preview" hidden>
+  <div class="vid-inner">
+    <h3>多角形ツールの使い方</h3>
+    <video id="vidPlayer" class="vid-player" controls muted playsinline preload="none"
+           src="assets/guide/polygon.mp4"></video>
+    <div class="vid-foot">
+      <button id="vidClose" class="primary">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 書き出しプレビュー（画面全体にかぶせる。地図の中に置くと
+     ズームボタン等と場所を取り合うため） -->
+<div id="exPreviewBox" class="ex-preview" hidden>
+  <div class="ex-preview-inner">
+    <div class="ex-preview-head">
+      <span>書き出しプレビュー
+        <span class="ex-preview-hintline">この内容がそのまま出ます（Esc または外側のクリックでも閉じます）</span>
+      </span>
+      <button id="exPreviewClose">✕ 閉じる</button>
+    </div>
+    <div class="ex-preview-body" id="exPreviewBody"></div>
+    <!-- 🔒 §30-13-3: 所在図ガイダンス⑧から出したプレビューの下部だけに出る
+         （⑫の「全部の紙」のプレビューには付けない＝app.js showExportPreview の opt.foot）。
+         🔴 ［PDF保存］［画像保存］は**所在図の紙だけ**を書き出す（配置図はまだ無いことが多い）。
+            件数の数え方は §22 のまま（書き出し1回で1件・30日/100m の規則）。 -->
+    <div class="ex-preview-foot" id="exPreviewFoot" hidden>
+      <p class="ex-preview-foot-say">所在図はこれで完成です。続けて配置図を作るときは
+        ［配置図ガイダンスへ進む］を押してください</p>
+      <div class="ex-preview-foot-btns">
+        <button type="button" data-exfoot="pdf">PDF保存</button>
+        <button type="button" data-exfoot="png">画像保存</button>
+        <button type="button" data-exfoot="toHz" class="primary">配置図ガイダンスへ進む</button>
+        <button type="button" data-exfoot="toList">案件一覧に戻る</button>
+        <button type="button" data-exfoot="back">戻る</button>
+      </div>
+      <p class="ex-preview-foot-msg" id="exPreviewFootMsg"></p>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/mvt.js"></script>
+<script src="js/gsi.js"></script>
+<script src="js/osm.js"></script>
+<script src="js/parse.js"></script>
+<script src="js/store.js"></script>
+<!-- 🔒 §21: 保存先フォルダ（段階A）。store.js より後・app.js より前に読む -->
+<script src="js/fsave.js"></script>
+<script src="js/mapview.js"></script>
+<script src="js/pmtiles.js"></script>
+<script src="js/autodraft.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/shozaizu.js"></script>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="js/export.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/reveal.js"></script>
+<!-- 🔒 §28-13（Step 4）: ④の［交差点名・バス停名を地図に重ねる］。
+     reveal.js の後（Reveal.drawSignal / drawBusStop を借りる） -->
+<script src="js/namelay.js"></script>
+<script src="js/stamp.js"></script>
+<script src="js/imglay.js"></script>
+<script src="js/recognize.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -29,5 +29,16 @@ apps/solara/mockup/ai_consent_bg_drafts/
 # GeoNames seed cache (Stella 相談 D1 都市プール) — DL zip/txt + 生成 12MB SQL。commit しない
 apps/solara/tools/_geonames_cache/
 
+# 車庫証明メーカーの開発中の目視確認用出力（devserver.py の /_save が書く）
+_devout/
+
+# 車庫証明メーカーの API キー。config.sample.js をコピーして作る。
+# 履歴にキーを残さないためコミットしない（公開時の扱いはオーナー判断）
+apps/shako-map/js/config.js
+
 # ストアスクショの実機キャプチャ素材 (個人データ含む中間物。装飾済みは phone_screenshots/ をコミット)
 apps/solara/docs/store_compliance_assets/phone_raw/
+
+# 車庫証明メーカー spike の作業用ファイル（ベンチ画像・検証用ライブラリ）。
+# アンダースコア始まり＝使い捨ての作業物。コミットしない（オーナー判断 2026-08-29）
+apps/shako-map/spike/_*

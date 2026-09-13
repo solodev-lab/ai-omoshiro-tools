@@ -40,11 +40,25 @@ jobs:
             --exclude='/apps/insta-reels' --exclude='/apps/tarot-v2' \
             --exclude='/worker' --exclude='/tools' --exclude='/docs' \
             --exclude='/logs' --exclude='/sns-templates' \
+            --exclude='/apps/shako-map/docs' --exclude='/apps/shako-map/tools' \
+            --exclude='/apps/shako-map/spike' \
             --exclude='*.md' \
             ./ _site/
           touch _site/.nojekyll
           echo "=== published top-level ===" && ls _site
           echo "=== published apps/ (should NOT contain solara/diet_app) ===" && ls _site/apps
+          echo "=== published apps/shako-map (should NOT contain docs/tools/spike) ===" && ls _site/apps/shako-map
+      - name: shako-map の config.js を Secrets から作る（キーはリポジトリに置かない）
+        # 🔒 2026-09-13: Google Maps のキーは GitHub Secrets（SHAKO_GOOGLE_MAPS_KEY）から
+        #    配信時にだけ config.js へ差し込む。履歴に残らず、取り替えは Secrets の書き換えだけ。
+        #    Secrets が空なら空文字で書く＝Google の下敷きは選択肢に出ない（地理院・OSM のみ）。
+        #    キー自体は利用者のブラウザに届く公開キー。守りは Google Cloud 側の
+        #    HTTP リファラー制限（https://solodev-lab.com/*）と日次上限（config.sample.js 参照）。
+        env:
+          SHAKO_KEY: ${{ secrets.SHAKO_GOOGLE_MAPS_KEY }}
+        run: |
+          printf 'window.SHAKO_CONFIG = { GOOGLE_MAPS_API_KEY: "%s" };\n' "$SHAKO_KEY" > _site/apps/shako-map/js/config.js
+          if [ -z "$SHAKO_KEY" ]; then echo "SHAKO_GOOGLE_MAPS_KEY は未設定（Google の下敷きは出ない）"; else echo "config.js を書いた（キーの長さ ${#SHAKO_KEY}）"; fi
       - name: legal/solara のルートは ja/ の写し（二重管理を作らない）
         # 🔴 2026-07-29: legal/solara/ の日本語版が「ルート」と「ja/」に同じ内容で2つ在り、
         #    直すたびに両方を手で直す状態だった(6ファイルとも改行以外は完全一致だった)。
