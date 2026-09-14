@@ -102,6 +102,27 @@
   /* 文字の大きさ（画面px）。editor.js の TEXT_PX と同じ値にする
    * ＝薄出しと実体化後の見た目がぴったり重なる（ずれると「なぞったら動いた」に見える） */
   var NAME_PX = { small: 12, medium: 15, large: 19 };
+  /* 🔒 §30-25-7: 文字の大きさが**ズームに連動**するようになったので、薄出しも
+   * editor と同じ換算（Editor.prototype.textPx ＝ 紙のミリ × mmPx()）で出す。
+   * ＝「なぞったら大きさが変わった」に見えない（上の表は予備）。 */
+  function namePxOf(ed, size) {
+    if (ed && typeof ed.textPx === 'function') {
+      var v = ed.textPx({ size: size });
+      if (v > 0) return v;
+    }
+    return NAME_PX[size] || NAME_PX.medium;
+  }
+  /* 🔒 §30-30-1: 印（信号機・バス停）の大きさは**文字の大きさに連動しない**。
+   * 薄出しの仮の印も「図に入れた時の見た目」に合わせて、基準（MARK_BASE_MM × mmPx）
+   * で描く＝拾った瞬間に大きさが変わらない。
+   * 🔴 値の出どころは editor.js の Editor.prototype.markBasePx 1か所。 */
+  function markBasePxOf(ed) {
+    if (ed && typeof ed.markBasePx === 'function') {
+      var v = ed.markBasePx();
+      if (v > 0) return v;
+    }
+    return NAME_PX.medium;
+  }
   var NAME_DOT_R = 3.6;            // 薄出しの●の半径(px)。editor の r0（size*0.24）と揃う
   var NAME_GAP = 4;                // 印と文字の間(px)
   var NAME_PAD = 3;                // 当たり判定・重なり判定の余白(px)
@@ -132,7 +153,8 @@
              h: size * (K.pole + K.bh) };
   }
   /** 印の「上に文字を逃がす量」。signal は矩形が anchor を中心に上下対称なので高さの半分、
-   *  bus は anchor（足の接地点）から上へだけ伸びるので**全高**、●は半径そのもの。 */
+   *  bus は anchor（足の接地点）から上へだけ伸びるので**全高**、●は半径そのもの。
+   *  🔒 §30-30-1: 引数は**印の大きさ**（基準 markBasePxOf）＝文字の大きさではない。 */
   function markHalfH(mark, fs) {
     if (mark === 'signal') return signalGeom(fs).h / 2;
     if (mark === 'bus') return busGeom(fs).h;
@@ -917,7 +939,7 @@
         if (!cats[it.cat] || seen[it.name]) continue;
         if (!(it.lat >= b.south && it.lat <= b.north
               && it.lng >= b.west && it.lng <= b.east)) continue;
-        push({ cat: it.cat, name: it.name, src: 'osm',
+        push({ cat: it.cat, name: it.name, src: 'osm', mark: it.mark || '',
                mx: mercX(it.lng), my: mercY(it.lat) });
       }
       if (cats.road && this._osm.roads.length && hasOSM()) {
@@ -992,21 +1014,25 @@
      * 🔴 §23-6-a「空きが無ければ出さない」の実装漏れ。薄出しどうししか見ていなかったので、
      *    道路名が「使用の本拠」の14mに置かれて紙で読めなくなっていた（案件③で実測）。 */
     var placed = this._existingTextBoxes(s), i, k;
+    // 🔒 §30-30-1: 印の基準の大きさ（画面と同じ式）。文字（fs）とは別物
+    var mBase = markBasePxOf(this.editor);
     for (i = 0; i < cand.length; i++) {
       var c = cand[i];
       var px = c.mx * ws + ox, py = c.my * ws + oy;
       if (px < -NAME_MARGIN || px > s.w + NAME_MARGIN
           || py < -NAME_MARGIN || py > s.h + NAME_MARGIN) continue;
       var meta = OSM.CAT_BY_ID[c.cat] || {};
-      var fs = NAME_PX[meta.size] || NAME_PX.medium;
+      var fs = namePxOf(this.editor, meta.size);   // 🔒 §30-25-7
       ctx.font = '700 ' + fs + 'px "Yu Gothic UI","Meiryo",sans-serif';
       var w = ctx.measureText(c.name).width;
       var h = fs * 1.15;
       var dot = !!meta.dot;
       /* 🔒 2026-09-02: 印の形は分類の meta.mark（交差点名だけ 'signal'）。
        * 🔴 表示文字列では分岐しない（§26-2 注意②）。無指定は従来どおり●。 */
-      var mark = dot ? (meta.mark || 'dot') : null;
-      var mHalf = dot ? markHalfH(mark, fs) : 0;   // 逃がし量が印の大きさに追従する
+      /* 🔒 §30-21-2: まず**その物の印**（信号の無い交差点＝'dot'）→ 分類の印 */
+      var mark = dot ? (c.mark || meta.mark || 'dot') : null;
+      // 🔒 §30-30-1: 印の大きさは基準（mBase）＝文字の大きさに連動しない
+      var mHalf = dot ? markHalfH(mark, mBase) : 0;   // 逃がし量が印の大きさに追従する
       /* 印が付く分類は文字を印の上へ逃がす（§18-8 の「●＝場所／文字＝脇」）。
        * 道路名は線に付く名前なので印を作らず、その場に横書きで置く（§23-5-a・v1）。 */
       var baseCy = dot ? (py - mHalf - NAME_GAP - h / 2) : py;
@@ -1015,7 +1041,7 @@
        *    別の名称がアイコンに乗る」ケース（§23-6-a「空きが無ければ出さない」）。 */
       var icon = null;
       if (mark === 'signal') {
-        var sg0 = signalGeom(fs);
+        var sg0 = signalGeom(mBase);       // 🔒 §30-30-1
         /* 🔴 ここに NAME_PAD を足してはいけない。文字の箱は上下に NAME_PAD を持つので、
          *    印にも足すと 1段目（真上・逃がし量 NAME_GAP=4）が必ず自分の印と当たり、
          *    交差点名だけ常に2段目へ飛ぶ（実測 36px 逃げた）。印の実寸のまま使う。 */
@@ -1025,7 +1051,7 @@
         /* 🔒 §22-aj-2 の教訓を踏襲: ここも NAME_PAD を足さず印の実寸のまま使う。
          * バス停は anchor（足の接地点＝py）から上へだけ伸びるので、箱は
          * py を下端に、板の上端（py - 全高）を上端にする（signal の上下対称とは違う）。 */
-        var bg0 = busGeom(fs);
+        var bg0 = busGeom(mBase);          // 🔒 §30-30-1
         var busIconW = Math.max(bg0.bw, bg0.foot);
         icon = { x: px - busIconW / 2, y: py - bg0.h, w: busIconW, h: bg0.h };
         placed.push(icon);
@@ -1047,9 +1073,9 @@
       // ---- 描く ----
       if (dot) {
         if (mark === 'signal') {
-          drawSignal(ctx, px, py, fs, FOG_NAME_DOT);
+          drawSignal(ctx, px, py, mBase, FOG_NAME_DOT);   // 🔒 §30-30-1
         } else if (mark === 'bus') {
-          drawBusStop(ctx, px, py, fs, FOG_NAME_DOT);
+          drawBusStop(ctx, px, py, mBase, FOG_NAME_DOT);  // 🔒 §30-30-1
         } else {
           ctx.beginPath();
           ctx.arc(px, py, NAME_DOT_R, 0, Math.PI * 2);
@@ -1095,9 +1121,11 @@
   /** なぞり中に実体化した名称を（SVG を組み直す前に）そのまま出す */
   Reveal.prototype._drawStrokeNames = function (ctx, ws, ox, oy) {
     var i, list = this._strokeNames;
+    // 🔒 §30-30-1: 印の基準の大きさ（文字の大きさには連動しない）
+    var mBase = markBasePxOf(this.editor);
     for (i = 0; i < list.length; i++) {
       var o = list[i].obj;
-      var fs = NAME_PX[o.size] || NAME_PX.medium;
+      var fs = namePxOf(this.editor, o.size);      // 🔒 §30-25-7
       var px = mercX(o.at.lng) * ws + ox, py = mercY(o.at.lat) * ws + oy;
       ctx.font = '700 ' + fs + 'px "Yu Gothic UI","Meiryo",sans-serif';
       if (o.anchor) {
@@ -1112,7 +1140,10 @@
          * 画面（editor.js）の textDrawWidth と同じ値になる＝終点も同じ。 */
         var lwHalf = ctx.measureText(o.text || '').width / 2;
         var E = global.Editor;
-        var draw = E && E.wantLead ? E.wantLead(o, ld, lwHalf, fs, 4)
+        /* 🔒 §30-24-5: 同一住所の主役ラベル（noLead:true）はなぞり出しでも線を描かない。
+         * E.wantLead に委ねる経路・自前の予備（E 未取得時）の両方に効かせる。 */
+        var draw = (o && o.noLead) ? false
+                 : E && E.wantLead ? E.wantLead(o, ld, lwHalf, fs, 4)
                                    : (ld > 1 && (o.lead || ld > fs * 2.2 + lwHalf));
         if (draw) {
           var LD = (E && E.LEAD) || { w: 1.1, dash: [3, 2] };
@@ -1128,12 +1159,14 @@
           ctx.stroke();
           ctx.restore();
         }
-        // 🔒 2026-09-02: 交差点名は信号機（画面 editor.js・紙 export.js と同じ形）
+        /* 🔒 2026-09-02: 交差点名は信号機（画面 editor.js・紙 export.js と同じ形）
+         * 🔒 §30-30-1: 大きさは基準（mBase）× markScale＝文字の大きさに連動しない */
+        var mSz = (E && E.markSizeOf) ? E.markSizeOf(o, fs, mBase) : mBase;
         if (o.dotStyle === 'signal') {
-          drawSignal(ctx, ax, ay, fs, '#111');
+          drawSignal(ctx, ax, ay, mSz, '#111');
         } else if (o.dotStyle === 'bus') {
           // 🔒 2026-09-04: バス停は標識アイコン（画面 editor.js・紙 export.js と同じ形）
-          drawBusStop(ctx, ax, ay, fs, '#111');
+          drawBusStop(ctx, ax, ay, mSz, '#111');
         } else {
           ctx.beginPath();
           ctx.arc(ax, ay, NAME_DOT_R, 0, Math.PI * 2);
@@ -1598,6 +1631,9 @@
   Reveal.OVERLAP_M = OVERLAP_M;
   Reveal.MIN_KEEP_PX = MIN_KEEP_PX;
   Reveal.NAME_PX = NAME_PX;
+  /* 🔒 §30-25-7: 文字の大きさ（紙基準・ズーム連動）の換算はこの1か所。
+   * namelay.js（重ね表示）も同じ物を読む＝薄出し・重ね表示・図の文字がそろう。 */
+  Reveal.namePxOf = namePxOf;
   Reveal.NAME_DOT_R = NAME_DOT_R;
   Reveal.FOG_NAME = FOG_NAME;
   Reveal.OSM_DEBOUNCE_MS = OSM_DEBOUNCE_MS;

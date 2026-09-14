@@ -65,8 +65,11 @@
   /* 🔒 2026-09-03: 名称の自動描画6分類（§23-5）の案件フィールド名。
    * 🔴 newCase と migrate の**両方が同じ表を読む**＝片方に足し忘れる事故を防ぐ。
    *    並びは画面（設定盤）の並びと同じ。app.js の SZ_GRADES とも対応する。 */
+  /* 🔒 §30-21-2（2026-09-13）: 施設・公園／建物名 を足して**8分類**
+   * （設定盤は 11項目 → 13項目・🔒 §30-21-4 5）。 */
   var NAME_LEVEL_KEYS = ['nameCrossLevel', 'nameShopLevel', 'nameOfficeLevel',
-                         'nameBusLevel', 'nameRoadLevel', 'namePoiLevel'];
+                         'nameBusLevel', 'nameRoadLevel', 'namePoiLevel',
+                         'nameFacilityLevel', 'nameBuildingLevel'];
 
   /* 🔒 §22-ao-②（2026-09-04 オーナー指示）: 所在図の設定盤・標準値の定義を1か所に統合。
    * 🔴 以前は newCase の既定・migrate の欠損補完・app.js の SZ_STD の3か所に
@@ -79,11 +82,23 @@
    * （points[key].mark = {shape,color}）、所在図の設定盤の項目ではなくなったため。
    * ［標準に戻す］（runShozaizuStandard）が印の形を勝手に戻さないのも、これで正しい。
    * 🔴 c.markStyle 自体は**旧案件の後方互換のために残す**（下の MARK_STYLE_STD）。 */
+  /* 🔒 §30-22-2 1（2026-09-13 オーナー指示）: **道路の線の標準は「白帯＋黒縁」**
+   * （roadStyle: 'line' → 'band'）。旧案件の保存値は migrate がそのまま通す。 */
   var SZ_STD = {
-    nature: true, roadStyle: 'line',
+    nature: true, roadStyle: 'band',
+    /* 🔒 §30-22-10: 名前と印の距離（1=近く／2=標準／3=離す）。既定は**離す**。
+     * 意味（近く＝印のすぐ隣／標準＝中点／離す＝従来）は shozaizu.js が唯一の出どころ。 */
+    nameGap: 3,
     lmLevel: 3, bldgLevel: 1, roadLevel: 3,
     nameCrossLevel: 3, nameShopLevel: 2, nameOfficeLevel: 2,
-    nameBusLevel: 3, nameRoadLevel: 4, namePoiLevel: 1
+    nameBusLevel: 3, nameRoadLevel: 4, namePoiLevel: 1,
+    /* 🔒 §30-21-4 3 → §30-21-5 1（2026-09-13 Fable 裁定・実測で改めた）: 施設・公園＝
+     * **多め（4）**／建物名＝**多め（4）**。標準（件数3・半径0.45）では岩上町の
+     * 宮塚公園・団地・格2の棟名（広い枠で0件になる）が切られていた
+     * （段の意味＝§22-aq は変えず、既定の段だけ上げる。棟名は「あると便利」＝オーナー）。
+     * 旧案件にこの2つは無いので migrate がこの値で補う（＝開いただけで
+     * 図が変わるが、新しい分類が既定で出るのは正典の意図）。 */
+    nameFacilityLevel: 4, nameBuildingLevel: 4
   };
   /* 印の形の既定（🔒 §22-ao ＝◎）。points[key].mark を持たない案件は今もこれで描く。 */
   var MARK_STYLE_STD = 'circle';
@@ -219,7 +234,8 @@
       created: now,
       updated: now,
       done: false,                         // 完了ステータス（正典 §19-3・既定＝作成中）
-      points: { home: null, lot: null },   // {lat,lng,label,address,title}
+      /* {lat,lng,label,address,title}。🔒 §30-22-1 6: same＝本拠と駐車場が同一住所 */
+      points: { home: null, lot: null, same: false },
       maps: maps,                          // 下敷き設定（種類ごと・案件レベルで共有）
       /* 🔒 §24-1 シート制。新規案件は「所在図1枚＋配置図1枚」から始める */
       sheets: {
@@ -852,12 +868,64 @@
        *    無い旧データだけ表示文字で見分ける。
        * 🔒 §25-4: 主役マーク（role:'mainmark' の四角）も2個で1組なので、
        * 🔴 markRole（'home'/'lot'）を鍵に混ぜないと**片方が消える**。 */
+      /* 🔒 §30-24-1: 主役の**多角形**だけは1地点にいくつあってもよい（建物と土地など）。
+       * 鍵に id を混ぜて「重複」と数えない（混ぜないと2つ目以降が読み込みで消える）。 */
       var key = o.role + '|' + o.type
               + '|' + (o.role === 'pinlabel' ? (o.pinKey || o.text || '') : '')
-              + '|' + (o.markRole || '');
-      if (seen[key]) list.splice(i, 1);
-      else seen[key] = true;
+              + '|' + (o.markRole || '')
+              + '|' + ((o.role === 'mainmark' && o.type === 'polygon') ? o.id : '');
+      var kept = seen[key];
+      if (!kept) { seen[key] = o; continue; }
+      /* 🔒 §30-25-28 4: 主役の文字が2つ残っていたら、**手で動かした方**（userMoved）
+       * を残す（生成物の方を捨てる）。それ以外は従来どおり後ろの1つを残す。
+       * 🔴 kept は必ず i より後ろにあるので、先に消しても i 以前の添字は動かない。 */
+      if (o.userMoved && !kept.userMoved) {
+        var at = list.indexOf(kept);
+        if (at >= 0) list.splice(at, 1);
+        seen[key] = o;
+      } else {
+        list.splice(i, 1);
+      }
     }
+  }
+
+  /**
+   * 🔒 §30-24-2（2026-09-13 オーナー指示）: 同一住所の主役ラベルを**2つに分ける**。
+   * 旧案件は「使用の本拠・駐車場」という1つの文字（pinKey:'home'）で保存されている。
+   * 開いた時に「使用の本拠」と「駐車場」の2つにし、どちらもドラッグで動かせるようにする。
+   * 🔴 判定は表示文字ではなく構造（同一住所なのに pinKey:'lot' の主役ラベルが無い）
+   *    で行う（§26-2 注意②）。1回だけ通す（印＝ c.sameLabelVer）。
+   * 🔴 置き場所は1つ目の**真下**（紙の文字の高さぶん）。紙の幅（枠の w_m）から出す。
+   */
+  var SAME_LABEL_VER = 2;
+  function splitSameLabel(sheet) {
+    var list = sheet.objects || [], home = null, i, o;
+    for (i = 0; i < list.length; i++) {
+      o = list[i];
+      if (!o || o.source !== 'shozaizu' || o.role !== 'pinlabel') continue;
+      if ((o.pinKey || 'home') === 'lot') return;      // 既に2つある＝何もしない
+      home = o;
+    }
+    if (!home || !home.at) return;
+    home.pinKey = 'home';
+    home.text = '使用の本拠';
+    /* 🔒 §30-24-5: 旧案件を分けた2文字も、同一住所の間は引き出し線を描かない */
+    home.noLead = true;
+    var lot = JSON.parse(JSON.stringify(home));
+    lot.id = 'lb' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    lot.pinKey = 'lot';
+    lot.text = '駐車場';
+    /* 印は本拠側の1つだけ（同じ場所に2つ重ねない・§30-24-2） */
+    lot.dotStyle = 'none';
+    lot.mark = null;
+    delete lot.lead;
+    lot.noLead = true;
+    /* 真下へ文字1行分ずらす。1行＝紙の 4.4mm ≒ 紙幅 210mm の 2.1%
+       ＝枠の実幅（w_m）の 2.1%（枠が無い紙は 8m を仮に置く） */
+    var wM = (sheet.frame && sheet.frame.w_m) || 400;
+    var dLat = (wM * 0.021) / 111320;
+    lot.at = { lat: home.at.lat - dLat, lng: home.at.lng };
+    list.push(lot);
   }
 
   /** 図形1個の欠けを寛容に補う（読み込みで落とさない） */
@@ -866,6 +934,28 @@
     if (o.type === 'text') {
       if (!o.size) o.size = 'medium';
       if (o.h_m !== undefined) delete o.h_m;
+      /* 🔒 §30-25-18 5: 印の大きさ（markScale）は**捨てない**。
+       * 無ければ持たせない（＝1倍として描く・Editor.markScaleOf が既定を持つ）。
+       * 壊れた値（数値でない・0以下）だけ落とす＝読み込みで落ちないようにする。 */
+      if (o.markScale !== undefined) {
+        var msc = Number(o.markScale);
+        if (isFinite(msc) && msc > 0) o.markScale = msc;
+        else delete o.markScale;
+      }
+      /* 🔒 §30-25-28 4: 「手で動かした主役の文字」の印（userMoved）は**捨てない**
+       * （捨てると所在図の作り直しで位置と大きさが元に戻ってしまう）。
+       * 壊れた値だけ落とす＝真なら true、偽なら持たせない。 */
+      if (o.userMoved !== undefined) {
+        if (o.userMoved) o.userMoved = true; else delete o.userMoved;
+      }
+    }
+    /* 🔒 §30-29-4 2: 幅の矢印の `noAuto`（「幅を入力」で空のまま引いた印＝自動の値を
+     * 出さない）は**捨てない**。捨てると、開き直した時に測った値が勝手に出てしまう。
+     * 壊れた値だけ落とす＝真なら true、偽なら持たせない（userMoved と同じ作法）。 */
+    if (o.type === 'arrow') {
+      if (o.noAuto !== undefined) {
+        if (o.noAuto) o.noAuto = true; else delete o.noAuto;
+      }
     }
     /* 駐車位置ラベルの塊（正典 §18-f 駐車位置ラベル・v1 の途中で足した type）。
        🔴 欠けた項目は寛容に補う。at が無い物は置き場所が決まらないので、
@@ -913,15 +1003,33 @@
        🔴 中身の妥当性（'circle'/'rect' と色の key）は app.js の markOf() が
           Editor.MARK を見て確かめる（色の一覧を2か所に書かない）。ここでは
           **形の無い / 壊れた値を捨てる**だけにして、保存値は極力そのまま通す。 */
+    /* 🔒 §30-22-1 4 (c): 形は 'circle' / 'rect' / 'none'（印なし・文字だけ）
+       🔒 §30-24-1: ＋ 'polygon'（多角形で囲む・◎■は描かない）の4種 */
     ['home', 'lot'].forEach(function (pk) {
       var p = c.points && c.points[pk];
       if (!p) return;
       if (p.mark && typeof p.mark === 'object') {
-        if (p.mark.shape !== 'circle' && p.mark.shape !== 'rect') delete p.mark.shape;
+        if (p.mark.shape !== 'circle' && p.mark.shape !== 'rect'
+            && p.mark.shape !== 'none' && p.mark.shape !== 'polygon') delete p.mark.shape;
+        /* 🔒 §30-25-37 1・3: 印の大きさ（0.5〜3・既定 1）。**捨てない**。
+           🔴 範囲・既定の出どころは editor.js の Editor.MARK_SCALE_RANGE 1か所
+              （読めない時だけ「壊れた値を落とす」に留める＝保存値は極力そのまま）。
+           旧案件は scale を持たない＝ app.js markOf が 1 で読む。 */
+        if (p.mark.scale !== undefined) {
+          var sc = Number(p.mark.scale);
+          var R = (global.Editor && global.Editor.MARK_SCALE_RANGE)
+                  || { min: 0.5, max: 3, def: 1 };
+          if (!isFinite(sc) || !(sc > 0)) p.mark.scale = R.def;
+          else p.mark.scale = Math.max(R.min, Math.min(R.max, sc));
+        }
       } else if (p.mark !== undefined) {
         delete p.mark;
       }
     });
+    /* 🔒 §30-22-1 6（2026-09-13 オーナー指示）: 使用の本拠と駐車場が同一住所。
+     * 🔴 2地点が**両方ある時だけ**成り立つ（片方を消したら同一も消える）。
+     *    旧案件はこの印を持たないので false ＝ 従来どおり2地点の図。 */
+    c.points.same = !!(c.points.same && c.points.home && c.points.lot);
     /* 🔒 §23-10: 建物の自動描画レベルも SCHEMA 1 のままの**追加フィールド**（1〜5）。
        値が無い（範囲外を含む）時だけ SZ_STD.bldgLevel で補う。既存の値はそのまま。 */
     if (!(Number(c.bldgLevel) >= 1 && Number(c.bldgLevel) <= 5)) c.bldgLevel = SZ_STD.bldgLevel;
@@ -929,6 +1037,10 @@
     /* 🔒 §23-9: 道路の描き方も SCHEMA 1 のままの**追加フィールド**。
        保存済みの値（'line' / 'band' のどちらか）はそのまま通す。値が無い時だけ補う。 */
     if (c.roadStyle !== 'band' && c.roadStyle !== 'line') c.roadStyle = SZ_STD.roadStyle;
+    /* 🔒 §30-22-2 2: 名前の位置（1〜3）。値が無い／範囲外の時だけ SZ_STD で補う
+     * ＝ 旧案件は「離す」で開く（新しい既定が効く・§22-ao-② の作法）。 */
+    if (!(Number(c.nameGap) >= 1 && Number(c.nameGap) <= 3)) c.nameGap = SZ_STD.nameGap;
+    else c.nameGap = Math.round(Number(c.nameGap));
     /* 🔒 2026-09-03（所在図パネルの再構成）: ここから下は**今回足した設定**。
        🔴 値が無い時だけ SZ_STD で補う（§22-ao-②）。既に値がある既存案件はそのまま
           ＝「開いただけで図が変わる」事故にならない。 */
@@ -981,9 +1093,13 @@
     KINDS.forEach(function (k) {
       c.sheets[k].forEach(function (s) {
         if (k === 'shozaizu') dedupeRoleObjects(s.objects);
+        /* 🔒 §30-24-2: 同一住所の1つの文字を2つへ（旧案件・1回だけ） */
+        if (k === 'shozaizu' && c.points.same
+            && Number(c.sameLabelVer) !== SAME_LABEL_VER) splitSameLabel(s);
         s.objects.forEach(normalizeObject);
       });
     });
+    c.sameLabelVer = SAME_LABEL_VER;
     return c;
   }
 

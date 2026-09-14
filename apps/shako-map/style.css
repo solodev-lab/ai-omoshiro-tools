@@ -15,6 +15,16 @@
   /* 作図中（確定前）の線。🔒 §18-ai: 航空写真の上でも淡色地図の上でも沈まない
    * 明るいオレンジ。青（--acc）だと下敷きに紛れて見えないとの実機指摘（2026-08-22） */
   --draft: #ff7a00;
+  /* 🔒 §30-25-30（2026-09-14 オーナー指示「破線の太さをもっと太く」「赤、明るくして」
+     「見えにくい」）: **紙の枠の破線**の太さ・刻み・赤・白い縁。値の出どころはこの5つ
+     1か所（.frame-rect ＝ 編集中の紙／.frame-rect.is-sibling ＝ 編集していない紙／
+     .frame-rect.is-photo ＝ 写真の下敷き／.frame-halo ＝ 下に敷く白い縁が読む）。
+     🔴 青は --acc（#1a56c4）そのもの。紙（export.js）には枠の線は出ない＝画面だけ。 */
+  --frame-w: 3.5px;
+  --frame-halo-w: 6.5px;      /* 色の線 ＋3px */
+  --frame-dash: 8 6;
+  --frame-red: #ff3b30;       /* 明るい赤（暗い赤は写真の上で沈む） */
+  --frame-halo: rgba(255, 255, 255, .85);
   --head-h: 46px;
   /* 🔒 §25-2: 図の種類の色。所在図＝青（--acc と同系）／配置図＝緑。
      どちらの図を作っているか画面のどこを見ても分かるようにするための色分け */
@@ -22,6 +32,30 @@
   --kind-h: #1e7a46;
   --kind-line: var(--kind-s);
   --kind-bg: #eef3fd;
+  /* 🔒 §30-17-2: ガイダンスの「進む」色（次に押す物）。所在図＝青／配置図＝緑。
+     出どころはこの5つの変数**1か所**だけ。使う所＝次に押すボタン・番号バッジ・
+     字幕の〇数字・足あとの「いま」の段・［枠を決めなおす］（薄い方・§30-17-3）。
+     🔴 配置図の緑の**値**は下の --sg-hz-* が唯一の出どころ（body.sg-hz と、
+     ガイダンスの外で緑を使う所＝「はじめに」の［配置図ガイダンス］§30-20 が同じ物を見る）。 */
+  --sg-hz-go: #1f8a4c;
+  --sg-hz-go-hover: #19703d;
+  --sg-hz-soft: #e3f4ea;
+  --sg-hz-soft-bd: #8fd0aa;
+  --sg-hz-soft-fg: #145c33;
+  --sg-go: #1a56c4;
+  --sg-go-hover: #1749a8;
+  --sg-go-soft: #e6eefb;
+  --sg-go-soft-bd: #9dbcf5;
+  --sg-go-soft-fg: #17408f;
+}
+
+/* 配置図ガイダンスの間だけ緑（app.js sgRender が body に sg-hz を付け外し） */
+body.sg-hz {
+  --sg-go: var(--sg-hz-go);
+  --sg-go-hover: var(--sg-hz-go-hover);
+  --sg-go-soft: var(--sg-hz-soft);
+  --sg-go-soft-bd: var(--sg-hz-soft-bd);
+  --sg-go-soft-fg: var(--sg-hz-soft-fg);
 }
 
 /* 編集中の図の種類でシート帯・タブの色が切り替わる（app.js が data-kind を書く） */
@@ -345,6 +379,159 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
  * `.spacer { flex: 1 1 auto }` が折り返し時に1行を丸ごと占有してしまい、
  * 1280px で 5 行・高さ 94px になった（実測）。1 行のまま縮める方が良い。 */
 
+/* ================= 🔒 §30-29-1: 上部バーの2行目（道具の行）=================
+   オーナー指示 2026-09-14:「アイコン類は上部ツールバーを1行追加して、すべてそこに配置」。
+   🔴 1行のまま**折り返さずに詰める**（.ed-tabs の教訓と同じ）。1024px でも入るよう、
+      アイコンは 30px・間は 4px まで詰まる（下の @media）。
+   🔴 #textPick を直下に出すため position: relative を立てる。 */
+.toolbar2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--bd);
+  flex: 0 0 auto;
+  overflow: visible;
+  /* 🔴 z-index は**付けない**。付けると重なりの箱（stacking context）ができて、
+     直下に出す #textPick が紙の帯（.ed-sheetbar・z-index 19）の裏に潜る。
+     窓側（.text-pick の z-index 40）で前に出す。 */
+}
+.tb-g { display: flex; align-items: center; gap: 6px; min-width: 0; position: relative; }
+/* 小さな見出し（幅が足りない画面では消える＝説明は各ボタンの title にある） */
+.tb-k {
+  font-size: 10px;
+  color: var(--mut);
+  white-space: nowrap;
+  flex: 0 0 auto;
+  line-height: 1.2;
+}
+.tb-ico { display: flex; align-items: center; gap: 5px; }
+/* グループの間の縦の区切り */
+.tb-sep {
+  flex: 0 0 auto;
+  width: 1px;
+  align-self: stretch;
+  min-height: 26px;
+  background: var(--bd);
+}
+/* 2行目のアイコンは道具メニュー（36px）より一回り小さく */
+.toolbar2 .ico-btn { width: 32px; height: 32px; }
+.toolbar2 .ico-btn svg { width: 20px; height: 20px; }
+.toolbar2 .ico-num { height: 32px; font-size: 10px; gap: 3px; }
+.toolbar2 .ico-num .num { width: 42px; }
+
+/* ---- 🔒 §30-29-1 2: ［A］で開く文字の選択窓（Excel／Word の選択メニューの形）---- */
+#textPick[hidden] { display: none; }
+.text-pick {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  z-index: 40;
+  width: 240px;
+  max-height: 62vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--bd-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
+  padding: 6px;
+}
+.tp-list { display: block; }
+/* 1行目＝［自由入力］（絵＋言葉で1行いっぱい） */
+.tp-free {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  text-align: left;
+}
+.tp-free svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.tp-free-t { font-weight: 700; }
+/* 定型の言葉は2列（言葉が長い物は1行に収まるよう折り返さない） */
+.tp-words {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--bd);
+}
+.tp-w {
+  padding: 6px 4px;
+  font-size: 12.5px;
+  line-height: 1.3;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 一番下の「大きさ」（#textSize そのもの＝値は1つ） */
+.tp-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--bd);
+  font-size: 12px;
+  color: var(--mut);
+}
+.tp-size select { flex: 1 1 0; min-width: 0; font-size: 12.5px; padding: 4px 5px; }
+
+/* ---- 🔒 §30-29-4 1: ［幅矢印］で開く小さな窓（#arrowPick）----
+   枠・影・位置は文字の窓（.text-pick）をそのまま使い、中身の並びだけここで足す。
+   🔴 幅は2行に収まるだけ（文字の窓より狭い）。 */
+#arrowPick[hidden] { display: none; }
+.arrow-pick { width: 216px; }
+.ap-list { display: block; }
+/* ［自動入力］／［幅を入力］の行（1行目に太字・2行目に小さく説明） */
+.ap-row {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  text-align: left;
+  line-height: 1.35;
+}
+.ap-row b { display: block; font-weight: 700; }
+.ap-row i { display: block; font-style: normal; font-size: 11px; color: var(--mut); }
+/* 「いま選んでいる方」は §30-18-4 の2択（.sg-seg-i.is-on）と同じ見え方にする */
+.ap-row.is-on { background: var(--sg-go-soft); color: var(--sg-go-soft-fg); }
+.ap-row.is-on i { color: inherit; }
+/* ［幅を入力］＋数値の欄＋「m」の行 */
+.ap-man {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--bd);
+}
+.ap-man .ap-row { flex: 1 1 0; min-width: 0; }
+.ap-man .num { width: 56px; flex: 0 0 auto; }
+.ap-u { font-size: 12px; color: var(--mut); flex: 0 0 auto; }
+
+/* 🔒 §30-29-1 4: はみ出す時はアイコンを詰める（折り返さない）。
+   実測（2026-09-14）: 1024px では詰めなくても右端 919px で収まる＝1024px は素のまま。
+   940px を切ったあたりから詰め、820px を切ったら小さな見出しを畳む
+   （説明は各ボタンの title に残る）。 */
+@media (max-width: 940px) {
+  .toolbar2 { gap: 6px; padding: 4px 8px; }
+  .tb-g { gap: 4px; }
+  .tb-ico { gap: 3px; }
+  .toolbar2 .ico-btn { width: 30px; height: 30px; }
+  .toolbar2 .ico-btn svg { width: 18px; height: 18px; }
+  .toolbar2 .ico-num { height: 30px; }
+  .toolbar2 .ico-num .num { width: 38px; }
+}
+@media (max-width: 820px) {
+  .tb-k { display: none; }
+}
+
 /* 下敷きの濃さ（上部メニュー） */
 .opacity-group {
   display: flex;
@@ -491,19 +678,49 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   letter-spacing: 0.04em;
 }
 .sb-lead { margin-right: 4px; }
-.sb-chips { display: flex; gap: 4px; margin-left: 4px; }
-.sb-chip {
-  min-width: 34px;
-  padding: 4px 9px;
+/* 🔒 §30-26-2: 紙は「番号＋ルーペ」のひと組（.sheet-chip）。
+   組と組の間を空けて、1と2が独立した塊に見えるようにする（オーナー指示）。 */
+.sb-chips { display: flex; gap: 10px; margin-left: 4px; }
+/* ---- 🔒 §30-26-2（2026-09-14 オーナー指示）: 番号とルーペのひと組 ----
+   1つの丸い囲みの中に 左＝番号／右＝ルーペ（この紙だけのプレビュー）。
+   いま開いている紙の組は濃い色（所在図＝青／配置図＝緑＝--kind-line の1か所）。 */
+.sheet-chip {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--bd-strong);
+  border-radius: 999px;
+  background: #fff;
+  overflow: hidden;
+}
+.sheet-chip > button {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  box-shadow: none;
+}
+.sheet-chip > button:hover { background: rgba(0, 0, 0, .07); }
+.sheet-no {
+  min-width: 28px;
+  padding: 4px 8px;
   font-size: 12.5px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.sb-chip.is-active {
+/* ルーペ（絵は app.js の TOOL_ICONS.loupe）。帯の高さに合わせて .ico-btn より小さく */
+.sheet-loupe.ico-btn {
+  width: 26px;
+  height: auto;
+  border-left: 1px solid var(--bd-strong);
+}
+.sheet-loupe.ico-btn svg { width: 15px; height: 15px; }
+.sheet-chip.is-active {
   background: var(--kind-line);
   border-color: var(--kind-line);
-  color: #fff;
 }
+.sheet-chip.is-active > button { color: #fff; }
+.sheet-chip.is-active > button:hover { background: rgba(255, 255, 255, .18); }
+.sheet-chip.is-active .sheet-loupe { border-left-color: rgba(255, 255, 255, .45); }
 .sb-btn { padding: 4px 10px; font-size: 12px; }
 /* 枠を決定中はボタンを塗って「いま固定されている」と分かるようにする（§24-2-3） */
 .sb-btn.is-on {
@@ -686,30 +903,45 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 /* 🔒 §24-4-d: 枠を決める前（場所を探している間）は覆いを薄く。
    紙の縁は常に見えるが、作図・下敷きの見やすさを損なわない。🙋 仮値 .14 */
 .frame-mask.is-soft { fill: rgba(20, 24, 32, .14); }
+/* 🔒 §30-22-1 2（2026-09-13 オーナー指示）: 枠の破線の色は**変数1か所**。
+   地図系＝青（--acc）／写真の下敷き＝赤（青い破線は航空写真の上で見えない）。
+   🔴 判定は app.js の underlayIsPhoto（UNDERLAYS[].photo）が付ける .is-photo だけ。
+   🔒 §30-25-30（2026-09-14 オーナー指示「破線の太さをもっと太く」「赤、明るくして」
+   「見えにくい」）: 太さ・破線の刻み・赤・白い縁の**値は :root の --frame-* 1か所**。
+   🔴 紙（export.js）には枠の線そのものが出ないので、ここは画面だけの話。 */
 .frame-rect {
+  --frame-ink: var(--acc);   /* 青＝ #1a56c4（:root の --acc） */
+  --frame-ink-photo: var(--frame-red);
   fill: none;
-  stroke: var(--acc);
-  stroke-width: 2;
-  stroke-dasharray: 8 5;
+  stroke: var(--frame-ink);
+  stroke-width: var(--frame-w);
+  stroke-dasharray: var(--frame-dash);
   pointer-events: none;
 }
+.frame-rect.is-photo { --frame-ink: var(--frame-ink-photo); }
 /* 🔒 §24-6: 他のシートの枠（見えるだけ・掴めない）＋番号の札。
    🔒 2026-09-06 オーナー指示「薄すぎて見えない。編集していない枠は赤色にする」
-   → 薄い青（#8fb4f5・1.2）をやめ、赤（#d92b2b）・太さ 2 に。編集中の枠は青のまま＝色で区別。🙋 仮値 */
-.frame-rect.is-sibling {
+   → 薄い青（#8fb4f5・1.2）をやめ、赤・太さは編集中の枠と同じ。編集中の枠は青＝色で区別。
+   🔒 §30-25-30: 赤は明るい赤（--frame-red）。太さ・破線は .frame-rect と同じ値を継ぐ。 */
+.frame-rect.is-sibling { --frame-ink: var(--frame-red); }
+/* 🔒 §30-25-30 3: 写真・地図の上でも見えるように、色の線の**下に白い縁**を敷いて
+   二重線にする（paint-order / filter は使わず、同じ矩形を2本描く＝app.js の
+   renderExportFrame / renderSiblingFrames が halo の矩形を色の線の前に入れる）。
+   🔴 破線の刻みは色の線と同じ（--frame-dash）＝白と色の破線がずれない。 */
+.frame-halo {
   fill: none;
-  stroke: #d92b2b;
-  stroke-width: 2;
-  stroke-dasharray: 8 5;
+  stroke: var(--frame-halo);
+  stroke-width: var(--frame-halo-w);
+  stroke-dasharray: var(--frame-dash);
   pointer-events: none;
 }
 /* 🔴 .mv-overlay は既定 pointer-events:none（§16 の当たり判定方式）。
    .hit と同様に、札だけは明示して当たり判定を戻す（§24-6 規則6） */
 .frame-badge { cursor: pointer; pointer-events: auto; }
-/* 編集していない枠の札＝白地に赤（枠と同じ色） */
-.frame-badge rect { fill: #fff; stroke: #d92b2b; stroke-width: 1.6; }
+/* 編集していない枠の札＝白地に赤（枠と同じ色・🔒 §30-25-30 で明るい赤 --frame-red） */
+.frame-badge rect { fill: #fff; stroke: var(--frame-red); stroke-width: 1.6; }
 .frame-badge text {
-  fill: #d92b2b;
+  fill: var(--frame-red);
   font-size: 12px;
   font-weight: 700;
   font-family: inherit;
@@ -760,19 +992,8 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   pointer-events: none;
 }
 
-/* 書き出し */
-.ex-panel { width: 258px; }
-.ex-sheet {
-  font-size: 12px;
-  border: 1px solid var(--bd);
-  border-radius: 4px;
-  padding: 6px 8px;
-  margin-bottom: 6px;
-  background: #f7f9fc;
-}
-.ex-sheet b { display: block; margin-bottom: 2px; }
-/* 🔒 §24-3: 紙は1枚1行で並べる（何枚出るかが一目で分かるように） */
-.ex-sheet .mut { display: block; color: var(--mut); line-height: 1.5; }
+/* 🔒 §30-29-1 3: 旧・書き出しの窓（.ex-panel / .ex-sheet）は廃止した。
+   紙ごとの枚数・縮尺はプレビュー画面の見出しと、出す紙を選ぶ窓（.ex-pick）が出す。 */
 
 /* プレビューは画面全体にかぶせる。
  * 地図の中だけに置くと、ズームボタン等と場所を取り合って
@@ -837,6 +1058,123 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   max-width: 100%;
 }
 .ex-preview-hintline { font-weight: 400; color: var(--mut); font-size: 11.5px; }
+
+/* ---- 🔒 §30-26-3（2026-09-14 オーナー指示）: 見出しの行のトグル
+   「他の枠の範囲を表示」。見た目は上部バーの表示／非表示（.mapsw）と同じ。
+   🔴 既定＝出さない（つまみが左）。値は案件に保存しない画面の状態。 ---- */
+.ex-sw {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+}
+.ex-sw-k { font-size: 12px; font-weight: 700; color: var(--mut); }
+.ex-sw .mapsw-track { width: 108px; }
+.ex-sw .mapsw-txt { font-size: 11px; }
+
+/* ---- 🔒 §30-27-1 2: プレビューの道しるべの行（見出しの下・案内の上）----
+   ［‹］→ 図のトグル → 紙の札 → ［次のページ ›］。
+   🔴 札と矢印の見た目は既存の .ex-pager-tab / .ex-pager-arrow をそのまま借りる
+      （色も形も1か所）。 */
+#exPreviewNav[hidden] { display: none; }
+.ex-nav {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--bd);
+  background: var(--panel);
+}
+/* 図のトグルは行の左（.ex-sw の margin-left:auto を打ち消す） */
+.ex-kindsw { margin-left: 0; }
+.ex-kindsw .mapsw-track { width: 132px; }
+/* 紙が無い側は選べない（薄く） */
+.ex-kindsw .mapsw-in:disabled ~ .mapsw-track { opacity: .5; cursor: default; }
+.ex-nav-tabs { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.ex-nav .ex-pager-arrow { font-size: 13px; padding: 7px 12px; }
+.ex-nav .ex-nav-next { margin-left: auto; }
+
+/* 🔒 §30-27-1 3: 図が切り替わった時の薄い帯（約3秒で消える）。
+   🔴 [hidden] は display:none なので、まず hidden を外してから .is-on を付ける
+      （そうしないと transition が効かない）。文は app.js が KIND_JA から作る。 */
+#exKindNote[hidden] { display: none; }
+.ex-kindnote {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--bd);
+  background: var(--kind-bg);
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+.ex-kindnote.is-on { opacity: 1; }
+/* 🔴 色は図の種類（data-kind）で決める＝表示文字では分岐しない（§25-2 の色分け） */
+.ex-kindnote[data-kind="shozaizu"] { background: #eef3fd; color: #17408f; }
+.ex-kindnote[data-kind="haichizu"] { background: var(--sg-hz-soft); color: var(--sg-hz-soft-fg); }
+/* 他の紙の枠を重ねる層（画像の上・掴めない）。
+   🔴 線と札の見た目は**画面の §24-6 と同じ class をそのまま借りる**
+      （.frame-halo / .frame-rect.is-sibling / .frame-badge ＝ 色も太さも1か所）。 */
+.ex-framelayer { position: absolute; pointer-events: none; overflow: hidden; }
+.ex-framelayer .frame-badge { pointer-events: none; cursor: default; }
+
+/* ---- 🔒 §30-25-10（2026-09-13 オーナー指示「所在図プレビューの画面で、
+   テキストだけ移動やサイズ調整ができるように。その案内を一番上に」）----
+   紙の画像の上に**透明な層**をかぶせ、文字の箱だけを掴めるようにする。
+   🔴 色は図ごと（所在図＝青／配置図＝緑）＝ --sg-go の1か所から借りる。 */
+/* 🔒 §30-25-16: 案内は**紙の器の外**＝見出し（.ex-preview-head）のすぐ下の1行。
+   器の中に幅100%で入れていた頃は、.is-nav（紙を横に並べる nowrap）で
+   案内が行の幅を取り、紙（figure・min-width:0）が押しつぶされていた。 */
+.ex-preview-tip {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--bd);
+  border-radius: 0;
+  background: var(--sg-go-soft);
+  color: var(--sg-go-soft-fg);
+  font-size: 12.5px;
+  line-height: 1.55;
+  font-weight: 700;
+}
+#exPreviewTip[hidden] { display: none; }
+.ex-preview-body figure { position: relative; }
+.ex-textlayer { position: absolute; pointer-events: none; }
+.ex-textbox {
+  position: absolute;
+  pointer-events: auto;
+  cursor: move;
+  border: 1px dashed transparent;
+  border-radius: 3px;
+  touch-action: none;
+}
+.ex-textbox:hover { border-color: var(--sg-go-soft-bd); background: rgba(0, 0, 0, .04); }
+.ex-textbox.is-grab {
+  border: 1px solid var(--sg-go);
+  border-style: solid;
+  background: var(--sg-go-soft);
+  opacity: .55;
+}
+.ex-texthandle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: #fff;
+  border: 1.5px solid var(--sg-go);
+  cursor: nwse-resize;
+  opacity: 0;
+  touch-action: none;
+}
+.ex-textbox:hover .ex-texthandle,
+.ex-textbox.is-grab .ex-texthandle { opacity: 1; }
 /* 🔒 §30-13-3: 所在図プレビューの下部（ガイダンス⑧から出した時だけ出る）。
    文1行＋ボタン5つ（PDF保存／画像保存／配置図ガイダンスへ進む／案件一覧に戻る／戻る）。 */
 #exPreviewFoot[hidden] { display: none; }
@@ -847,6 +1185,29 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   background: var(--panel);
   border-radius: 0 0 10px 10px;
 }
+/* 🔒 §30-27-1 6: ［PDF］［画像］の帯（プレビューを出している間は常に見える）。
+   所在図④⑧から出した時は、この下に .ex-preview-foot の列が続く（同じ地色）。 */
+#exPreviewBar[hidden] { display: none; }
+.ex-preview-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--bd);
+  background: var(--panel);
+  border-radius: 0 0 10px 10px;
+}
+.ex-preview-bar button { padding: 8px 22px; font-weight: 700; }
+.ex-preview-bar-msg {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--mut);
+  min-height: 1em;
+}
+/* 帯の下に列が続く時は、帯の丸みを消す（角が二重に見えないように） */
+.ex-preview-foot:not([hidden]) { border-radius: 0 0 10px 10px; }
+.ex-preview-bar:has(+ .ex-preview-foot:not([hidden])) { border-radius: 0; }
 .ex-preview-foot-say { margin: 0 0 8px; font-size: 12.5px; font-weight: 700; }
 .ex-preview-foot-btns { display: flex; flex-wrap: wrap; gap: 8px; }
 .ex-preview-foot-btns button { padding: 8px 14px; font-weight: 700; }
@@ -866,6 +1227,126 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .ex-preview.is-nav .ex-preview-body figure { min-width: 0; }
 /* かぶせ（z-index 60）より左面を前に出す。JS が付け外しする（sideFront） */
 .side.is-front { position: relative; z-index: 61; }
+
+/* ---- 紙の札とページ送りの矢印（🔒 §30-18-6 2 → 🔒 §30-27-1 2 で道しるべの行へ）----
+   🔴 この2つ（.ex-pager-tab / .ex-pager-arrow）は .ex-nav（#exPreviewNav）が借りる。
+      旧 .ex-pager / .ex-pager-head / .ex-pager-n / .ex-pager-view は廃止した
+      （紙は1枚ずつ #exPreviewBody に直接出す）。 */
+.ex-pager-tab { font-size: 12px; padding: 4px 11px; border-radius: 999px; }
+.ex-pager-tab.is-now {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: var(--acc-ink);
+  font-weight: 700;
+}
+.ex-pager-arrow {
+  flex: 0 0 auto;
+  font-size: 20px;
+  line-height: 1;
+  padding: 12px 13px;
+  font-weight: 700;
+}
+
+/* ---- 🔒 §30-27-2: PDF・画像の小さな窓（出す紙を選ぶ）----
+   プレビュー（z-index 60）の**上**に重ねる。プレビューを出していなくても開ける。 */
+#exPick[hidden] { display: none; }
+.ex-pick {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(20, 24, 32, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.ex-pick-inner {
+  background: var(--panel);
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+  width: 100%;
+  max-width: 460px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 12px;
+}
+.ex-pick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px 10px 16px;
+  border-bottom: 1px solid var(--bd);
+  font-size: 13px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+#exPickClose { padding: 7px 14px; font-weight: 700; border-color: var(--bd-strong); }
+.ex-pick-say {
+  margin: 0;
+  padding: 9px 16px 0;
+  font-size: 12px;
+  color: var(--mut);
+  line-height: 1.5;
+}
+.ex-pick-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 16px 0;
+}
+.ex-pick-sec { margin: 0 0 12px; }
+.ex-pick-sec.is-empty { display: none; }
+.ex-pick-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--bd);
+  cursor: pointer;
+}
+.ex-pick-i {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 5px 0 5px 18px;
+  cursor: pointer;
+}
+.ex-pick-i:hover, .ex-pick-h:hover { background: var(--bg); }
+.ex-pick-i .ex-pick-no { font-weight: 700; min-width: 1.6em; }
+.ex-pick-i .ex-pick-sub { color: var(--mut); font-size: 11.5px; }
+/* 「所在図と配置図を1枚にまとめる」（条件を満たす時だけ選べる） */
+.ex-pick-combo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--bd);
+  cursor: pointer;
+}
+.ex-pick-combo.is-off { opacity: .5; cursor: default; }
+.ex-pick-note, .ex-pick-why, .ex-pick-msg {
+  margin: 8px 16px 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.ex-pick-note { color: var(--mut); }
+.ex-pick-why { color: var(--warn); font-weight: 700; }
+.ex-pick-msg { color: var(--mut); min-height: 1em; }
+#exPickNote[hidden], #exPickWhy[hidden] { display: none; }
+.ex-pick-foot {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 0;
+}
+.ex-pick-foot button { padding: 9px 18px; font-weight: 700; }
 
 /* ---- 提出前チェック（正典 §16-5 B）。止めない確認ダイアログ ---- */
 #chkBox[hidden] { display: none; }
@@ -904,6 +1385,10 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 }
 .vid-foot button { padding: 7px 18px; }
 
+/* 🔒 §30-29-1 3: 提出前チェック（#chkBox）は、プレビュー画面の帯の［PDF］［画像］から
+   出るようになった。DOM の並びでは #exPreviewBox より前なので、同じ z-index（60）では
+   プレビューの裏に隠れてしまう。紙を選ぶ窓（70）より下・プレビュー（60）より上に置く。 */
+.chk-box { z-index: 65; }
 .chk-inner {
   background: var(--panel);
   border-radius: 10px;
@@ -918,6 +1403,25 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .chk-list li { color: #8a4b00; }
 .chk-btns { margin-top: 12px; }
 .chk-btns button { padding: 7px 14px; }
+
+/* ---- はじめに（🔒 §30-20）。［新しい案件］の直後だけ出すかぶせ ---- */
+#welcomeBox[hidden] { display: none; }
+.wc-inner { width: 560px; }
+.wc-lead { font-size: 13px; line-height: 1.8; margin: 0 0 10px; }
+.wc-btns { margin-top: 14px; align-items: stretch; }
+.wc-btns button { padding: 10px 12px; }
+/* 🔒 §30-17-2 の緑の値を1か所（--sg-hz-*）から借りる。配置図＝緑 */
+.wc-btns button.wc-hz { background: var(--sg-hz-go); border-color: var(--sg-hz-go); }
+.wc-btns button.wc-hz:hover:not(:disabled) { background: var(--sg-hz-go-hover); }
+.wc-again {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--mut);
+  cursor: pointer;
+}
 
 
 /* ---- 画像の下敷き（正典 §16-3 Step 7A） ---- */
@@ -1003,8 +1507,11 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .sz-sw .mapsw-txt { font-size: 11px; }
 /* 🔴 地図トグルの .mapsw-show/.mapsw-hide は「非表示＝警告色」という専用の色分け。
    設定盤の2択はどちらを選んでも警告ではないので、選んだ側を濃くするだけにする */
+/* 🔒 §30-26-3: プレビューの「他の枠の範囲を表示」も同じ2択（どちらも警告ではない） */
 .sz-sw .mapsw-in:not(:checked) ~ .mapsw-track .sw-a,
-.sz-sw .mapsw-in:checked ~ .mapsw-track .sw-b {
+.sz-sw .mapsw-in:checked ~ .mapsw-track .sw-b,
+.ex-sw .mapsw-in:not(:checked) ~ .mapsw-track .sw-a,
+.ex-sw .mapsw-in:checked ~ .mapsw-track .sw-b {
   color: var(--ink);
   font-weight: 700;
 }
@@ -1146,11 +1653,22 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .paste-found .v { font-weight: 700; word-break: break-all; }
 .paste-found .none { color: var(--mut); }
 
-/* テキストのその場入力 */
-.text-input {
+/* テキストのその場入力
+   🔒 §30-15-4: 入力欄と［OK］の器。位置決め（absolute・transform）は器が持つ。 */
+.text-box {
   position: absolute;
   z-index: 9;
   transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+/* 🔒 §30-15-3: 信号機・バス停の名前は**印の右隣**に出すので、
+   左端をその場所に合わせる（上下だけ中心そろえ）。
+   🔒 §30-15-5 規則3: 右隣だと地図からはみ出す時は**左隣**（右端を印の左端に合わせる）。 */
+.text-box.is-mark { transform: translate(0, -50%); }
+.text-box.is-mark.is-mark-left { transform: translate(-100%, -50%); }
+.text-input {
   min-width: 150px;
   padding: 5px 8px;
   border: 2px solid var(--acc);
@@ -1158,6 +1676,18 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   background: #fff;
   font-size: 14px;
 }
+.text-ok {
+  padding: 5px 11px;
+  border: 2px solid var(--acc);
+  border-radius: 4px;
+  background: var(--acc);
+  color: var(--acc-ink);
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.text-ok:hover { background: #1749a8; }
 
 .zoom-btns { display: flex; gap: 6px; margin: 9px 0 0; }
 .zoom-btns button { flex: 1 1 0; font-size: 12px; padding: 5px 0; }
@@ -1263,10 +1793,13 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   text-anchor: middle;
   dominant-baseline: middle;
 }
+/* 🔒 §30-25-25: font-size は削った（大きさは editor.js が枠ごとに font-size 属性で
+   直接指定＝ズームや枠のサイズに連動する。CSS には太さ・色だけ残す）。
+   dominant-baseline: middle を足した＝可変サイズでも常に枠の中心に載る。 */
 .rect-number {
-  font: 700 15px "Yu Gothic UI", "Meiryo", sans-serif;
+  font-weight: 700; font-family: "Yu Gothic UI", "Meiryo", sans-serif;
   fill: #111; stroke: #fff; stroke-width: 3.5;
-  paint-order: stroke; text-anchor: middle;
+  paint-order: stroke; text-anchor: middle; dominant-baseline: middle;
 }
 
 /* 保管場所マーク（正典 §16-5 A）。太枠＋白フチ付きの文字 */
@@ -1282,6 +1815,8 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   stroke-width: 2;
 }
 .handle-rot { fill: var(--acc); stroke: #fff; }
+/* 🔒 §30-22-3 3: 文字の右下の「大きさのつまみ」。小さいので線は細く */
+.handle-text { stroke-width: 1.6; cursor: nwse-resize; }
 
 /* 🔒 §30-14-5 3（2026-09-10 オーナー指示）: 図形の中心に置く「移動の十字（✥）」。
    四角（主役マーク以外）と塊に出る。ドラッグ＝図形ごと移動。
@@ -1464,6 +1999,32 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
    太さは Editor.BUSSTOP.lw（属性で入る）ので、ここでは色だけ決める。 */
 .anno-bus { fill: none; stroke: #111; stroke-linecap: round; }
 .anno-bus.is-sel { stroke: var(--acc); }
+/* 🔒 §30-22-3 2（2026-09-13 オーナー指示）: P マーク（□の中に P）。
+   §23-9「線だけで描く」に従い箱は塗らない。太さは Editor.PARKING.lw（属性で入る）。 */
+.anno-parking { fill: none; stroke: #111; }
+.anno-parking.is-sel { stroke: var(--acc); }
+.anno-parking-p {
+  font-family: "Yu Gothic UI", "Meiryo", sans-serif; font-weight: 700;
+  fill: #111; stroke: none; text-anchor: middle; dominant-baseline: central;
+}
+.anno-parking-p.is-sel { fill: var(--acc); }
+/* 🔒 §30-25-9（2026-09-13 オーナー指示）: 木の印（樹冠＋幹）。
+   🔒 §30-30-2: 樹冠は path（もこもこの輪郭）。円だった頃と同じ class で描く。
+   幹は線だけ。樹冠は**白で塗る**（下の地図が透けて記号がつぶれないように）。
+   太さは Editor.TREE.lw（属性で入る）ので、ここでは色だけ決める。 */
+.anno-tree { fill: none; stroke: #111; stroke-linecap: round; }
+.anno-tree-crown { fill: #fff; }
+.anno-tree.is-sel { stroke: var(--acc); }
+/* 🔒 §30-22-3 2: 駐車枠の中に入れる文字（来客用・♿）。枠の中なので白フチは細めに */
+.cell-label {
+  font-family: "Yu Gothic UI", "Meiryo", sans-serif; font-weight: 700;
+  fill: #111; stroke: #fff; stroke-width: 2.4; paint-order: stroke;
+  text-anchor: middle; dominant-baseline: central;
+}
+/* 🔒 §30-22-7 5: 車いすの印（自前の単色パス・絵文字ではない）。
+   形の数値は Editor.WHEELCHAIR が唯一の出どころ（太さは属性で入る）＝ここは色だけ。 */
+.cell-wheel line, .cell-wheel circle { stroke: #111; fill: none; stroke-linecap: round; }
+.cell-wheel circle.is-fill { fill: #111; stroke: none; }
 /* 🔒 §22-am-2: 名前と●をつなぐ引き出し線。太さ・破線は Editor.LEAD が唯一の出どころで、
    editor.js が style 属性で入れる（CSS は表示属性に勝つので、ここに書くと二重管理になる）。
    下の値は保険（editor.js を通らない経路で描かれた時の見た目）。 */
@@ -1597,19 +2158,21 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 }
 .sg-steps span.is-done { color: var(--acc); border-color: var(--acc); cursor: pointer; }
 .sg-steps span.is-done:hover { background: #eef3fd; }
-.sg-steps span.is-now { background: var(--acc); border-color: var(--acc); color: #fff; font-weight: 700; }
+/* 🔒 §30-17-2: 足あとの「いま」の段も図ごとの色（所在図＝青／配置図＝緑） */
+.sg-steps span.is-now { background: var(--sg-go); border-color: var(--sg-go); color: #fff; font-weight: 700; }
 
 /* 🔒 §30-12-1: ガイダンスの目指す所。足あとの直下・全段で常に出す1行
    （オーナー: 「青色に強調されたボタンを順に押していくと、所在図が出来上がります。」）。 */
+/* 🔒 §30-17-4 1: 図ごとの色に合わせる（所在図＝青／配置図＝薄い緑） */
 .sg-aim {
   margin: 0 0 10px;
   padding: 7px 9px;
   border-radius: 6px;
-  background: #eef3fd;
-  border: 1px solid #c9daf6;
+  background: var(--sg-go-soft);
+  border: 1px solid var(--sg-go-soft-bd);
   font-size: 12px;
   line-height: 1.6;
-  color: #17408f;
+  color: var(--sg-go-soft-fg);
 }
 
 .sg-title { font-size: 14.5px; margin: 0 0 6px; }
@@ -1657,6 +2220,21 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   box-shadow: 0 0 0 2px rgba(26, 86, 196, .18);
 }
 .sg-mk .mark-colors { margin-left: 0; }
+/* 🔒 §30-25-40 1: 「印の大きさ」の行（.sg-mk-size）は廃止（印の右下のつまみと
+   右パネルへ移した）＝ここに書式は無い。 */
+/* 🔒 §30-24-1: ①の▼の中の「多角形の書式」（右パネル #propMpStyle と同じ部品）。
+   多角形を描いた後だけ出る（sgRenderMarks が hidden を外す）。 */
+.sg-mp-fmt {
+  margin-top: 6px;
+  padding: 6px 7px;
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12.5px;
+}
+.sg-mp-fmt .prop-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.sg-mp-fmt .prop-row:last-child { margin-bottom: 0; }
+.sg-mp-fmt .mark-colors { margin-left: 0; }
 .sg-pick { display: flex; gap: 8px; }
 .sg-pick label {
   flex: 1 1 0;
@@ -1744,6 +2322,14 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   letter-spacing: .04em;
 }
 .sg-tk:first-child { margin-top: 0; }
+/* 🔒 §30-25-36 1: 段の中を区画に分ける薄い線と、.sg-tools の外に単独で置く小見出し
+   （<p> の既定マージンを消して .sg-tk の余白だけにする）。 */
+.sg-sep {
+  border: 0;
+  border-top: 1px solid var(--bd);
+  margin: 14px 0 0;
+}
+p.sg-tk { margin: 10px 0 4px; }
 .sg-tool {
   display: block;
   width: 100%;
@@ -1760,6 +2346,34 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   margin-top: 2px;
 }
 .sg-tool.is-active i { color: inherit; }
+/* 🔒 §30-22-3 2（2026-09-13 オーナー指示）: **道具は全部アイコン**。
+   正方形 36px・横並び（折り返す）。説明は title（マウスオーバー）に寄せた。
+   🔴 絵は app.js の TOOL_ICONS が入れる inline SVG（stroke: currentColor）。
+      選択中（.tool.is-active）は文字色が白になるので、絵も一緒に白へ変わる。 */
+.ico-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 0; }
+.ico-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+.ico-btn svg { width: 22px; height: 22px; display: block; }
+/* 🔒 §30-25-8: アイコンの行に混ぜる小さな入力欄（「開始番号」）。
+   36px のアイコンと高さをそろえ、ラベルは小さく前に置く。 */
+.ico-num {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  font-size: 11px;
+  color: var(--mut);
+}
+.ico-num .num { width: 46px; }
 /* ③の小さな道具の段（選択・消しゴム・文字だけ横並び） */
 .sg-tools.is-row { flex-direction: row; flex-wrap: wrap; }
 .sg-tools.is-row .sg-tool-s { flex: 1 1 0; min-width: 0; font-size: 12px; padding: 7px 4px; }
@@ -1771,6 +2385,141 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   border-radius: 5px;
   padding: 6px 9px;
   margin: 9px 0 0;
+}
+/* 「文字を置く」欄のボタン（🔒 §30-18-4）は中身の長さで畳む
+   （.sg-tool-s の flex:1 1 0 だと3〜4個が1行に潰れて読めない） */
+.sg-tools.is-row .sg-preset,
+.sg-tools.is-row .sg-textfree { flex: 0 1 auto; font-size: 12px; padding: 7px 9px; }
+
+/* ---- 2択のトグル（🔒 §30-18-4 幅の決め方／§30-18-6 まとめ方）----
+   セグメントの見た目（枠でつないだ2行・選んだ方に図の色の薄い地）。
+   🔴 値は radio が持つ（表示文字列では分岐しない）。色は §30-17-2 の変数から。 */
+.sg-seg {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bd-strong);
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--panel);
+  margin: 8px 0 0;
+}
+.sg-seg-i {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px 7px;
+  padding: 7px 9px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  cursor: pointer;
+  border-top: 1px solid var(--bd);
+}
+.sg-seg-i:first-child { border-top: 0; }
+.sg-seg-i b { font-weight: 700; }
+.sg-seg-i i { font-style: normal; font-size: 11px; color: var(--mut); }
+.sg-seg-i.is-on { background: var(--sg-go-soft); color: var(--sg-go-soft-fg); }
+.sg-seg-i.is-on i { color: inherit; }
+.sg-seg-i.is-off { opacity: .45; cursor: default; }
+.sg-seg-l { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.sg-seg-i input[type="text"] { margin-left: auto; width: 72px; }
+.sg-seg-i input[type="text"]:disabled { background: var(--bg); color: var(--mut); }
+
+/* 🔒 §30-27-1 7: 旧 .sg-combo（⑧の「所在図と配置図をまとめて」の枠）は廃止。
+   まとめはプレビュー画面の最後の札と、PDF・画像の窓のチェック1つになった。 */
+
+/* 🔒 §30-22-3 1: ④の下敷きの濃さ（スライダー）と表示／非表示。
+   値は上部バーと同じ1つ（app.js setUnderlayPct）。ここは見た目だけ。 */
+.sg-uop {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0 0 9px;
+  padding: 7px 9px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+.sg-uop-r { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+.sg-uop-r input[type="range"] { flex: 1 1 0; min-width: 0; }
+.sg-uop-r b { flex: 0 0 40px; text-align: right; font-size: 11.5px; }
+.sg-uop-sw { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+
+/* 🔒 §30-22-4 1（2026-09-13 オーナー指示）: 配置図は**全段の一番上**に下敷きの操作。
+   器は1つだけ（app.js hzUnderBarTo が段ごとに移す）。中の〇・濃さ・切替は
+   上部バーと同じ1つの値。他の部品と区別が付くよう、薄い枠で囲む。 */
+#hzUnderBar {
+  margin: 0 0 10px;
+  padding: 8px 9px 4px;
+  border: 1px solid var(--bd);
+  border-radius: 7px;
+  background: #fff;
+}
+#hzUnderBar > .sg-lb:first-child, #hzUnderBar #hzUnderNote + .sg-lb { margin-top: 0; }
+#hzUnderBar .sg-uop { margin-bottom: 5px; }
+
+/* 🔒 §30-25-23: 常設の道具の帯（［選択］［消しゴム］）。器は1つだけ
+   （app.js sgToolStripTo が段ごとに移す＝ hzUnderBarTo と同じ作法）。
+   置き場所は §30-25-23 2: 下敷きの濃さがある段は**同じ行の左**（.sg-uop-row）、
+   無い段（所在図①②③）は .sg-body の一番上に単独で出す（下の #sgToolStrip 既定値・
+   横並び1行）。案内数字は付けない対象＝ここには .sg-num 用の位置決めは不要。 */
+#sgToolStrip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin: 0 0 9px;
+}
+#sgToolStrip .sg-strip-icons { display: flex; gap: 6px; flex: 0 0 auto; }
+#sgToolStrip .ico-btn { width: 28px; height: 28px; }
+#sgToolStrip .ico-btn svg { width: 17px; height: 17px; }
+.sg-strip-say { font-size: 12px; color: var(--mut); }
+
+/* 下敷きの濃さと同じ行に道具の帯を置く（配置図の全段 #hzUnderBar・所在図④ #sgS4）。
+   🔴 パネル幅が狭いので、この行にいる時だけ帯は「アイコン2つ／説明文」の2段に詰めて
+   幅を取らない（.sg-uop の濃さスライダーが潰れないように）。中の .sg-uop 自身の
+   余白は行が持つので 0 にする。 */
+.sg-uop-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 9px;
+}
+.sg-uop-row #sgToolStrip {
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  max-width: 96px;
+  margin: 0;
+}
+.sg-uop-row .sg-strip-say { white-space: normal; line-height: 1.25; }
+.sg-uop-row .sg-uop { flex: 1 1 auto; min-width: 0; margin: 0; }
+#hzUnderBar .sg-uop-row { margin-bottom: 5px; }
+
+/* 🔒 §30-22-4 9: ⑦の「保管場所マークの書式」（右パネルと同じ3行を面に出す） */
+.sg-fmt {
+  margin: 6px 0 9px;
+  padding: 6px 9px 8px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+.sg-fmt .sg-lb { margin-top: 0; }
+.sg-fmt .prop-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+.sg-fmt .mark-colors { margin-left: 0; }
+
+/* 🔒 §30-22-8 5: 文字の定型は**言葉のボタン**（絵にしない）。
+   ［自由入力］（.ico-btn）と同じ高さで横に並ぶ。 */
+.sg-word {
+  flex: 0 0 auto;
+  height: 36px;
+  padding: 0 11px;
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* ---- ④ 表示切替（🔒 §28-5 B・Step 3）: 下敷きを選ぶ〇 ----
@@ -1832,6 +2581,17 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   margin-top: 2px;
 }
 .sg-ov-st { font-size: 11px; color: var(--mut); margin: 4px 0 0 4px; }
+
+/* 🔒 §30-16: ［クリックした名前を図に入れる］。押している間（拾う状態）は塗って、
+   「いま地図のクリックがこのボタンのものになっている」と分かるようにする
+   （§24-2-3 の［枠を決定］＝ .sb-btn.is-on と同じ作法）。 */
+.sg-name-pick.is-on {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: var(--acc-ink);
+  font-weight: 700;
+}
+.sg-name-pick:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ---- ⑨⑩⑪ の見本画像（🔒 §29 Step 7・assets/guide/ のオーナー提供の線画） ----
    小さい線画なので**引き伸ばさない**（にじむ）。原寸〜面の幅まで。 */
@@ -1976,11 +2736,12 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   text-align: center;
   pointer-events: none;
 }
+/* 🔒 §30-17-2: 番号バッジも図ごとの色（所在図＝青／配置図＝緑） */
 [data-sgstate="next"]::before {
-  background: var(--acc);
-  border-color: var(--acc);
+  background: var(--sg-go);
+  border-color: var(--sg-go);
   color: #fff;
-  box-shadow: 0 0 0 3px rgba(29, 91, 199, .18);
+  box-shadow: 0 0 0 3px var(--sg-go-soft);
 }
 [data-sgstate="opt"]::before { opacity: .45; }
 [data-sgstate="done"]::before {
@@ -1994,12 +2755,14 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
    🔴 青の出どころは **data-sgstate="next" だけ**（固定の class="primary" は
       ガイダンス面から外した＝ sgRenderFoot の spec・index.html の #sgSearchHome ほか）。
    🔴 押せない時（disabled）は青にしない（青は「今押せる」物だけ・§30-12-2 4）。 */
+/* 🔒 §30-17-2: 「進む」色は図ごと（所在図＝青／配置図＝緑）。変数は :root と
+   body.sg-hz の1か所（app.js sgRender が navFigOf で付け外し）。 */
 #sideNav button[data-sgstate="next"]:not(:disabled) {
-  background: var(--acc);
-  border-color: var(--acc);
+  background: var(--sg-go);
+  border-color: var(--sg-go);
   color: var(--acc-ink);
 }
-#sideNav button[data-sgstate="next"]:not(:disabled):hover { background: #1749a8; }
+#sideNav button[data-sgstate="next"]:not(:disabled):hover { background: var(--sg-go-hover); }
 /* 道具ボタン（.sg-tool）の中の説明文も白字にする（既定は var(--mut)） */
 #sideNav button[data-sgstate="next"]:not(:disabled) b,
 #sideNav button[data-sgstate="next"]:not(:disabled) i { color: inherit; }
@@ -2008,6 +2771,35 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   border-color: #fff;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, .85);
 }
+/* 🔒 §30-17-3: 枠を決定した後の［枠を決めなおす］は**薄い色**（所在図＝薄い青／
+   配置図＝薄い緑）。存在は分かるが「進む」ボタンと同じ濃さにはしない。
+   印は app.js sgSyncOrient が付け外し（文言を変える1か所と同じ所）。
+   🔴 data-sgstate="next" が付いた時は上の next の規則が勝つ（specificity
+      (1,2,1) > (1,1,1)）＝決定前だけ next になるので通常は両立しない。 */
+#sideNav button.is-redo {
+  background: var(--sg-go-soft);
+  border-color: var(--sg-go-soft-bd);
+  color: var(--sg-go-soft-fg);
+}
+
+/* 🔒 §30-18-1「どれか1つ」の番号（配置図⑥＝直線／多角形／曲線）:
+   同じ番号を3つのボタンに付け、3つとも**薄い色**で強調する
+   （「青（緑）は常に1つ」の例外＝どれを押してもよい選択肢）。
+   🔴 バッジは通常の濃い色のまま（印は data-sgone・app.js sgRenderNums が付ける）。 */
+#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled),
+#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled):hover {
+  background: var(--sg-go-soft);
+  border-color: var(--sg-go-soft-bd);
+  color: var(--sg-go-soft-fg);
+}
+#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled) b,
+#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled) i { color: inherit; }
+/* 薄い地なので、バッジの白い縁（濃い地用）は元の色に戻す */
+#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled)::before {
+  border-color: var(--sg-go);
+  box-shadow: 0 0 0 2px var(--sg-go-soft);
+}
+
 /* 🔒 §30-12-2 1「次に押す1つだけが青」: 選択中の道具（.tool.is-active）は
    道具メニュー側では青地のままだが、**ガイダンス面では薄い青地＋青枠＋青字**にする。
    🔴 青いボタン＝「次に押す物」を1つに保つため（選んだ道具と次の番号は別物）。
@@ -2018,6 +2810,13 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   color: var(--acc);
 }
 #sideNav .tool.is-active i { color: var(--acc); }
+/* 🔒 §30-19-1: ガイダンス面の［枠をまとめて］も同じ薄い青（青いボタンは1つに保つ） */
+#sideNav .tool.is-on {
+  background: #eef3fd;
+  border-color: var(--acc);
+  color: var(--acc);
+}
+#sideNav .tool.is-on b, #sideNav .tool.is-on i { color: var(--acc); }
 
 /* ---- 字幕（🔒 §30-3 / §30-10・地図領域の上部中央・大きく）----
    1行目＝次に押す番号／2行目＝その操作説明（§30-7 B）。
@@ -2054,18 +2853,19 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
    flex の子は自動で block 化されるので指定は要らない。 */
 .sg-caption:not(.is-side) .sg-caption-btnrow { flex: 0 0 100%; }
 .sg-caption.is-side .sg-caption-btnrow { flex: 0 0 auto; }
+/* 🔒 §30-17-4 2: 図ごとの色に合わせる（所在図＝青／配置図＝緑）。文字は白のまま */
 .sg-caption-btn {
   font-size: 12.5px;
   font-weight: 700;
   line-height: 1.2;
   padding: 6px 12px;
-  border: 1px solid var(--acc);
+  border: 1px solid var(--sg-go);
   border-radius: 8px;
-  background: #eef3fd;
-  color: var(--acc);
+  background: var(--sg-go);
+  color: #fff;
   cursor: pointer;
 }
-.sg-caption-btn:hover { background: #dfe9fb; }
+.sg-caption-btn:hover { background: var(--sg-go-hover); }
 /* 🔒 §30-13-4: A4 縦のときは「左面と枠の間」の空きに**縦長の箱**で置く
    （左 8px・上 8px・幅は JS が空き−24px で入れる＝sgCaptionPlace）。
    〇数字の下に指示文（縦並び）。空きが 220px 未満・A4 横なら付かない。 */
@@ -2077,14 +2877,27 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   align-items: flex-start;
   gap: 4px;
 }
+/* 🔒 §30-25-1 1（2026-09-13 オーナー指示）: A4 横（＝縦長の箱が置けない時）は
+   **横長の箱**。左 8px・幅は JS が「地図領域の幅−16px」で入れる（sgCaptionPlace）。
+   🔴 〇数字の**右から**指示文が始まる（数字の下へ落とさない）＝文の要素を
+      flex: 1 1 0 / min-width: 0 にする。折り返した2行目以降も文の左端に揃う。
+   🔴 文の下のボタン（.sg-caption-btnrow）は今までどおり次の行
+      （上の `.sg-caption:not(.is-side) .sg-caption-btnrow { flex: 0 0 100% }`）。 */
+.sg-caption.is-wide {
+  left: 8px;
+  transform: none;
+  max-width: none;
+}
+.sg-caption.is-wide i { flex: 1 1 0; min-width: 0; }
 .sg-caption.is-moved { transform: none; }
 .sg-caption.is-dragging { cursor: grabbing; }
+/* 🔒 §30-17-2: 字幕の〇数字も図ごとの色（所在図＝青／配置図＝緑） */
 .sg-caption b {
   flex: 0 0 auto;
   font-size: 30px;
   font-weight: 700;
   line-height: 1.1;
-  color: var(--acc);
+  color: var(--sg-go);
 }
 .sg-caption i {
   font-style: normal;
@@ -2093,6 +2906,17 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   line-height: 1.5;
   color: #111;
 }
+/* ---- 字幕の改行と行間（🔒 §30-17-1・2026-09-13 オーナー指示）----
+   指示文の「／」→ <br>（改行だけ）／「／／」→ 段落（.sg-cap-p）＝改行＋行間。
+   中身は app.js sgSayHtml が組む（印は SG_NUM[].say の中・文言はデータのまま）。
+   🔴 行間が付くのは **A4 縦の縦長の箱（.is-side）だけ**。横長では 0。
+   🔴 下に長くなる時は app.js sgCaptionPlace が高さを測って
+      .is-tight（行間 0）→ .is-flow（改行も外して普通の折り返し）の順に削る。 */
+.sg-cap-p { display: block; }
+.sg-caption.is-side .sg-cap-p + .sg-cap-p { margin-top: .55em; }
+.sg-caption.is-tight .sg-cap-p + .sg-cap-p,
+.sg-caption.is-flow .sg-cap-p + .sg-cap-p { margin-top: 0; }
+.sg-caption.is-flow br { display: none; }
 .sg-caption-x {
   position: absolute;
   top: 4px;
@@ -2226,6 +3050,28 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   text-align: right;
 }
 #propLabel { text-align: left !important; }
+/* 🔒 §30-22-1 4 / §30-22-4 9: 右パネルの書式ボタン（線の太さ・斜線・太線）。
+   色は既存の .mark-color を使う（同じ形の丸ボタンで揃える）。 */
+.prop-row-k { flex: 0 0 60px; color: var(--fg-sub, #555); }
+.fmt-btn {
+  padding: 3px 9px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+.fmt-btn.is-on { background: var(--acc); border-color: var(--acc); color: #fff; }
+/* 🔒 §30-25-40 4: 「印の大きさ」は4段（小／標準／大／特大）。右パネルは狭く、
+   見出し（60px）＋4つを1行に並べるとはみ出して［特大］が押せなくなるので、
+   見出しを1行にして4つを折り返し可で並べる。 */
+#propMarkSizeFmt .prop-row { flex-wrap: wrap; }
+#propMarkSizeFmt .prop-row-k { flex: 0 0 100%; margin-bottom: 3px; }
+#propMarkSizeFmt .fmt-btn { padding: 3px 6px; }
+/* 🔒 §30-24-1: 多角形の書式は**アイコン**（線の太さの絵・斜線の絵）。
+   絵は currentColor で描くので、選択中（is-on）は白抜きになる。 */
+.fmt-ico { padding: 2px 5px; line-height: 0; }
+.fmt-ico svg { display: block; }
 
 /* 🔒 §25-4: 主役マークの色（赤／オレンジ／黄）。選択中の図形の欄に3つ並べるだけ */
 .mark-colors { display: flex; gap: 6px; margin-left: auto; }
@@ -2252,20 +3098,21 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .dist-info { font-size: 12.5px; margin: 9px 0 0; font-weight: 700; }
 .dist-info.over { color: var(--warn); }
 
-/* ---- 道具（右パネルにまとめる） ---- */
+/* ---- 道具（左面にまとめる） ----
+   🔒 §30-28-1 2（2026-09-14 オーナー指示「しっかり整理して、薄い線を引いて、
+      サブタイトルを付けて綺麗に」）: 区画の作りは**ガイダンス面と同じ部品**
+      （小見出し p.sg-tk ／ 区切り線 hr.sg-sep ／ 折りたたみ .sg-more-w）。
+   🔴 旧 .tool-block（区画ごとの上罫）／.tool-label（小見出し）は廃止した
+      ＝見た目の出どころを .sg-tk / .sg-sep の1組にまとめる（§30-28-3）。 */
 .tools { margin-bottom: 16px; }
-.tool-block {
-  border-top: 1px solid var(--bd);
-  padding: 7px 0 8px;
-}
-.tool-block:first-of-type { border-top: none; padding-top: 0; }
-.tool-label {
-  display: block;
-  font-size: 11px;
-  color: var(--mut);
-  margin-bottom: 5px;
-  letter-spacing: .03em;
-}
+/* 見出し（h2「描く」）のすぐ下に来る小見出しは、上の余白を詰める */
+.tools > h2 + .sg-tk { margin-top: 2px; }
+/* 区切り線のすぐ下の小見出しも、線と離れすぎないようにする */
+.tools > .sg-sep + .sg-tk { margin-top: 8px; }
+/* ▼（3つだけ）は区切り線の直後に来ることがあるので、上の余白を線に合わせる */
+.tools > .sg-sep + .sg-more-w { margin-top: 8px; }
+/* 🔒 §30-28-2 9: ▼の中の「なぞり出し」の区切り線は箱の中なので余白を詰める */
+.tools .sg-more-body > .sg-sep { margin-top: 10px; }
 .tool-row {
   display: flex;
   align-items: center;
@@ -2278,6 +3125,11 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .tool-row > select { flex: 1 1 0; min-width: 0; font-size: 12.5px; padding: 4px 5px; }
 .tool.is-active { background: var(--acc); border-color: var(--acc); color: #fff; }
 .tool.is-active:hover { background: #1749a8; }
+/* 🔒 §30-19-1: ［枠をまとめて］の「置く状態」（押してから地図をクリックする間）。
+   選んだ道具（.is-active）と同じ見た目にする＝「いま地図のクリックはこのボタンの物」。 */
+.tool.is-on { background: var(--acc); border-color: var(--acc); color: #fff; }
+.tool.is-on:hover { background: #1749a8; }
+.tool.is-on b, .tool.is-on i { color: #fff; }
 
 /* 🔒 2026-09-06: マーカー設置ボタン（道具メニューとガイダンス①の2か所・同じ見た目）。
    押している間（次の地図クリックを待っている間）は .is-armed で色を変える。 */

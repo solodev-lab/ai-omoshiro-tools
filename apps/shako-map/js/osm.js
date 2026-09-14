@@ -42,7 +42,14 @@
   var FETCH_MS = 22000;       // こちらから諦める時間（ms）
   var PAD = 0.25;             // 表示範囲をこの割合だけ広げて取る（パンの取り直しを減らす）
   var MAX_SPAN_M = 4000;      // これより広い範囲は投げない（実測 1km四方 = 2.9秒）
-  var MAX_POINTS = 900;       // out center の上限（暴走よけ）
+  /* 🔒 §30-21-1（2026-09-13 オーナー指示「無料で取得できる情報は全て取得する」）:
+   * 点は**名前のある物を全部**1回で取る（分類はこちらで付ける）。上限は
+   * 「分類ごと」ではなく**全体**で持つ（従来は分類ごとに 900）。
+   * 🔒 §30-21-4 1（Fable 裁定・実測）: 全体 2,000 の1本だと名駅で上限に当たり、
+   *    `out center` が **node → way → relation の順**に詰めるため、**面**
+   *    （駐車場・建物＝way/relation）だけが丸ごと切られて従来の名前が15件落ちた。
+   *    → 上限は **node と way+relation で別枠**（各 3,000）。下の buildQuery 参照。 */
+  var MAX_POINTS = 3000;      // out center の上限（暴走よけ・node / way+relation それぞれに掛かる）
   var MAX_WAYS = 900;         // out geom の上限
   var MAX_ROUTES = 40;        // 🔒 §22-av: 路線関係（国道・都道府県道）の上限
   var CACHE_MAX = 12;         // 案件内キャッシュの本数
@@ -58,6 +65,8 @@
    * gsi   … 地理院 Anno にも同じ物があるか（両方から集めて名前で名寄せする）
    * osm   … OSM から取るか
    */
+  /* 🔒 §30-21-2（2026-09-13）: 既存6分類＋**施設・公園／建物名**の8分類。
+   * 並びは正典の表のとおり（pointCat が上から順に1つへ決める）。 */
   var CATS = [
     { id: 'public',   ja: '公共的建物', dot: true,  size: 'medium', gsi: true,  osm: true },
     { id: 'crossing', ja: '交差点名',   dot: true,  size: 'medium', gsi: false, osm: true,
@@ -66,7 +75,12 @@
     { id: 'office',   ja: '会社名',     dot: true,  size: 'small',  gsi: false, osm: true },
     { id: 'bus',      ja: 'バス停',     dot: true,  size: 'small',  gsi: false, osm: true,
       mark: 'bus' },
-    { id: 'road',     ja: '道路名',     dot: false, size: 'medium', gsi: true,  osm: true }
+    { id: 'road',     ja: '道路名',     dot: false, size: 'medium', gsi: true,  osm: true },
+    /* 🔒 §30-21-2 新2分類。印は●（駅の印は今のところ無いので●のまま）。
+     * 🔴 road より後ろに置く＝名前の置き場所の取り合いで既存6分類を押しのけない
+     *    （buildAutoNames は CATS の順に out へ積む）。 */
+    { id: 'facility', ja: '施設・公園', dot: true,  size: 'small',  gsi: false, osm: true },
+    { id: 'building', ja: '建物名',     dot: true,  size: 'small',  gsi: false, osm: true }
   ];
 
   var CAT_BY_ID = Object.create(null);
@@ -105,21 +119,32 @@
              h: Math.abs(b.north - b.south) * mLat };
   }
 
-  /** 有効な分類だけの素直な集合にする（未知の id は捨てる） */
+  /** 有効な分類だけの素直な集合にする（未知の id は捨てる）
+   * _pts … 点の分類（道路名**以外**）を1つでも要求しているか。
+   *        🔒 §30-21-1: 点は「名前のある物を全部」1回で取るので、どの点の分類を
+   *        要求したかは問い合わせ文にも応答にも影響しない（＝この真偽だけが要る）。 */
   function normCats(cats) {
-    var out = Object.create(null), n = 0;
+    var out = Object.create(null), n = 0, pts = false;
     CATS.forEach(function (c) {
-      if (cats && cats[c.id]) { out[c.id] = true; n++; }
+      if (cats && cats[c.id]) {
+        out[c.id] = true; n++;
+        if (c.id !== 'road') pts = true;
+      }
     });
     out._n = n;
+    out._pts = pts;
     return out;
   }
 
+  /**
+   * キャッシュの1本が、いま欲しい分類をまかなえるか。
+   * 🔒 §30-21-1: 点の分類は**全部まとめて1回**で取るので、分類の要求に依らず当たる。
+   * 取った／取らなかったの区別が残るのは「点をそもそも取ったか（_pts）」と
+   * 「道路（out geom）を一緒に取ったか（road）」の2つだけ。
+   */
   function catsCovered(have, want) {
-    for (var i = 0; i < CATS.length; i++) {
-      var id = CATS[i].id;
-      if (want[id] && !have[id]) return false;
-    }
+    if (want._pts && !have._pts) return false;
+    if (want.road && !have.road) return false;
     return true;
   }
 
@@ -129,43 +154,56 @@
    *    代表点を**枠の中**に置く必要があるため（§23-5-a）。center だけだと
    *    枠の外に代表点が出て名前が消える。
    */
+  /* 🔒 §30-21-1: 取らない物は**これだけ**。行政境界／路線の関係（バス・鉄道の線。
+   * 国道・県道の番号は下の別経路で取る）／木の個体。`!=` `!~` は「タグが無い物」も
+   * 含めて残す（Overpass の仕様）ので、名前があって除外条件に当たらない物が全部残る。
+   * 🔴 「1棟」「2棟」のような棟名は**除かない**（団地の中で場所を示すのに効く）。 */
+  var EXCLUDE = '["boundary"!~"."]["admin_level"!~"."]'
+              + '["type"!="route"]["natural"!="tree"]';
+
+  /* 🔒 §30-21-4 2（2026-09-13 Fable 裁定）: **名前の欄は `name` だけではない**。
+   * 取り方（§30-21-1「`name` → `name:ja` → `brand`」＝下の pickName）と
+   * 問い合わせ文を一致させる＝`name:ja` しか無い物・`brand` しか無い物（チェーン店）
+   * も取りに行く。
+   * 🔴 `[!"name"]` を付けて3つが**重ならない**ようにする（同じ物を3回返させない）。 */
+  var NAME_SEL = ['["name"]', '[!"name"]["name:ja"]', '[!"name"]["brand"]'];
+
+  /**
+   * 点（`out center`）の union を1つ組む。
+   * 🔒 §30-21-4 1: 上限（MAX_POINTS）は **この union ごと**に掛かる＝
+   *    node の集合と way+relation の集合で**枠を分ける**ことで、点（node）が多い
+   *    土地でも面（way/relation の建物・駐車場・公園）が切り捨てられない。
+   * @param types ['node'] か ['way','relation']
+   */
+  function ptUnion(types, bb) {
+    var q = '(', t, i;
+    for (t = 0; t < types.length; t++) {
+      for (i = 0; i < NAME_SEL.length; i++) {
+        q += types[t] + NAME_SEL[i] + EXCLUDE + '(' + bb + ');';
+      }
+    }
+    return q + ');out center ' + MAX_POINTS + ';';
+  }
+
   function buildQuery(b, cats, routes) {
     var bb = fmtBBox(b), q = '[out:json][timeout:' + QL_TIMEOUT + '];', any = false;
 
-    /* 🔴 2026-09-04 是正3（§22-ak-6）: **分類ごとに `out` を分ける**。
-     * 以前は5分類を1つの union に入れて `out center 900` を1回だけ掛けていたので、
-     * 密集地では上限を**分類どうしで奪い合って**いた（実測・名古屋三の丸 枠1625×2181m）:
+    /* 🔒 §30-21-1（2026-09-13 オーナー指示）: 点は **名前のある物を全部**取る。
+     * 分類は応答を見て pointCat が付ける（＝どの分類を要求されても応答は同じ）。
      *
-     *   6分類ぜんぶ要求 → 応答 900点（うち バス停 60・交差点 272）
-     *   交差点＋バス停だけ要求 → 応答 461点（うち バス停 187・交差点 274）
-     *
-     * ＝「バス停をなしにすると交差点の取得結果が変わる」＝ **取得層での段依存**。
-     * 分類ごとに out を分ければ、ある分類が返す集合は他の分類の有無に依らない。 */
-    function grp(lines) {
-      if (!lines.length) return;
+     * 🔴 §22-ak-6（2026-09-04 是正3）で「分類ごとに `out` を分ける」ことにした理由は
+     *    **上限の奪い合い**（900点を分類どうしで取り合い、バス停を切ると交差点名の
+     *    取得結果が変わっていた）。今回は取る物が**分類の要求に依らず一定**になったので
+     *    分類どうしの奪い合いは消える。
+     * 🔒 §30-21-4 1: ただし **node と面（way/relation）の奪い合い**は残る
+     *    （`out center` は node → way → relation の順に詰めて上限で切るので、
+     *    node が多い土地では面だけが丸ごと落ちる＝名駅で実測15件）。
+     *    → `out` を **node の1回と way+relation の1回**に分ける（要求は1回のまま）。
+     *    （§30-13-8 1「初回に全分類を一度に取る」＝呼び出し側も常に全分類を要求する） */
+    if (cats._pts) {
+      q += ptUnion(['node'], bb);
+      q += ptUnion(['way', 'relation'], bb);
       any = true;
-      q += (lines.length > 1 ? '(' + lines.join('') + ');' : lines[0])
-         + 'out center ' + MAX_POINTS + ';';
-    }
-
-    if (cats.public) {
-      grp(['node["amenity"]["name"](' + bb + ');',
-           'way["amenity"]["name"](' + bb + ');',
-           'relation["amenity"]["name"](' + bb + ');']);
-    }
-    if (cats.crossing) {
-      grp(['node["highway"="traffic_signals"]["name"](' + bb + ');']);
-    }
-    if (cats.shop) {
-      grp(['node["shop"]["name"](' + bb + ');',
-           'way["shop"]["name"](' + bb + ');']);
-    }
-    if (cats.office) {
-      grp(['node["office"]["name"](' + bb + ');',
-           'way["office"]["name"](' + bb + ');']);
-    }
-    if (cats.bus) {
-      grp(['node["highway"="bus_stop"]["name"](' + bb + ');']);
     }
     if (cats.road) {
       q += 'way["highway"]["name"](' + bb + ');out geom ' + MAX_WAYS + ';';
@@ -189,14 +227,79 @@
 
   /* ================= 応答 → 名称 ================= */
 
-  /** 点の分類。🔴 順番が意味を持つ（交差点・バス停は highway なので先に見る） */
+  /**
+   * 点の分類（🔒 §30-21-2 の表）。
+   * 🔴 **順番が意味を持つ**。1つの物が複数のタグを持つ時は表の**上から**1つに決める
+   *    （例: `amenity=school` かつ `building=school` → 公共的建物）。
+   * @return null（分類なし）か {cat, sub, mark}
+   *   sub  … 分類を決めたタグの**値**。格の表（shozaizu.js の POI_PRIO 系）が読む。
+   *          🔴 新2分類は `キー:値`（'leisure:park'）＝別のキーで同じ値が来ても混ざらない。
+   *   mark … その物だけ分類の既定の印と違う時（信号の無い交差点＝●）。
+   */
   function pointCat(tg) {
-    if (tg.highway === 'traffic_signals') return 'crossing';
-    if (tg.highway === 'bus_stop') return 'bus';
-    if (tg.shop) return 'shop';
-    if (tg.office) return 'office';
-    if (tg.amenity) return 'public';
+    /* ① 公共的建物（他の目印）＝ amenity 全部（従来どおり） */
+    if (tg.amenity) return { cat: 'public', sub: tg.amenity };
+    /* ② 交差点名。信号あり＝信号機の印／信号なし・高速の出入口＝● */
+    if (tg.highway === 'traffic_signals') {
+      return { cat: 'crossing', sub: 'traffic_signals' };
+    }
+    if (tg.junction === 'yes') {
+      return { cat: 'crossing', sub: 'junction', mark: 'dot' };
+    }
+    if (tg.highway === 'motorway_junction') {
+      return { cat: 'crossing', sub: 'motorway_junction', mark: 'dot' };
+    }
+    /* ③ お店 */
+    if (tg.shop) return { cat: 'shop', sub: tg.shop };
+    /* ④ 会社名 */
+    if (tg.office) return { cat: 'office', sub: tg.office };
+    if (tg.craft) return { cat: 'office', sub: tg.craft };
+    if (tg.industrial) return { cat: 'office', sub: tg.industrial };
+    /* ⑤ バス停 */
+    if (tg.highway === 'bus_stop') return { cat: 'bus', sub: 'bus_stop' };
+    if (tg.public_transport === 'platform' && tg.bus === 'yes') {
+      return { cat: 'bus', sub: 'platform' };
+    }
+    /* ⑥ 施設・公園（🔒 §30-21-2 新） */
+    if (tg.power) return { cat: 'facility', sub: 'power:' + tg.power };
+    if (tg.man_made) return { cat: 'facility', sub: 'man_made:' + tg.man_made };
+    if (tg.leisure) return { cat: 'facility', sub: 'leisure:' + tg.leisure };
+    if (tg.landuse) return { cat: 'facility', sub: 'landuse:' + tg.landuse };
+    if (tg.healthcare) return { cat: 'facility', sub: 'healthcare:' + tg.healthcare };
+    if (tg.railway === 'station' || tg.railway === 'halt') {
+      return { cat: 'facility', sub: 'railway:' + tg.railway };
+    }
+    if (tg.public_transport === 'station') {
+      return { cat: 'facility', sub: 'public_transport:station' };
+    }
+    if (tg.waterway) return { cat: 'facility', sub: 'waterway:' + tg.waterway };
+    if (tg.natural === 'water') return { cat: 'facility', sub: 'natural:water' };
+    /* ⑦ 建物名（🔒 §30-21-2 新・**棟名を含む**） */
+    if (tg.building) return { cat: 'building', sub: 'building:' + tg.building };
+    if (tg.tourism) return { cat: 'building', sub: 'tourism:' + tg.tourism };
+    if (tg.historic) return { cat: 'building', sub: 'historic:' + tg.historic };
+    /* 🔒 §30-21-2「`brand` だけの店」＝上のどれにも当たらず brand だけ持つ物。
+     * 🔴 表の3行目（お店）だが、**他のどれかに当たる物はそちらが先**（表の上から）
+     *    なので、判定はここ（最後）に置く。 */
+    if (tg.brand) return { cat: 'shop', sub: '' };
     return null;
+  }
+
+  /** 英字（ASCII）だけの文字列か。ソースに制御文字を入れないための小物 */
+  function isAscii(s) {
+    for (var i = 0; i < s.length; i++) { if (s.charCodeAt(i) > 127) return false; }
+    return true;
+  }
+
+  /**
+   * 🔒 §30-21-1 名前の取り方: `name` → 無ければ `name:ja` → 無ければ `brand`。
+   * 🔴 `name` が**英字だけ**で `name:ja` がある時は `name:ja` を優先する
+   *    （所在図は日本語の紙なので、"Nagoya Station" より「名古屋駅」）。
+   */
+  function pickName(tg) {
+    var n = tg.name, ja = tg['name:ja'];
+    if (n && ja && isAscii(n)) return ja;
+    return n || ja || tg.brand || '';
   }
 
   function elPoint(e) {
@@ -219,13 +322,26 @@
     return m ? m[1] : '';
   }
 
-  function parse(json, cats) {
+  /**
+   * 応答 → {items, roads, routes, truncated, counts}。
+   * 🔒 §30-21-1: 点は**分類で絞らずに全部**作る（問い合わせが全部取っているので、
+   * ここで捨てるとキャッシュに穴が空く）。要求された分類だけにするのは fetchNames。
+   *
+   * 🔒 §30-21-4 1: **上限に当たったか（truncated）**もここで数える。
+   * 🔴 数えるのは「`out center` で返ってきた物」だけ＝
+   *    node（＝`out center` の node は lat/lon を持つ）と、
+   *    **`center` を持つ** way/relation。道路（`out geom`）は `geometry` を、
+   *    路線関係（`out geom(bb)`）は `members` を持ち `center` を持たないので混ざらない。
+   */
+  function parse(json) {
     var els = (json && json.elements) || [];
     var items = [], roads = [], routes = [], seenPt = Object.create(null),
-        seenWay = Object.create(null), i;
+        seenWay = Object.create(null), i, nNode = 0, nArea = 0;
     for (i = 0; i < els.length; i++) {
       var e = els[i], tg = e.tags || {};
-      var name = tg.name;
+      if (e.type === 'node') nNode++;
+      else if ((e.type === 'way' || e.type === 'relation') && e.center) nArea++;
+      var name = pickName(tg);
       /* 🔒 §22-av: 路線関係（国道・都道府県道）。名前が無い関係もあるので
        * **名前の判定より前**に見る。番号が取れない関係は印を描けないので捨てる。 */
       if (e.type === 'relation' && tg.route === 'road' && tg.network) {
@@ -255,14 +371,14 @@
       /* 道路（out geom で返ってきた物）は geometry を持つ。
        * 点の分類（out center）と取り違えないよう geometry の有無で分ける。 */
       if (e.type === 'way' && e.geometry && e.geometry.length >= 2 && tg.highway) {
-        if (!cats.road) continue;
         if (seenWay[e.id]) continue;
         seenWay[e.id] = true;
         roads.push({ name: name, geom: e.geometry, id: e.id });
         continue;
       }
-      var cat = pointCat(tg);
-      if (!cat || !cats[cat]) continue;
+      var pc = pointCat(tg);
+      if (!pc) continue;
+      var cat = pc.cat;
       var ll = elPoint(e);
       if (!ll) continue;
       // 同じ物が node と way の両方で地図に入っている事があるので詰める
@@ -274,10 +390,19 @@
        *    （§23-6-a 持ち越し2・名駅前で319件）。自動描画の5段階では
        *    公共性・規模の高い物から先に出す必要があり、その優先順の判定に使う
        *    （shozaizu.js POI_PRIO / SHOP_PRIO）。表示文字では判定しない（§26-2 注意②）。 */
-      items.push({ cat: cat, name: name, lat: ll.lat, lng: ll.lng, src: 'osm',
-                   sub: tg.amenity || tg.shop || tg.office || tg.highway || '' });
+      /* 🔒 §30-21-2: sub と印（mark）の出どころは pointCat の1か所だけ。
+       * 🔴 mark は「その物だけ分類の既定の印と違う」時に入る（信号の無い交差点＝'dot'）。
+       *    描く側は it.mark || CATS の mark で読む（表示文字では判定しない・注意②）。 */
+      var item = { cat: cat, name: name, lat: ll.lat, lng: ll.lng, src: 'osm',
+                   sub: pc.sub || '' };
+      if (pc.mark) item.mark = pc.mark;
+      items.push(item);
     }
-    return { items: items, roads: roads, routes: routes };
+    /* 🔒 §30-21-4 1: どちらかの枠が上限に届いていたら「省いた」＝呼び出し側が
+     * 生成後の一言で知らせる（黙って減らさない）。 */
+    return { items: items, roads: roads, routes: routes,
+             truncated: (nNode >= MAX_POINTS || nArea >= MAX_POINTS),
+             counts: { node: nNode, area: nArea } };
   }
 
   /* ================= 道路名の名寄せ（🔒 §23-5-a） =================
@@ -394,6 +519,29 @@
   }
 
   /**
+   * 🔒 §30-21-1: キャッシュ（＝取った物ぜんぶ）から、要求された分類だけを渡す。
+   * 🔴 取る時に絞らず**渡す時に絞る**のが肝。重ね表示（namelay・交差点名とバス停だけ）が
+   *    取った物を、所在図の生成（全分類）がそのまま使い回せる。
+   */
+  function pickCats(items, cs) {
+    var out = [];
+    for (var i = 0; i < items.length; i++) {
+      if (cs[items[i].cat]) out.push(items[i]);
+    }
+    return out;
+  }
+
+  /** 実測の報告用（lastStats）。分類ごとの点数 */
+  function countByCat(items) {
+    var m = Object.create(null);
+    CATS.forEach(function (c) { m[c.id] = 0; });
+    for (var i = 0; i < items.length; i++) {
+      if (m[items[i].cat] !== undefined) m[items[i].cat]++;
+    }
+    return m;
+  }
+
+  /**
    * 表示範囲の名称を取る。
    * @param bounds {west,south,east,north}（＝いま画面に写っている範囲）
    * @param cats   {public:true, road:true, ...}
@@ -409,8 +557,12 @@
 
     var hit = findCache(bounds, cs, wantRoutes);
     if (hit) {
-      return Promise.resolve({ items: hit.data.items, roads: hit.data.roads,
+      return Promise.resolve({ items: pickCats(hit.data.items, cs),
+                               roads: cs.road ? hit.data.roads : [],
                                routes: hit.data.routes || [],
+                               /* 🔒 §30-21-4 1: 上限に当たったかはキャッシュにも
+                                * 付いて回る（2回目の生成で一言が消えないように）。 */
+                               truncated: !!hit.data.truncated,
                                bbox: hit.bbox, ms: hit.ms, bytes: hit.bytes,
                                cached: true });
     }
@@ -441,14 +593,18 @@
     return Promise.resolve().then(attempt).then(function (r) {
       var now = (global.performance && performance.now) ? performance.now() : Date.now();
       var ms = Math.round(now - t0);
-      var data = parse(r.json, cs);
+      var data = parse(r.json);
       var e = { cats: cs, routes: wantRoutes, bbox: bbox, data: data,
                 ms: ms, bytes: r.bytes };
       putCache(e);
       _last = { ms: ms, bytes: r.bytes, endpoint: r.endpoint,
                 points: data.items.length, ways: data.roads.length,
-                routes: data.routes.length };
-      return { items: data.items, roads: data.roads, routes: data.routes,
+                routes: data.routes.length, byCat: countByCat(data.items),
+                /* 🔒 §30-21-4 1: 実測の報告用（node / way+relation それぞれの応答数） */
+                nodes: data.counts.node, areas: data.counts.area,
+                truncated: data.truncated, max: MAX_POINTS };
+      return { items: pickCats(data.items, cs), roads: data.roads,
+               routes: data.routes, truncated: data.truncated,
                bbox: bbox, ms: ms, bytes: r.bytes, cached: false,
                endpoint: r.endpoint };
     });
@@ -460,6 +616,7 @@
     CATS: CATS,
     CAT_BY_ID: CAT_BY_ID,
     MAX_SPAN_M: MAX_SPAN_M,
+    MAX_POINTS: MAX_POINTS,
     PAD: PAD,
     fetchNames: fetchNames,
     mergeRoads: mergeRoads,

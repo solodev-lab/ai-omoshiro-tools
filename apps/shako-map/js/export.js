@@ -159,8 +159,16 @@
   /* ================= 図形を canvas に描く ================= */
 
   /** 紙面ミリ → 出力ピクセル（pxmm ＝ 紙1mm あたりのピクセル数） */
+  /* 🔒 §30-22-3 3: 文字の大きさは**連続値（o.sizeMm・紙のミリ）**が優先。
+   * 判断は editor.js の Editor.textMm が唯一の実装（画面と紙で必ず同じ）。
+   * 読めない時（export.js 単体）は従来の3段に落ちる。 */
+  function textMm(o) {
+    if (global.Editor && global.Editor.textMm) return global.Editor.textMm(o);
+    if (o && o.sizeMm > 0) return o.sizeMm;
+    return SHEET_TEXT_MM[o && o.size] || SHEET_TEXT_MM.medium;
+  }
   function textPx(o, pxmm) {
-    return mmPx(SHEET_TEXT_MM[o.size] || SHEET_TEXT_MM.medium, pxmm);
+    return mmPx(textMm(o), pxmm);
   }
 
   /**
@@ -191,6 +199,9 @@
    *    🔴 方位記号・スケールバー・出典（枠の外の飾り）は図面の寸法表記ではないので
    *       従来の S 基準のまま（他の飾りと大きさの釣り合いが崩れるため）。
    */
+  /* 🔒 §30-25-19: `storage` は**もう使っていない**（保管場所マークは印だけになり、
+   * 「保管場所」の文字は画面にも紙にも出さない）。表の形（と editor.js の予備）を
+   * 揃えたままにするので消さずに残す。 */
   var LABEL_MM = { dim: 3.4, storage: 3.4, number: 4.4 };
   /**
    * 紙面ミリ → 出力ピクセル。
@@ -224,6 +235,21 @@
               && o.style && o.style.casing && o.points && o.points.length >= 2
               && roadBandOf(o));
   }
+  /* 🔒 §30-25-4: 「道路」の判定は editor.js の `Editor.isRoad` が**唯一の実装**。
+   * ここは読むだけ（export.js を単体で読み込んだ時だけ白帯の道路に落ちる）＝
+   * 画面と紙で並び順が必ず同じになる（isCasingRoad / roadBandOf と同じ作法）。 */
+  function isRoadObj(o) {
+    if (global.Editor && global.Editor.isRoad) return global.Editor.isRoad(o);
+    return isCasingRoad(o);
+  }
+  /* 🔒 §30-25-4: 「道路 → その他」に並べ替えた**写し**（元の配列は触らない）。 */
+  function sortRoadsFirst(objects) {
+    var roads = [], rest = [];
+    for (var i = 0; i < objects.length; i++) {
+      (isRoadObj(objects[i]) ? roads : rest).push(objects[i]);
+    }
+    return roads.concat(rest);
+  }
 
   /**
    * 🔒 §23-9: 連続する道路を**塊まるごと2パス**（全部の黒縁 → 全部の白帯）で描く。
@@ -254,20 +280,28 @@
     g.restore();
   }
 
-  function drawObjects(g, objects, proj, S, mpp, pxmm) {
+  /**
+   * @param boxes 🔒 §30-25-10: 渡すと、描いた文字の箱（canvas px）をここへ積む
+   *   （[{id,x,y,w,h}]）。プレビューで「文字だけ動かす」層が読む＝**箱の出どころは
+   *   描画と同じこの1か所**（別に見積もると画像と枠がずれる）。
+   */
+  function drawObjects(g, objects, proj, S, mpp, pxmm, boxes) {
     // S = 線の太さの倍率、mpp = 1px あたりの実距離(m)
     // 🔒 §22-at: 1U が表す実距離(m) = 出力px何個ぶんか(S) × 1pxの実距離(mpp)
     var mPerU = mpp * S;
     /* 🔒 §22-at-3 欠陥2-①: 文字（drawOneObject の case 'text' が引き出し線・
      * ●・アイコンごと描く）は道路の帯・川・建物より**必ず後**に描く。画面
      * （editor.js render）と同じ理屈・同じ分け方（objects の並びには触らない）。 */
+    /* 🔒 §30-25-4: 描く順は画面（editor.js render）と同じ「道路 → その他 → 文字」。
+     * 🔴 判定も並べ替えも Editor.isRoad 1か所（objects の並びには触らない）。 */
+    var list = sortRoadsFirst(objects);
     var texts = [];
-    for (var i = 0; i < objects.length; i++) {
-      var o = objects[i];
+    for (var i = 0; i < list.length; i++) {
+      var o = list[i];
       if (o.type === 'text') { texts.push(o); continue; }
       if (isCasingRoad(o)) {
         var run = [];
-        while (i < objects.length && isCasingRoad(objects[i])) { run.push(objects[i]); i++; }
+        while (i < list.length && isCasingRoad(list[i])) { run.push(list[i]); i++; }
         i--;
         drawRoadRun(g, run, proj, S, mPerU);
         continue;
@@ -276,6 +310,18 @@
     }
     for (var ti = 0; ti < texts.length; ti++) {
       drawOneObject(g, texts[ti], proj, S, mpp, pxmm);
+      /* 🔒 §30-25-10 3: 文字の箱（プレビューで掴む的）。印つき文字は**文字の箱**
+       * だけ（印は動かさないので含めない）。中心は at ＝ drawText と同じ点。 */
+      if (boxes) {
+        var tb = texts[ti];
+        if (tb.text) {
+          var tc = proj(tb.at.lat, tb.at.lng);
+          var tsz2 = textPx(tb, pxmm);
+          var tw = leadTextHalf(g, tb.text, tsz2, tb) * 2;
+          var th = tsz2 * 1.5;
+          boxes.push({ id: tb.id, x: tc.x - tw / 2, y: tc.y - th / 2, w: tw, h: th });
+        }
+      }
     }
   }
 
@@ -307,6 +353,21 @@
         case 'path': {
           if (!o.points || o.points.length < 2) break;
           var closed = (o.type !== 'path');
+          /* 🔒 §30-22-1 4: 主役の多角形（role:'mainmark'）は画面と同じく
+           * 斜線ハッチ＋選んだ太さ・色で刷る（四角の主役マークと同じ作法）。 */
+          if (o.role === 'mainmark') {
+            var mp = o.points.map(function (q) { return proj(q.lat, q.lng); });
+            var mhex = inkHex(o.inkColor);
+            if (o.hatch !== false) drawHatch(g, mp, mhex, S, pxmm);
+            g.beginPath();
+            g.moveTo(mp[0].x, mp[0].y);
+            for (var mi = 1; mi < mp.length; mi++) g.lineTo(mp[mi].x, mp[mi].y);
+            g.closePath();
+            g.strokeStyle = mhex;
+            g.lineWidth = Math.max(0.8, (st.w || 2) * S);
+            g.stroke();
+            break;
+          }
           if (st.rail) {
             // 鉄道は白黒ハッチ（正典 §5）
             tracePts(g, o.points, proj, closed);
@@ -351,7 +412,8 @@
           var tp = proj(o.at.lat, o.at.lng);
           var tsz = textPx(o, pxmm);
           // 🔒 §18-8: 目標物の●（anchor）は紙にも同じ規則で出す
-          if (o.anchor) drawAnchor(g, proj(o.anchor.lat, o.anchor.lng), tp, o, tsz, S);
+          // 🔒 §30-30-1: pxmm を渡す（印の基準の大きさ＝紙のミリで固定）
+          if (o.anchor) drawAnchor(g, proj(o.anchor.lat, o.anchor.lng), tp, o, tsz, S, pxmm);
           // 🔒 §22-av: 路線番号の印（国道 ▽ / 都道府県道 六角形）を数字の下に敷く
           if (o.badge) drawBadge(g, tp, o, tsz, S);
           drawText(g, tp, o.text, tsz, st.color || '#111', S);
@@ -402,6 +464,71 @@
              pole: size * K.pole, foot: size * K.foot, lw: K.lw,
              h: size * (K.pole + K.bh) };
   }
+  /* P マーク（🔒 §30-22-3 2）。寸法は Editor.parkingGeom が唯一の出どころ */
+  var PARKING_FALLBACK = { s: 0.95, rx: 0.12, font: 0.72, lw: 1.6 };
+  function parkingGeom(size) {
+    if (global.Editor && global.Editor.parkingGeom) return global.Editor.parkingGeom(size);
+    var K = PARKING_FALLBACK;
+    return { s: size * K.s, rx: size * K.rx, font: size * K.font, lw: K.lw };
+  }
+  /* 木の印（🔒 §30-25-9）。寸法は Editor.treeGeom が唯一の出どころ */
+  var TREE_FALLBACK = { r: 0.385, trunk: 0.342, lw: 1.6 };
+  function treeGeom(size) {
+    if (global.Editor && global.Editor.treeGeom) return global.Editor.treeGeom(size);
+    var K = TREE_FALLBACK, r = size * K.r, tr = size * K.trunk;
+    return { r: r, trunk: tr, cy: -(tr + r), hw: r, up: r, h: tr + r * 2, lw: K.lw };
+  }
+  /**
+   * 🔒 §30-30-2: もこもこの樹冠を canvas のパスにする（fill / stroke は呼ぶ側）。
+   * 🔴 弧の数値（中心・半径・角度）は editor.js の Editor.treeCanopyArcs が唯一の
+   *    出どころ＝画面（SVG の A コマンド）と紙（canvas の arc）で必ず同じ形になる。
+   *    editor.js が無い時（export.js 単体）だけ従来の円1つに落ちる。
+   * @param cx,cy 樹冠の中心／@param r 樹冠の横の半径
+   */
+  function treeCanopyPath(g, cx, cy, r) {
+    var C = (global.Editor && global.Editor.treeCanopyArcs)
+          ? global.Editor.treeCanopyArcs() : null;
+    g.beginPath();
+    if (!C) { g.arc(cx, cy, r, 0, Math.PI * 2); return; }
+    for (var i = 0; i < C.arcs.length; i++) {
+      var a = C.arcs[i];
+      g.arc(cx + a.x * r, cy + a.y * r, a.r * r, a.a0, a.a0 + a.sweep, false);
+    }
+    g.closePath();
+  }
+  /* 🔒 §30-30-1: 印の**基準の大きさ**（紙のミリ）。文字の大きさには連動しない。
+   * 🔴 値の出どころは editor.js の Editor.markBaseMm 1か所（＝文字「中」と同じ 3.4mm）。 */
+  var MARK_BASE_MM_FALLBACK = 3.4;
+  function markBasePx(pxmm) {
+    var mm = (global.Editor && global.Editor.markBaseMm)
+           ? global.Editor.markBaseMm() : MARK_BASE_MM_FALLBACK;
+    return mmPx(mm, pxmm);
+  }
+  /* 🔒 §30-25-18 3 / §30-30-1: 印（信号機・バス停・P・木）の大きさ
+   * ＝ **基準（固定）× markScale**（文字の大きさには連動しない）。
+   * 🔴 式の出どころは editor.js の Editor.markSizeOf **1か所**（画面と紙で必ず同じ）。
+   *    export.js 単体で読み込まれた時だけ「基準そのまま（倍率1）」に落ちる。 */
+  function markSizeOf(o, size, basePx) {
+    if (global.Editor && global.Editor.markSizeOf) {
+      return global.Editor.markSizeOf(o, size, basePx);
+    }
+    return basePx > 0 ? basePx : size;
+  }
+  /* 🔒 §30-25-37 1: 主役の印（◎・■）の大きさの倍率。◎の輪の半径・線の太さと、
+   * ■の紙の最小 mm に掛ける。🔴 倍率の出どころは editor.js の markScaleOf 1か所。 */
+  function markScaleOf(o) {
+    if (global.Editor && global.Editor.markScaleOf) return global.Editor.markScaleOf(o);
+    return 1;
+  }
+  /** ■（role:'mainmark' の四角）が持つ倍率。図形の markScale が唯一の出どころ */
+  function rectMarkScale(o) {
+    if (global.Editor && global.Editor.clampMarkScale) {
+      return global.Editor.clampMarkScale(o && o.markScale);
+    }
+    var v = Number(o && o.markScale);
+    return (isFinite(v) && v > 0) ? v : 1;
+  }
+
   /** 角丸矩形のパス（canvas 標準の roundRect は環境差があるので自前で引く） */
   function roundRectPath(g, x, y, w, h, r) {
     r = Math.max(0, Math.min(r, w / 2, h / 2));
@@ -453,6 +580,9 @@
   }
   /** 🔒 §22-am-6-2: 線を描くか。判定も editor.js が出どころ（画面と紙で必ず同じ） */
   function wantLead(o, d, wHalf, size, near) {
+    /* 🔒 §30-24-5: 同一住所の主役ラベル（noLead:true）は紙にも線を描かない。
+     * Editor.wantLead に委ねる経路・自前の予備（Editor 未読込）の両方に効かせる。 */
+    if (o && o.noLead) return false;
     if (global.Editor && global.Editor.wantLead) {
       return global.Editor.wantLead(o, d, wHalf, size, near);
     }
@@ -466,7 +596,10 @@
    * 目標物の●（正典 §18-8）。位置は anchor で固定、文字（at）だけが動く。
    * 文字が離れている時は細い引き出し線でつなぐ（画面と同じ規則）。
    */
-  function drawAnchor(g, a, p, o, sizePx, S) {
+  function drawAnchor(g, a, p, o, sizePx, S, pxmm) {
+    /* 🔒 §30-30-1: 印の**基準の大きさ**（紙のミリ × pxmm）。文字（sizePx）とは別物
+     * ＝文字を大きくしても印は変わらない（画面 editor.js の markBasePx と同じ式）。 */
+    var mBase = markBasePx(pxmm);
     var dx = p.x - a.x, dy = p.y - a.y;
     var d = Math.sqrt(dx * dx + dy * dy);
     /* 🔒 §18-j / §22-am-6-2: 文字の半幅は**実際に描かれる幅**で測る（画面と同じ関数）。
@@ -501,7 +634,7 @@
      * 3か所とも同じ形になる。輪郭は線だけ（§23-9）＝ 1.6U ＝ 300dpi で 0.304mm。
      * 🔴 旧データ（dotStyle 無し）は下の●に落ちる＝紙でも●のまま（後方互換）。 */
     if (o.dotStyle === 'signal') {
-      var sg = signalGeom(sizePx);
+      var sg = signalGeom(markSizeOf(o, sizePx, mBase));   // 🔒 §30-25-18 3 / §30-30-1
       g.lineWidth = Math.max(0.8, sg.lw * S);
       g.strokeStyle = color;
       roundRectPath(g, a.x - sg.w / 2, a.y - sg.h / 2, sg.w, sg.h, sg.rx);
@@ -520,7 +653,7 @@
      * 3か所とも同じ形になる。塗りは一切なし（§23-9）。anchor（a）は足の接地点。
      * 🔴 旧データ（dotStyle 無し）は下の●に落ちる＝紙でも●のまま（後方互換）。 */
     if (o.dotStyle === 'bus') {
-      var bg = busStopGeom(sizePx);
+      var bg = busStopGeom(markSizeOf(o, sizePx, mBase));  // 🔒 §30-25-18 3 / §30-30-1
       var footY = a.y, poleTopY = footY - bg.pole, boardTopY = poleTopY - bg.bh;
       g.lineWidth = Math.max(0.8, bg.lw * S);
       g.strokeStyle = color;
@@ -538,11 +671,57 @@
       g.restore();
       return;
     }
+    /* 🔒 §30-22-3 2: P マーク（□の中に P）。形は editor.js の Editor.parkingGeom が
+     * 唯一の出どころ＝画面と紙で必ず同じ。輪郭は線だけ（§23-9）。 */
+    if (o.dotStyle === 'parking') {
+      var pk = parkingGeom(markSizeOf(o, sizePx, mBase));  // 🔒 §30-25-18 3 / §30-30-1
+      g.lineWidth = Math.max(0.8, pk.lw * S);
+      g.strokeStyle = color;
+      roundRectPath(g, a.x - pk.s / 2, a.y - pk.s / 2, pk.s, pk.s, pk.rx);
+      g.stroke();
+      g.save();
+      g.font = '700 ' + pk.font.toFixed(1) + 'px "Yu Gothic UI","Meiryo",sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillStyle = color;
+      g.fillText('P', a.x, a.y);
+      g.restore();
+      g.restore();
+      return;
+    }
+    /* 🔒 §30-25-9 / §30-30-2: 木＝もこもこの樹冠（線だけ・白で塗る）＋幹。形は editor.js の
+     * Editor.treeGeom が唯一の出どころ＝画面と紙で必ず同じ。
+     * anchor（a）は幹の下端＝印は a から上へだけ伸びる（バス停と同じ作法）。 */
+    if (o.dotStyle === 'tree') {
+      var tg = treeGeom(markSizeOf(o, sizePx, mBase));     // 🔒 §30-25-18 3 / §30-30-1
+      g.lineWidth = Math.max(0.8, tg.lw * S);
+      g.strokeStyle = color;
+      g.lineCap = 'round';
+      g.beginPath();
+      g.moveTo(a.x, a.y);
+      g.lineTo(a.x, a.y - tg.trunk);
+      g.stroke();
+      /* 🔒 §30-30-2: 樹冠は**もこもこ**（ふくらみの輪郭）。弧の数値は editor.js の
+       * Editor.treeCanopyArcs が唯一の出どころ＝画面（SVG）と紙（canvas）で同じ形。 */
+      treeCanopyPath(g, a.x, a.y + tg.cy, tg.r);
+      g.fillStyle = '#fff';
+      g.fill();
+      g.stroke();
+      g.restore();
+      return;
+    }
     /* 🔒 §18-r: 自宅・駐車場は**二重丸（◎）で施設●の約2倍**（画面 editor.js と同じ形）。
      * 白黒印刷でも主役の2地点が一目で分かるようにする。
      * 🔴 この枝は**旧データ用に残す**（既存案件はそのまま二重丸で刷れる・§25-4-7）。 */
     if (o.dotStyle === 'double' || o.role === 'pinlabel') {
-      var rr = r * 2;
+      /* 🔒 §30-25-37 1: 輪の半径と線の太さに印の大きさ（markScale）を掛ける
+       * （画面 editor.js の ◎ とまったく同じ倍率）。 */
+      var dms = markScaleOf(o);
+      /* 🔒 §30-30-1: 半径は**文字の大きさに連動しない**（基準 mBase × 倍率）。
+       * 🔴 式の出どころは editor.js の Editor.mainRingR 1か所（画面と紙で同じ）。 */
+      var rr = (global.Editor && global.Editor.mainRingR)
+             ? global.Editor.mainRingR(o, sizePx, mBase)
+             : Math.max(1.6, mBase * 0.24) * 2 * dms;
       /* 🔒 §28-14 ①-4: ◎も色を選べる（形2種×色3種）。色の key は o.markColor で、
        * 四角の印と**同じ表**（Editor.MARK.colors）を読む。持っていない旧データは
        * 従来どおり文字と同じ色（黒）で刷る＝後方互換。 */
@@ -551,7 +730,9 @@
       g.arc(a.x, a.y, rr, 0, Math.PI * 2);
       g.fillStyle = '#fff';
       g.fill();
-      g.lineWidth = Math.max(1, 2.2 * S);
+      // 🔒 §30-25-37 1: 線の太さの出どころは Editor.RING_W（CSS .anno-ring と同じ値）
+      var ringW = (global.Editor && global.Editor.RING_W) || 2.2;
+      g.lineWidth = Math.max(1, ringW * dms * S);
       g.strokeStyle = dHex;
       g.stroke();
       g.beginPath();
@@ -608,6 +789,18 @@
     g.fillStyle = color;
     g.fillText(text, p.x, p.y);
     g.restore();
+  }
+
+  /**
+   * 🔒 §30-25-25: 駐車枠の番号の大きさ・位置は editor.js の唯一の実装
+   * （Editor.cellNumberGeom）を読む＝画面と紙で必ず同じ規則になる
+   * （標準4.4mmと枠に収まる大きさの小さい方・向きは回さない）。
+   * 無い時（Editor 未読込＝単体テスト）は従来どおり中心・stdPx へ落ちる。
+   * @param c 枠の4隅（紙px） @param ctr 枠の中心（フォールバック用） @param stdPx 標準の大きさ(px)
+   */
+  function numberGeomOf(c, ctr, text, stdPx) {
+    var G = global.Editor && global.Editor.cellNumberGeom;
+    return G ? G(c, text, stdPx) : { cx: ctr.x, cy: ctr.y, size: stdPx };
   }
 
   /* ---------- 駐車位置ラベルの塊（正典 §18-f 駐車位置ラベル） ----------
@@ -692,13 +885,37 @@
     return (o.style && o.style.color) || MARK_FALLBACK.colors[0].hex;
   }
 
+  /* 🔒 §30-22-1 4 / §30-22-4 9: 線の色（黒／赤／青）・保管場所の書式。
+   * 値の出どころは editor.js（Editor.INK / Editor.storageConf）1か所。
+   * ここは読むだけ（export.js 単体で読み込まれた時だけ既定に落ちる）。 */
+  var INK_FALLBACK = { black: '#111111', red: '#c0392b', blue: '#1d4ed8' };
+  function inkHex(key) {
+    if (global.Editor && global.Editor.inkHex) return global.Editor.inkHex(key);
+    return INK_FALLBACK[key] || INK_FALLBACK.black;
+  }
+  function storageConf(v) {
+    if (global.Editor && global.Editor.storageConf) return global.Editor.storageConf(v);
+    if (!v) return null;
+    /* 🔒 §30-22-7 4: 既定は 黒・**斜線なし**・太線あり（editor.js と同じ値）。
+     * ここは editor.js を読めない時（export.js 単体）の保険。 */
+    var c = (v === true) ? {} : v;
+    return { color: c.color || 'black',
+             hatch: (c.hatch === undefined) ? false : !!c.hatch,
+             bold:  (c.bold === undefined) ? true : !!c.bold };
+  }
+  function storageW(bold) {
+    var W = (global.Editor && global.Editor.STORAGE_W) || { bold: 5, thin: 2 };
+    return bold ? W.bold : W.thin;
+  }
+
   function rectCorners(o, proj, mpp, pxmm) {
     var c = proj(o.center.lat, o.center.lng);
     var hw = (o.w_m / mpp) / 2, hh = (o.h_m / mpp) / 2;
     /* 🔒 §25-4: 主役マークは紙面での最小サイズを保証する
      * （広域の所在図で建物サイズの四角が消えないように。画面 editor.js と同じ規則）。 */
     if (o.role === 'mainmark') {
-      var min = mmPx(markConf().minMm, pxmm) / 2;
+      // 🔒 §30-25-37 1: 紙の最小 mm にも印の大きさ（markScale）を掛ける（画面と同じ規則）
+      var min = mmPx(markConf().minMm * rectMarkScale(o), pxmm) / 2;
       if (hw < min) hw = min;
       if (hh < min) hh = min;
     }
@@ -715,6 +932,8 @@
    * 画面（SVG の pattern・patternTransform rotate(45)）と同じ見た目になるよう、
    * 線の間隔・太さは同じ mm 値から出す。
    */
+  /* 🔒 §30-22-1 4 / §30-22-4 9: 頂点の数は**4つとは限らない**（主役の多角形・
+   * 保管場所の枠）。c.length で回す＝四角（4隅）は今までとまったく同じ結果になる。 */
   function drawHatch(g, c, hex, S, pxmm) {
     var sp = mmPx(markConf().hatchMm, pxmm);
     var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -727,7 +946,7 @@
     g.save();
     g.beginPath();
     g.moveTo(c[0].x, c[0].y);
-    for (var i = 1; i < 4; i++) g.lineTo(c[i].x, c[i].y);
+    for (var i = 1; i < c.length; i++) g.lineTo(c[i].x, c[i].y);
     g.closePath();
     g.clip();
     g.strokeStyle = hex;
@@ -767,7 +986,9 @@
     g.closePath();
     g.stroke();
     // 保管場所マーク（正典 §16-5 A）。画面と同じ見た目で紙にも出す
-    if (o.storage) drawStorage(g, c, proj(o.center.lat, o.center.lng), S, pxmm);
+    if (o.storage) {
+      drawStorage(g, c, proj(o.center.lat, o.center.lng), S, pxmm, o.storage);
+    }
 
     // 寸法ラベル（正典 §4-3）。自動の寸法は showDims で出し分けるが、
     // 利用者が入れた値(labelOverride)は OFF でも必ず紙に出す。
@@ -781,26 +1002,92 @@
     }
 
     if (o.number != null) {
-      drawText(g, ctr, String(o.number), mmPx(LABEL_MM.number, pxmm), '#111', S);
+      // 🔒 §30-25-25: 大きさ＝標準(LABEL_MM.number)と枠に収まる大きさの小さい方
+      var ngR = numberGeomOf(c, ctr, String(o.number), mmPx(LABEL_MM.number, pxmm));
+      if (ngR.size >= mmPx(1.8, pxmm)) {
+        drawText(g, { x: ngR.cx, y: ngR.cy }, String(o.number), ngR.size, '#111', S);
+      }
     }
   }
 
-  /** 保管場所の太枠＋ラベル（画面 editor.js の _drawStorage と同じ形） */
-  function drawStorage(g, c, ctr, S, pxmm) {
+  /** 保管場所の太枠＋ラベル（画面 editor.js の _drawStorage と同じ形）
+   * 🔒 §30-22-4 9: 色（黒／赤／青）・斜線・太線は v（o.storage の値）が持つ。
+   *    旧データ（true）の読み替えは Editor.storageConf の1か所。 */
+  function drawStorage(g, c, ctr, S, pxmm, v) {
+    var cf = storageConf(v || true);
+    var hex = inkHex(cf.color);
     g.save();
-    g.lineWidth = 5 * S;
-    g.strokeStyle = '#111';
+    if (cf.hatch) drawHatch(g, c, hex, S, pxmm);
+    g.lineWidth = storageW(cf.bold) * S;
+    g.strokeStyle = hex;
     g.beginPath();
     g.moveTo(c[0].x, c[0].y);
-    for (var i = 1; i < 4; i++) g.lineTo(c[i].x, c[i].y);
+    for (var i = 1; i < c.length; i++) g.lineTo(c[i].x, c[i].y);
     g.closePath();
     g.stroke();
-    var mid = { x: (c[2].x + c[3].x) / 2, y: (c[2].y + c[3].y) / 2 };
-    var vx = mid.x - ctr.x, vy = mid.y - ctr.y;
-    var len = Math.hypot(vx, vy) || 1;
-    var szS = mmPx(LABEL_MM.storage, pxmm);
-    drawText(g, { x: mid.x + vx / len * szS * 1.15, y: mid.y + vy / len * szS * 1.15 },
-             '保管場所', szS, '#111', S);
+    /* 🔒 §30-25-19（2026-09-14 オーナー指示）: 保管場所マークは**印だけ**。
+     * 「保管場所」の文字は紙にも刷らない（画面 editor.js `_drawStorage` と同じ）。
+     * 言葉が要る時は配置図⑦の［保管場所］で文字として置く（§30-25-20）。 */
+    g.restore();
+  }
+
+  /**
+   * 🔒 §30-22-3 2: 枠の中に入れる文字（［来客用］［車いす］）を紙に描く。
+   * 形の決め方は editor.js の Editor.cellTextGeom が唯一の実装＝
+   * 画面と紙で「縦長なら縦書き・横長なら横書き」が必ず一致する。
+   */
+  function drawCellText(g, c, text, S) {
+    var G = global.Editor && global.Editor.cellTextGeom;
+    if (!G) return;
+    var q = G(c, text);
+    if (!(q.size >= 4)) return;
+    g.save();
+    g.translate(q.cx, q.cy);
+    g.rotate(q.ang * Math.PI / 180);
+    if (!q.vertical) {
+      drawText(g, { x: 0, y: 0 }, text, q.size, '#111', S);
+    } else {
+      var lh = q.size * 1.02;
+      for (var i = 0; i < q.n; i++) {
+        drawText(g, { x: 0, y: (i - (q.n - 1) / 2) * lh },
+                 text.charAt(i), q.size, '#111', S);
+      }
+    }
+    g.restore();
+  }
+
+  /**
+   * 🔒 §30-22-7 5: 枠の中の**車いすの印**を紙に描く（絵文字は使わない）。
+   * 形の数値は editor.js の Editor.WHEELCHAIR／Editor.cellIconGeom が唯一の出どころ
+   * ＝画面（SVG）と紙（canvas）で必ず同じ形になる。
+   */
+  function drawCellWheel(g, c, S) {
+    var G = global.Editor && global.Editor.cellIconGeom;
+    var W = global.Editor && global.Editor.WHEELCHAIR;
+    if (!G || !W) return;
+    var q = G(c);
+    if (!(q.size >= 8)) return;
+    var s = q.size;
+    g.save();
+    g.translate(q.cx, q.cy);
+    g.rotate(q.ang * Math.PI / 180);
+    g.strokeStyle = '#111';
+    g.fillStyle = '#111';
+    g.lineCap = 'round';
+    g.lineWidth = Math.max(0.8, W.wheel.lw * s * S);
+    g.beginPath();
+    g.arc(W.wheel.x * s, W.wheel.y * s, W.wheel.r * s, 0, Math.PI * 2);
+    g.stroke();
+    g.beginPath();
+    g.arc(W.head.x * s, W.head.y * s, W.head.r * s, 0, Math.PI * 2);
+    g.fill();
+    g.lineWidth = Math.max(0.8, W.lw * s * S);
+    for (var i = 0; i < W.lines.length; i++) {
+      g.beginPath();
+      g.moveTo(W.lines[i][0][0] * s, W.lines[i][0][1] * s);
+      g.lineTo(W.lines[i][1][0] * s, W.lines[i][1][1] * s);
+      g.stroke();
+    }
     g.restore();
   }
 
@@ -850,9 +1137,20 @@
       g.stroke();
       var mid = { x: (pts[0].x + pts[2].x) / 2, y: (pts[0].y + pts[2].y) / 2 };
       if (!first) first = { pts: pts, mid: mid };
-      if (o.storage && o.storage[i]) drawStorage(g, pts, mid, S, pxmm);
+      if (o.storage && o.storage[i]) {
+        drawStorage(g, pts, mid, S, pxmm, o.storage[i]);
+      }
+      // 🔒 §30-22-3 2: 来客用・車いす（番号より先に＝番号が上に乗る）
+      if (o.guest && o.guest[i]) drawCellText(g, pts, '来客用', S);
+      if (o.wheel && o.wheel[i]) drawCellWheel(g, pts, S);
       var num = o.numbers && o.numbers[i];
-      if (num != null) drawText(g, mid, String(num), mmPx(LABEL_MM.number, pxmm), '#111', S);
+      if (num != null) {
+        // 🔒 §30-25-25: 大きさ＝標準(LABEL_MM.number)と枠に収まる大きさの小さい方
+        var ngS = numberGeomOf(pts, mid, String(num), mmPx(LABEL_MM.number, pxmm));
+        if (ngS.size >= mmPx(1.8, pxmm)) {
+          drawText(g, { x: ngS.cx, y: ngS.cy }, String(num), ngS.size, '#111', S);
+        }
+      }
     }
     /* 1枠の代表寸法。🔒 v4（§16-10-d-4）: 自動では出さず、
      * 画面で［寸法(m)を図に出す］を入れた塊だけ紙にも出す（画面と同じ規則）。 */
@@ -895,9 +1193,17 @@
     }
   }
 
-  /** 幅矢印に出す文字（§25-5）。editor.js の Editor.arrowText と同じ規則 */
+  /**
+   * 幅矢印に出す文字（§25-5）。
+   * 🔒 §30-29-4 2: 規則の**唯一の実装は editor.js の Editor.arrowText**
+   *    （Editor.textMm / roadBand / markScaleOf と同じ作法）。
+   *    ＝ 画面と紙で必ず同じ（`noAuto` の判定も1か所で済む）。
+   * 🔴 下の3行は Editor を読めない時の控えだけ（規則は同じ）。
+   */
   function arrowText(o) {
+    if (global.Editor && global.Editor.arrowText) return global.Editor.arrowText(o);
     if (o.label) return o.label;
+    if (o.noAuto) return '';
     if (!o.a || !o.b || typeof GSI === 'undefined') return '';
     return fmtM(GSI.distanceMeters(o.a, o.b));
   }
@@ -1006,6 +1312,41 @@
     return Math.round(frame_w_m * 1000 / panelWmm);
   }
 
+  /**
+   * 🔒 §30-15-5 規則2: **描かずに**その紙の縮尺 1:N を返す（安い・canvas を作らない）。
+   * 🔴 中身は renderSheet と同じ手順（向きの決め方 → 紙に刷られる mm 幅 → 1:N）。
+   *    editor.js が「印つき文字を紙の物差しで置く」ために読む。
+   * @return 1:N の N（紙 1mm ＝ 実寸 N mm）。枠が無ければ null
+   */
+  function scaleFor(frame, orient) {
+    if (!frame || !frame.center || !(frame.w_m > 0)) return null;
+    var asp = frameAspect(frame);
+    var o = (orient === 'landscape') ? 'landscape'
+          : (orient === 'portrait') ? 'portrait'
+          : (asp >= 1 ? 'landscape' : 'portrait');
+    return scaleDenominator(frame.w_m, placeOnPage(o, asp).w);
+  }
+
+  /**
+   * 🔒 §30-25-10 5: **紙の上で ○mm ずらす ＝ 緯度経度でいくら動くか**。
+   * プレビューで文字をドラッグした量（画像px → 紙mm）を図形の at に効かせる
+   * ための唯一の換算（画面の editor は px で解くが、紙の上の操作は mm で解く）。
+   * 　紙 mm → 実距離 m … scaleFor（1:N ＝ 紙1mm が実寸 N mm）
+   * 　実距離 m → 度   … 緯度1度の地上距離（editor.js の offsetLL と同じ値）
+   * 🔴 dy は**画面と同じく下が＋**（緯度は南へ ＝ 減る）。
+   * @return {dLat, dLng}（枠が無ければ 0）
+   */
+  function paperDeltaToLatLng(frame, orient, dxMm, dyMm) {
+    var N = scaleFor(frame, orient);
+    if (!(N > 0) || !frame || !frame.center) return { dLat: 0, dLng: 0 };
+    var mPerMm = N / 1000;                        // 紙 1mm ＝ 実寸 何 m
+    var dxM = (dxMm || 0) * mPerMm, dyM = (dyMm || 0) * mPerMm;
+    var mPerDeg = EQUATOR_M / 360;                // 緯度1度の地上距離(m)
+    var c = Math.cos(frame.center.lat * Math.PI / 180);
+    return { dLat: -dyM / mPerDeg,
+             dLng: dxM / (mPerDeg * Math.max(1e-6, c)) };
+  }
+
   /* ================= 1枚を描く ================= */
 
   /**
@@ -1031,6 +1372,14 @@
     /* 紙のどこに何 mm で刷られるか。枠の比率が作図領域と一致していれば箱いっぱい
      * （＝はみ出しも余白の偏りも無い）。旧データで比率が違う枠だけ中央に収める */
     var place = fitBox(lay.box, asp);
+    /* 🔒 §30-18-6（まとめ描き）: **紙に刷られる大きさ**を呼び出し側が上書きできる。
+     * 🔴 縮尺の文字（1:N）と縮尺バーは「紙に何 mm で刷られるか」から出るので、
+     *    半分の面に縮めて並べる時はここを縮めないと嘘の縮尺になる。
+     *    置き場所（x/y）はまとめ側が決めるので、大きさだけを受ける。
+     * 🔴 1図1ページの経路は opts.paperMm を渡さない＝従来と同じ描画のまま。 */
+    if (opts.paperMm && opts.paperMm.w > 0 && opts.paperMm.h > 0) {
+      place = { x: 0, y: 0, w: opts.paperMm.w, h: opts.paperMm.h };
+    }
     var pxmm = pxPerMm(dpi);
     var outW = Math.max(32, Math.round(place.w * pxmm));
     var outH = Math.max(32, Math.round(place.h * pxmm));
@@ -1049,7 +1398,10 @@
     g.beginPath();
     g.rect(0, 0, outW, outH);
     g.clip();
-    drawObjects(g, opts.objects || [], proj, S, mpp, pxmm);
+    /* 🔒 §30-25-10 3: 文字の箱（canvas px）を集めて返す。プレビューの
+     * 「文字だけ動かす」層が読む。 */
+    var textBoxes = [];
+    drawObjects(g, opts.objects || [], proj, S, mpp, pxmm, textBoxes);
     g.restore();
 
     /* 🔒 §28-3/§28-7（2026-09-06 オーナー指示）: **方位記号の自動描画は廃止**した。
@@ -1092,6 +1444,8 @@
 
     return { canvas: cv, mpp: mpp, bounds: b, noScale: !!opts.noScale,
              orient: orient,
+             // 🔒 §30-25-10 3: 文字の箱（canvas px）。出どころは描画と同じ1か所
+             textBoxes: textBoxes,
              place: place, page: lay.page, sheetWmm: place.w,
              /* 1:N は**実際に紙へ刷られる幅**で出す（作図領域が広がったので
                 従来の 138mm 固定のままだと 1.4 倍ずれた数字になる） */
@@ -1188,6 +1542,146 @@
     return doc;
   }
 
+  /* ========= 所在図と配置図を1枚にまとめる（🔒 §30-18-6 2・2026-09-13）=========
+   *
+   * オーナー指示: 「紙が A4 縦なら**1枚の A4 横**に所在図（左）・配置図（右）、
+   * A4 横なら**1枚の A4 縦**に所在図（上）・配置図（下）。それぞれ 0.707 倍
+   * （半分の面に収める）・間は 6mm。🔴 所在図の**縮尺の表示は縮めた分を反映**」。
+   *
+   * 🔴 縮尺を正しくする唯一の道は「**縮めた紙の大きさで描き直す**」こと
+   *    （renderSheet の opts.paperMm）。出来上がりを写真的に縮小すると
+   *    1:N の数字だけが元の紙の値のまま残り、嘘になる。
+   * 🔴 1図1ページの経路（buildPDF / renderSheet）には**一切触っていない**。
+   */
+  var COMBI_MARGIN_MM = 6;    // まとめの紙の余白（1図1ページの 10mm より詰める）
+  var COMBI_HEAD_MM = 8;      // 上の見出し帯
+  var COMBI_GAP_MM = 6;       // 🔒 2図の間
+  var COMBI_K = Math.SQRT1_2; // 🔒 0.707 倍（面で半分）
+
+  /**
+   * まとめの1枚を描く。
+   * @param o {a, b, dpi}  a＝所在図側／b＝配置図側。どちらも
+   *          {objects, frame, orient, attributions, noScale, kindJa}
+   * @return {canvas, page:{w,h}(mm), orient, k, parts:[{r, rect(mm)}]}
+   */
+  function renderCombined(o) {
+    var A = o && o.a, B = o && o.b;
+    if (!A || !B || !A.frame || !B.frame) {
+      throw new Error('まとめるには所在図と配置図が1枚ずつ必要です');
+    }
+    var dpi = o.dpi || DPI;
+    // 元の紙の向き（2枚とも同じ＝呼び出し側が確かめてから渡す）
+    var src = (A.orient === 'landscape') ? 'landscape' : 'portrait';
+    var orient = (src === 'portrait') ? 'landscape' : 'portrait';
+    var side = (src === 'portrait');        // 縦の紙 → 横に並べる
+    var page = pageSize(orient);
+    var box = {
+      x: COMBI_MARGIN_MM,
+      y: COMBI_MARGIN_MM + COMBI_HEAD_MM,
+      w: page.w - COMBI_MARGIN_MM * 2,
+      h: page.h - COMBI_MARGIN_MM * 2 - COMBI_HEAD_MM
+    };
+    // 元の紙で刷られる大きさ（＝1図1ページの時の mm 矩形）
+    var pa = fitBox(pageLayout(src).box, frameAspect(A.frame));
+    var pb = fitBox(pageLayout(src).box, frameAspect(B.frame));
+    /* 倍率は 0.707。🔴 旧データ（比率の違う枠）で入り切らない時だけ、
+     * 2図とも同じだけ更に縮める（片方だけ縮めると並びが崩れる）。 */
+    var k = COMBI_K;
+    if (side) {
+      k = Math.min(k, (box.w - COMBI_GAP_MM) / (pa.w + pb.w),
+                      box.h / Math.max(pa.h, pb.h));
+    } else {
+      k = Math.min(k, box.w / Math.max(pa.w, pb.w),
+                      (box.h - COMBI_GAP_MM) / (pa.h + pb.h));
+    }
+    var ra = { w: pa.w * k, h: pa.h * k }, rb = { w: pb.w * k, h: pb.h * k };
+    if (side) {
+      var totalW = ra.w + rb.w + COMBI_GAP_MM;
+      ra.x = box.x + (box.w - totalW) / 2;
+      rb.x = ra.x + ra.w + COMBI_GAP_MM;
+      ra.y = box.y + (box.h - ra.h) / 2;
+      rb.y = box.y + (box.h - rb.h) / 2;
+    } else {
+      var totalH = ra.h + rb.h + COMBI_GAP_MM;
+      ra.y = box.y + (box.h - totalH) / 2;
+      rb.y = ra.y + ra.h + COMBI_GAP_MM;
+      ra.x = box.x + (box.w - ra.w) / 2;
+      rb.x = box.x + (box.w - rb.w) / 2;
+    }
+
+    var parts = [{ src: A, rect: ra }, { src: B, rect: rb }].map(function (p) {
+      return {
+        rect: p.rect,
+        r: renderSheet({
+          objects: p.src.objects, frame: p.src.frame, orient: p.src.orient,
+          attributions: p.src.attributions, noScale: p.src.noScale, dpi: dpi,
+          // 🔴 縮めた紙の大きさで描く＝縮尺の文字とバーがこの大きさで出る
+          paperMm: { w: p.rect.w, h: p.rect.h },
+          // 図の中の左上に「所在図」「配置図」（帯が狭いので図の中に入れる）
+          pageMark: p.src.kindJa || ''
+        })
+      };
+    });
+
+    var pxmm = pxPerMm(dpi);
+    var cv = document.createElement('canvas');
+    cv.width = Math.max(32, Math.round(page.w * pxmm));
+    cv.height = Math.max(32, Math.round(page.h * pxmm));
+    var g = cv.getContext('2d');
+    g.fillStyle = '#fff';
+    g.fillRect(0, 0, cv.width, cv.height);
+    // 見出し帯（左に表題だけ。🔴 案件名は紙に刷らない＝§20-7）
+    g.fillStyle = '#111';
+    g.font = '700 ' + (COMBI_HEAD_MM * 0.52 * pxmm).toFixed(1)
+           + 'px "Yu Gothic UI","Meiryo",sans-serif';
+    g.textAlign = 'left';
+    g.textBaseline = 'middle';
+    g.fillText('保管場所の所在図・配置図',
+               COMBI_MARGIN_MM * pxmm, (COMBI_MARGIN_MM + COMBI_HEAD_MM * 0.55) * pxmm);
+    parts.forEach(function (p) {
+      g.drawImage(p.r.canvas, p.rect.x * pxmm, p.rect.y * pxmm,
+                  p.rect.w * pxmm, p.rect.h * pxmm);
+      g.strokeStyle = '#111';
+      g.lineWidth = Math.max(1, 0.4 * pxmm);
+      g.strokeRect(p.rect.x * pxmm, p.rect.y * pxmm,
+                   p.rect.w * pxmm, p.rect.h * pxmm);
+    });
+    return { canvas: cv, page: page, orient: orient, k: k, parts: parts };
+  }
+
+  /**
+   * 🔒 §30-26-3（2026-09-14 オーナー指示）: **他の紙の枠**が、この紙の画像の
+   * どこに来るかを canvas ピクセルの矩形で返す。
+   * プレビューの上に重ねる「他の枠の範囲」だけが使う（**紙には出さない**＝
+   * renderSheet / buildPDF は1行も変えていない）。
+   * @param r  renderSheet の返り値（bounds＝この紙が切り取っている緯度経度・canvas）
+   * @param f  他の紙の枠 {center:{lat,lng}, w_m, aspect}
+   * @return {x,y,w,h}（canvas px。画像の外にも出る＝切るのは呼び手の仕事）／無理なら null
+   * 🔴 投影は renderSheet の中身と同じ makeProjector / frameBounds を使う
+   *    （別に見積もると画像と枠がずれる＝出どころは1か所）。
+   */
+  function frameRectOnPage(r, f) {
+    if (!r || !r.canvas || !r.bounds) return null;
+    if (!f || !f.center || !(f.w_m > 0)) return null;
+    var b = frameBounds(f);
+    var proj = makeProjector(r.bounds, r.canvas.width, r.canvas.height);
+    var nw = proj(b.north, b.west), se = proj(b.south, b.east);
+    return { x: Math.min(nw.x, se.x), y: Math.min(nw.y, se.y),
+             w: Math.abs(se.x - nw.x), h: Math.abs(se.y - nw.y) };
+  }
+
+  /** 🔒 §30-18-6 2: まとめの PDF（**1ページ**）。中身は renderCombined の1枚そのもの */
+  function buildCombinedPDF(o) {
+    var ctor = global.jspdf && global.jspdf.jsPDF;
+    if (!ctor) throw new Error('PDF ライブラリを読み込めませんでした');
+    var c = renderCombined(o);
+    var doc = new ctor({ orientation: c.orient, unit: 'mm',
+                         format: 'a4', compress: true });
+    doc.addImage(c.canvas.toDataURL('image/png'), 'PNG',
+                 0, 0, c.page.w, c.page.h, undefined, 'FAST');
+    return { doc: doc, combined: c };
+  }
+
   /* ================= 書き出し範囲枠 ================= */
 
   /** 図形が収まる枠を作る（正典 §4-10 既定は描画物にフィット）。
@@ -1237,6 +1731,16 @@
     pageLayout: pageLayout,                      // 紙と作図領域（mm）
     placeOnPage: placeOnPage,                    // 図が刷られる mm 矩形
     SHEET_SCALE: SHEET_SCALE,
+    /* 🔒 §30-15-5 規則2: 紙に刷られる文字の高さは SHEET_TEXT_MM × SHEET_SCALE(mm)。
+     * editor.js（印つき文字の置き場所）が読む＝数値の出どころはここ1か所のまま。 */
+    SHEET_TEXT_MM: SHEET_TEXT_MM,
+    scaleFor: scaleFor,                          // 🔒 §30-15-5 規則2: 描かずに 1:N
+    /* 🔒 §30-25-10 5: 紙の上の ○mm → 緯度経度のずれ（プレビューで文字を動かす） */
+    paperDeltaToLatLng: paperDeltaToLatLng,
+    /* 🔒 §30-22-4 10 / §30-25-7: 補助文字（寸法・保管場所・番号）の紙面ミリ。
+     * editor.js（画面）が同じ値で描くために読む＝表はここ1か所。 */
+    LABEL_MM: LABEL_MM,
+    pxPerMm: pxPerMm,
     textEmWidth: textEmWidth,
     /* 🔒 §22-am: 紙の付き物（縮尺バー・出典・通し表示）が居座る場所。
      * shozaizu.js の名前の配置が読む（位置の出どころはこのファイル1か所）。
@@ -1247,6 +1751,12 @@
     renderSheet: renderSheet,
     pageMark: pageMark,                          // 🔒 §26-4-e: PNG にも通し表示
     buildPDF: buildPDF,
+    /* 🔒 §30-18-6 2: 所在図＋配置図を1枚にまとめる（プレビュー用の canvas と PDF）。
+     * 🔴 1図1ページの経路（buildPDF）とは別口＝従来の書き出しは何も変わらない。 */
+    renderCombined: renderCombined,
+    buildCombinedPDF: buildCombinedPDF,
+    /* 🔒 §30-26-3: プレビューに重ねる「他の枠の範囲」の換算（画面だけ・紙には出ない） */
+    frameRectOnPage: frameRectOnPage,
     fitFrame: fitFrame,
     frameBounds: boundsOf,
     scaleDenominator: scaleDenominator

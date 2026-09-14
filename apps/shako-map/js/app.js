@@ -38,16 +38,19 @@
     /* 🔒 §29-5 決定2（2026-09-08）: photoEra ＝ ⑤下敷きの〇に出す撮影時期の固定文字列。
      * 地理院 写真（gsi-photo）だけ固定値を持たない（枠の中心の z11 タイルから動的に
      * 取る・sgSyncEra 参照）。UNDERLAYS 1か所に持たせて説明文と二重管理にしない。 */
-    { id: 'plateau', label: '正射写真 PLATEAU（真上から・なぞる用）',
+    /* 🔒 §30-22-1 2（2026-09-13 オーナー指示）: `photo: true` ＝**写真の下敷き**。
+     * 枠の破線を赤にするか（青い破線は写真の上で見えにくい）の判定はこの印1か所で行う
+     * （表示文字・id の並びでは判定しない・§26-2 注意②）。 */
+    { id: 'plateau', label: '正射写真 PLATEAU（真上から・なぞる用）', photo: true,
       provider: 'gsi', kind: 'plateau', photoEra: '撮影 2020年',
       note: '真上から見た形に補正済みで建物が傾きません。'
           /* 🔒 §18-an: 配信範囲は実測で ZL10〜18。下限未満では要求ごと止める */
           + 'なぞって作図してよい下敷きです（対象都市のみ・ZL10〜18。広域表示では出ません）。' },
-    { id: 'gsi-ort', label: '正射写真 地理院（真上から・全国・なぞる用）',
+    { id: 'gsi-ort', label: '正射写真 地理院（真上から・全国・なぞる用）', photo: true,
       provider: 'gsi', kind: 'ort', photoEra: '撮影年不明（2007年以降）',
       note: '真上から見た形に補正済み。全国をカバーします。'
           + 'なぞって作図してよい下敷きです（ZL18まで）。' },
-    { id: 'gsi-photo', label: '航空写真 地理院（全国）',
+    { id: 'gsi-photo', label: '航空写真 地理院（全国）', photo: true,
       provider: 'gsi', kind: 'satellite',
       note: '全国の最新写真。オルソではありません。' },
     { id: 'gsi-pale', label: '地理院 地図（淡色）', provider: 'gsi', kind: 'roadmap',
@@ -64,7 +67,7 @@
       note: 'お店・施設の名前と路線番号が分かります（所在図の既定の下敷き）。'
           + '交差点名はガイダンス④の［交差点名・バス停名を地図に重ねる］で重ねられます。'
           + '提供：OSMFJ（tile.openstreetmap.jp）・© OpenStreetMap contributors（CC-BY）。' },
-    { id: 'google-photo', label: 'Google 航空写真（高精細・見る用）',
+    { id: 'google-photo', label: 'Google 航空写真（高精細・見る用）', photo: true,
       provider: 'google', kind: 'satellite', google: true, photoEra: '時期不明・見るだけ',
       note: '最も鮮明ですが、正射補正されていないため背の高い建物は傾いて写ります。'
           + '🔴 位置の確認だけに使ってください（なぞって作図しない・上の正射写真に切り替える）。' },
@@ -73,6 +76,17 @@
       note: '道路地図。場所の当たりを付ける用です。'
           + '🔴 なぞって作図しないでください（作図は地理院 淡色地図で）。' }
   ];
+  /**
+   * 🔒 §30-22-1 2: いまの下敷きが**写真**か（地理院 写真／地理院 オルソ／PLATEAU／
+   * Google 航空写真）。枠の破線の色（青／赤）を決めるのはこの1か所。
+   * 🔴 下敷きを隠している時（地図OFF）は白地なので「写真ではない」＝青のまま。
+   */
+  function underlayIsPhoto() {
+    if ($('underlayOff') && $('underlayOff').checked) return false;
+    var u = underlayById($('underlaySel') ? $('underlaySel').value : '');
+    return !!(u && u.photo);
+  }
+
   function underlayById(id) {
     for (var i = 0; i < UNDERLAYS.length; i++) {
       if (UNDERLAYS[i].id === id) return UNDERLAYS[i];
@@ -95,6 +109,14 @@
     /* 🔒 §28-14 ①-4: マーカーの形・色を**置く前に**選んだ時の控え（画面だけ）。
        置いた瞬間に points[key].mark へ移す（onNavPinPlace）＝案件に残るのはそちら。 */
     markPick: { home: null, lot: null },
+    /* 🔒 §30-24-1: **次に描く主役の多角形**の書式（太さ／色／斜線）。
+       画面の状態なので案件には保存しない（何も選んでいない時に書式のアイコンを
+       押すとここが変わり、次に描く多角形がこの書式で出る）。 */
+    mainPolyDefault: { width: 'normal', color: 'black', hatch: true },
+    /* 🔒 §30-24-1: その地点の多角形の**先頭**（＝ピンを持つ「最初に描いた物」）の id。
+       画面の状態なので案件には保存しない。先頭が入れ替わった＝最初の物を消した時に
+       ピンを次の物の重心へ動かすためだけに使う（syncMainPolyHead）。 */
+    mainPolyHead: { home: null, lot: null },
     /* 🔒 §30-2: 案内数字の「押した」記録（画面だけ・案件に保存しない）。
        key は '図:番号'。状態から済んだか判定できない部品（道具・〇・欄・
        プレビュー）は、押した瞬間にここへ記す（sgNumDone が最後に見る）。 */
@@ -103,12 +125,24 @@
        開いている間だけ・案件には保存しない）。key は 図 → 段の番号（1〜12）→ 機能の key。
        値が無い＝閉じている（既定は全部閉じ）。 */
     sgMoreOpen: { shozaizu: {}, haichizu: {} },
+    /* 🔒 §30-25-35 2: 配置図の下敷きの▼（#hzUnderMore）だけは**段をまたいで
+       覚えない**（「次に進んだら折りたたんだ状態で」）。開いた段の番号だけを持ち、
+       段が変わったら 0 に戻す＝閉じる。同じ段にいる間は開いたまま。 */
+    hzUnderOpenAt: 0,
+    /* 🔒 §30-28-1 2: 道具メニューの▼（印を変える／地図の名前を確かめる／
+       自動・取り込み）の開閉。**同じ案件を開いている間だけ**覚える（案件には保存しない）。
+       値が無い＝閉じている（既定は全部閉じ）。 */
+    toolMoreOpen: {},
     /* 前回の「注意」の有無（'段:key' → 真偽）。出た**瞬間**だけ自動で開くため */
     sgMoreWarn: {},
     /* 🔒 §30-12-4 5 / §30-11-b 5: 写真を取り込んだ直後は
        ［自分で撮った写真・図面を使う］だけを自動で開く（位置合わせの案内と濃さの欄を
        見せるため）。開いたら下ろす（画面だけの合図・保存しない）。 */
     sgMoreImgNew: false,
+    /* 🔒 §30-26-3: プレビューに「同じ図の他の紙の枠」を重ねるか（既定＝出さない）。
+       🔴 画面の状態なので**案件には保存しない**。プレビューを閉じても、
+          同じ案件を開いている間は覚えている（オーナー指示）。 */
+    exOtherFrames: false,
     /* 案件一覧の絞り込み（正典 §19-2/19-3/19-4）。
        🔴 画面の状態なので**保存しない**。開くたびに［進行中］・検索空・更新順に戻る */
     listQuery: '',
@@ -120,8 +154,9 @@
     select: '図形をクリックで選択・ドラッグで移動。Delete で削除、Ctrl+D で複製、Ctrl+Z で戻す',
     line: '2回クリックで1本引きます（Esc で取り消し）',
     curve: '2回クリックで両端 → マウスを動かして膨らみを決め、もう1回クリックで確定',
-    // 🔒 §18-10: 道具の名前は「駐車枠（四角）」で統一する
-    rect: 'ドラッグで駐車枠（四角）を描きます。選択すると辺つまみで伸縮・上のつまみで回転',
+    /* 🔒 §30-22-3 2（§18-10 を改めた）: 四角は「建物など」の四角（駐車枠の意味は持たない）。
+     * 駐車枠は［駐車枠］（stamp）1つだけ。 */
+    rect: 'ドラッグで四角を1つ描きます（建物・囲いなど）。選択すると辺つまみで伸縮・上のつまみで回転',
     polygon: 'クリックで頂点を足し、ダブルクリック（または Enter）で閉じます。'
       + 'Backspace または［1つ戻す］で直前の点を取り消せます',
     // 🔒 §25-5: 空欄なら地図から計算した距離が入る。実測値は「幅」欄か「表示」欄で上書き
@@ -134,10 +169,26 @@
       + '名前が要らなければ空のまま Enter（印だけ残ります）',
     bus: 'バス停の場所をクリックすると印が置かれ、続けて停留所名を入れられます。'
       + '名前が要らなければ空のまま Enter（印だけ残ります）',
+    /* 🔒 §30-22-3 2: P マークは信号機・バス停と同じ「印つき文字」（名前は空でもよい） */
+    parking: 'クリックした場所に P マーク（□の中に P）が置かれ、続けて名前を入れられます。'
+      + '名前が要らなければ空のまま Enter（印だけ残ります）',
+    /* 🔒 §30-25-9: 木も信号機・P マークと同じ「印つき文字」（名前は空でもよい） */
+    tree: 'クリックした場所に木の印が置かれ、続けて名前を入れられます。'
+      + '名前が要らなければ空のまま Enter（印だけ残ります）',
+    /* 🔒 §30-22-1 4: 主役の多角形は**この道具だけ Enter で閉じる**（§4-5 の例外） */
+    /* 🔒 §30-24-1: 書式は▼「印を変える」の中にも同じ物が出る（いくつでも描ける） */
+    mainpoly: '建物や土地の形にそってクリックで頂点を足し、最後に Enter（またはダブルクリック）で'
+      + '囲みます。同じ場所にいくつでも描けます。線の太さ・斜線・色は、'
+      + '描いた直後（左の欄）か、選んでから右の欄で変えられます',
+    /* 🔒 §30-22-3 2: 来客用・車いすは駐車枠をクリックで入り切り（保管場所と同じ） */
+    guest: '駐車枠をクリックすると枠の中に「来客用」が入ります。もう一度クリックで外れます',
+    wheel: '駐車枠をクリックすると枠の中に車いすの印が入ります。もう一度クリックで外れます',
     eraser: 'クリックした図形を1つ消します。塊は枠1枚だけ消えます',
     number: '枠の上を押したままなぞると、通った順に連番が入ります（塊をまたいでもOK）。'
       + '1回クリックで1枠ずつ。Alt+クリックで消去',
-    storage: '対象の枠をクリックすると太枠＋「保管場所」の文字が付きます。'
+    /* 🔒 §30-25-19: 印は太枠（＋斜線・色）だけ。「保管場所」の文字は出さない
+     * （言葉が要る時は配置図⑦の［保管場所］で文字として置く・§30-25-20） */
+    storage: '対象の枠をクリックすると太枠が付きます。'
       + 'もう一度クリックで外れます（複数の枠に付けられます）',
     /* 🔒 §23（なぞり出し）。下書きは書き出しに含まれない（§23-2）ことを必ず伝える */
     reveal: '地図の建物・道路が薄く見えます。押したままなぞると、'
@@ -152,7 +203,263 @@
     parcel: '青い枠が土地の区画です。駐車場の区画をクリックすると外枠と地番を取り込みます'
   };
 
+  /* ================= 道具のアイコン（🔒 §30-22-3 2・2026-09-13 オーナー指示）=======
+   * > オーナー: 「道具は全部アイコン（説明はマウスオーバー）」
+   * ボタンの中身は**絵だけ**・説明は title（マウスオーバー）に寄せる。
+   * 🔴 絵・名前・説明の出どころは**この表1か所**。index.html 側は
+   *    `data-icon="鍵"` を書くだけ（applyToolIcons が中身と title を入れる）。
+   *    ＝ ガイダンス④と道具メニューで絵も説明も必ず同じになる。
+   * 🔴 <svg> は stroke="currentColor" fill="none"（選択中は文字色が白になるので、
+   *    絵も一緒に白へ変わる＝色を二重に持たない）。
+   * 🔴 押した時の動きは従来どおり class="tool" の共通ハンドラ（data-tool）。
+   *    ここは**見た目だけ**を差し替える（配線は1本も変えない）。 */
+  function ico(body, extra) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"'
+      + ' fill="none" stroke="currentColor" stroke-width="1.7"'
+      + ' stroke-linecap="round" stroke-linejoin="round"'
+      + (extra || '') + '>' + body + '</svg>';
+  }
+  /**
+   * 🔒 §30-30-2: 道具［木］の絵。図に入る印と**同じ関数**（Editor.treeGeom /
+   * treeCanopyPath）から作る＝絵と印が食い違わない（車いす・方位記号と同じ作法）。
+   * 24 の箱に上下 1 の余白を取り、全高 22 に収まる size を解いて描く。
+   */
+  function treeIconBody() {
+    var E = window.Editor;
+    if (!E || !E.treeGeom || !E.treeCanopyPath) {
+      return '<path d="M12 22v-6.5"/><circle cx="12" cy="8.3" r="7.3"/>';   // 予備
+    }
+    var g1 = E.treeGeom(1);                 // size=1 の時の全高で size を逆算
+    var size = 22 / g1.h;
+    var g = E.treeGeom(size);
+    var baseY = 1 + g.h;                    // 幹の下端（＝ anchor）
+    return '<path d="M12 ' + baseY.toFixed(2) + 'V' + (baseY - g.trunk).toFixed(2) + '"/>'
+         + '<path d="' + E.treeCanopyPath(12, baseY + g.cy, g.r) + '"/>';
+  }
+
+  var TOOL_ICONS = {
+    /* --- 道路や建物、文字や線を足す・消す --- */
+    select: { ja: '選択（手のひら）',
+      note: '文字や線を掴んで動かす・大きさを変える。迷ったらこれ',
+      svg: ico('<path d="M9 11.5V5.6a1.5 1.5 0 0 1 3 0v5.4"/>'
+             + '<path d="M12 10.2a1.5 1.5 0 0 1 3 0v1.3"/>'
+             + '<path d="M15 10.6a1.5 1.5 0 0 1 3 0v4.6a5.5 5.5 0 0 1-5.5 5.5h-1a4.6 4.6 0 0 1-3.9-2.1l-2.3-3.7a1.5 1.5 0 0 1 2.4-1.7L9 15.2"/>') },
+    eraser: { ja: '消しゴム', note: 'いらない文字・線をクリックして消す',
+      svg: ico('<path d="M5 20h14"/><path d="M15.2 4.6 20 9.4l-8.2 8.2H7.6L3.6 13.6z"/>') },
+    line: { ja: '直線', note: '道路や境界を1本引く（クリック→クリック）',
+      svg: ico('<path d="M6.5 17.5 17.5 6.5"/><circle cx="5" cy="19" r="1.8"/>'
+             + '<circle cx="19" cy="5" r="1.8"/>') },
+    curve: { ja: '曲線', note: '曲がった道路・川を引く（両端をクリック→ふくらみを決める）',
+      svg: ico('<path d="M4 17.5c5 0 4-11 8-11s5 6.5 8 6.5"/>') },
+    polygon: { ja: '多角形', note: '建物・敷地の形を囲う（クリックで角、Enter で確定）',
+      svg: ico('<path d="M12 3.8 20 9.6 17 19H7L4 9.6z"/>') },
+    rect: { ja: '四角（建物など）', note: 'ドラッグで四角を1つ描く（建物・囲いなど）',
+      svg: ico('<rect x="4.2" y="6.2" width="15.6" height="11.6" rx="1"/>') },
+    /* 🔒 §30-25-6 1（2026-09-13 オーナー指示）: 文字の道具は**1つだけ**にした。
+     * 旧 text（「A」＋カーソルの縦棒）は廃止し、絵は下の textFree（［自由入力］）が継ぐ。 */
+    /* --- 印を置く --- */
+    signal: { ja: '信号機', note: '交差点に信号機の印を置く。交差点名も入れられる（空でもよい）',
+      svg: ico('<rect x="3.2" y="8" width="17.6" height="8" rx="2.6"/>'
+             + '<circle cx="8" cy="12" r="1.5" fill="currentColor" stroke="none"/>'
+             + '<circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>'
+             + '<circle cx="16" cy="12" r="1.5" fill="currentColor" stroke="none"/>') },
+    bus: { ja: 'バス停', note: 'バス停の印を置く。停留所名も入れられる（空でもよい）',
+      svg: ico('<rect x="5.4" y="3.2" width="13.2" height="7.6" rx="1.6"/>'
+             + '<path d="M12 10.8V20"/><path d="M8.2 20h7.6"/>') },
+    parking: { ja: 'P マーク', note: 'クリックした所に P マークを置く。名前も入れられる（空でもよい）',
+      svg: ico('<rect x="4.2" y="4.2" width="15.6" height="15.6" rx="3"/>'
+             + '<path d="M9.8 16.4V7.8h3a2.7 2.7 0 0 1 0 5.4h-3"/>') },
+    /* 🔒 §30-25-9 3 / §30-30-2: 木の絵は Editor.treeGeom / Editor.treeCanopyPath を
+     * そのまま 24 の箱へ収めた物＝図に入る印とまったく同じ形（もこもこの樹冠も同じ数値）。
+     * 🔴 大きさは treeGeom(size) の全高（trunk + 樹冠）が 22 に収まる size を解いた値。
+     *    Editor が読めない時（単体テスト）だけ従来の円の絵に落ちる。 */
+    tree: { ja: '木', note: 'クリックした所に木の印を置く。名前も入れられる（空でもよい）',
+      svg: ico(treeIconBody()) },
+    /* --- 駐車枠 --- */
+    stamp: { ja: '駐車枠', note: '押してから置きたい場所を地図でクリック。まわりの＋で増やせます',
+      svg: ico('<path d="M4 4.5v15M12 4.5v15M20 4.5v15"/><path d="M4 19.5h16"/>') },
+    number: { ja: '番号', note: '枠をなぞると通った順に連番が入る（Alt＋クリックで消去）',
+      svg: ico('<rect x="3.5" y="6" width="17" height="12" rx="2"/>'
+             + '<path d="M8.4 15V9.6L6.9 10.7"/>'
+             + '<path d="M12.4 10.3a1.7 1.7 0 0 1 3 1.1c0 1.6-3 1.9-3 3.6h3.4"/>') },
+    guest: { ja: '来客用', note: '駐車枠をクリックすると枠の中に「来客用」が入る（もう一度で外れる）',
+      svg: ico('<circle cx="12" cy="7.2" r="3.2"/>'
+             + '<path d="M5.4 20.2a6.6 6.6 0 0 1 13.2 0"/>') },
+    /* 🔒 §30-22-7 5: 車いすの絵は Editor.WHEELCHAIR の数値 ×24（中心 12,12）＝
+     * 図に入る印とまったく同じ形（絵と印が食い違わない）。 */
+    wheel: { ja: '車いす', note: '駐車枠をクリックすると枠の中に車いすの印が入る（もう一度で外れる）',
+      svg: ico('<circle cx="12.5" cy="15.4" r="7.2" stroke-width="1.7"/>'
+             + '<circle cx="8.6" cy="3.4" r="2.3" fill="currentColor" stroke="none"/>'
+             + '<path d="M7.9 6.5 10.6 10.8"/><path d="M8.6 8.2 14.4 9.1"/>'
+             + '<path d="M10.6 10.8 14.9 12.7"/><path d="M14.9 12.7 16.8 17.3"/>'
+             + '<path d="M16.8 17.3 19.4 16.8"/>') },
+    stampSpec: { ja: '台数を指定して置く…', note: '台数・1枠の幅と奥行を数値で決めてまとめて置く',
+      svg: ico('<path d="M3.5 4.5v10M9.5 4.5v10M15.5 4.5v10"/><path d="M3.5 14.5h12"/>'
+             + '<path d="M19 16.5v5M16.5 19h5"/>') },
+    /* --- 幅の矢印（🔒 §30-29-4 1）---
+     * 絵＝両矢印（←→）＋両端の止め（寸法線の形）。道具そのものではなく
+     * 「小さな窓を開く」ボタンに付くが、絵と説明の出どころは他と同じこの表1か所。 */
+    arrow: { ja: '幅の矢印',
+      note: '道路や出入口の幅を矢印で書き入れる（自動で測るか、幅を入力）',
+      svg: ico('<path d="M3.6 12h16.8"/><path d="M7.2 8.4 3.6 12l3.6 3.6"/>'
+             + '<path d="M16.8 8.4 20.4 12l-3.6 3.6"/>'
+             + '<path d="M3.6 5.4v13.2"/><path d="M20.4 5.4v13.2"/>') },
+    /* --- 文字（定型・§30-18-4 の作法） ---
+     * 🔒 §30-22-8 5（2026-09-13 Fable 裁定）: **定型の文字ボタンは絵にしない**
+     *    （［私道］［建物］［駐輪場］は言葉をそのまま出す＝index.html の
+     *    🔒 §30-25-9 1: ［木］は定型から外れ、「印を置く」の道具（tree）になった。
+     *    .sg-word。ここに絵を持たせると「言葉のボタン」と二重になる）。
+     *    アイコンを持つのは［自由入力］だけ。 */
+    /* 🔒 §30-25-6 2: 絵は**「A」だけ**（カーソルの縦棒は無し）＝旧 text の絵を継ぐ。
+     * 文字の道具はこの1つなので、2つの絵を見分けさせる必要がそもそも無い。 */
+    textFree: { ja: '自由入力', note: 'クリックした所に入力欄を出して、好きな文字を置く',
+      svg: ico('<path d="M4.5 19 11 5.5 17.5 19"/><path d="M7.1 14.2h7.8"/>') },
+    /* --- 紙の帯（🔒 §30-26-2）---
+     * 道具ではないが、絵と説明の出どころを増やさないために同じ表に置く。
+     * 絵＝A4 縦の紙（右上を折った四角）＋その上の虫眼鏡。 */
+    /* 🔒 §30-27-1 1: プレビューは1つの画面になったので、開く先は「この紙から」 */
+    loupe: { ja: 'この紙のプレビュー', note: 'この紙から、紙の見た目で確かめます',
+      svg: ico('<path d="M4.6 2.9h8.1l4.7 4.7v13.5H4.6z"/><path d="M12.7 2.9v4.7h4.7"/>'
+             + '<circle cx="11" cy="13.1" r="3.5"/><path d="M13.5 15.6 16.8 18.9"/>') }
+  };
+
+  /**
+   * 🔒 §30-22-3 2: `data-icon` が付いたボタンに、表の絵と説明を入れる。
+   * 🔴 中身も title もこの表が唯一の出どころ＝同じ道具が2か所に出ても必ず同じ見た目。
+   * 🔒 §30-26-2: 後から作るボタン（紙の帯のルーペ）にも同じ物を入れられるよう、
+   *    **1つ分**（applyToolIcon）と**全部**（applyToolIcons）に分けてある。
+   */
+  function applyToolIcon(b) {
+    var it = b && b.dataset && TOOL_ICONS[b.dataset.icon];
+    if (!it) return;
+    b.innerHTML = it.svg;
+    b.classList.add('ico-btn');
+    b.title = it.ja + '：' + it.note;
+    b.setAttribute('aria-label', it.ja);
+  }
+  function applyToolIcons() {
+    document.querySelectorAll('[data-icon]').forEach(applyToolIcon);
+  }
+
   var $ = function (id) { return document.getElementById(id); };
+
+  /* ============ 定型の言葉（🔒 §30-29-1 2・2026-09-14 オーナー指示）============
+   * > オーナー:「文字はボタンクリックで、A から私道、建物とか全ての既定テキストが、
+   * >   エクセルやワードにあるみたいな小さいウィンドウが開いてそこで選択する感じに」
+   * 🔴 **一覧の出どころはこの表1か所**（旧 index.html の #textPreset の <option> と
+   *    ガイダンスの .sg-preset を1つに統合した）。言葉を増やす時はここだけ足す。
+   * 🔴 index.html 側は「どの言葉を出すか」を data-words="私道,建物,駐輪場" で指定する
+   *    だけ（言葉そのものは持たない）。この表に無い言葉は出さない（buildPresetRows）。
+   * 🔴 押した後の作法は §30-18-4 のまま（押す → 地図をクリックした所へ置く）。 */
+  var TEXT_PRESETS = [
+    '私道', '建物', '駐輪場', '保管場所', '出入口', '入口', '出口',
+    '道路', '公道', '歩道', '駐車場', '使用の本拠', '隣家', '店舗',
+    '空地', '月極駐車場', '○○通り', '幅員　m', '入庫口の高さ　m',
+    '新規', '増車', '代替（ナンバー：　）'
+  ];
+  /** その言葉が表にあるか（🔴 表示文字で分岐しないための唯一の照合口） */
+  function isTextPreset(w) { return TEXT_PRESETS.indexOf(w) >= 0; }
+
+  /** 定型の言葉のボタンを1つ作る（🔒 §30-29-1 2・見た目も配線も1か所） */
+  function makePresetBtn(word, cls) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'sg-preset ' + (cls || 'sg-word');
+    b.dataset.preset = word;
+    b.textContent = word;
+    b.title = '押してから、置きたい場所を地図でクリックします';
+    return b;
+  }
+
+  /**
+   * 🔒 §30-29-1 2: ガイダンスの「文字を置く」欄（所在図④・配置図④⑤⑥⑦）の
+   * 言葉のボタンを **TEXT_PRESETS から組む**。index.html の
+   * `<span class="sg-words" data-words="私道,建物,駐輪場">` が器。
+   * 🔴 表に無い言葉は出さない（言葉の出どころを2つに割らないため）。
+   */
+  function buildPresetRows() {
+    document.querySelectorAll('.sg-words').forEach(function (box) {
+      box.innerHTML = '';
+      (box.dataset.words || '').split(',').forEach(function (w) {
+        var word = w.trim();
+        if (!word || !isTextPreset(word)) return;
+        box.appendChild(makePresetBtn(word));
+      });
+    });
+  }
+
+  /**
+   * 🔒 §30-29-1 2: 上部バー2行目の［A］で開く**文字の選択窓**（#textPick）。
+   * 1行目＝［自由入力］（A のアイコン）／続いて TEXT_PRESETS の全部／
+   * 一番下は「大きさ」（#textSize そのもの＝値は1つ）。
+   * 🔴 中身はここで1回だけ組む（言葉の出どころは TEXT_PRESETS）。
+   */
+  function buildTextPick() {
+    var list = $('textPickList');
+    if (!list) return;
+    list.innerHTML = '';
+    // 1行目＝［自由入力］（.sg-textfree の共通ハンドラが受ける）
+    var free = document.createElement('button');
+    free.type = 'button';
+    free.className = 'sg-textfree tp-free';
+    free.dataset.icon = 'textFree';
+    list.appendChild(free);
+    applyToolIcon(free);
+    // 絵だけだと何の行か分からないので、この行にだけ言葉を添える
+    var lb = document.createElement('span');
+    lb.className = 'tp-free-t';
+    lb.textContent = TOOL_ICONS.textFree.ja;
+    free.appendChild(lb);
+    free.classList.remove('ico-btn');     // 幅いっぱいの行（正方形のアイコンではない）
+    // 続いて定型の言葉（表の並び順そのまま）
+    var g = document.createElement('div');
+    g.className = 'tp-words';
+    TEXT_PRESETS.forEach(function (w) { g.appendChild(makePresetBtn(w, 'tp-w')); });
+    list.appendChild(g);
+  }
+
+  /** 窓の開け閉め（🔴 状態は #textPick の hidden 1つ・別の変数を持たない） */
+  function textPickSet(open) {
+    var box = $('textPick'), btn = $('tbTextBtn');
+    if (!box) return;
+    box.hidden = !open;
+    if (btn) {
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.classList.toggle('is-on', !!open);
+    }
+  }
+  function textPickOpen() { textPickSet(true); }
+  function textPickClose() { textPickSet(false); }
+
+  /* ====== 幅の矢印の小さな窓（🔒 §30-29-4 1・2026-09-14 オーナー指示）======
+   * ［幅矢印］のアイコン（#tbArrowBtn）の直下に出る。中身は2択だけ:
+   *   ［自動入力］（地図の尺度から計測）／［幅を入力］＋数値の欄＋「m」
+   * どちらかを押すと窓が閉じて矢印の道具になる（#textPick と同じ作法）。
+   * 🔴 状態は #arrowPick の hidden 1つ・値は arrowWidth ／ state.arrowMode のまま。 */
+  function arrowPickSet(open) {
+    var box = $('arrowPick'), btn = $('tbArrowBtn');
+    if (!box) return;
+    box.hidden = !open;
+    if (btn) {
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.classList.toggle('is-on', !!open);
+    }
+  }
+  function arrowPickOpen() {
+    arrowPickSet(true);
+    syncArrowModeUI();            // いまのモードを窓にも映す（値の出どころは1つ）
+    var el = $('apArrowW');
+    if (el) el.focus();           // 「幅を入力」は打ってから押す作法なので焦点を置く
+  }
+  /**
+   * 窓を閉じる。🔴 選ばずに閉じた（外側クリック・Esc・案件の切替）時は、
+   * 打ちかけの値を**いまのモードに戻す**（自動のままなら空へ）。
+   * ＝「自動なのに欄に数字が残っていて、引いたら数字が出た」を作らない。
+   */
+  function arrowPickClose() {
+    arrowPickSet(false);
+    if (state.arrowMode !== 'manual') setArrowWidth('');
+  }
   function svgEl(name, attrs) {
     var n = document.createElementNS(SVGNS, name);
     for (var k in attrs) n.setAttribute(k, attrs[k]);
@@ -320,7 +627,8 @@
       Store.save(c).then(function (ok) {
         if (!ok) { alert(Store.lastSaveError()); return; }
         renderCaseList();
-        openCase(c.id);
+        // 🔒 §30-20: 新しい案件の時だけ「はじめに」を出す（fresh）
+        openCase(c.id, { fresh: true });
       }, function (e) { alert((e && e.message) || Store.lastSaveError()); });
     });
 
@@ -643,11 +951,127 @@
    * 🔒 §18-v: 欄は3か所あるが**値は1つ**。⑧で入れた道幅が⑨の出入口幅に化けないよう、
    *    ⑧⑨へ入った時に空にして例示（プレースホルダ）だけを見せる。
    */
+  /**
+   * 🔒 §30-28-2 6: 幅の矢印は**道具メニューにも**配置図⑤⑥と同じ2択で出す。
+   * 🔴 欄もトグルも3か所あるが**値は1つ**（state.editor.arrowWidth／state.arrowMode）。
+   *    欄・トグルの一覧はこの表1か所（増やす時はここだけ足す＝NUM_START_FIELDS と同じ作法）。
+   *      'side' … 道具メニュー #sideArrowMode / #arrowWidth
+   *      'road' … 配置図⑤ #sgRoadMode / #sgRoadW
+   *      'gate' … 配置図⑥ #sgGateMode / #sgGateW
+   * 🔒 §30-29-4 1: 上部バー2行目の小さな窓（#arrowPick）の欄もこの表に足した。
+   *      'pick' … 上部バー2行目の窓 #arrowPickMode / #apArrowW
+   *    🔴 この欄だけ `noDisable: true`（窓は「幅を打ってから［幅を入力］を押す」
+   *       作法なので、開いている間は自動の時でも打てる）。値は他と同じ1つ。
+   */
+  var ARROW_FIELDS = [
+    { from: 'side', box: 'sideArrowMode', inp: 'arrowWidth' },
+    { from: 'road', box: 'sgRoadMode', inp: 'sgRoadW' },
+    { from: 'gate', box: 'sgGateMode', inp: 'sgGateW' },
+    { from: 'pick', box: 'arrowPickMode', inp: 'apArrowW', noDisable: true }
+  ];
+
   function setArrowWidth(v, from) {
-    if (from !== 'side') $('arrowWidth').value = v;
-    if (from !== 'road') $('sgRoadW').value = v;
-    if (from !== 'gate') $('sgGateW').value = v;
+    ARROW_FIELDS.forEach(function (f) {
+      if (f.from === from) return;          // 打っている本人の欄は書き換えない
+      var el = $(f.inp);
+      if (el) el.value = v;
+    });
     if (state.editor) state.editor.arrowWidth = v;
+  }
+
+  /**
+   * 幅の決め方（🔒 §30-18-4・2026-09-13 オーナー指示）。
+   * 「自動入力（地図の尺度から計測）」／「道幅入力（出入口の幅を入力）」の2択。
+   * 🔴 **値の持ち方は今の arrowWidth のまま**（空＝自動・§25-5）。このトグルは
+   *    見せ方だけで、新しい保存データは持たない（state.arrowMode＝画面の状態）。
+   * 🔴 欄は⑤⑥で2つあるが値は1つ（§18-l）なので、モードも1つで両方を揃える。
+   */
+  function setArrowMode(m, from) {
+    state.arrowMode = (m === 'manual') ? 'manual' : 'auto';
+    if (state.arrowMode === 'auto') setArrowWidth('');   // 自動＝欄は空（§25-5）
+    /* 🔒 §30-29-4 2: 「幅を入力」で引いた矢印には `noAuto` を付ける（＝欄が空なら
+     * 何も出さない）。editor は state を見に行かないので、arrowWidth と同じ作法で
+     * ここから写す（🔴 出どころは state.arrowMode 1か所・editor 側は控え）。 */
+    if (state.editor) state.editor.arrowManual = (state.arrowMode === 'manual');
+    syncArrowModeUI(from);
+  }
+
+  /** 4つのトグルと4つの欄を、いまのモードに合わせる（見た目だけ・🔒 §30-28-2 6） */
+  function syncArrowModeUI(from) {
+    var manual = (state.arrowMode === 'manual');
+    ARROW_FIELDS.forEach(function (f) {
+      var box = $(f.box), inp = $(f.inp);
+      if (box) {
+        box.querySelectorAll('input[type="radio"]').forEach(function (r) {
+          r.checked = (r.value === (manual ? 'manual' : 'auto'));
+          var row = r.closest('.sg-seg-i');
+          if (row) row.classList.toggle('is-on', r.checked);
+        });
+        /* 🔒 §30-29-4 1: 窓の2つのボタンにも「いま選んでいる方」を出す
+         * （ラジオではないので data-mode で見る＝表示文字で分岐しない）。 */
+        box.querySelectorAll('[data-mode]').forEach(function (b) {
+          b.classList.toggle('is-on', b.dataset.mode === (manual ? 'manual' : 'auto'));
+        });
+      }
+      // 🔒 §30-29-4 1: 窓の欄（noDisable）は開いている間いつでも打てる
+      if (inp && !f.noDisable) inp.disabled = !manual;
+    });
+    // 「幅を入力」を選んだ本人の欄には、そのまま打てるよう焦点を移す
+    if (manual && from) {
+      var me = ARROW_FIELDS.filter(function (f) { return f.from === from; })[0];
+      var el = me && $(me.inp);
+      if (el) el.focus();
+    }
+  }
+
+  /**
+   * 枠の番号の開始値（🔒 §30-18-2 → 🔒 §30-25-8 で**3か所**に）。欄は
+   *   'side' … 上部バー2行目 #tbNumStart（🔒 §30-29-1 1: 旧・道具メニュー #numStart）
+   *   'sg'   … 配置図③ #sgNumStart
+   *   'sz'   … 所在図④ #sgNumStart4
+   * だが**値は1つ**（state.editor.numberStart＝案件の numberCounter）。
+   * 幅矢印の setArrowWidth と同じ作法（どれを変えても3つが揃う）。
+   * 🔴 欄の一覧はこの表1か所（増やす時はここだけ足す）。
+   */
+  var NUM_START_FIELDS = [
+    { from: 'side', id: 'tbNumStart' },     // 🔒 §30-29-1 1: 上部バー2行目
+    { from: 'sg', id: 'sgNumStart' },
+    { from: 'sz', id: 'sgNumStart4' }     // 🔒 §30-25-8: 所在図④
+  ];
+
+  function setNumberStart(v, from) {
+    var n = parseInt(v, 10);
+    if (isNaN(n)) return;
+    if (state.editor) state.editor.numberStart = n;
+    if (state.current) state.current.numberCounter = n;
+    syncNumberStartUI(n, from);
+  }
+
+  /** 3つの欄に同じ値を映す（打っている本人の欄は書き換えない） */
+  function syncNumberStartUI(n, from) {
+    NUM_START_FIELDS.forEach(function (f) {
+      if (f.from === from) return;
+      var el = $(f.id);
+      if (el) el.value = n;
+    });
+  }
+
+  /**
+   * 使用の本拠の住所の欄（🔒 §28-2 → 🔒 §30-28-2 1 で**3か所**に）。
+   *   'addrHome'     … 上部バー（doSearch が読む唯一の欄）
+   *   'sgAddrHome'   … ガイダンス①
+   *   'sideAddrHome' … 道具メニュー「所在図の準備」
+   * だが**値は1つ**（どれを打っても3つが揃う＝ NUM_START_FIELDS と同じ作法）。
+   * 🔴 欄の一覧はこの表1か所（増やす時はここだけ足す）。
+   */
+  var ADDR_HOME_FIELDS = ['addrHome', 'sgAddrHome', 'sideAddrHome'];
+
+  function syncAddrHome(v, from) {
+    ADDR_HOME_FIELDS.forEach(function (id) {
+      if (id === from) return;          // 打っている本人の欄は書き換えない
+      var el = $(id);
+      if (el) el.value = v;
+    });
   }
 
   /**
@@ -711,7 +1135,14 @@
     nmOffice: { key: 'nameOfficeLevel', names: ['szNmOffice'], ja: '会社名',   osm: 'office' },
     nmBus:    { key: 'nameBusLevel',    names: ['szNmBus'],    ja: 'バス停',   osm: 'bus' },
     nmRoad:   { key: 'nameRoadLevel',   names: ['szNmRoad'],   ja: '道路名',   osm: 'road' },
-    nmPoi:    { key: 'namePoiLevel',    names: ['szNmPoi'],    ja: '他の目印', osm: 'public' }
+    nmPoi:    { key: 'namePoiLevel',    names: ['szNmPoi'],    ja: '他の目印', osm: 'public' },
+    /* 🔒 §30-21-2（2026-09-13）: 無料で取れる名前を全部取る＝新2分類。
+     * 施設・公園（変電所・公園・団地・駅・川…）と 建物名（棟名を含む）。
+     * 設定盤は 11項目 → 13項目（🔒 §30-21-4 5）→ 14項目（🔒 §30-22-2 3）。 */
+    nmFacility: { key: 'nameFacilityLevel', names: ['szNmFacility'],
+                  ja: '施設・公園', osm: 'facility' },
+    nmBuilding: { key: 'nameBuildingLevel', names: ['szNmBuilding'],
+                  ja: '建物名',     osm: 'building' }
   };
 
   /* 2択の項目。el＝チェックボックスの id／on＝checked の時の値／off＝未 checked の値。
@@ -725,13 +1156,42 @@
     road:   { key: 'roadStyle', el: 'szRoadBand',   on: 'band',   off: 'line', ja: '道路の線' }
   };
 
+  /* 🔒 §30-22-2 2（2026-09-13 オーナー指示）: **段数が5でない項目**の表。
+   * いまは「名前の位置」（近く／標準／離す＝1〜3）だけ。作法は SZ_GRADES と同じ
+   *   ①案件データが真実 ②画面のラジオを合わせる ③変えたらその場で作り直す
+   * 🔴 段は数字で持ち、表示文字では識別しない（§26-2 注意②）。
+   * 🔴 既定値は Store.SZ_STD.nameGap（＝3 離す）1か所。 */
+  var SZ_PICKS = {
+    gap: { key: 'nameGap', name: 'szNameGap', max: 3, ja: '名前の位置' }
+  };
+
+  /** いま選ばれている段（案件があれば案件の値が真実・🔒 §30-22-2 2） */
+  function pickValue(which) {
+    var g = SZ_PICKS[which], c = state.current, v;
+    if (c) {
+      v = Number(c[g.key]);
+      if (v >= 1 && v <= g.max) return Math.round(v);
+    }
+    var el = document.querySelector('input[name="' + g.name + '"]:checked');
+    v = el ? Number(el.value) : Number(SZ_STD[g.key]);
+    return (v >= 1 && v <= g.max) ? Math.round(v) : Number(SZ_STD[g.key]);
+  }
+
+  /** 画面のラジオを段に合わせる（🔒 §30-22-2 2） */
+  function syncPickPick(which, v) {
+    var g = SZ_PICKS[which], n = Number(v);
+    if (!(n >= 1 && n <= g.max)) n = Number(SZ_STD[g.key]);
+    var el = document.querySelector('input[name="' + g.name + '"][value="' + n + '"]');
+    if (el) el.checked = true;
+  }
+
   /* 「標準」の値一式。［標準の設定で作る］（タスク3）と、案件がまだ無い時の既定に使う。
    * 🔒 §22-ao-②: 標準値の定義は store.js の Store.SZ_STD の**1か所だけ**に統合した
    *    （以前はここで GRADE_STD から組み立てていて、newCase / migrate と定義が3か所に
    *    分かれていた）。ここは Store.SZ_STD をそのまま指す。 */
   var SZ_STD = Store.SZ_STD;
 
-  /** いま設定盤で選ばれている名称6分類の段（shozaizu.js の nameLevels の形にする） */
+  /** いま設定盤で選ばれている名称8分類の段（shozaizu.js の nameLevels の形にする） */
   function nameLevelsNow() {
     var out = {};
     Object.keys(SZ_GRADES).forEach(function (k) {
@@ -739,6 +1199,42 @@
       if (g.osm) out[g.osm] = gradeValue(k);
     });
     return out;
+  }
+
+  /**
+   * 🔒 §30-21-5 4（2026-09-13 Fable 裁定）: 設定盤・名称8分類（osm を持つ行）の
+   * 段の説明文言を、shozaizu.js の実値（Shozaizu.NAME_LEVELS）から**ここ1か所**で組む。
+   * 🔴 旧 HTML の固定文字（「3件まで」「8件まで」「20件まで」）は NAME_LEVELS の
+   *    実値（1/3/8）とズレていた。行ごとに違う文言を書かない（表示の文言で分岐しない・
+   *    注意②と同じ考え方）＝どの行も段の数字だけを見てこの1関数で組み立てる。
+   */
+  var NAME_LEVEL_WORD = ['', 'なし', '少なめ', '標準', '多め', '全部'];
+  function nameLevelTitle(level) {
+    var n = Number(level);
+    var word = NAME_LEVEL_WORD[n] || '';
+    var cfg = window.Shozaizu && Shozaizu.NAME_LEVELS && Shozaizu.NAME_LEVELS[n];
+    if (!cfg || !cfg.count) return word;                 // なし（0件）はそのまま
+    if (cfg.count === Infinity) return word + '（上限なし）';
+    return word + '（' + cfg.count + '件' + (n === 2 ? '・近く' : '') + '）';
+  }
+
+  /** 設定盤・名称8分類の全行・全段に nameLevelTitle の title を付け直す（🔒 §30-21-5 4）。
+   * 複製ではなく部品は1組だけ（§28-4）なので、ここで付ければどちらの置き場所でも効く。 */
+  function syncNameLevelTitles() {
+    Object.keys(SZ_GRADES).forEach(function (k) {
+      var g = SZ_GRADES[k];
+      if (!g.osm) return;
+      g.names.forEach(function (name) {
+        for (var lv = 1; lv <= 5; lv++) {
+          var input = document.querySelector('input[name="' + name + '"][value="' + lv + '"]');
+          if (!input) continue;
+          var t = nameLevelTitle(lv);
+          input.title = t;
+          var label = document.querySelector('label[for="' + input.id + '"]');
+          if (label) label.title = t;
+        }
+      });
+    });
   }
 
   /* 🔒 §18-r: 段 → 実際に採る施設の件数（添字＝段）。
@@ -823,20 +1319,42 @@
    * 範囲が広すぎる（'wide'）は従来どおり別枠（§22-as の対象外・呼び出し側で扱う）。
    * @return '' か、先頭に空白付きの警告文
    */
+  /* 🔒 §30-23: 「枠に入った目印がほとんど無い」と言う件数の境目（これ未満で一言を足す） */
+  var SZ_MARKS_MIN = 3;
+
   function szNameWarningText(s) {
+    var w = '';
     if (s.osmError && s.osmError !== 'wide') {
-      return ' ⚠ 名前の取得に失敗しました（通信）。少し待って、もう一度［所在図を作る］を押してください。';
+      w = ' ⚠ 名前の取得に失敗しました（通信）。少し待って、もう一度［所在図を作る］を押してください。';
+    } else if (!s.osmError && s.mainNoName && (s.mainNoName.home || s.mainNoName.lot)) {
+      w = ' ⚠ ' + mainNoNameText(s.mainNoName);
     }
-    if (!s.osmError && s.mainNoName && (s.mainNoName.home || s.mainNoName.lot)) {
-      return ' ⚠ ' + mainNoNameText(s.mainNoName);
+    /* 🔒 §30-21-4 1: 名前が多すぎて応答の上限に当たった時は**足す**（上の2つとは別の話。
+     * 取れなかったのでも無いのでもなく「取ったが多すぎて一部を省いた」）。
+     * 🔴 判定は shozaizu の stat（namesTruncated）。表示文字では分岐しない（注意②）。 */
+    if (s.namesTruncated) {
+      w += ' ⚠ 名前が多すぎて一部を省きました（枠を小さくすると全部出ます）';
     }
-    return '';
+    /* 🔒 §30-23: 逆に枠が狭すぎて、周りの施設が全部枠の外へ出てしまった時も**足す**
+     * （上の3つとは別の話＝取れているが紙に載らない）。
+     * 🔴 判定は shozaizu の stat（marksInFrame＝枠に入った目印の件数）。
+     *    表示文字列では分岐しない（注意②）。
+     * 🔴 通信に失敗した時（osmError）は数えない。OSM の名前が丸ごと欠けて件数が
+     *    必ず少なくなり、「枠が狭い」と誤診断してしまう（§22-as の
+     *    「無い」と「取れなかった」は別、と同じ理由）。実機で 504 を踏んで確認。 */
+    if (!s.osmError && typeof s.marksInFrame === 'number' && s.marksInFrame < SZ_MARKS_MIN) {
+      w += ' ⚠ 枠が狭くて目印がほとんど入りません。'
+         + '地図を縮小して枠を広げると、周りの施設名が出ます';
+    }
+    return w;
   }
 
   /** 設定盤の全項目を、いまの案件の値で引き直す（案件を開いた時・標準へ戻した時） */
   function syncSzPanel() {
     Object.keys(SZ_GRADES).forEach(function (k) { syncGradePick(k, gradeValue(k)); });
     Object.keys(SZ_TOGGLES).forEach(function (k) { syncTogglePick(k, toggleValue(k)); });
+    // 🔒 §30-22-2 2: 段数が5でない項目（名前の位置）
+    Object.keys(SZ_PICKS).forEach(function (k) { syncPickPick(k, pickValue(k)); });
   }
 
   /**
@@ -858,7 +1376,10 @@
      * 書き終わったら索引が更新された一覧へ引き直す（更新日時・図形数が古いまま
      * 残らないように）。作図側の呼び出しは今までどおり戻り値を見なくてよい。 */
     var p = Store.flush();
-    closeExportPreview();      // 誘導から出したプレビューを残さない
+    closeExportPreview();      // 誘導から出したプレビューを残さない（sgCap 等の後始末込み）
+    /* 🔒 §30-25-26: 一覧へ戻る時も、開いている窓は全部閉じる
+     * （案件を開く／新しく作る と同じ CASE_PANELS を通る closeAllOverlays）。 */
+    closeAllOverlays();
     /* 🔒 §28-6 ⑤: 保存した段は消さない（次にこの案件を開いた時に続きから） */
     navClose(true);            // 掴んだままの地図クリックを残さない（§18）
     state.current = null;
@@ -916,9 +1437,16 @@
     });
     $('pasteRun').addEventListener('click', runPaste);
     $('pasteText').addEventListener('input', previewPaste);
-    /* 🔒 §28-14 ①-1: Enter で検索できるのは使用の本拠の欄だけ（駐車場の欄は撤去） */
-    $('addrHome').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') doSearch();
+    /* 🔒 §28-14 ①-1: Enter で検索できるのは使用の本拠の欄だけ（駐車場の欄は撤去）。
+     * 🔒 §30-28-2 1: 欄は3か所（上部バー／ガイダンス①／道具メニュー）だが値は1つ。
+     *    配線もこの1か所（ADDR_HOME_FIELDS の表を回すだけ＝処理を2つ書かない）。 */
+    ADDR_HOME_FIELDS.forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      el.addEventListener('input', function () { syncAddrHome(this.value, id); });
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doSearch();
+      });
     });
 
     document.querySelectorAll('.tab').forEach(function (t) {
@@ -927,6 +1455,8 @@
 
     /* シート帯（🔒 §24-1 / §24-5 / §25-3）。追加・複製・削除・並べ替え・向き・枠へ移動 */
     $('sbAdd').addEventListener('click', function () { addSheet(null); });
+    // 🔒 §30-26-1: ［枠を抜出し追加］（［複製］とは別のボタン・案内が違う）
+    $('sheetExtract').addEventListener('click', extractSheet);
     $('sbDup').addEventListener('click', function () { addSheet(curSheet()); });
     $('sbDel').addEventListener('click', deleteSheet);
     $('sbLeft').addEventListener('click', function () { moveSheet(-1); });
@@ -942,22 +1472,27 @@
       setUnderlayChoice(this.value);
     });
 
+    /* 🔒 §30-22-3 1: 濃さ・出し入れの出入口は setUnderlayPct 1つ
+     * （上部バーもガイダンス④も同じ関数を呼ぶ＝値が2か所に割れない）。 */
     $('opacity').addEventListener('input', function () {
-      var o = Number(this.value) / 100;
-      $('opacityVal').textContent = this.value + '%';
-      $('underlayOff').checked = (o === 0);
-      applyOpacity(o);
-      persistSheetState();
-      sgSyncUnderlay();       // 🔒 §28-5 B: ④の〇も追従（1つのデータ）
+      setUnderlayPct(this.value);
     });
 
     $('underlayOff').addEventListener('change', function () {
-      var o = this.checked ? 0 : 1;
-      $('opacity').value = o * 100;
-      $('opacityVal').textContent = (o * 100) + '%';
-      applyOpacity(o);
-      persistSheetState();
-      sgSyncUnderlay();       // 🔒 §28-5 B: ④の〇も追従（1つのデータ）
+      setUnderlayPct(this.checked ? 0 : 100);
+    });
+
+    /* ④の濃さと表示／非表示（🔒 §30-22-3 1）。上部バーと**同じ値**を書くだけ。
+     * 🔒 §30-22-4 1: 同じ物が配置図の全段（#hzUnderBar）にも出るので、配線は
+     *    **class 1か所**（.js-uop-range / .js-uop-show）でまとめて受ける。
+     * 🔴 「表示する」に戻す時は、直前の濃さ（0 でない値）へ戻す。 */
+    document.querySelectorAll('.js-uop-range').forEach(function (r) {
+      r.addEventListener('input', function () { setUnderlayPct(this.value); });
+    });
+    document.querySelectorAll('.js-uop-show').forEach(function (c) {
+      c.addEventListener('change', function () {
+        setUnderlayPct(this.checked ? (state.sgUnderLastPct || SG4_UNDER_PCT) : 0);
+      });
     });
 
     /* ---- 道具バー ---- */
@@ -965,10 +1500,13 @@
       b.addEventListener('click', function () {
         if (b.disabled || !state.editor) return;
         var t = b.dataset.tool;
-        /* 🔒 §25-7: ［枠をまとめて］は道具でもパネルでもなく
-         * **「押した瞬間に1枠置く」操作**になった（⑧［道路を置く］と同じ作法）。
+        /* 🔒 §25-7 →§30-19-1: ［枠をまとめて］は道具でもパネルでもなく
+         * **「押してから地図をクリックした所に1枠置く」操作**（もう一度押すとやめる）。
          * 台数を数えて入力する従来の窓は［台数を指定して置く…］に残してある。 */
-        if (t === 'stamp') { placeStampOne(); return; }
+        if (t === 'stamp') { toggleStampArm(); return; }
+        /* 🔒 §30-22-1 4: 主役の多角形は「どちらの地点を囲むか」を持つ道具。
+         * 🔴 ボタンの文字ではなく data-mkey で渡す（§26-2 注意②）。 */
+        if (t === 'mainpoly') state.editor.mainPolyKey = (b.dataset.mkey === 'lot') ? 'lot' : 'home';
         state.editor.setTool(t);
         if (t === 'parcel') loadParcelCandidates();
         else state.editor.setCandidates(null);
@@ -986,7 +1524,7 @@
     document.querySelectorAll('#rvNames .rv-cat').forEach(function (b) {
       b.addEventListener('change', applyNameCats);
     });
-    /* 「全ての目印」＝ 上の6分類の合算チェック（§23-5 の表の最終行） */
+    /* 「全ての目印」＝ 上の8分類の合算チェック（§23-5 の表の最終行・🔒 §30-21-4 7 で 6→8） */
     $('rvCatAll').addEventListener('change', function () {
       var on = this.checked;
       document.querySelectorAll('#rvNames .rv-cat').forEach(function (b) {
@@ -1003,51 +1541,48 @@
     });
     $('dfClose').addEventListener('click', function () { $('draftPanel').hidden = true; });
     $('dfRun').addEventListener('click', runAutoDraft);
-    /* ---- 書き出し（正典 §7） ---- */
+    /* ---- ［枠を図形に合わせる］（🔒 §30-29-5 3・旧 #exPanel の「図形が全部入るように」）----
+     * 旧・書き出しの窓が §30-29-1 3 で廃止された時に一緒に消えてしまったので、
+     * 左メニューの▼「自動・取り込み」の末尾へ**同じ処理のまま**戻した。
+     * 🔴 これは「地図の表示自体を合わせる」操作。書き出し範囲は常に画面なので、
+     *    画面を動かせば範囲もついてくる。 */
+    if ($('btnFitAll')) {
+      $('btnFitAll').addEventListener('click', function () {
+        if (!state.current) return;
+        var objs = objectsOf(state.kind);
+        var subj = objs.filter(function (o) {
+          return o.source !== 'auto' && o.source !== 'shozaizu';
+        });
+        var f = Exporter.fitFrame(subj.length ? subj : objs,
+                                  state.current.points.lot || state.current.points.home,
+                                  curAspect());   // 🔒 §25-3: この紙の向きで収める
+        if (!f) { hint('まだ図形がありません', 2500); return; }
+        var b = Exporter.frameBounds(f);
+        state.map.fitPoints([{ lat: b.north, lng: b.west },
+                             { lat: b.south, lng: b.east }], 0.05);
+        /* 🔴 これは「範囲を決め直す」明示の操作なので、枠を決定済みの紙でも
+         * ここでは新しい範囲を採る（決定は保ったまま中身だけ入れ替える）。 */
+        var sh = curSheet();
+        var ff = (sh && sh.frameFixed) ? frameFromView() : null;
+        if (ff) sh.frame = ff;
+        else if (!sh || !sh.frameFixed) syncFrameFromView();
+        renderSheetBar();
+        renderOverlay();
+        Store.autosave(state.current);
+        hint(KIND_JA[state.kind] + 'の図形が全部入るように表示を合わせました', 3500);
+      });
+    }
+    /* ---- 上部バーの［プレビュー］（🔒 §30-29-1 3・旧［書き出し］）----
+     * オーナー指示 2026-09-14:「上部ツールバーの書き出しボタンは『プレビュー』ボタンに
+     *   名称変更。とび先も1つにまとめたプレビュー画面」。
+     * 🔴 旧 #exPanel（書き出しの窓）は廃止した。PDF／画像はプレビュー画面の帯
+     *    （#exPreviewBar → exPickOpen）＝出口は1つ（§30-27-1 6）。 */
     $('btnExport').addEventListener('click', function () {
       if (!state.current) return;
-      var open = $('exPanel').hidden;
-      $('exPanel').hidden = !open;
-      state.showFrame = open;
-      if (open) { syncFrameFromView(); ensureFrames(); renderExportInfo(); }
-      renderOverlay();
-    });
-    $('exClose').addEventListener('click', function () {
-      $('exPanel').hidden = true;
-      state.showFrame = false;
-      renderOverlay();
-    });
-    // 「図形が全部入るように」= 地図の表示自体を合わせる。
-    // 書き出し範囲は常に画面なので、画面を動かせば範囲もついてくる。
-    $('exFitAll').addEventListener('click', function () {
-      var objs = objectsOf(state.kind);
-      var subj = objs.filter(function (o) {
-        return o.source !== 'auto' && o.source !== 'shozaizu';
-      });
-      var f = Exporter.fitFrame(subj.length ? subj : objs,
-                                state.current.points.lot || state.current.points.home,
-                                curAspect());   // 🔒 §25-3: この紙の向きで収める
-      if (!f) { hint('まだ図形がありません', 2500); return; }
-      var b = Exporter.frameBounds(f);
-      state.map.fitPoints([{ lat: b.north, lng: b.west },
-                           { lat: b.south, lng: b.east }], 0.05);
-      /* 🔴 これは「範囲を決め直す」明示の操作なので、枠を決定済みの紙でも
-       * ここでは新しい範囲を採る（決定は保ったまま中身だけ入れ替える）。 */
-      var sh = curSheet();
-      var ff = (sh && sh.frameFixed) ? frameFromView() : null;
-      if (ff) sh.frame = ff;
-      else if (!sh || !sh.frameFixed) syncFrameFromView();
-      renderSheetBar();
-      renderOverlay();
-      renderExportInfo();
-      Store.autosave(state.current);
-      hint(KIND_JA[state.kind] + 'の図形が全部入るように表示を合わせました', 3500);
-    });
-    // 書き出し・プレビューの前に「提出前チェック」を挟む（正典 §16-5 B）
-    $('exPdf').addEventListener('click', function () { withSubmitCheck(exportPDF); });
-    $('exPng').addEventListener('click', function () { withSubmitCheck(exportPNG); });
-    $('exPreview').addEventListener('click', function () {
-      withSubmitCheck(showExportPreview);
+      // 枠の数値は「いま見えている範囲」なので、開く前に1回だけ揃えておく
+      syncFrameFromView();
+      ensureFrames();
+      openPreview({ kind: state.kind });
     });
     $('chkGo').addEventListener('click', function () {
       $('chkBox').hidden = true;
@@ -1059,10 +1594,61 @@
       $('chkBox').hidden = true;
       state.pendingExport = null;
     });
+    /* 🔒 §30-20: 「はじめに」の3つのボタン。ガイダンスの2つは**上部バーの同名ボタンと
+     * 同じ処理**（navStartFig）を呼ぶ＝同じ操作は同じ結果（§26-2）。
+     * ［ガイダンスを使わずに作成］は閉じるだけ（何も始めない）。 */
+    $('wcNavSz').addEventListener('click', function () {
+      welcomeClose();
+      navStartFig('shozaizu');
+    });
+    $('wcNavHz').addEventListener('click', function () {
+      welcomeClose();
+      navStartFig('haichizu');
+    });
+    $('wcSkip').addEventListener('click', function () { welcomeClose(); });
     // 閉じ方は3通り用意する（ボタン／背景クリック／Esc）
     $('exPreviewClose').addEventListener('click', closeExportPreview);
     $('exPreviewBox').addEventListener('click', function (e) {
       if (e.target === this) closeExportPreview();   // 外側（暗い部分）を押した時
+    });
+    /* 🔒 §30-26-3: 「他の枠の範囲を表示」。切り替えたら**層だけ**描き直す
+     * （画像は作り直さない＝紙の描画には一切触らない）。 */
+    $('exOtherFrames').addEventListener('change', function () {
+      state.exOtherFrames = this.checked;
+      exFrameSync();
+    });
+    /* ---- 🔒 §30-27-1 2: プレビューの道しるべの行 ---- */
+    $('exNavPrev').addEventListener('click', function () {
+      if (state.exPager) exPagerGo(state.exPager.i - 1);
+    });
+    $('exNavNext').addEventListener('click', function () {
+      if (state.exPager) exPagerGo(state.exPager.i + 1);
+    });
+    /* 図のトグル（所在図／配置図）。🔴 行き先は「その図の1枚目」＝番号で決める */
+    $('exKindSw').addEventListener('change', function () {
+      var pg = state.exPager;
+      if (!pg) return;
+      var want = this.checked ? 'haichizu' : 'shozaizu';
+      for (var i = 0; i < pg.pages.length; i++) {
+        if (pg.pages[i].kind === want) { exPagerGo(i); return; }
+      }
+      exNavRender();        // 紙が無い側は選べない（見た目を戻す）
+    });
+    /* ---- 🔒 §30-27-1 6 / §30-27-2: ［PDF］［画像］→ 出す紙を選ぶ窓 ----
+     * 🔒 §30-29-1 3: 旧 #exPanel の［PDF］［画像］が持っていた
+     *    「提出前チェック」（#chkBox・正典 §16-5 B）は**ここへ移した**
+     *    ＝出す紙を選ぶ窓より前に1回だけ挟む（入口は1つ）。 */
+    $('exBarPdf').addEventListener('click', function () {
+      withSubmitCheck(function () { exPickOpen('pdf'); });
+    });
+    $('exBarPng').addEventListener('click', function () {
+      withSubmitCheck(function () { exPickOpen('png'); });
+    });
+    $('exPickClose').addEventListener('click', exPickClose);
+    $('exPickCancel').addEventListener('click', exPickClose);
+    $('exPickGo').addEventListener('click', exPickRun);
+    $('exPick').addEventListener('click', function (e) {
+      if (e.target === this) exPickClose();   // 外側（暗い部分）を押した時
     });
     /* 🔒 v6（§16-10-f）: 写真の縮尺の3択（scaleBox）は**廃止**した。
      * 認識は画像に触らないので、縮尺を人に確認する必要がなくなった。 */
@@ -1084,6 +1670,21 @@
       hint('筆の太さ: ' + Reveal.sizeJa(s), 1400);
     });
 
+    /* 🔒 §30-18-6 2 / §30-27-1 2: プレビューは ← → でもページを送れる
+     * （かぶせが出ている間だけ・文字入力欄の上では奪わない）。
+     * 🔴 紙を選ぶ窓（#exPick）が開いている間は奪わない（そちらが手前）。 */
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      if (!state.exPager || $('exPreviewBox').hidden) return;
+      if (!$('exPick').hidden) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      var t = e.target;
+      if (t && (t.isContentEditable || t.tagName === 'INPUT'
+                || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+      e.preventDefault();
+      exPagerGo(state.exPager.i + (e.key === 'ArrowRight' ? 1 : -1));
+    });
+
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
       // 🔒 §22-ah: 動画が出ている時は動画を先に閉じる（一番手前のかぶせ物なので）
@@ -1091,6 +1692,27 @@
         e.preventDefault();
         e.stopPropagation();
         vidClose();
+      } else if ($('textPick') && !$('textPick').hidden) {
+        /* 🔒 §30-29-1 2: 文字の選択窓は小さなポップアップ＝一番手前の扱い
+         * （かぶせ物より先に閉じる。開いている間は他の窓は開けない） */
+        e.preventDefault();
+        e.stopPropagation();
+        textPickClose();
+      } else if ($('arrowPick') && !$('arrowPick').hidden) {
+        /* 🔒 §30-29-4 1: 幅の矢印の窓も同じ扱い（文字の窓と並べる） */
+        e.preventDefault();
+        e.stopPropagation();
+        arrowPickClose();
+      } else if (!$('exPick').hidden) {
+        /* 🔒 §30-27-2: 紙を選ぶ窓が一番手前（プレビューより先に閉じる） */
+        e.preventDefault();
+        e.stopPropagation();
+        exPickClose();
+      } else if (!$('welcomeBox').hidden) {
+        // 🔒 §30-20: Esc は閉じるだけ（ガイダンスは始めない）
+        e.preventDefault();
+        e.stopPropagation();
+        welcomeClose();
       } else if (!$('exPreviewBox').hidden) {
         e.preventDefault();
         e.stopPropagation();
@@ -1104,13 +1726,25 @@
         e.preventDefault();
         e.stopPropagation();
         stopEdgePick();
+      } else if (state.namePick) {
+        // 🔒 §30-16: 拾う状態を Esc で抜ける
+        e.preventDefault();
+        e.stopPropagation();
+        stopNamePick();
+        hint('名前を図に入れるのをやめました', 2000);
+      } else if (state.stampArm) {
+        // 🔒 §30-19-1: ［枠をまとめて］の置く状態を Esc で抜ける（何も置かない）
+        e.preventDefault();
+        e.stopPropagation();
+        stopStampArm();
+        hint('枠を置くのをやめました', 2000);
       } else if (state.pinPlace) {
         e.preventDefault();
         e.stopPropagation();
         navPinArm(null);
         hint('マーカーの設置をやめました', 2000);
       } else if (state.plPlace) {
-        // 🔒 §22-ab: 駐車位置ラベルの2クリック待ちを Esc で抜ける
+        // 🔒 §22-ab / §30-22-4 10: 駐車位置ラベルの「枠を待っている」状態を Esc で抜ける
         e.preventDefault();
         e.stopPropagation();
         plDisarm();                     // 案内の一言は plDisarm が戻す（⑪／小窓の両方）
@@ -1135,6 +1769,16 @@
      * 🔒 §28-5 C（Step 3）: ガイダンス④の［所在図プレビュー］（#sgPrev）も
      * **同じ関数**（runShozaizuPreview）を呼ぶ（同じ操作は同じ結果・§26-2）。 */
     $('szPrev').addEventListener('click', runShozaizuPreview);
+
+    /* 🔒 §30-22-4 4 / 🔒 §30-25-34 1: ［地図の道路を写す］（配置図の枠の近くの
+     * 道路の縁を地図から写す）。
+     * 🔒 §30-29-5 3: 左メニューの▼「自動・取り込み」の先頭にも戻した
+     *    （配置図④の #sgRoadAuto と**同じ関数** drawRoadsNearFrame・同じ名前と説明）。
+     * 🔴 入口の一覧はこの配列1か所（増やす時はここだけ足す）。 */
+    ['sgRoadAuto', 'btnRoadAuto'].forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener('click', function () { drawRoadsNearFrame(); });
+    });
 
     /* ---- 一発生成 ---- */
     $('btnAuto').addEventListener('click', runAutoAll);
@@ -1273,9 +1917,95 @@
       hint('ガイダンスを閉じました。描いた図・置いたマーカーは何も消えていません', 3500);
     });
     sgCaptionInitDrag();      // 🔒 §30-10: 字幕の［×］とドラッグ（1回だけ配線）
+    /* 🔒 §30-29-1 2: ガイダンスの「文字を置く」欄の言葉のボタンを TEXT_PRESETS から
+     * 組む（言葉のボタンは絵を持たないので、アイコンを入れる前でも後でもよい）。 */
+    buildPresetRows();
+    /* 🔒 §30-22-3 2: 道具のアイコン（絵と説明）を入れる。1回だけ・表は TOOL_ICONS */
+    applyToolIcons();
+    /* 🔒 §30-29-1 2: 文字の選択窓は **applyToolIcons の後**に組む
+     * （applyToolIcon は innerHTML を絵で置き換えるので、先に作ると
+     *  ［自由入力］の行に添えた言葉が消える）。 */
+    buildTextPick();
+    /* 🔒 §30-29-1 2: ［A］は「窓を開く」ボタンなので、説明だけ差し替える
+     * （絵は TOOL_ICONS.textFree のまま＝出どころは1か所）。 */
+    if ($('tbTextBtn')) {
+      $('tbTextBtn').title = '文字を置く：よく使う言葉と［自由入力］を選びます';
+      $('tbTextBtn').setAttribute('aria-label', '文字を置く');
+      $('tbTextBtn').addEventListener('click', function () {
+        textPickSet($('textPick').hidden);
+      });
+      /* 外側をクリックしたら閉じる（窓の中と［A］自身は閉じない）。
+       * 🔴 stopPropagation は使わない（窓の中の .sg-preset を委譲で受けているため）。
+       * 🔴 Esc は既存の keydown の並び（§30-27-2 と同じ所）で受ける。 */
+      document.addEventListener('click', function (e) {
+        var t = e.target;
+        if (t && t.closest && (t.closest('#textPick') || t.closest('#tbTextBtn'))) return;
+        textPickClose();
+      });
+    }
+    /* 🔒 §30-29-4 1: ［幅矢印］も「窓を開く」ボタン（絵は TOOL_ICONS.arrow のまま）。
+     * 2つの選択肢は道具（class="tool"）にせず、押した時に
+     * モードを決める → 窓を閉じる → 矢印の道具にする、の3つをここで受ける。 */
+    if ($('tbArrowBtn')) {
+      $('tbArrowBtn').title = '幅の矢印：自動で測るか、幅を入力して矢印を引きます';
+      $('tbArrowBtn').setAttribute('aria-label', '幅の矢印');
+      $('tbArrowBtn').addEventListener('click', function () {
+        if ($('arrowPick').hidden) arrowPickOpen(); else arrowPickClose();
+      });
+      /* 外側をクリックしたら閉じる（窓の中とアイコン自身は閉じない）。
+       * 🔴 Esc は上の keydown の並び（文字の窓の次）で受ける。 */
+      document.addEventListener('click', function (e) {
+        var t = e.target;
+        if (t && t.closest && (t.closest('#arrowPick') || t.closest('#tbArrowBtn'))) return;
+        arrowPickClose();
+      });
+      /* 🔴 判定は data-mode（'auto' / 'manual'）だけ・表示文字では分岐しない */
+      $('arrowPickMode').querySelectorAll('[data-mode]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          setArrowMode(this.dataset.mode);      // 値は arrowWidth／state.arrowMode の1つ
+          arrowPickSet(false);                  // 選んで閉じる（打った値は戻さない）
+          sgRenderStatus();
+          if (state.editor) state.editor.setTool('arrow');
+          /* §30-18-4 と同じ一言（幅が入っていればその値・空なら測る／出さない） */
+          var w = String((state.editor && state.editor.arrowWidth) || '').trim();
+          if (state.arrowMode === 'manual') {
+            hint(w ? ('端から端までドラッグすると「' + w + (/m$/.test(w) ? '' : 'm')
+                      + '」を添えて矢印を書き込みます')
+                   : '幅を入れずに引くと、矢印だけを書き込みます（あとで「表示」欄に入れられます）',
+                 4500);
+          } else {
+            hint('端から端までドラッグすると、地図から計算した幅が入ります', 4500);
+          }
+        });
+      });
+    }
     /* 🔒 §30-12-4: 「やること」以外の部品を「こんな時に押すボタン」の箱へ移す。
      * 🔴 器を作るのは**1回だけ**（部品は index.html にある物を移す＝id も配線もそのまま）。 */
     sgBuildMore();
+    /* 🔒 §30-25-35: 配置図の下敷きの▼（#hzUnderMore）は index.html に固定で置いて
+     * ある（#hzUnderBar ごと段を移るので sgBuildMore は通さない）。配線はここ1回だけ。 */
+    if ($('hzUnderMoreBtn')) {
+      $('hzUnderMoreBtn').addEventListener('click', function () {
+        hzUnderMoreSet($('hzUnderMoreBody').hidden);
+      });
+    }
+    if ($('hzUnderMoreX')) {
+      $('hzUnderMoreX').addEventListener('click', function () { hzUnderMoreSet(false); });
+    }
+    /* 🔒 §30-28-1 2: 道具メニューの▼（3つ）。開閉は data-tmore ／ data-tmore-x
+     * （属性）で受ける＝ボタンの文字では分岐しない。描き方は sgMorePaint 1か所。 */
+    document.querySelectorAll('.tools [data-tmore]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var w = toolMoreBox(b.dataset.tmore);
+        var body = w && w.querySelector('.sg-more-body');
+        if (body) toolMoreSet(b.dataset.tmore, body.hidden);
+      });
+    });
+    document.querySelectorAll('.tools [data-tmore-x]').forEach(function (b) {
+      b.addEventListener('click', function () { toolMoreSet(b.dataset.tmoreX, false); });
+    });
+    /* 🔒 §30-29-2: 道具メニューの「確かめる・出す」は廃止した
+     * （上部バーの［プレビュー］＝openPreview 1つに寄せた）。 */
     /* 🔒 §30-2: 案内数字の「押した」記録。
      * 🔴 **捕捉（capture）で受ける**。段を進めるボタン（次へ・決定）を押すと、
      *    本来の処理が先に走って段が変わってしまい、どの図・どの番号を押したのかが
@@ -1301,18 +2031,13 @@
     });
     $('sgPinHome').addEventListener('click', function () { navPinArm('home'); });
     $('sgPinLot').addEventListener('click', function () { navPinArm('lot'); });
-    /* 🔒 §28-2: 使用の本拠の欄は上部バーの #addrHome と**同じ値**（1つのデータ）。
-     * どちらを打っても両方に入る。検索そのものは従来の doSearch()。 */
-    $('sgAddrHome').addEventListener('input', function () {
-      $('addrHome').value = this.value;
+    /* 🔒 §28-2 / §30-28-2 1: 使用の本拠の欄は上部バー・ガイダンス①・道具メニューの
+     * 3か所だが**同じ値**（1つのデータ）。欄の配線は ADDR_HOME_FIELDS の所1か所に
+     * まとめてある。ここは［検索］のボタンだけ（中身は従来の doSearch()）。 */
+    ['sgSearchHome', 'sideSearchHome'].forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener('click', function () { doSearch(); });
     });
-    $('addrHome').addEventListener('input', function () {
-      $('sgAddrHome').value = this.value;
-    });
-    $('sgAddrHome').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') doSearch();
-    });
-    $('sgSearchHome').addEventListener('click', function () { doSearch(); });
     /* ①: 地図の選択（🔒 §28-14 ①-3）。④の〇と**同じ出入口**（sgUnderlayPick）。
      * 2つ目の値（Google 航空写真／地理院 写真）は buildUnderlayOptions が入れる。 */
     document.querySelectorAll('#sgUnder1 input[name="sgUnder1R"]').forEach(function (r) {
@@ -1320,21 +2045,48 @@
         if (this.checked) sgUnderlayPick(this.value);
       });
     });
-    /* ①: マーカーの種類（🔒 §28-14 ①-4）。中身は sgRenderMarks が組み立てるので
-     * ここは器への委譲だけ（形＝data-shape／色＝data-color）。 */
-    $('sgMarks').addEventListener('click', function (e) {
-      var b = e.target.closest ? e.target.closest('button[data-mk]') : null;
-      if (!b) return;
-      sgSetMark(b.dataset.mk, b.dataset.shape ? { shape: b.dataset.shape }
-                                              : { color: b.dataset.color });
+    /* ①: 印の形と色（🔒 §28-14 ①-4 / §30-22-1 4〜5）。中身は sgRenderMarks が
+     * 組み立てるので、ここは器への委譲だけ（形＝data-shape／色＝data-color）。
+     * 🔴 器は地点ごとに2つ（本拠／駐車場）。押した先の判定は data-mk 1か所。 */
+    /* 🔒 §30-24-2: ［同一住所］の直下の▼も同じ器（値は本拠の物＝ data-mk="home"） */
+    /* 🔒 §30-28-2 1: 道具メニューの▼の器（#sideMarks*）も同じ委譲で受ける
+     * （押した先の判定は data-mk・処理は sgSetMark 1か所）。 */
+    ['sgMarksHome', 'sgMarksLot', 'sgMarksSame',
+     'sideMarksHome', 'sideMarksLot', 'sideMarksSame'].forEach(function (id) {
+      var box = $(id);
+      if (!box) return;
+      box.addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('button[data-mk]') : null;
+        if (!b) return;
+        /* 🔒 §30-25-40 1: 形（data-shape）／色（data-color）の2種だけ
+         * （大きさ＝ data-scale の行は廃止・つまみと右パネルへ移した）。
+         * どれが押されたかは**属性**で見る（表示文字では分岐しない）。 */
+        var patch = null;
+        if (b.dataset.shape) patch = { shape: b.dataset.shape };
+        else if (b.dataset.color) patch = { color: b.dataset.color };
+        if (patch) sgSetMark(b.dataset.mk, patch);
+      });
+    });
+    /* ①: ［使用の本拠と駐車場が同一住所］（🔒 §30-22-1 6）。
+     * 中身はマーカー設置と**同じ仕組み**（押す → 地図をクリック）＝ navPinArm。
+     * 🔒 §30-28-2 1: 道具メニューの #sideSame も同じ関数を呼ぶ。 */
+    ['sgSame', 'sideSame'].forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener('click', function () { navPinArm('same'); });
     });
     /* ②: 紙の向き・2地点を入れる・枠を決定。**中身は既存の関数そのまま**（§28-1 ④）
      * 🔒 §30-13-2 1: 〇2つ（旧 #sgOrient）はやめて、押すとその場で縦↔横が
      *   切り替わる普通のボタンにした。中身は⑤と同じ setSheetOrient（値は1つ）。 */
     /* 🔒 §30-14-1: ⑤（配置図①）も**同じ作り**の［紙の向きを変える］。
      * 中身は1つの関数（setSheetOrient）＝値はシートの orient 1つのまま。 */
+    /* 🔒 §30-29-2: 道具メニューの「紙と枠」（#sideOriToggle / #sideFix）は廃止した。
+     * 器はガイダンス②（所在図）と⑤（配置図）の2つ。2行目の「いま: …」と
+     * ［枠を決定］↔［枠を決めなおす］の切替は sgSyncOrient がまとめて書く
+     * （値はシートの orient / frameFixed 1つ）。 */
     ['sgOriToggle', 'sgOri5Toggle'].forEach(function (id) {
-      $(id).addEventListener('click', function () {
+      var b = $(id);
+      if (!b) return;
+      b.addEventListener('click', function () {
         var sh = curSheet();
         setSheetOrient((sh && sh.orient === 'landscape') ? 'portrait' : 'landscape');
         sgSyncOrient();      // 2行目の「いま: …」を押した結果に合わせる
@@ -1354,8 +2106,15 @@
     });
     /* ④: ［交差点名・バス停名を地図に重ねる］（🔒 §28-13 決定3・Step 4）。
      * 🔴 案件には保存しない画面の状態。図形にもならず紙にも出ない。 */
-    $('sgNameLay').addEventListener('change', function () {
-      if (state.namelay) state.namelay.setOn(this.checked);
+    /* 🔒 §30-28-2 9: 道具メニューの▼にも同じチェックがある（値は1つ・setNameLay）。 */
+    NAME_LAY_BOXES.forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener('change', function () { setNameLay(this.checked); });
+    });
+    /* 🔒 §30-16: ［クリックした名前を図に入れる］。もう一度押すと終わる。 */
+    NAME_LAY_PICKS.forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener('click', toggleNamePick);
     });
     /* 🔒 §30-13-2 所在図④-2: 本文の［所在図プレビュー］（旧 #sgPrev）は削除した。
      * ⑧は下部（#sgFoot の data-act="szPrev"）＝ sgAct が navShowPreview('shozaizu') を呼ぶ。
@@ -1385,8 +2144,8 @@
     /* ⑤: ［駐車場に寄る］（道具メニューの #btnFocusLot と同じ関数）／［枠を決定］ */
     $('sgFocusLot').addEventListener('click', focusLot);
     $('sgFix5').addEventListener('click', toggleFrameFixed);
-    /* ⑦: ［台数を指定して置く…］は道具メニューの #btnStampSpec と同じ窓
-     *     （下の ['sgStampSpec','btnStampSpec'] の配線でまとめて受ける）。
+    /* ⑦: ［台数を指定して置く…］は上部バー2行目の #tbStampSpec と同じ窓
+     *     （下の ['sgStampSpec7','sgStampSpec4','tbStampSpec'] の配線でまとめて受ける）。
      * ⑦: ［写真から枠を描く］＝旧📷ウィザード③の［車両枠を描く］と同じ関数。 */
     $('sgFillRun').addEventListener('click', sgRunFill);
     $('sgFillCount').addEventListener('keydown', function (e) {
@@ -1441,14 +2200,30 @@
         szSettingChanged(t.ja);
       });
     });
+    /* 🔒 §30-22-2 2: 段数が5でない項目（名前の位置）。作法は5段階と同じ */
+    Object.keys(SZ_PICKS).forEach(function (which) {
+      var g = SZ_PICKS[which];
+      document.querySelectorAll('input[name="' + g.name + '"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+          if (!this.checked) return;
+          var v = Math.max(1, Math.min(g.max,
+            Math.round(Number(this.value) || Number(SZ_STD[g.key]))));
+          if (state.current) state.current[g.key] = v;
+          syncPickPick(which, v);
+          szSettingChanged(g.ja);
+        });
+      });
+    });
     /* 🔒 §29 Step 6: 旧⑤（多角形）・旧⑥（駐車枠）・旧⑦（道路）の小ウィンドウの
      * ボタン（#navPoly / #navRect / #navStamp / #navRoadLine / #navRoadPoly /
      * #navRoadCurve）は、左面のガイダンス⑥⑦⑧の **class="tool"** のボタンへ移した
      * （道具メニューと同じ共通ハンドラが setTool と is-active を1か所で受け持つ）。
      * ここにあった配線は、押す物が無くなったので削除した。 */
     // 台数が分かっている時のための従来の窓（正典 §4-4・幅と奥行の数値指定もここ）
-    // 🔒 §29-1 ⑦: ガイダンスの［台数を指定して置く…］（#sgStampSpec）も同じ窓
-    ['sgStampSpec', 'btnStampSpec'].forEach(function (id) {
+    // 🔒 §29-1 ⑦: ガイダンスの［台数を指定して置く…］も同じ窓
+    // 🔒 §30-22-3 2: 所在図④にも［台数を指定して置く…］（#sgStampSpec4）が出る
+    // 🔒 §30-25-12 2 ③: 配置図③は ▼ の中の #sgStampSpec → 行の #sgStampSpec7 へ
+    ['sgStampSpec7', 'sgStampSpec4', 'tbStampSpec'].forEach(function (id) {
       var b = $(id);
       if (!b) return;
       b.addEventListener('click', function () {
@@ -1461,26 +2236,54 @@
     ['sgRoadArrow', 'sgGateArrow'].forEach(function (id) {
       $(id).addEventListener('click', function () {
         if (!state.editor) return;
+        /* 🔒 §30-29-7 1: 「道幅入力」で欄が空でも止めない（旧・§30-18-4／§30-29-6 5 の
+         * 「幅を入れてください」で止める作法を差し替え）。上部バーの窓（#tbArrowBtn・
+         * 1933行目付近）と同じく、そのまま矢印の道具に入る＝矢印だけ置ける
+         * （editor.js が state.arrowMode から o.noAuto:true を付ける＝§30-29-4）。 */
         state.editor.setTool('arrow');
         /* 🔒 §18-l: 幅欄に値があれば、その値を添えた（手入力ラベル確定済みの）矢印になる。
          * 値の受け渡しは既存の editor.arrowWidth ＝ 正典 §4-6 の仕組みをそのまま使う。
          * 🔒 §25-5: 空欄のまま引いた矢印は**地図から計算した距離**が入る
-         * （実測値が分かったら選んで「表示」欄に手入力すると上書きできる）。 */
+         * （実測値が分かったら選んで「表示」欄に手入力すると上書きできる）。
+         * 🔒 §30-29-7 1: 「道幅入力」で欄が空の時は、地図から計算した距離ではなく
+         *    矢印だけ（文字なし）になる（上部バーの窓と同じ一言・§30-29-4）。 */
         var w = String(state.editor.arrowWidth || '').trim();
-        hint(w ? ('端から端までドラッグすると「' + w + (/m$/.test(w) ? '' : 'm')
-                  + '」を添えて矢印を書き込みます')
-               : '端から端までドラッグすると、地図から計算した幅が入ります', 4500);
+        if (state.arrowMode === 'manual') {
+          hint(w ? ('端から端までドラッグすると「' + w + (/m$/.test(w) ? '' : 'm')
+                    + '」を添えて矢印を書き込みます')
+                 : '幅を入れずに引くと、矢印だけを書き込みます（あとで「表示」欄に入れられます）',
+               4500);
+        } else {
+          hint('端から端までドラッグすると、地図から計算した幅が入ります', 4500);
+        }
       });
     });
-    /* ⑨⑩ 文字を置く（🔒 §22-z・2026-08-28 オーナー指示）。
-     * 🔴 旧: 道具を text にして地図をクリック → 入力欄が出る → Enter で確定、の3手。
-     *    新: **押した瞬間に地図の中央へ確定済みで置き、道具は［選択］**にする。
-     *    置いた文字はそのまま掴んで動かせるので、入力欄を挟む意味がなかった。 */
-    $('sgRoadText').addEventListener('click', function () {
-      navPlaceTextAtCenter('道路');
+    /* ⑤⑥「文字を置く」欄（🔒 §30-18-4・2026-09-13 オーナー指示）。
+     * 🔴 定型は**共通ハンドラ1つ**（data-preset を読むだけ・表示文字列では分岐しない）。
+     *    押した後に地図をクリックした所へ置き、1回で解除する（textPreset の作法）。
+     * 🔴 旧 §22-z の［「道路」の文字を置く］（押した瞬間に地図の中央へ置く）は
+     *    置き場所を選べないので廃止した（#sgRoadText / #sgGateText も無くなった）。 */
+    /* 🔒 §30-29-1 2: 言葉のボタンは **TEXT_PRESETS から JS が組む**ようになったので、
+     *    配線は**委譲1本**にした（後から作った物にも同じ処理が効く＝配線を増やさない）。
+     * 🔴 判定は data-preset（class）だけ・表示文字では分岐しない。 */
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      var w = t.closest('.sg-preset');
+      if (w) { navTextPreset(w.dataset.preset); return; }
+      if (t.closest('.sg-textfree')) navTextFree();
     });
-    $('sgGateText').addEventListener('click', function () {
-      navPlaceTextAtCenter('出入口');
+    /* ⑤⑥ 幅の決め方のトグル（🔒 §30-18-4）。値は arrowWidth 1つのまま（§18-l）。
+     * 🔒 §30-28-2 6: 道具メニューの #sideArrowMode も同じ配線（表は ARROW_FIELDS）。 */
+    ARROW_FIELDS.forEach(function (f) {
+      var box = $(f.box);
+      if (!box) return;
+      box.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t || t.type !== 'radio') return;
+        setArrowMode(t.value, f.from);
+        sgRenderStatus();
+      });
     });
     /* ⑪ 駐車位置ラベル（🔒 §29-1・Step 7 で左面へ）。行の中身も置き方も
      * 道具メニューの #plPanel と**同じ関数**（接頭辞だけ 'lb' / 'pl' で分ける）。 */
@@ -1489,8 +2292,11 @@
       addCustomRow('lbCustom');
     });
     $('sgLabelPlace').addEventListener('click', function () { labelArm('lb'); });
-    /* ⑫ プレビュー（🔒 §24-3/§25-3: 所在図・配置図の全部の紙が1図1ページで出る） */
-    $('sgPrevAll').addEventListener('click', function () { navShowPreview(); });
+    /* ⑫（🔒 §30-27-1 7）: この段は［プレビュー］［PDFにして保存］の2ボタンだけ。
+     * プレビューは**唯一の画面**（配置図から見せるだけ。中のトグルで所在図も見られる）。
+     * ［PDFにして保存］＝出す紙を選ぶ窓（§30-27-2）。 */
+    $('sgPrevAll').addEventListener('click', function () { navShowPreview('haichizu'); });
+    $('sgSavePdf').addEventListener('click', function () { exPickOpen('pdf'); });
     /* 駐車位置ラベルの小ウィンドウ（🔒 §22-ab・道具メニューから単独で使う） */
     $('btnLabelBlock').addEventListener('click', function () {
       if ($('plPanel').hidden) plOpen(); else plClose();
@@ -1501,6 +2307,17 @@
     });
     $('plPlace').addEventListener('click', function () { labelArm('pl'); });
     $('plCancel').addEventListener('click', plClose);
+    /* ［標準の値］（🔒 §30-22-4 10 / §30-22-6 1）。ガイダンス⑦と小ウィンドウの2か所、
+     * 中身は**同じ関数**（値の出どころは LABEL_STD 1か所）。 */
+    [['lbStd', 'lb'], ['plStd', 'pl']].forEach(function (kv) {
+      var b = $(kv[0]);
+      if (b) {
+        b.addEventListener('click', function (e) {
+          e.preventDefault();
+          labelSetStd(kv[1]);
+        });
+      }
+    });
     /* 多角形ツールの使い方動画（🔒 §22-ah）。かぶせの外側を押しても閉じる */
     $('vidClose').addEventListener('click', vidClose);
     $('vidBox').addEventListener('click', function (e) {
@@ -1513,24 +2330,25 @@
       var n = state.editor.clearGenerated();
       hint(n ? ('自動生成した ' + n + ' 個を消しました') : '自動生成した図形はありません', 3000);
     });
-    // 幅矢印の「幅」欄は右パネルとガイダンス⑨⑩の3か所（🔒 §18-l で同期させる）
-    $('arrowWidth').addEventListener('input', function () {
-      setArrowWidth(this.value, 'side');
+    /* 幅矢印の「幅」欄は道具メニューとガイダンス⑤⑥の3か所（🔒 §18-l で同期させる）。
+     * 🔒 §30-28-2 6: 欄の一覧は ARROW_FIELDS 1か所（配線もこの1か所）。 */
+    ARROW_FIELDS.forEach(function (f) {
+      var el = $(f.inp);
+      if (!el) return;
+      el.addEventListener('input', function () {
+        setArrowWidth(this.value, f.from);
+        sgRenderStatus();
+      });
     });
-    $('sgRoadW').addEventListener('input', function () {
-      setArrowWidth(this.value, 'road');
-      sgRenderStatus();
-    });
-    $('sgGateW').addEventListener('input', function () {
-      setArrowWidth(this.value, 'gate');
-      sgRenderStatus();
-    });
-    $('numStart').addEventListener('change', function () {
-      var n = parseInt(this.value, 10);
-      if (!isNaN(n) && state.editor) {
-        state.editor.numberStart = n;
-        if (state.current) state.current.numberCounter = n;
-      }
+    /* 枠の番号の開始値は3か所（道具メニュー／配置図③／所在図④）だが値は1つ
+     * （🔒 §30-18-2 → 🔒 §30-25-8）。🔴 欄の一覧は NUM_START_FIELDS 1か所。
+     * 🔒 §30-25-33（2026-09-14 オーナー指示「数字を入力してそのまま駐車枠を
+     *   なぞると反映されない」）: **input**（1文字ごと）で写す。change（欄を離れた
+     *   時だけ）では、欄に打ってすぐ地図をなぞる操作に間に合わない。 */
+    NUM_START_FIELDS.forEach(function (f) {
+      var el = $(f.id);
+      if (!el) return;
+      el.addEventListener('input', function () { setNumberStart(this.value, f.from); });
     });
     $('textSize').addEventListener('change', function () {
       if (state.editor) state.editor.textSize = this.value;
@@ -1538,14 +2356,9 @@
     /* 🔒 2026-08-19（正典 §16-10-d-4 / §9-j 注記）: 寸法の自動記入トグルは撤去した。
      * 寸法が図に出るのは (a)「表示」欄への手入力 (b) 図形を選んで
      * ［寸法(m)を図に出す］を入れた時だけ。書き出しも同じ規則。 */
-    $('textPreset').addEventListener('change', function () {
-      if (!state.editor) return;
-      state.editor.textPreset = this.value;
-      if (this.value) {
-        state.editor.setTool('text');
-        hint('地図上をクリックすると「' + this.value + '」を置きます', 3000);
-      }
-    });
+    /* 🔒 §30-29-1 2: 旧・道具メニューの定型文の選択肢（#textPreset の <select>）は
+     * 廃止した。定型は上部バー2行目の［A］→ #textPick の言葉のボタン
+     * （.sg-preset の共通ハンドラ）だけ＝値は state.editor.textPreset 1つのまま。 */
     $('btnUndo').addEventListener('click', function () {
       if (state.editor) { state.editor.undo(); updateHistoryButtons(); }
     });
@@ -1578,8 +2391,13 @@
       else if (e.key === 'Escape') { e.preventDefault(); hideTextInput(); }
     });
     $('textInput').addEventListener('blur', function () {
-      if (!$('textInput').hidden) commitTextInput();
+      if (!$('textBox').hidden) commitTextInput();
     });
+    /* 🔒 §30-15-4: ［OK］は Enter と同じ（確定）。
+     * 🔴 mousedown で既定動作を止める＝入力欄の focus を外さない。止めないと
+     *    blur が先に走って、押した時にはもう確定済み（二度手間）になる。 */
+    $('textOk').addEventListener('mousedown', function (e) { e.preventDefault(); });
+    $('textOk').addEventListener('click', function () { commitTextInput(); });
 
     /* ---- ズーム操作（作図倍率） ---- */
     $('btnZoomIn').addEventListener('click', function () { stepZoom(1); });
@@ -1591,6 +2409,9 @@
      * 🔴 連打を避けるため 120ms まとめてから置き直す。 */
     var capRz = null;
     window.addEventListener('resize', function () {
+      /* 🔒 §30-25-10 3: プレビューの「文字の箱」も画像の表示倍率で決まるので、
+       * 窓の大きさが変わったら引き直す（画像はすぐ縮むのでまとめない）。 */
+      exRelayout();
       if (capRz) clearTimeout(capRz);
       capRz = setTimeout(function () { capRz = null; sgCaptionPlace(); }, 120);
     });
@@ -1623,6 +2444,20 @@
    * 寄せるかは下の fitBothMaximizeZoom が 0.5 刻みの梯子で決め直す。 */
   var FIT_BOTH_PAD = 0.12;
 
+  /* 🔒 §30-23（2026-09-13 オーナー実機・岩上町147 を ZL19 で作って「ハイツ岩上」しか
+   * 出ない）: **所在図の自動ズームの上限**。2地点が近いと枠が横 150m ほどまで寄り、
+   * 250〜500m 先の変電所・公園・団地が枠の外＝紙に描けない。所在図は ZL16〜17
+   * （1:2,000〜4,000）で作る図なので、自動で寄せるのはここまでにする。
+   * 🔴 手で拡大するのは自由（ホイール・［＋］は素通り）。ここが効くのは
+   *    ［2つのマーカーが入るように地図を動かす］＝ fitBothPoints の系統だけ。
+   * 🔴 配置図は ZL20 で駐車場を描く図なので上限を掛けない（下の fitBothMaxZoom）。 */
+  var FIT_BOTH_MAX_ZL = 17.5;
+
+  /** いまの図で自動ズームが寄れる上限（所在図だけ §30-23 の上限が効く） */
+  function fitBothMaxZoom() {
+    return (state.kind === 'shozaizu') ? FIT_BOTH_MAX_ZL : Infinity;
+  }
+
   /**
    * 2地点が**紙になる枠（青い破線）**に収まるところへ地図を動かす。
    * 道具メニューの［2地点を表示］と、ガイダンス②の
@@ -1650,6 +2485,11 @@
       } catch (e) { box = null; }
     }
     state.map.fitPoints(pts, FIT_BOTH_PAD, box);
+    /* 🔒 §30-23: 粗い探索が上限より寄ってしまった時はここで引き戻す
+     * （下の fitBothMaximizeZoom は box がある時しか呼ばれないので、両方で押さえる）。 */
+    if (state.map.getZoom() > fitBothMaxZoom()) {
+      state.map.setView(null, fitBothMaxZoom());
+    }
     /* 🔒 §30-5: fitPoints は整数ZL刻みの粗い探索なので、box があり2点とも揃っている
      * 時だけ、0.5刻みの梯子で「枠に2点とも入る最大のZL」まで寄せ直す。 */
     if (box && pts.length === 2) fitBothMaximizeZoom();
@@ -1667,7 +2507,11 @@
    */
   function fitBothMaximizeZoom() {
     if (!state.map) return;
-    var ladder = state.map.zoomLadder();
+    /* 🔒 §30-23: はしごの段を上げる時に上限（所在図は ZL17.5）を超えない。
+     * 上限より上の段をはしごから外す＝下の while が自然にそこで止まる。 */
+    var maxZ = fitBothMaxZoom();
+    var ladder = state.map.zoomLadder().filter(function (z) { return z <= maxZ; });
+    if (!ladder.length) return;
     var idx = ladder.indexOf(state.map.getZoom());
     if (idx < 0) return;
     var center = state.map.getCenter();
@@ -1733,8 +2577,10 @@
   /** 選択内容に合わせて右パネルを出し入れする */
   function renderPropPanel(sel) {
     var panel = $('propPanel');
-    ['propRect', 'propMark', 'propStamp', 'propArrow', 'propText',
-     'propLabelBlock'].forEach(function (id) {
+    /* 🔒 §30-25-40 4: 「印の大きさ」は**文字の欄の外**に置く（印つき文字だけでなく
+     * 主役の■＝四角を選んだ時にも同じ行を出すため）＝ここで一緒に伏せる。 */
+    ['propRect', 'propMark', 'propMainPoly', 'propStamp', 'propArrow', 'propText',
+     'propLabelBlock', 'propMarkSize', 'propStorage'].forEach(function (id) {
       $(id).hidden = true;
     });
     if (!sel || !sel.length) { panel.hidden = true; return; }
@@ -1747,6 +2593,15 @@
     var o = sel[0], f1 = function (v) { return (Math.round(v * 10) / 10).toFixed(1); };
     /* 🔒 §25-4: 主役マークは rect だが車両枠ではない。専用の欄を出す
      * （寸法の欄は出さない＝マークに寸法ラベルは付かない） */
+    /* 🔒 §30-22-1 4: 主役の多角形（rect ではなく polygon の主役マーク）。
+     * 線の太さ・色・斜線だけを出す（寸法は持たない＝四角の印と同じ考え方）。 */
+    if (o.type === 'polygon' && o.role === 'mainmark') {
+      $('propMainPoly').hidden = false;
+      $('propMpWhat').textContent =
+        (o.markRole === 'lot' ? '駐車場' : '使用の本拠') + 'の印（多角形）';
+      renderPolyStyle(o);
+      return;
+    }
     if (o.type === 'rect' && o.role === 'mainmark') {
       $('propMark').hidden = false;
       $('propMarkWhat').textContent =
@@ -1773,14 +2628,329 @@
     } else if (o.type === 'arrow') {
       $('propArrow').hidden = false;
       $('propArrowLabel').value = o.label || '';
+      /* 🔒 §30-29-4 2: 「幅を入力」で引いた矢印（noAuto）は空欄でも計算しないので、
+       * 例示（プレースホルダ）もその矢印に合わせる（判定は o.noAuto だけ）。 */
+      $('propArrowLabel').placeholder = o.noAuto ? '空欄=数字を出さない' : '空欄=地図から計算';
     } else if (o.type === 'text') {
       $('propText').hidden = false;
       $('propTextValue').value = o.text || '';
       $('propTextSize').value = o.size || 'medium';
+      /* 🔒 §30-22-3 3: いまの大きさ（紙のミリ）。右下のつまみで変わる連続値。 */
+      $('propTextMm').textContent = '紙に刷られる高さ: 約 '
+        + (Math.round(Editor.textMm(o) * 10) / 10).toFixed(1)
+        + ' mm（文字の右下のつまみをドラッグしても変えられます）';
     } else if (o.type === 'labelBlock') {
       $('propLabelBlock').hidden = false;
       $('propLbLines').textContent = (o.lines || []).join(' / ');
     }
+    /* 🔒 §30-25-18 4 / §30-25-40 4: 印の大きさ（印つき文字4種と、主役の◎・■）。
+     * 出すか伏せるかは renderMarkSize の中で決める（対象の判定は1か所）。 */
+    renderMarkSize(o);
+    /* 🔒 §30-22-4 9: 保管場所マークの書式（色／斜線／太線）。
+     * 印そのものは選べない（枠に付く物）ので、**付いている図形を選んだ時**に出す。 */
+    if (storageOf(o)) {
+      $('propStorage').hidden = false;
+      renderStorageFmt(o);
+    }
+  }
+
+  /* 🔒 §30-25-18 4（2026-09-14 オーナー指示）: 右パネルの「印の大きさ」。
+   * 🔴 値の出どころは**印の右下のつまみと同じ1か所**（印つき文字＝図形の
+   *    `markScale` ／ 主役の◎・■＝案件の `points[key].mark.scale`）。
+   *    上下限は Editor.clampMarkScale が持つ（ここには書かない）。 */
+  /* 🔒 §30-25-40 4: ▼「印を変える」の行は廃止。この表を読むのは**右パネルだけ**
+   * （印つき文字4種と、主役の印＝◎・■の両方に同じ4段が出る）。 */
+  var MARK_SIZE_BTNS = [{ ja: '小', v: 0.7 }, { ja: '標準', v: 1 },
+                        { ja: '大', v: 1.5 }, { ja: '特大', v: 2 }];
+
+  /**
+   * 🔒 §30-25-40 4: その図形が**主役の印**（◎＝主役の文字／■＝主役の四角）なら
+   * どちらの地点の物かを返す（そうでなければ null）。
+   * 🔴 主役の印かどうかの判定は Editor.mainMarkKeyOf 1か所（role / dotStyle /
+   *    markRole で見る）。主役の文字の地点は pinKeyOf（旧案件の保険つき）。
+   */
+  function mainMarkKeyOf(o) {
+    if (!o || !window.Editor || !Editor.mainMarkKeyOf) return null;
+    var k = Editor.mainMarkKeyOf(o);
+    if (!k) return null;
+    return (o.type === 'text') ? pinKeyOf(o) : k;
+  }
+
+  /** 🔒 §30-25-40 4: いま「大きさを変えられる印」が付いている主役か
+   *  （◎か■の時だけ。印なし・多角形には大きさが無いので行を出さない）。 */
+  function mainMarkSizableKey(o) {
+    var k = mainMarkKeyOf(o);
+    if (!k) return null;
+    var sh = markOf(k).shape;
+    return (sh === 'circle' || sh === 'rect') ? k : null;
+  }
+
+  /**
+   * 印の大きさの行（右パネル）。対象は2種類:
+   *   ・印つき文字4種（信号機・バス停・P・木）＝値は図形の markScale
+   *   ・🔒 §30-25-40 4 主役の印（◎・■）＝値は案件の points[key].mark.scale
+   */
+  function renderMarkSize(o) {
+    var box = $('propMarkSize');
+    if (!box) return;
+    var mainKey = mainMarkSizableKey(o);
+    var isMark = !!mainKey
+              || !!(window.Editor && Editor.keepsMark && Editor.keepsMark(o));
+    box.hidden = !isMark;
+    if (!isMark) return;
+    // 🔴 読む値の出どころ: 主役＝ markOf(key).scale ／ 印つき文字＝ markScale
+    var cur = mainKey ? markOf(mainKey).scale : Editor.markScaleOf(o);
+    var fmt = $('propMarkSizeFmt');
+    fmt.innerHTML = '';
+    var row = document.createElement('div');
+    row.className = 'prop-row';
+    var k = document.createElement('span');
+    k.className = 'prop-row-k';
+    k.textContent = '印の大きさ';
+    row.appendChild(k);
+    MARK_SIZE_BTNS.forEach(function (b) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'fmt-btn' + (Math.abs(cur - b.v) < 0.005 ? ' is-on' : '');
+      btn.textContent = b.ja;
+      btn.title = '印の大きさ: ' + b.ja;
+      btn.addEventListener('click', function () {
+        if (!state.editor) return;
+        /* 🔒 §30-25-40 4: 主役の印は**つまみとまったく同じ口**を通す
+         * （値の出どころは points[key].mark.scale 1か所）。 */
+        if (mainKey) setMainMarkScale(mainKey, b.v);
+        else state.editor.applyMarkScale(o, b.v);
+        renderPropPanel(state.editor.getSelected());
+        updateHistoryButtons();
+      });
+      row.appendChild(btn);
+    });
+    fmt.appendChild(row);
+    $('propMarkScaleNow').textContent = 'いまの印の大きさ: '
+      + (Math.round(cur * 100) / 100) + ' 倍'
+      + '（印の右下のつまみをドラッグしても変えられます）';
+  }
+
+  /** その図形に付いている保管場所マークの書式（無ければ null・🔒 §30-22-4 9） */
+  function storageOf(o) {
+    if (!o || !o.storage) return null;
+    var conf = Editor.storageConf;
+    if (o.type === 'stampGroup') {
+      var keys = Object.keys(o.storage);
+      for (var i = 0; i < keys.length; i++) {
+        if (o.storage[keys[i]]) return conf(o.storage[keys[i]]);
+      }
+      return null;
+    }
+    return conf(o.storage);
+  }
+
+  /**
+   * 🔒 §30-22-1 4 / §30-24-1: 主役の多角形の「線の太さ・斜線・線の色」。
+   * 🔴 出す所は**2か所**（①の▼「印を変える」の中 ／ 右パネル #propMpStyle）だが、
+   *    組み立てはこの1関数（保管場所マークの storageFmtRows と同じ作法）。
+   * 🔴 値の出どころは Editor.POLY_W / Editor.INK（editor.js の1か所）。
+   * 🔒 §30-24-1: 文字のボタンではなく**アイコン**（線の太さの絵・斜線の絵・色の丸）。
+   * @param box   入れ物
+   * @param cur   いまの値 {width,color,hatch}
+   * @param apply patch を受け取って値を変える関数
+   */
+  function polyFmtRows(box, cur, apply) {
+    if (!box || !cur) return;
+    box.innerHTML = '';
+    var row = function (label) {
+      var d = document.createElement('div');
+      d.className = 'prop-row';
+      var s = document.createElement('span');
+      s.className = 'prop-row-k';
+      s.textContent = label;
+      d.appendChild(s);
+      box.appendChild(d);
+      return d;
+    };
+    var btn = function (on, title, svg, fn) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'fmt-btn fmt-ico' + (on ? ' is-on' : '');
+      b.title = title;
+      b.setAttribute('aria-label', title);
+      b.innerHTML = '<svg viewBox="0 0 26 16" width="26" height="16" aria-hidden="true">'
+        + svg + '</svg>';
+      b.addEventListener('click', fn);
+      return b;
+    };
+    var rw = row('線の太さ');
+    (Editor.POLY_W || []).forEach(function (w) {
+      rw.appendChild(btn((cur.width || 'normal') === w.key, '線の太さ: ' + w.ja,
+        '<line x1="3" y1="8" x2="23" y2="8" stroke="currentColor" stroke-linecap="round"'
+        + ' stroke-width="' + w.w + '"/>',
+        function () { apply({ width: w.key }); }));
+    });
+    var rh = row('斜線');
+    [[true, '入れる'], [false, '入れない']].forEach(function (kv) {
+      rh.appendChild(btn((cur.hatch !== false) === kv[0], '斜線を' + kv[1],
+        '<rect x="3.5" y="2.5" width="19" height="11" fill="none" stroke="currentColor"'
+        + ' stroke-width="1.2"/>'
+        + (kv[0] ? '<path d="M5 13L10 3M11 13L16 3M17 13L22 3" stroke="currentColor"'
+                 + ' stroke-width="1.1" fill="none"/>' : ''),
+        function () { apply({ hatch: kv[0] }); }));
+    });
+    var rc = row('線の色');
+    (Editor.INK || []).forEach(function (c) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mark-color' + ((cur.color || 'black') === c.key ? ' is-on' : '');
+      b.style.background = c.hex;
+      b.title = '線の色: ' + c.ja;
+      b.setAttribute('aria-label', '線の色 ' + c.ja);
+      b.addEventListener('click', function () { apply({ color: c.key }); });
+      rc.appendChild(b);
+    });
+  }
+
+  /** その図形の書式（polyFmtRows に渡す形） */
+  function polyFmtOf(o) {
+    return { width: o.widthKey || 'normal', color: o.inkColor || 'black',
+             hatch: o.hatch !== false };
+  }
+
+  /** 🔒 §30-24-1: いま選んでいる主役の多角形（key を渡すとその地点の物だけ） */
+  function selectedMainPoly(key) {
+    if (!state.editor) return null;
+    var sel = state.editor.getSelected();
+    for (var i = 0; i < sel.length; i++) {
+      var o = sel[i];
+      if (o && o.role === 'mainmark' && o.type === 'polygon'
+          && (!key || (o.markRole || 'home') === key)) return o;
+    }
+    return null;
+  }
+
+  /**
+   * 🔒 §30-24-1: 書式を反映する。**選んでいる多角形があればそれに**、
+   * 何も選んでいなければ「次に描く多角形の既定」（画面の状態）に効く。
+   */
+  function applyPolyFmt(o, patch) {
+    if (o && state.editor) {
+      state.editor.applyMainPolyProps(o, patch);
+      renderPropPanel(state.editor.getSelected());
+      updateHistoryButtons();
+    } else {
+      if (patch.width) state.mainPolyDefault.width = patch.width;
+      if (patch.color) state.mainPolyDefault.color = patch.color;
+      if (patch.hatch !== undefined) state.mainPolyDefault.hatch = !!patch.hatch;
+      if (state.editor) state.editor.mainPolyDefault = state.mainPolyDefault;
+    }
+    sgRenderMarks();
+  }
+
+  /** 右パネル（選んだ多角形の書式） */
+  function renderPolyStyle(o) {
+    polyFmtRows($('propMpStyle'), polyFmtOf(o), function (patch) {
+      applyPolyFmt(o, patch);
+    });
+  }
+
+  /** ①の▼の中（選んでいる多角形 → 無ければ次に描く多角形の既定） */
+  function renderPolyFmt(box, key) {
+    var o = selectedMainPoly(key);
+    polyFmtRows(box, o ? polyFmtOf(o) : state.mainPolyDefault, function (patch) {
+      applyPolyFmt(o, patch);
+    });
+  }
+
+  /**
+   * 🔒 §30-22-4 9: 保管場所マークの書式（色／斜線／太線）の3行。
+   * 🔴 出す所は**2か所**（右パネル #propStorageFmt ＝選んだ印の書式／
+   *    配置図⑦ #sgStorageFmt ＝これから置く印の既定）だが、**組み立てはこの1関数**。
+   *    違うのは「いまの値（cur）」と「押した時にすること（apply）」だけ。
+   * @param box  入れ物
+   * @param cur  いまの値（Editor.storageConf の形）
+   * @param apply patch を受け取って値を変える関数
+   */
+  function storageFmtRows(box, cur, apply) {
+    if (!box || !cur) return;
+    box.innerHTML = '';
+    var row = function (label) {
+      var d = document.createElement('div');
+      d.className = 'prop-row';
+      var s = document.createElement('span');
+      s.className = 'prop-row-k';
+      s.textContent = label;
+      d.appendChild(s);
+      box.appendChild(d);
+      return d;
+    };
+    var rc = row('色');
+    (Editor.INK || []).forEach(function (c) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mark-color' + (cur.color === c.key ? ' is-on' : '');
+      b.style.background = c.hex;
+      b.title = c.ja;
+      b.setAttribute('aria-label', c.ja);
+      b.addEventListener('click', function () { apply({ color: c.key }); });
+      rc.appendChild(b);
+    });
+    [['斜線', 'hatch', '入れる', '入れない'],
+     ['太線', 'bold', 'する', 'しない']].forEach(function (r) {
+      var d = row(r[0]);
+      [[r[2], true], [r[3], false]].forEach(function (kv) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'fmt-btn' + (cur[r[1]] === kv[1] ? ' is-on' : '');
+        b.textContent = kv[0];
+        b.addEventListener('click', function () {
+          var patch = {};
+          patch[r[1]] = kv[1];
+          apply(patch);
+        });
+        d.appendChild(b);
+      });
+    });
+  }
+
+  /** 右パネル: 選んだ図形に付いている保管場所マークの書式（🔒 §30-22-4 9） */
+  function renderStorageFmt(o) {
+    storageFmtRows($('propStorageFmt'), storageOf(o), function (patch) {
+      state.editor.applyStorageProps(o, patch);
+      renderPropPanel(state.editor.getSelected());
+      updateHistoryButtons();
+      sgRenderStorageFmt();     // ⑦の欄も同じ見た目に揃える
+    });
+  }
+
+  /**
+   * 🔒 §30-22-4 9 ＋ §30-22-7 4: 配置図⑦の「保管場所マークの書式」。
+   * 🔴 ここで決めた書式は**これから置く印の既定**（Editor.storageDefault）。
+   * 🔴 それだけだと「変えても画面が何も変わらない」ので、**いま編集中の紙に
+   *    置いてある保管場所マークにも同じ書式を掛ける**（他の紙には触らない）。
+   */
+  function sgRenderStorageFmt() {
+    if (!window.Editor || !Editor.storageDefault) return;
+    /* 🔒 §30-28-2 7: 器は2か所（配置図⑦ #sgStorageFmt ／ 道具メニュー
+     * #sideStorageFmt）だが、組み立ても値も1か所（storageFmtRows ＋ storageDefault）。
+     * 🔴 器の一覧はこの表1か所。 */
+    ['sgStorageFmt', 'sideStorageFmt'].forEach(function (id) {
+      storageFmtRows($(id), Editor.storageDefault(), function (patch) {
+        Editor.storageDefault(patch);
+        applyStorageFmtHere(patch);
+        sgRenderStorageFmt();
+        if (state.editor) renderPropPanel(state.editor.getSelected());
+      });
+    });
+  }
+
+  /** いま編集中の紙に置いてある保管場所マーク全部に書式を掛ける（🔒 §30-22-4 9） */
+  function applyStorageFmtHere(patch) {
+    var ed = state.editor;
+    if (!ed) return 0;
+    var n = 0;
+    (ed.objects || []).slice().forEach(function (o) {
+      if (o && o.storage && ed.applyStorageProps(o, patch)) n++;
+    });
+    if (n) { updateHistoryButtons(); Store.autosave(state.current); }
+    return n;
   }
 
   /**
@@ -2128,46 +3298,10 @@
   }
   function sheetHasDrawing(sh) { return sheetDrawCount(sh) > 0; }
 
-  /** 🔒 §24-3: 書き出しは全シートなので、**1枚ずつ全部**を一覧に出す */
-  function renderExportInfo() {
-    var c = state.current;
-    if (!c) return;
-    KINDS.forEach(function (k) {
-      var el2 = $('exInfo' + k.charAt(0).toUpperCase() + k.slice(1));
-      var list = sheetsOf(k);
-      if (!el2) return;
-      if (!list.length) { el2.innerHTML = ''; return; }
-      var rows = list.map(function (sh, i) {
-        /* 表示中の紙は今の画面の枠を出す。ただし枠を決定済みなら
-           決めた枠の方が本当に出る範囲（🔒 §24-2-3） */
-        var frame = frameForSheet(k, sh);
-        // 🔒 §28-10 裁定6: 数えるのも判定するのも sheetDrawCount の1か所
-        var n = sheetDrawCount(sh);
-        var head = (i + 1) + '/' + list.length + '枚目　'
-                 + (sh.orient === 'landscape' ? 'A4横' : 'A4縦');
-        if (!frame) return '<span class="mut">' + head + '　範囲が未設定</span>';
-        /* 🔒 §26-4-e: 図形が1個も無い紙は書き出さない。一覧にも理由を出しておく
-           （この帯の枚数と、出てくるページ数が食い違って見えるのを防ぐ）
-           🔒 §28-10 裁定6: 方位記号だけの紙も白紙。理由を分けて出す */
-        if (!n) {
-          return '<span class="mut">' + head + '　図形 0 個（'
-               + ((sh.objects || []).length ? '方位記号だけ・' : '')
-               + '白紙のため書き出しません）</span>';
-        }
-        // 1:N は**紙に実際に刷られる幅**で出す（1図1ページで作図領域が広がった）
-        var sn = Exporter.scaleDenominator(
-          frame.w_m, Exporter.placeOnPage(sh.orient, Exporter.frameAspect(frame)).w);
-        return '<span class="mut">' + head + '　図形 ' + n + ' 個　'
-          + (sheetScaleUnknown(k)
-              ? '縮尺は出しません（寸法は実測値を記入してください）'
-              : '実寸 約' + Math.round(frame.w_m) + 'm 幅 ／ 約1:' + sn.toLocaleString())
-          + '</span>';
-      });
-      el2.innerHTML = '<b>' + KIND_JA[k] + '（全' + list.length + '枚）</b>'
-                    + rows.join('');
-    });
-  }
-
+  /* 🔒 §30-29-1 3: renderExportInfo()（旧 #exPanel の
+   * 「何枚目・図形 N 個・縮尺」の一覧）は廃止した。
+   * 紙ごとの件は紙の帯（.ed-sheetbar）とプレビュー画面の
+   * 見出し（exPagerRender）・出す紙を選ぶ窓（exPickRender）が出す。 */
   /**
    * その図の縮尺を出してよいか（正典 §16-10-f-3 / 🔒 §18-ae）。
    * 🔒 §18-ae: **配置図は常に縮尺を出さない**（画面の 1:N・スケールバー、
@@ -2186,32 +3320,27 @@
     return !!(im && im.imgId);
   }
 
-  /**
-   * その図に方位記号（北矢印）を出してよいか（🔒 §18-ag）。
-   * 🔴 配置図は取り込み画像を**回して**位置合わせすることがあり、図の上が北とは限らない。
-   *    分からない向きの北を刷るのは嘘なので、配置図には出さない
-   *    （§18-ae の縮尺と同じ「嘘の情報を出さない」原則）。
-   *    所在図は地理院データから北を上にして作るので従来どおり出す。
-   * 🔒 §28-3/§28-7: 方位記号は紙の自動要素をやめて**部品**（type:'compass'）にした。
-   *    この判定は「紙に描くか」ではなく **［枠を決定］で部品を置くか** の条件として残る
-   *    （＝所在図の紙にだけ置く。配置図には置かない）。
-   * これで配置図に自動で載る物は**出典表記だけ**になる。
-   */
-  function sheetNorthUnknown(k) {
-    return k === 'haichizu';
-  }
+  /* 🔒 §30-22-4 11 で廃止: `sheetNorthUnknown(k)`（配置図には方位記号を置かない）。
+   * §18-ag の理由（取り込み画像を回すので図の上が北とは限らない）は、
+   * 方位記号が「紙の付き物」だった頃の話。いまは**消せる部品**なので、
+   * 置いた上で利用者が消す／動かす方に改めた（判定そのものを取り除いた）。 */
 
   /**
    * 🔒 §28-3: ［枠を決定］した紙の**右上**に方位記号の部品を1個置く。
    * 置いたあとはドラッグで動かせる・消しゴムで消せる（ふつうのオブジェクト）。
    * 🔴 既に方位記号がある紙には**2つ目を置かない**（§28-3）。
-   * 🔴 §18-ag: 向きが確かな図（所在図）にだけ置く。配置図には置かない。
    * 🔴 旧案件（方位記号なし）に**自動では足さない**（§25-4-7 と同じ作法）
    *    ＝ 呼ぶのは［枠を決定］の操作からだけ。
    * @returns true＝置いた
    */
+  /* 🔒 §30-22-4 11（2026-09-13 オーナー指示）: **配置図にも方位記号を自動で置く**。
+   * 🔴 §18-ag「向きが分からない図には出さない」を改めた（sheetNorthUnknown は
+   *    紙の付き物だった頃の判定で、いまの方位記号は**ドラッグで回せない代わりに
+   *    消せる部品**）。配置図も枠を決めた時点では地図と同じ北上なので、置いた上で
+   *    利用者が消す／動かす方が実務に合う、というのがオーナーの判断。
+   * 🔴 残りの条件は §28-3 のまま（枠を決めた時だけ・既にあれば置かない）。 */
   function placeCompass(kind, sh) {
-    if (!sh || !sh.frame || sheetNorthUnknown(kind)) return false;
+    if (!sh || !sh.frame) return false;
     var objs = sh.objects || [];
     for (var i = 0; i < objs.length; i++) {
       if (objs[i] && objs[i].type === 'compass') return false;   // 2つ目は置かない
@@ -2230,6 +3359,347 @@
       updateHistoryButtons();
     }
     return true;
+  }
+
+  /* ========== 🔒 §30-22-4 4 / §30-25-22: ［道路を描く］（配置図）==========
+   * 配置図の**枠の近く**（枠＋周囲 ROADAUTO_PAD_M）の道路を自動で置く。
+   *
+   * 🔒 §30-25-22（2026-09-14 オーナー指示「幅の直し方は縁をドラッグだけ。両端で
+   *    別々に動くように。多角形ツールで描いてくれれば修正が楽。点はせいぜい3個」）:
+   *    **白帯＋黒縁の帯はもう作らない**。道路の**両側の縁**を、それぞれ独立した
+   *    線の図形（多角形ツールが Enter で確定した物と同じ `type:'path'`）として置く。
+   *      ・片側ずつ別の図形 ＝ 頂点をドラッグすれば**片側だけ**動く（幅の修正）
+   *      ・中は透明（帯が無い）＝ 下敷きの写真・地図がそのまま見える
+   *      ・交差点は**開ける**（他の道路の帯の面に入る区間を切り落とす）
+   *      ・点は両端＋途中1点の**最大3点**
+   * 🔴 置いた物は普通の図形（消しゴムで消せる・選んで動かせる・紙にもそのまま出る）。
+   * 🔴 押すたびに前回の自動分（source:'roadauto'）だけを消して描き直す
+   *    ＝ 手で描いた物・所在図から持ってきた物には触らない。
+   * 🔴 幅は「縁の位置そのもの」なので、縁の図形に `widthM` は持たせない（§30-25-22 6）。
+   * 🔴 使うのは地理院ベクトルタイル（RdCL）だけ。Overpass は使わない。
+   * 🔴 所在図の自動生成の道路（帯）は**今のまま**（shozaizu.js は触らない）。 */
+  var ROADAUTO_PAD_M = 30;      // 枠の外へ広げる距離(m)
+  var ROADAUTO_Z = 16;          // 地理院ベクトルタイルの最大ズーム（17 以上は 404）
+  /* 🔒 §30-25-22 2/3: 縁の作り方の数値（単位はすべてメートル）。
+   * 🔴 値の出どころはこの表1か所。 */
+  var ROADAUTO_W_UNKNOWN = 4.2; // 幅員ランクが分からない道路の幅(m)
+  var ROADAUTO_STEP_M = 0.5;    // 縁を標本化する間隔（交差点の開け方の分解能）
+  var ROADAUTO_MIN_RUN_M = 1;   // これより短い切れ端は捨てる
+  var ROADAUTO_DP_M = 0.3;      // Douglas–Peucker の許容
+  var ROADAUTO_MAX_PTS = 3;     // 1本の縁に打つ点の上限（両端＋途中1点）
+  /* 同じ道路が複数の地物に分かれている継ぎ目（一直線に続く所）で縁が切れないよう、
+   * 帯の面は「ほんの少し内側」を中と見なす。交差点の開き方はこの分だけ狭くなる。 */
+  var ROADAUTO_CUT_EPS_M = 0.2;
+  var ROADAUTO_CELL_M = 8;      // 帯の面を引くための格子の目
+  var roadAutoBusy = false;
+
+  /* ---- 🔒 §30-25-22: 縁を作るための幾何（メートルの平面で解く）----
+   * 枠の中心の緯度で 緯度経度 ⇄ メートル の換算を1回だけ決める
+   * （扱うのは枠＋30m の範囲だけなので、この平面近似で十分）。 */
+  function raPlane(lat0, lng0) {
+    var kx = 111320 * Math.cos(lat0 * Math.PI / 180), ky = 111320;
+    if (!(kx > 1)) kx = 1;                    // 極に近い時の保険
+    return {
+      kx: kx, ky: ky,
+      to: function (p) { return { x: (p.lng - lng0) * kx, y: (lat0 - p.lat) * ky }; },
+      back: function (q) { return { lat: lat0 - q.y / ky, lng: lng0 + q.x / kx }; }
+    };
+  }
+
+  /** 点と線分の距離の2乗（メートルの平面） */
+  function raD2Seg(p, a, b) {
+    var vx = b.x - a.x, vy = b.y - a.y;
+    var L2 = vx * vx + vy * vy;
+    var t = (L2 > 0) ? ((p.x - a.x) * vx + (p.y - a.y) * vy) / L2 : 0;
+    if (t < 0) t = 0; else if (t > 1) t = 1;
+    var dx = p.x - (a.x + vx * t), dy = p.y - (a.y + vy * t);
+    return dx * dx + dy * dy;
+  }
+
+  /** 折れ線の長さ(m) */
+  function raLen(line) {
+    var L = 0;
+    for (var i = 0; i + 1 < line.length; i++) {
+      L += Math.hypot(line[i + 1].x - line[i].x, line[i + 1].y - line[i].y);
+    }
+    return L;
+  }
+
+  /** 線分を矩形で切る（Liang–Barsky）。まるごと外なら null */
+  function raClipSeg(a, b, R) {
+    var t0 = 0, t1 = 1, dx = b.x - a.x, dy = b.y - a.y;
+    var pq = [[-dx, a.x - R.x0], [dx, R.x1 - a.x], [-dy, a.y - R.y0], [dy, R.y1 - a.y]];
+    for (var i = 0; i < 4; i++) {
+      var p = pq[i][0], q = pq[i][1];
+      if (p === 0) { if (q < 0) return null; continue; }
+      var r = q / p;
+      if (p < 0) { if (r > t1) return null; if (r > t0) t0 = r; }
+      else { if (r < t0) return null; if (r < t1) t1 = r; }
+    }
+    if (!(t1 > t0)) return null;
+    return [{ x: a.x + dx * t0, y: a.y + dy * t0 },
+            { x: a.x + dx * t1, y: a.y + dy * t1 }];
+  }
+
+  /** 折れ線を矩形で切る（🔒 §30-25-22 2 手順1）。中に入っている区間の配列 */
+  function raClip(pts, R) {
+    var out = [], cur = null;
+    for (var i = 0; i + 1 < pts.length; i++) {
+      var seg = raClipSeg(pts[i], pts[i + 1], R);
+      if (!seg) { cur = null; continue; }
+      var last = cur && cur[cur.length - 1];
+      if (last && Math.abs(last.x - seg[0].x) < 1e-6 && Math.abs(last.y - seg[0].y) < 1e-6) {
+        cur.push(seg[1]);
+      } else {
+        cur = [seg[0], seg[1]];
+        out.push(cur);
+      }
+    }
+    return out;
+  }
+
+  /** 折れ線を d だけ横へずらした折れ線（角は隣り合う法線の平均・🔒 §30-25-22 2 手順2） */
+  function raOffset(line, d) {
+    var i, pts = [line[0]];
+    for (i = 1; i < line.length; i++) {         // 同じ点の続きは落とす
+      var q = pts[pts.length - 1];
+      if (Math.hypot(line[i].x - q.x, line[i].y - q.y) > 1e-6) pts.push(line[i]);
+    }
+    var n = pts.length;
+    if (n < 2) return null;
+    var segN = [];
+    for (i = 0; i + 1 < n; i++) {
+      var dx = pts[i + 1].x - pts[i].x, dy = pts[i + 1].y - pts[i].y;
+      var L = Math.hypot(dx, dy);
+      segN.push({ x: -dy / L, y: dx / L });
+    }
+    var out = [];
+    for (i = 0; i < n; i++) {
+      var a = segN[Math.max(0, i - 1)], b = segN[Math.min(segN.length - 1, i)];
+      var nx = a.x + b.x, ny = a.y + b.y, L2 = Math.hypot(nx, ny);
+      if (!(L2 > 1e-6)) { nx = b.x; ny = b.y; L2 = 1; }   // 折り返し（180°）の保険
+      out.push({ x: pts[i].x + nx / L2 * d, y: pts[i].y + ny / L2 * d });
+    }
+    return out;
+  }
+
+  /** 折れ線を step ごとに標本化（両端は必ず入る・🔒 §30-25-22 2 手順3） */
+  function raSample(line, step) {
+    var out = [line[0]];
+    for (var i = 0; i + 1 < line.length; i++) {
+      var a = line[i], b = line[i + 1];
+      var L = Math.hypot(b.x - a.x, b.y - a.y);
+      var n = Math.max(1, Math.ceil(L / step));
+      for (var k = 1; k <= n; k++) {
+        out.push({ x: a.x + (b.x - a.x) * k / n, y: a.y + (b.y - a.y) * k / n });
+      }
+    }
+    return out;
+  }
+
+  /**
+   * 🔒 §30-25-22 3: 「他の道路の帯の面」の索引（格子）。
+   * 面＝その道路の中心線から 幅/2 以内。1点ずつ全部の道路を見ると遅いので、
+   * 辺を格子の目へ入れておき、標本の点は同じ目の辺だけを見る。
+   * @param roads [{line:[平面の点], half:m}]
+   */
+  function raBandIndex(roads) {
+    var cell = ROADAUTO_CELL_M, map = {}, all = [];
+    roads.forEach(function (r, ri) {
+      var half = r.half - ROADAUTO_CUT_EPS_M;
+      if (!(half > 0)) return;
+      var h2 = half * half;
+      for (var i = 0; i + 1 < r.line.length; i++) {
+        var a = r.line[i], b = r.line[i + 1];
+        var seg = { ri: ri, a: a, b: b, h2: h2 };
+        var x0 = Math.floor((Math.min(a.x, b.x) - r.half) / cell);
+        var x1 = Math.floor((Math.max(a.x, b.x) + r.half) / cell);
+        var y0 = Math.floor((Math.min(a.y, b.y) - r.half) / cell);
+        var y1 = Math.floor((Math.max(a.y, b.y) + r.half) / cell);
+        if ((x1 - x0 + 1) * (y1 - y0 + 1) > 400) { all.push(seg); continue; }
+        for (var cx = x0; cx <= x1; cx++) {
+          for (var cy = y0; cy <= y1; cy++) {
+            var k = cx + ',' + cy;
+            (map[k] || (map[k] = [])).push(seg);
+          }
+        }
+      }
+    });
+    return { cell: cell, map: map, all: all };
+  }
+
+  /** その点が「他の道路の帯の面」の中か（自分の道路 skipRi は見ない） */
+  function raInBand(idx, p, skipRi) {
+    var i, list = idx.map[Math.floor(p.x / idx.cell) + ',' + Math.floor(p.y / idx.cell)];
+    if (list) {
+      for (i = 0; i < list.length; i++) {
+        if (list[i].ri === skipRi) continue;
+        if (raD2Seg(p, list[i].a, list[i].b) < list[i].h2) return true;
+      }
+    }
+    for (i = 0; i < idx.all.length; i++) {
+      if (idx.all[i].ri === skipRi) continue;
+      if (raD2Seg(p, idx.all[i].a, idx.all[i].b) < idx.all[i].h2) return true;
+    }
+    return false;
+  }
+
+  /** 帯の面に入る点を除き、外の連続区間だけに分ける（短い切れ端は捨てる） */
+  function raSplit(samples, idx, skipRi) {
+    var runs = [], cur = null;
+    for (var i = 0; i < samples.length; i++) {
+      if (raInBand(idx, samples[i], skipRi)) { cur = null; continue; }
+      if (!cur) { cur = []; runs.push(cur); }
+      cur.push(samples[i]);
+    }
+    return runs.filter(function (r) {
+      return r.length >= 2 && raLen(r) >= ROADAUTO_MIN_RUN_M;
+    });
+  }
+
+  /** Douglas–Peucker（許容 tol・メートル） */
+  function raDP(pts, i0, i1, tol) {
+    var best = -1, bi = -1;
+    for (var i = i0 + 1; i < i1; i++) {
+      var d = raD2Seg(pts[i], pts[i0], pts[i1]);
+      if (d > best) { best = d; bi = i; }
+    }
+    if (bi > 0 && best > tol * tol) {
+      var l = raDP(pts, i0, bi, tol), r = raDP(pts, bi, i1, tol);
+      return l.slice(0, l.length - 1).concat(r);
+    }
+    return [pts[i0], pts[i1]];
+  }
+
+  /** 🔒 §30-25-22 2 手順4: 間引いて**最大3点**（両端＋最も外れた途中1点）にする */
+  function raSimplify(run) {
+    if (run.length <= 2) return run;
+    var dp = raDP(run, 0, run.length - 1, ROADAUTO_DP_M);
+    if (dp.length <= ROADAUTO_MAX_PTS) return dp;
+    var a = run[0], b = run[run.length - 1], best = -1, bi = -1;
+    for (var i = 1; i < run.length - 1; i++) {
+      var d = raD2Seg(run[i], a, b);
+      if (d > best) { best = d; bi = i; }
+    }
+    return (bi > 0) ? [a, run[bi], b] : [a, b];
+  }
+
+  /**
+   * 🔒 §30-25-22 1: 縁の線の**太さ・色**＝いまの黒縁の既定。
+   * 🔴 数値は写さず `Editor.roadBand` から取る（帯の外幅 − 中身 の半分＝縁の太さ）。
+   *    mPerU を 0 で渡す＝実距離による太りを掛けない「等級の既定」を読む。
+   */
+  function raEdgeStyle(st) {
+    var bd = (window.Editor && Editor.roadBand)
+      ? Editor.roadBand({ style: { casing: true, w: st.w, color: st.color } },
+                        { mPerU: 0 })
+      : null;
+    if (!bd) return { w: st.w, color: st.color };
+    var w = (bd.inner > 0) ? (bd.outer - bd.inner) / 2 : bd.outer;
+    return { w: Math.round(w * 100) / 100, color: bd.outerColor };
+  }
+
+  function drawRoadsNearFrame() {
+    var c = state.current, sh = curSheet();
+    if (!c || !sh || !state.editor) return Promise.resolve(0);
+    if (roadAutoBusy) return Promise.resolve(0);
+    var f = sh.frame || frameFromView();
+    if (!f) {
+      hint('先に枠を決めてください（枠の近くの道路を描きます）', 3000);
+      return Promise.resolve(0);
+    }
+    if (!window.GSI || !window.Exporter || !window.Shozaizu) return Promise.resolve(0);
+    var b = Exporter.frameBounds(f);
+    // 枠の外へ 30m 広げる（緯度は一定・経度は cos(緯度) で伸ばす）
+    var dLat = ROADAUTO_PAD_M / 111320;
+    var dLng = ROADAUTO_PAD_M
+             / (111320 * Math.max(1e-6, Math.cos(f.center.lat * Math.PI / 180)));
+    var bounds = { west: b.west - dLng, east: b.east + dLng,
+                   south: b.south - dLat, north: b.north + dLat };
+
+    roadAutoBusy = true;
+    hint('枠の近くの道路を取りに行っています…', 0);
+    var t0 = Date.now();
+    return GSI.fetchTiles(bounds, ROADAUTO_Z).then(function (tiles) {
+      var table = Shozaizu.roadStyleTable('band');
+      /* --- ① 中心線を集めて枠＋30m で切る（🔒 §30-25-22 2 手順1）--- */
+      var plane = raPlane(f.center.lat, f.center.lng);
+      var c0 = plane.to({ lat: bounds.north, lng: bounds.west });
+      var c1 = plane.to({ lat: bounds.south, lng: bounds.east });
+      var R = { x0: Math.min(c0.x, c1.x), x1: Math.max(c0.x, c1.x),
+                y0: Math.min(c0.y, c1.y), y1: Math.max(c0.y, c1.y) };
+      var roads = [];
+      tiles.forEach(function (t) {
+        var RL = t.layers && t.layers.RdCL;
+        if (!RL) return;
+        for (var i = 0; i < RL.features.length; i++) {
+          var ft = RL.features[i];
+          var rank = GSI.roadRank(ft.props);
+          // §22-at の幅（vt_rnkwidth → 実距離）。分からない道路は既定の幅
+          var widthM = GSI.roadWidthM(ft.props) || ROADAUTO_W_UNKNOWN;
+          for (var gi = 0; gi < ft.geom.length; gi++) {
+            if (ft.geom[gi].length < 2) continue;
+            var pts = Shozaizu._toLatLngs(ft.geom[gi], t, RL.extent);
+            if (!Shozaizu._bboxHits(pts, bounds)) continue;
+            var mpts = pts.map(plane.to);
+            raClip(mpts, R).forEach(function (line) {
+              if (line.length >= 2 && raLen(line) > 0.05) {
+                roads.push({ line: line, half: widthM / 2, rank: rank });
+              }
+            });
+          }
+        }
+      });
+      /* --- ② 交差点を開けるための「帯の面」の索引（🔒 §30-25-22 2 手順3）--- */
+      var idx = raBandIndex(roads);
+      /* --- ③ 左右の縁 → 交差点で切る → 間引く → 図形にする --- */
+      var made = [];
+      roads.forEach(function (r, ri) {
+        var st = table[r.rank] || table[1];
+        var es = raEdgeStyle(st);
+        [1, -1].forEach(function (sgn) {
+          var ed = raOffset(r.line, sgn * r.half);
+          if (!ed) return;
+          raSplit(raSample(ed, ROADAUTO_STEP_M), idx, ri).forEach(function (run) {
+            var q = raSimplify(run);
+            if (q.length < 2) return;
+            made.push({
+              id: 'ra' + Date.now().toString(36) + made.length.toString(36),
+              type: 'path', closed: false,
+              points: q.map(function (p) { return plane.back(p); }),
+              /* 🔒 §30-25-22 1: 太さ・色は黒縁の既定（raEdgeStyle）。
+               * 🔴 casing は付けない＝帯（白塗り）を描かない＝中は透明。 */
+              style: { w: es.w, color: es.color },
+              roadRank: r.rank, source: 'roadauto'
+            });
+          });
+        });
+      });
+      var objs = sh.objects || (sh.objects = []);
+      var ed2 = state.editor, live = (ed2.objects === objs);
+      if (live) ed2.snapshot();
+      // 前回の自動分だけ消す（🔴 配列は差し替えず splice だけ・§23-7-1）
+      for (var k = objs.length - 1; k >= 0; k--) {
+        if (objs[k] && objs[k].source === 'roadauto') objs.splice(k, 1);
+      }
+      /* 🔒 §30-25-4: 道路は一番下（描く順・当たり判定）。並びの上でも先頭へ入れて
+       * おく（Editor.isRoad が source:'roadauto' を道路として数える）。 */
+      for (var m = made.length - 1; m >= 0; m--) objs.unshift(made[m]);
+      if (live) { ed2.selection = []; ed2.commit(); updateHistoryButtons(); }
+      Store.autosave(c);
+      var sec = Math.round((Date.now() - t0) / 100) / 10;
+      hint(made.length
+        ? ('枠の近くの道路の縁を ' + made.length + ' 本描きました（' + sec + '秒）。'
+           + '縁の点をドラッグすると道幅を直せます。要らない線は消しゴムで消せます')
+        : 'この枠の近くには道路のデータがありませんでした', 6000);
+      return made.length;
+    }).catch(function (err) {
+      hint('道路を取りに行けませんでした（' + (err && err.message ? err.message : '通信エラー') + '）', 5000);
+      return 0;
+    }).then(function (n) {
+      roadAutoBusy = false;
+      return n;
+    });
   }
 
   /**
@@ -2259,8 +3729,12 @@
    *    除いた枚数は state.pagesSkipped に置き、PDF/PNG の結果表示で伝える。
    *    🔴 通し表示（所在図 1/2）は**残った紙で採番し直す**。除いた番号を飛ばすと
    *       「1/3 と 3/3 だけがある」提出物になり、抜けたように見える。
+   *
+   * 🔒 §30-26-2: `sheetId` を渡すと**その紙1枚だけ**（紙の帯のルーペ＝この紙の
+   *    プレビュー）。🔴 絞るのは**最後**＝通し表示（所在図 2/3）は絞る前の数え方の
+   *    まま出す（「1/1」と出ると何枚目の紙なのか分からなくなる）。
    */
-  function pagesForExport(only) {
+  function pagesForExport(only, sheetId) {
     // 表示中のシートは必ず「いまの画面」を使う。
     // ズームやパンをした後に古い枠で出さないため（オーナー指摘 2026-08-16）。
     syncFrameFromView();
@@ -2279,6 +3753,8 @@
       kept.forEach(function (sh, i) {
         out.push({
           kind: k, kindJa: KIND_JA[k], index: i + 1, total: kept.length,
+          // 🔒 §30-26-2/3: どの紙か（ルーペの絞り込み・他の枠の「自分を除く」で使う）
+          sheetId: sh.id,
           orient: sh.orient === 'landscape' ? 'landscape' : 'portrait',
           objects: sh.objects || [],
           frame: frameForSheet(k, sh),
@@ -2288,6 +3764,10 @@
       });
     });
     state.pagesSkipped = skipped;
+    // 🔒 §30-26-2: 絞るのは最後（通し表示は絞る前の数え方のまま）
+    if (sheetId) {
+      return out.filter(function (p) { return p.sheetId === sheetId; });
+    }
     return out;
   }
 
@@ -2341,18 +3821,23 @@
   }
 
   /** done(メッセージ, 成功したか) は誘導⑪から結果を受け取るために使う（§18-f）
-   *  🔴 §22: 書き出しで何ページ出ても課金は**案件単位**（pagesForExport の注記参照） */
-  function exportPDF(done, only) {
+   *  🔴 §22: 書き出しで何ページ出ても課金は**案件単位**（pagesForExport の注記参照）
+   *  🔒 §30-27-2: `only` の代わりに **紙の一覧（pick）** を渡せる口を足した
+   *     （PDF・画像の窓でチェックした紙だけを出す）。並びは pagesForExport のまま
+   *     ＝所在図→配置図・番号順。渡さなければ従来どおり（only の絞りだけ）。 */
+  function exportPDF(done, only, pick) {
     if (!state.current) return;
     /* 🔒 §21-2: フォルダの権限はクリック（ユーザー操作）の中で先に取っておく。
        PDF の組み立てに時間がかかると、後から requestPermission が通らなくなる */
     FSave.prepare();
-    $('exPdf').disabled = true;
-    $('exResult').textContent = 'PDF を作成しています…';
+    /* 🔒 §30-29-1 3: 経過と結果の一言は**出す紙を選ぶ窓**（#exPickMsg）と
+     * プレビューの帯（#exBarMsg）が出す＝done() 1本に寄せた
+     * （旧 #exPanel の #exResult / #exPdf の disabled は窓ごと廃止）。 */
     setTimeout(function () {
       var blob, pages;
       try {
-        pages = pagesForExport(only);     // 🔒 §30-13-3: only='shozaizu' なら所在図だけ
+        // 🔒 §30-13-3: only='shozaizu' なら所在図だけ／🔒 §30-27-2: pick があればそれ
+        pages = pick || pagesForExport(only);
         /* 🔒 §26-4-e: 白紙を除いた結果1枚も残らない時は、buildPDF の
            「枠が未設定です」ではなく本当の理由を伝える。 */
         if (!pages.length) {
@@ -2376,22 +3861,21 @@
     }, 30);
 
     function finish(msg, ok) {
-      $('exResult').textContent = msg;
-      $('exPdf').disabled = false;
       if (typeof done === 'function') done(msg, ok);
     }
   }
 
-  /** 🔒 §24-3: PNG は**シートごとに1枚**。ファイル名に種類と番号を入れる */
-  function exportPNG(done, only) {
+  /** 🔒 §24-3: PNG は**シートごとに1枚**。ファイル名に種類と番号を入れる
+   *  🔒 §30-27-2: `pick`（紙の一覧）を渡せる口は exportPDF と同じ */
+  function exportPNG(done, only, pick) {
     if (!state.current) return;
     FSave.prepare();                       // 🔒 §21-2（exportPDF と同じ理由）
-    $('exPng').disabled = true;
-    $('exResult').textContent = 'PNG を作成しています…';
+    // 🔒 §30-29-1 3: 経過と結果の一言は done() 1本（exportPDF と同じ）
     setTimeout(function () {
       var jobs = [];
       try {
-        pagesForExport(only).forEach(function (p) {     // 🔒 §30-13-3
+        // 🔒 §30-13-3 / 🔒 §30-27-2（pick があればチェックした紙だけ）
+        (pick || pagesForExport(only)).forEach(function (p) {
           if (!p.frame) return;
           var r = Exporter.renderSheet({
             objects: p.objects, frame: p.frame, orient: p.orient,
@@ -2424,51 +3908,455 @@
     }, 30);
 
     function finish(msg, ok) {
-      $('exResult').textContent = msg;
-      $('exPng').disabled = false;
       if (typeof done === 'function') done(msg, ok);
     }
   }
 
-  /** 提出前の目視確認。書き出しと同じ描画をそのまま見せる（🔒 §24-3: 全シート）。
-   *  only を渡すとその種類だけ出す（誘導③④は所在図側だけ＝§18-f） */
-  function showExportPreview(only, opt) {
-    if (!state.current) return;
-    var body = $('exPreviewBody');
-    body.innerHTML = '';
-    pagesForExport(only).forEach(function (p) {
-      if (!p.frame) return;
-      var r = Exporter.renderSheet({
-        objects: p.objects, frame: p.frame, orient: p.orient,
-        attributions: p.attributions,
-        noScale: p.noScale,
-        dpi: 96                       // 画面確認用は軽く
-      });
-      var fig = document.createElement('figure');
-      var cap = document.createElement('figcaption');
-      // 🔒 §18-ae: 縮尺を持たない図（配置図）には比率を出さない
-      cap.textContent = p.kindJa + ' ' + p.index + '/' + p.total
-        + '（' + (p.orient === 'landscape' ? 'A4横' : 'A4縦') + '）'
-        + (r.scaleN ? '  1:' + r.scaleN.toLocaleString() : '');
-      var img = new Image();
-      img.src = r.canvas.toDataURL('image/png');
-      fig.appendChild(cap);
-      fig.appendChild(img);
-      body.appendChild(fig);
+  /* ================= プレビューで文字だけ動かす（🔒 §30-25-10） =================
+   * オーナー指示 2026-09-13:「所在図プレビューの画面で、テキストだけ移動や
+   * サイズ調整ができるように。その案内を一番上に」。
+   * 作り: 紙の画像の上に**透明な層**を重ね、`renderSheet` が返す文字の箱
+   *   （r.textBoxes・canvas px）に合わせて掴める枠を並べる。
+   * 🔴 箱の出どころは描画と同じ1か所（別に見積もると画像と枠がずれる）。
+   * 🔴 触れるのは文字（type:'text'）だけ。線・印・枠はここでは動かせない。
+   * 🔴 結果は案件の図形そのもの（o.at / o.sizeMm）に入る＝閉じた後の地図・
+   *    書き出しにそのまま効く。1操作＝snapshot＋commit（Ctrl+Z で戻る）。
+   * 🔴 まとめ描き（renderCombined）は対象外（showCombinedPreview は層を付けない）。 */
+
+  /** 層の置き直し（画像の読み込み・窓の大きさ変更で呼ぶ）。プレビューごとに作り直す */
+  var exPlacers = [];
+  function exRelayout() {
+    for (var i = 0; i < exPlacers.length; i++) {
+      try { exPlacers[i](); } catch (e) {}
+    }
+  }
+  function exPlacersReset() { exPlacers.length = 0; exFrameLayers.length = 0; }
+
+  /* ---- 🔒 §30-26-3: プレビューに重ねる「他の枠の範囲」 ----
+   * トグル（#exOtherFrames）が ON の時だけ、同じ図の**他の紙**の枠を
+   * 赤の破線＋番号の札で画像の上に重ねる。
+   * 🔴 **プレビューだけ**。紙（Exporter.renderSheet の canvas）には1本も描かない。
+   * 🔴 トグルを切り替えたら**層だけ**描き直す（画像は作り直さない）。
+   * 🔴 線・札の見た目は画面の §24-6 と同じ class（.frame-halo / .frame-rect.is-sibling /
+   *    .frame-badge）を借りる＝色も太さも style.css の1か所。 */
+  var exFrameLayers = [];        // 層ごとの描き直し関数（プレビューごとに作り直す）
+  var exFrameClipSeq = 0;        // clipPath の id を重ねない（作り直すたびに増える）
+  /** トグルの見た目を state に合わせる（閉じても覚えている＝§30-26-3 1） */
+  function exFrameSwitchSync() {
+    var sw = $('exOtherFrames');
+    if (sw) sw.checked = !!state.exOtherFrames;
+  }
+  function exFrameSync() {
+    for (var i = 0; i < exFrameLayers.length; i++) {
+      try { exFrameLayers[i](); } catch (e) {}
+    }
+  }
+
+  /**
+   * その面に重ねる他の紙の枠を数える（canvas px）。
+   * @param pt {page, r, ox, oy} page＝pagesForExport の1件／r＝renderSheet の返り値／
+   *           ox,oy＝画像全体の中でその面が置かれている canvas px の左上
+   * @return [{x,y,w,h,label}]（画像の外に丸ごと出る枠は返さない＝§30-26-3 3）
+   */
+  function exOtherFrameRects(pt) {
+    var out = [];
+    var p = pt && pt.page, r = pt && pt.r;
+    if (!p || !r || !r.canvas || !window.Exporter || !Exporter.frameRectOnPage) return out;
+    var cw = r.canvas.width, ch = r.canvas.height;
+    sheetsOf(p.kind).forEach(function (sh, i) {
+      // 🔴 「自分」は紙の id で外す（表示文字・番号では判定しない）
+      if (!sh || sh.id === p.sheetId) return;
+      var f = frameForSheet(p.kind, sh);
+      var q = Exporter.frameRectOnPage(r, f);
+      if (!q) return;
+      // 画像の外に丸ごと出る枠は出さない（掛かっている分は clip で切る）
+      if (q.x + q.w <= 0 || q.y + q.h <= 0 || q.x >= cw || q.y >= ch) return;
+      out.push({ x: q.x + pt.ox, y: q.y + pt.oy, w: q.w, h: q.h,
+                 // 🔴 札の数字は**紙の帯と同じ番号**（§24-6 と同じ数え方）
+                 label: String(i + 1) });
     });
-    /* 🔒 §30-13-3: 下部のボタン（PDF保存・画像保存・配置図ガイダンスへ進む…）は
-     * **所在図ガイダンス⑧から出した時だけ**（⑫の「全部の紙」には付けない）。 */
+    return out;
+  }
+
+  /**
+   * 画像1枚に「他の枠の範囲」の層をかぶせる。
+   * @param fig <figure>（position:relative）
+   * @param img その <img>
+   * @param cw,ch その画像の canvas の幅・高さ（px）
+   * @param parts [{page, r, ox, oy}]（まとめ描きは2面・1図1ページは1面）
+   */
+  function exFrameLayer(fig, img, cw, ch, parts) {
+    if (!fig || !img || !(cw > 0) || !(ch > 0) || !(parts && parts.length)) return;
+    var svg = svgEl('svg', { class: 'ex-framelayer' });
+    fig.appendChild(svg);
+    var items = [];      // [{x,y,w,h,label,part} … canvas px]
+
+    /** 表示px ÷ canvas px（画像は縦横同じ倍率で縮む） */
+    function viewK() {
+      return (img.clientWidth > 0) ? img.clientWidth / cw : 0;
+    }
+
+    function place() {
+      var k = viewK();
+      svg.style.left = (img.offsetLeft + img.clientLeft) + 'px';
+      svg.style.top = (img.offsetTop + img.clientTop) + 'px';
+      svg.style.width = img.clientWidth + 'px';
+      svg.style.height = img.clientHeight + 'px';
+      if (!k) return;
+      items.forEach(function (it) {
+        var x = it.x * k, y = it.y * k, w = it.w * k, h = it.h * k;
+        [it.els.halo, it.els.rect].forEach(function (e) {
+          e.setAttribute('x', x.toFixed(1));
+          e.setAttribute('y', y.toFixed(1));
+          e.setAttribute('width', Math.max(1, w).toFixed(1));
+          e.setAttribute('height', Math.max(1, h).toFixed(1));
+        });
+        /* 札は**画面の大きさのまま**（画像が縮んでも読める）。枠の左上の内側に置き、
+         * 面からはみ出す時はその面の中へ寄せる（§24-6 の placeFrameBadge と同じ形）。 */
+        var bw = 12 + 9 * it.label.length, bh = 18;
+        var lo = { x: it.part.ox * k, y: it.part.oy * k,
+                   w: it.part.cw * k, h: it.part.ch * k };
+        var bx = Math.min(Math.max(x + 4, lo.x + 2), lo.x + lo.w - bw - 2);
+        var by = Math.min(Math.max(y + 4, lo.y + 2), lo.y + lo.h - bh - 2);
+        it.els.bg.setAttribute('x', bx.toFixed(1));
+        it.els.bg.setAttribute('y', by.toFixed(1));
+        it.els.bg.setAttribute('width', bw);
+        it.els.bg.setAttribute('height', bh);
+        it.els.tx.setAttribute('x', (bx + bw / 2).toFixed(1));
+        it.els.tx.setAttribute('y', (by + bh / 2 + 4.2).toFixed(1));
+        // 面の外へ出た分は切る（まとめ描きで隣の図に掛からないように）
+        it.els.clip.setAttribute('x', lo.x.toFixed(1));
+        it.els.clip.setAttribute('y', lo.y.toFixed(1));
+        it.els.clip.setAttribute('width', Math.max(1, lo.w).toFixed(1));
+        it.els.clip.setAttribute('height', Math.max(1, lo.h).toFixed(1));
+      });
+    }
+
+    /** 層を作り直す（トグルの切り替え＝ここだけ。画像は触らない） */
+    function build() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      items.length = 0;
+      svg.style.display = state.exOtherFrames ? '' : 'none';
+      if (!state.exOtherFrames) { place(); return; }
+      var defs = svgEl('defs', {});
+      svg.appendChild(defs);
+      parts.forEach(function (pt, pi) {
+        var part = { ox: pt.ox || 0, oy: pt.oy || 0,
+                     cw: (pt.r && pt.r.canvas) ? pt.r.canvas.width : cw,
+                     ch: (pt.r && pt.r.canvas) ? pt.r.canvas.height : ch };
+        exOtherFrameRects({ page: pt.page, r: pt.r, ox: part.ox, oy: part.oy })
+          .forEach(function (q, qi) {
+            var id = 'exfr' + (exFrameClipSeq++) + '_' + pi + '_' + qi;
+            var cp = svgEl('clipPath', { id: id });
+            var cr = svgEl('rect', {});
+            cp.appendChild(cr);
+            defs.appendChild(cp);
+            var g = svgEl('g', { 'clip-path': 'url(#' + id + ')' });
+            var halo = svgEl('rect', { class: 'frame-halo' });
+            var rc = svgEl('rect', { class: 'frame-rect is-sibling' });
+            var bg2 = svgEl('g', { class: 'frame-badge' });
+            var br = svgEl('rect', { rx: 4, ry: 4 });
+            var bt = svgEl('text', { 'text-anchor': 'middle' });
+            bt.textContent = q.label;
+            bg2.appendChild(br);
+            bg2.appendChild(bt);
+            g.appendChild(halo);
+            g.appendChild(rc);
+            g.appendChild(bg2);
+            svg.appendChild(g);
+            items.push({ x: q.x, y: q.y, w: q.w, h: q.h, label: q.label, part: part,
+                         els: { halo: halo, rect: rc, bg: br, tx: bt, clip: cr } });
+          });
+      });
+      place();
+    }
+
+    exPlacers.push(place);
+    exFrameLayers.push(build);
+    img.addEventListener('load', place);
+    build();
+  }
+
+  /**
+   * 🔒 §30-25-10 6 → §30-25-16 改定: 案内は**紙の器の外**（見出しのすぐ下の行）。
+   * 🔴 文は index.html の #exPreviewTip が持つ。ここは**出し入れするだけ**
+   *    （器に足すと .is-nav の nowrap で紙が押しつぶされる）。
+   * @param show true＝出す／false＝隠す
+   */
+  function exTextTip(show) {
+    var p = $('exPreviewTip');
+    if (p) p.hidden = !show;
+  }
+
+  /** その紙の中から id の図形を探す（紙の配列が写しでも本体を書けるように） */
+  function exFindObj(p, id) {
+    var i, list = (p && p.objects) || [];
+    for (i = 0; i < list.length; i++) if (list[i] && list[i].id === id) return list[i];
+    var sheets = sheetsOf(p && p.kind);
+    for (var s = 0; s < sheets.length; s++) {
+      var objs = (sheets[s] && sheets[s].objects) || [];
+      for (i = 0; i < objs.length; i++) if (objs[i] && objs[i].id === id) return objs[i];
+    }
+    return null;
+  }
+
+  /** その文字の紙面ミリ（連続値が無ければ3段の既定。表は Exporter 1か所） */
+  function exTextMm(o) {
+    if (window.Editor && Editor.textMm) return Editor.textMm(o);
+    var T = (window.Exporter && Exporter.SHEET_TEXT_MM) || { medium: 3.4 };
+    return (o && o.sizeMm > 0) ? o.sizeMm : (T[o && o.size] || T.medium);
+  }
+  function exClampMm(mm) {
+    if (window.Editor && Editor.clampTextMm) return Editor.clampTextMm(mm);
+    return Math.max(1.2, Math.min(30, Math.round(mm * 100) / 100));
+  }
+
+  /**
+   * 1枚の紙に「文字だけ動かす」層をかぶせる。
+   * @param fig <figure>（中に img が入っている・position:relative）
+   * @param img その <img>
+   * @param p   その紙（pagesForExport の1件。kind / objects / frame / orient）
+   * @param r0  Exporter.renderSheet の返り値（canvas・textBoxes・place）
+   * @param onRedraw 描き直した後に新しい dataURL を渡す（ページ送りの控えの更新）
+   */
+  function exTextLayer(fig, img, p, r0, onRedraw) {
+    if (!window.Exporter || !p || !p.frame || !fig || !img) return;
+    var layer = document.createElement('div');
+    layer.className = 'ex-textlayer';
+    fig.appendChild(layer);
+    var cur = r0;
+    /* 紙に刷られる幅(mm) ÷ canvas の幅(px)。まとめ描きの paperMm 上書きにも効く */
+    var SS = (window.Exporter && Exporter.SHEET_SCALE > 0) ? Exporter.SHEET_SCALE : 1;
+
+    function mmPerCanvasPx() {
+      return (cur.place && cur.place.w > 0 && cur.canvas.width > 0)
+        ? cur.place.w / cur.canvas.width : 0;
+    }
+    /** 表示px ÷ canvas px */
+    function viewK() {
+      return (img.clientWidth > 0 && cur.canvas.width > 0)
+        ? img.clientWidth / cur.canvas.width : 0;
+    }
+
+    function place() {
+      var k = viewK();
+      if (!k) return;
+      layer.style.left = (img.offsetLeft + img.clientLeft) + 'px';
+      layer.style.top = (img.offsetTop + img.clientTop) + 'px';
+      layer.style.width = img.clientWidth + 'px';
+      layer.style.height = img.clientHeight + 'px';
+      var kids = layer.children;
+      for (var i = 0; i < kids.length; i++) {
+        var b = kids[i]._box;
+        if (!b) continue;
+        kids[i].style.left = (b.x * k) + 'px';
+        kids[i].style.top = (b.y * k) + 'px';
+        kids[i].style.width = Math.max(8, b.w * k) + 'px';
+        kids[i].style.height = Math.max(8, b.h * k) + 'px';
+      }
+    }
+    exPlacers.push(place);
+    img.addEventListener('load', place);
+
+    /** 動かした後に、その紙だけ描き直す（他の紙は触らない） */
+    function redraw() {
+      try {
+        cur = Exporter.renderSheet({
+          objects: p.objects, frame: p.frame, orient: p.orient,
+          attributions: p.attributions, noScale: p.noScale, dpi: 96
+        });
+      } catch (e) { return; }
+      var url = cur.canvas.toDataURL('image/png');
+      img.src = url;
+      if (typeof onRedraw === 'function') onRedraw(url, cur);
+      build();
+    }
+
+    function start(e, box, d, sizing) {
+      if (e.button !== 0) return;
+      var o = exFindObj(p, box.id);
+      if (!o || !o.at) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var target = e.currentTarget;
+      try { target.setPointerCapture(e.pointerId); } catch (err) {}
+      d.classList.add('is-grab');
+      /* 🔴 いま editor が読み込んでいる紙なら履歴に載せる（Ctrl+Z で戻る）。
+       * 別の紙は editor の履歴に入れられないので、直接書いて保存だけする。 */
+      var live = !!(state.editor && state.editor.objects === p.objects);
+      if (live) state.editor.snapshot();
+      var k = viewK(), mpp = mmPerCanvasPx();
+      var x0 = e.clientX, y0 = e.clientY;
+      var at0 = { lat: o.at.lat, lng: o.at.lng };
+      var mm0 = exTextMm(o);
+      var moved = false;
+
+      function toMm(dPx) { return (k > 0) ? dPx / k * mpp : 0; }
+
+      function onMove(ev) {
+        var dx = ev.clientX - x0, dy = ev.clientY - y0;
+        if (!moved && Math.abs(dx) + Math.abs(dy) < 2) return;
+        moved = true;
+        if (sizing) {
+          /* 紙に刷られる高さ（mm）を縦の動きぶん増やす。o.sizeMm は
+           * 「記載欄基準の mm」なので SHEET_SCALE で割って戻す（textPx と同じ単位）。 */
+          var mm = exClampMm(mm0 + toMm(dy) / SS);
+          o.sizeMm = mm;
+          d.style.transform = 'scale(' + (mm / (mm0 || 1)).toFixed(3) + ')';
+        } else {
+          var dd = Exporter.paperDeltaToLatLng(p.frame, p.orient, toMm(dx), toMm(dy));
+          o.at.lat = at0.lat + dd.dLat;
+          o.at.lng = at0.lng + dd.dLng;
+          d.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+        }
+      }
+      function onUp() {
+        target.removeEventListener('pointermove', onMove);
+        target.removeEventListener('pointerup', onUp);
+        target.removeEventListener('pointercancel', onUp);
+        d.classList.remove('is-grab');
+        d.style.transform = '';
+        if (!moved) {                       // 動かしていない＝履歴に残さない
+          if (live && state.editor.undoStack.length) state.editor.undoStack.pop();
+          return;
+        }
+        if (live) state.editor.commit();    // 描き直し＋保存（change）
+        else Store.autosave(state.current);
+        state.exTextDirty = true;
+        redraw();
+        updateHistoryButtons();
+      }
+      target.addEventListener('pointermove', onMove);
+      target.addEventListener('pointerup', onUp);
+      target.addEventListener('pointercancel', onUp);
+    }
+
+    function build() {
+      while (layer.firstChild) layer.removeChild(layer.firstChild);
+      (cur.textBoxes || []).forEach(function (b) {
+        var d = document.createElement('div');
+        d.className = 'ex-textbox';
+        d.dataset.id = b.id;
+        d._box = b;
+        d.title = 'ドラッグで動かす／右下のつまみで大きさを変える';
+        var h = document.createElement('div');
+        h.className = 'ex-texthandle';
+        d.appendChild(h);
+        d.addEventListener('pointerdown', function (e) { start(e, b, d, false); });
+        h.addEventListener('pointerdown', function (e) { start(e, b, d, true); });
+        layer.appendChild(d);
+      });
+      place();
+    }
+    build();
+  }
+
+  /* ============ 🔒 §30-27-1: プレビュー画面は1つ ============
+   * オーナー指示 2026-09-14:「プレビュー画面は1つでいい。所在図と配置図はトグル切替。
+   *   1つのプレビュー画面を全てが使えば、そこで1を見る、2を見る、切り替えができ、
+   *   次のページボタンが右端にあれば連続でどんどん確認できる」。
+   * 入口（所在図④⑧・配置図⑧・紙の帯のルーペ・上部バー［書き出し］・まとめ描き）は
+   * 全部 openPreview() を呼ぶ。渡すのは「どの図のどの紙から見せるか」だけ。
+   * 🔴 ページの並びは pagesForExport() 1本（所在図→配置図・番号順）。
+   *    条件を満たす時だけ、末尾に「まとめ（1枚）」の面が1つ付く（§30-18-6 2 の条件）。 */
+
+  /** まとめ（1枚）の面か（🔴 判定は番号だけ＝表示文字では分岐しない） */
+  function exIsCombo(i) {
+    var pg = state.exPager;
+    return !!(pg && pg.combo && i === pg.pages.length);
+  }
+  /** その番号の図の種類（まとめの面は null） */
+  function exKindAt(i) {
+    var pg = state.exPager;
+    if (!pg || i < 0 || i >= pg.pages.length) return null;
+    return pg.pages[i].kind;
+  }
+  /** 最後の面の番号（まとめの面があればその番号） */
+  function exLastIndex() {
+    var pg = state.exPager;
+    if (!pg) return 0;
+    return pg.pages.length + (pg.combo ? 1 : 0) - 1;
+  }
+
+  /**
+   * プレビューを開く（🔒 §30-27-1 1）。
+   * @param o.kind     その図の1枚目から見せる（'shozaizu' / 'haichizu'）
+   * @param o.sheetId  その紙から見せる（紙の帯のルーペ・§30-26-2）
+   * @param o.combined まとめ（1枚）の面から見せる（条件を満たす時だけ）
+   * @param o.foot     所在図④⑧から出した時だけ true（下部の行き先ボタン列・§30-13-3）
+   * @param o.nav      ガイダンスの左面を隠さない置き方にする（§18-f）
+   */
+  function openPreview(o) {
+    o = o || {};
+    if (!state.current) return;
+    var list = pagesForExport().filter(function (p) { return !!p.frame; });
+    var inf = sgComboInfo();          // 🔴 まとめられるかの判定は sgComboInfo 1か所
+    if (!list.length) {
+      hint('書き出せる図がありません。先に図を作ってください。', 3500);
+      return;
+    }
+    var i = 0, k;
+    if (o.combined && inf.ok) {
+      i = list.length;                                   // 末尾＝まとめの面
+    } else if (o.sheetId) {
+      for (k = 0; k < list.length; k++) {
+        if (list[k].sheetId === o.sheetId) { i = k; break; }
+      }
+    } else if (o.kind) {
+      for (k = 0; k < list.length; k++) {
+        if (list[k].kind === o.kind) { i = k; break; }
+      }
+    }
+    state.exPager = {
+      pages: list, i: i, url: {}, r: {}, scale: {},
+      combo: !!inf.ok, comboInfo: inf,
+      /* 🔴 まとめの面には図の種類が無いので、直前に見ていた図を覚えておく
+       * （トグルと紙の札はこの値で決まる）。 */
+      kindNow: (i < list.length) ? list[i].kind : list[0].kind
+    };
+    if (o.nav) navPreviewFrame();     // 🔒 §18-f: 左面（ガイダンス）を隠さない置き方
+    /* 🔒 §30-13-3: 下部の行き先ボタン列は**所在図ガイダンス⑧から出した時だけ**。 */
     var foot = $('exPreviewFoot');
     if (foot) {
-      foot.hidden = !(opt && opt.foot);
+      foot.hidden = !o.foot;
       $('exPreviewFootMsg').textContent = '';
     }
+    $('exBarMsg').textContent = '';
+    exKindNoteHide();                 // 🔒 §30-27-1 3: 開いた直後は帯を出さない
     $('exPreviewBox').hidden = false;
     /* 🔒 §30-13-3: プレビューを出している間は字幕を隠す（紙面に重ならないように）。
      * 🔴 reset=true＝閉じた時に同じ文をまた出せるようにする（§30-10）。 */
     sgCaptionHide(true);
+    exPagerRender();
     // 誘導から出した時は下部のボタンを押し続けたいので、焦点を奪わない
     if (!state.navPreview) $('exPreviewClose').focus();
+  }
+
+  /** 🔒 §30-27-1 3: 「配置図に切り替わりました」の薄い帯（約3秒）。
+   *  🔴 文は KIND_JA の表から作る（表示文字では分岐しない）。消えるのは CSS の transition。 */
+  var exKindNoteT = 0, exKindNoteT2 = 0;
+  function exKindNoteShow(kind) {
+    var el = $('exKindNote');
+    if (!el || !KIND_JA[kind]) return;
+    clearTimeout(exKindNoteT);
+    clearTimeout(exKindNoteT2);
+    el.textContent = KIND_JA[kind] + 'に切り替わりました';
+    el.setAttribute('data-kind', kind);
+    el.hidden = false;
+    // [hidden] は display:none なので、外してから .is-on を付ける（transition が効く）
+    requestAnimationFrame(function () { el.classList.add('is-on'); });
+    exKindNoteT = setTimeout(function () {
+      el.classList.remove('is-on');
+      exKindNoteT2 = setTimeout(function () { el.hidden = true; }, 400);
+    }, 3000);
+  }
+  function exKindNoteHide() {
+    var el = $('exKindNote');
+    if (!el) return;
+    clearTimeout(exKindNoteT);
+    clearTimeout(exKindNoteT2);
+    el.classList.remove('is-on');
+    el.hidden = true;
   }
 
   function closeExportPreview() {
@@ -2476,9 +4364,22 @@
     $('exPreviewBox').hidden = true;
     $('exPreviewBox').classList.remove('is-nav');
     if ($('exPreviewFoot')) $('exPreviewFoot').hidden = true;
+    // 🔒 §30-27-1 2/6: 道しるべの行と［PDF］［画像］の帯も畳む
+    if ($('exPreviewNav')) $('exPreviewNav').hidden = true;
+    if ($('exPreviewBar')) $('exPreviewBar').hidden = true;
+    exKindNoteHide();                   // 🔒 §30-27-1 3
     sideFront(false);
     state.navPreview = false;
+    state.exPager = null;               // 🔒 §30-18-6 2: ページ送りも仕切り直す
     $('exPreviewBody').innerHTML = '';   // 画像を抱えたままにしない
+    exTextTip(false);                   // 🔒 §30-25-16: 案内も隠す
+    exPlacersReset();                   // 🔒 §30-25-10: 層の置き直しも捨てる
+    /* 🔒 §30-25-10 4: プレビューで文字を動かしたら、地図にもそのまま効く。
+     * 別の紙を動かした時は editor が描き直していないので、閉じた時に1回引き直す。 */
+    if (state.exTextDirty) {
+      state.exTextDirty = false;
+      if (state.editor) state.editor.render();
+    }
     /* 🔒 §30-13-3: 閉じたら字幕を戻す（所在図④なら⑧の文）。
      * 🔴 番号と字幕の出どころは sgRenderNums 1か所（ここで文を書かない）。
      * 🔒 §30-13-7 3: ここも「字幕を出す時」＝置き場所を引き直す契機（同じ文でも）。 */
@@ -2607,9 +4508,19 @@
     var prevSheet = sheetOf('shozaizu');
     var prevFrame = (prevSheet && prevSheet.frame)
       ? JSON.parse(JSON.stringify(prevSheet.frame)) : null;
+    /* 🔒 §30-25-28 4: ①でマーカーを置いた時に作った主役の文字は「前回の生成の
+     * 位置」ではない。**まだ一度も生成していない紙**では位置を引き継がず、
+     * 生成に「名前の位置」の規則どおり置かせる（手で動かした文字は userMoved で
+     * 文字ごと残るので、こちらの経路には乗らない）。
+     * 🔴 判定は「主役の印と文字**以外**の生成物があるか」＝表示文字では分岐しない。 */
+    var wasGenerated = state.editor.objects.some(function (o) {
+      return o && o.source === 'shozaizu'
+          && o.role !== 'pinlabel' && o.role !== 'mainmark';
+    });
     var roleAt = Object.create(null);
     state.editor.objects.forEach(function (o) {
       if (o.type === 'text' && o.role && o.source === 'shozaizu') {
+        if (o.role === 'pinlabel' && !wasGenerated) return;
         roleAt[o.role + ':' + o.text] = { lat: o.at.lat, lng: o.at.lng };
       }
     });
@@ -2641,6 +4552,10 @@
     Object.keys(SZ_GRADES).forEach(function (k) {
       c[SZ_GRADES[k].key] = gradeValue(k);
     });
+    // 🔒 §30-22-2 2: 段数が5でない項目（名前の位置）も同じ作法で書き戻す
+    Object.keys(SZ_PICKS).forEach(function (k) {
+      c[SZ_PICKS[k].key] = pickValue(k);
+    });
     // 🔒 2026-09-03（後半）: 名称6分類の段（§23-5）。全部「なし」なら OSM を叩かない
     var nameLevels = nameLevelsNow();
     syncSzPanel();
@@ -2653,10 +4568,18 @@
     var mv = state.map;
     // 書き出す枠の範囲そのもので作る（少しだけ外側も拾って端を欠けさせない）
     var fb = frame ? Exporter.frameBounds(frame) : mv.getBounds();
-    var padLat = (fb.north - fb.south) * 0.08;
-    var padLng = (fb.east - fb.west) * 0.08;
-    var genBounds = { west: fb.west - padLng, east: fb.east + padLng,
-                      south: fb.south - padLat, north: fb.north + padLat };
+    /* 🔒 §30-25-3 1（2026-09-13 オーナー指示）: **取得範囲＝画面に映っている範囲と
+     * 枠の範囲の和＋8%**。地理院タイルも Overpass も同じ範囲を1回で取る。
+     * 🔴 段（多め・全部）を選ぶと枠の外にも描けるようにするための「材料」。
+     *    どこまで描くかは shozaizu.js の areaFor（段ごと）が決める（§30-25-3 2）。
+     * 🔴 取得範囲は**画面より広げない**（Overpass の重さ・§30-25-3 5）。 */
+    var vb = mv.getBounds();
+    var ub = { west: Math.min(fb.west, vb.west), east: Math.max(fb.east, vb.east),
+               south: Math.min(fb.south, vb.south), north: Math.max(fb.north, vb.north) };
+    var padLat = (ub.north - ub.south) * 0.08;
+    var padLng = (ub.east - ub.west) * 0.08;
+    var genBounds = { west: ub.west - padLng, east: ub.east + padLng,
+                      south: ub.south - padLat, north: ub.north + padLat };
     /* 🔒 §26-4-b: 枠が決定済みの紙は地図を動かしていないので、
      * タイルの倍率は**枠から**出す（地図のズームで取ると粗すぎ／細かすぎになる）。
      * 🔴 §22-an: 未決定の紙はいまの画面そのものが枠（frameShozaizu が地図を動かさない）
@@ -2670,6 +4593,10 @@
       frameBounds: frame ? fb : null,
       zoom: genZoom,
       home: c.points.home, lot: c.points.lot,
+      /* 🔒 §30-22-1 6 / §30-22-6 2: 同一住所＝印もラベルも1つ・結線と距離は描かない */
+      same: !!c.points.same,
+      /* 🔒 §30-22-2 2: 名前の位置（1=近く／2=標準／3=離す）。案件に保存される */
+      nameGap: pickValue('gap'),
       // 🔒 §23-10: 建物の自動描画（1=なし〜5=全部）。旧 szBldg の bool は廃止
       bldgLevel: bldgLevel,
       // 🔒 2026-09-03: 道路の量も5段階（1=なし〜5=全部）。3=標準＝従来の自動間引き
@@ -2678,11 +4605,25 @@
       /* 🔒 §18-r: 施設（目標物）の件数。段 → 件数は LM_COUNT の表で引く
        * （段5「全部」は Infinity＝上限も距離の足切りも無し）。厳選そのものは従来のまま */
       landmarks: LM_COUNT[lmLevel],
+      /* 🔒 §30-25-3 2: 「描く範囲」を段で決めるため、件数だけでなく**段そのもの**も渡す
+       * （4=多め・5=全部 は枠の外＝画面に映っている所まで描く）。 */
+      lmLevel: lmLevel,
       // 🔒 §25-4: 主役の印の様式（'rect'＝四角＋斜線 / 'circle'＝◎）。案件に保存される
       markStyle: markStyle,
       /* 🔒 §28-14 ①-4: 主役の印の形と色は**地点ごと**（ガイダンス①で選ぶ）。
        * markStyle は旧案件の後方互換で残してある（marks が優先・shozaizu.js 側）。 */
       marks: marksForGen(),
+      /* 🔒 §30-24-1: 主役の印が多角形の時、文字はその**縁**から離して置く。
+       * 多角形は利用者が描いた図形（生成物ではない）のでここで渡す（描いた順）。 */
+      mainPolys: ['home', 'lot'].reduce(function (acc, k) {
+        return acc.concat(Editor.mainPolysOf(state.editor.objects, k)
+          .map(function (o) {
+            return { markRole: (o.markRole || 'home'),
+                     points: o.points.map(function (p) {
+                       return { lat: p.lat, lng: p.lng };
+                     }) };
+          }));
+      }, []),
       // 🔒 §23-9: 道路の描き方（'line'＝黒線1本 / 'band'＝白帯＋黒縁）。案件に保存される
       roadStyle: roadStyle,
       /* 🔒 2026-09-03（後半・§23-5）: 名称6分類の段。
@@ -2738,9 +4679,22 @@
        * 🔒 §23-10: 旧実装は生成の**前**に消していたが、それだと上の確認で
        *    ［キャンセル］した時に図が空になる。生成が確定してから消すよう動かした。 */
       var n = 0;
+      /* 🔒 §30-25-28 4: 手で動かした／大きさを変えた主役の文字（userMoved）が
+       * 残っている地点。生成物の同じ文字は捨てる（重複させない・判定は pinKey）。 */
+      var keptMain = {};
       state.editor.snapshot();
       for (var i = state.editor.objects.length - 1; i >= 0; i--) {
-        if (state.editor.objects[i].source !== 'shozaizu') continue;
+        var od = state.editor.objects[i];
+        if (od.source !== 'shozaizu') continue;
+        /* 🔒 §30-24-1: 主役の**多角形**は利用者が手で描いた印（生成物ではない）。
+         * 作り直しで消さない（消すと囲んだ土地の形が毎回消えてしまう）。 */
+        if (od.role === 'mainmark' && od.type === 'polygon') continue;
+        /* 🔒 §30-25-28 4（2026-09-14 オーナー指示）: 手で動かした主役の文字も
+         * 「利用者が触った物」＝多角形と同じ扱いで消さず・置き直さず残す。 */
+        if (od.role === 'pinlabel' && od.type === 'text' && od.userMoved) {
+          keptMain[pinKeyOf(od)] = true;
+          continue;
+        }
         state.editor.objects.splice(i, 1); n++;
       }
       if (n) state.editor.commit();
@@ -2753,7 +4707,16 @@
           if (at) o.at = { lat: at.lat, lng: at.lng };
         });
       }
-      state.editor.addGenerated(res.objects);
+      /* 🔒 §30-25-28 4: 残した主役の文字と同じ地点の生成物は載せない
+       * （判定は pinKey＝表示文字では分岐しない・§26-2 注意②）。 */
+      var fresh = res.objects.filter(function (o) {
+        return !(o && o.type === 'text' && o.role === 'pinlabel'
+                 && keptMain[pinKeyOf(o)]);
+      });
+      state.editor.addGenerated(fresh);
+      /* 🔒 §30-24-3: 作り直しの後は「使用の本拠」「駐車場」の文字が必ず1つずつある
+       * （生成側は地点が無いと作らない＝片方が消える経路の出口）。 */
+      ensureMainLabels();
       updateHistoryButtons();
       var s = res.stats;
       /* 🔒 §23-9 / 2026-09-03: 道路は「段の名前・描き方」を添える */
@@ -3189,22 +5152,48 @@
     fillBusy(false);
   }
 
-  /** かぶせ物を全部閉じる（起動時・復元に失敗した時の安全網） */
+  /** 🔒 §30-25-26: 案件を開く／新しく作る／一覧へ戻る のどれでも閉じる窓の一覧。
+   * 上部バー・道具メニューから hidden で出し入れしている窓（index.html で
+   * class="stamp-panel" が付いている物を全部・書き出し窓・提出前チェック・
+   * はじめに・プレビュー）を集めた1か所。
+   * 🔴 新しい窓を足す時はまずここに id を足す（closeAllOverlays 側は直さない）。
+   * welcomeBox（はじめに）も一度ここで閉じる。openCaseInner が最後にまた開き直す
+   * （opt.fresh の時だけ・§30-20 の作法のまま）。 */
+  var CASE_PANELS = ['chkBox', 'welcomeBox', 'exPreviewBox',
+    'exPick',                       // 🔒 §30-27-2: PDF・画像の窓
+    'stampPanel', 'plPanel', 'draftPanel', 'fillPanel', 'imgPanel', 'szPanel',
+    'pastePanel',
+    'textPick',        // 🔒 §30-29-1 2: 文字の選択窓
+    'arrowPick'];      // 🔒 §30-29-4 1: 幅の矢印の窓
+
+  /** かぶせ物を全部閉じる（案件を開く／新しく作る／一覧へ戻る 共通の安全網） */
   function closeAllOverlays() {
     // 🔒 §22-ah: 動画は pause も要るので専用の閉じ方を通す（他より先に）
     vidClose();
     // 🔒 §22-ab: 駐車位置ラベルの小ウィンドウも畳む（2クリック待ちも解除する）
     // 🔒 §22-ao-①: 所在図の設定盤（szPanel）も案件をまたいで持ち越さない
-    ['chkBox', 'exPreviewBox', 'plPanel', 'szPanel'].forEach(function (id) {
+    // 🔒 §30-20: 「はじめに」も安全網に入れる（出すのは openCaseInner の最後）
+    // 🔒 §30-25-26: 閉じる窓の一覧は CASE_PANELS の1か所
+    CASE_PANELS.forEach(function (id) {
       var el = $(id);
       if (el) el.hidden = true;
     });
+    textPickClose();     // 🔒 §30-29-1 2: 文字の選択窓も案件をまたいで持ち越さない
+    arrowPickClose();    // 🔒 §30-29-4 1: 幅の矢印の窓も同じ（打ちかけの値も戻す）
     plDisarm();
+    /* 🔒 §30-25-26: fillPanel／imgPanel は隠すだけでは足りない。
+     * 「辺に沿わせる」の2クリック待ち（.map-wrap の pointerdown 乗っ取り）と
+     * 画像のつまみ表示（ImgLay.adjust）は窓の hidden とは別の状態なので、
+     * ここで一緒に解除しないと、次の案件の地図クリックを乗っ取ったままになる。 */
+    stopEdgePick();
+    if (state.imglay) state.imglay.setAdjust(false);
     // ガイダンスから出したプレビューの置き方も戻す（§18-f）
     $('exPreviewBox').classList.remove('is-nav');
     sideFront(false);
     state.navPreview = false;
     state.pendingExport = null;
+    state.exPager = null;        // 🔒 §30-27-1: 面の控えは案件をまたいで持ち越さない
+    state.exPick = null;         // 🔒 §30-27-2: 窓の選択も同じ
   }
 
   /** いまの画像の置き方（認識へ渡す） */
@@ -3693,16 +5682,31 @@
     return true;
   }
 
+  /**
+   * 🔒 §30-22-3 1（2026-09-13 オーナー指示）: 下敷きの濃さ（0〜100%）を変える
+   * **唯一の出入口**。上部バーのスライダー・［地図OFF］・ガイダンス④の濃さと
+   * 表示切替は、どこを触ってもここを通る＝値は1つ（case の underlayOpacity）。
+   */
+  function setUnderlayPct(pct) {
+    var p = Math.max(0, Math.min(100, Math.round(Number(pct) || 0)));
+    $('opacity').value = p;
+    $('opacityVal').textContent = p + '%';
+    $('underlayOff').checked = (p === 0);
+    applyOpacity(p / 100);
+    persistSheetState();
+    sgSyncUnderlay();        // 🔒 §28-5 B / §30-22-3 1: ①④⑤の〇・濃さ・切替も追従
+  }
+
+  /** いまの下敷きの濃さ（%）。値の出どころは上部バーの #opacity 1か所 */
+  function underlayPct() {
+    return Math.max(0, Math.min(100, Math.round(Number($('opacity').value) || 0)));
+  }
+
   /** 上部バーの［地図OFF］を切り替える（ウィザードから自動で操作する用） */
   function setUnderlayOffState(off) {
     var box = $('underlayOff');
     if (box.checked === off) return;
-    box.checked = off;
-    var o = off ? 0 : 1;
-    $('opacity').value = o * 100;
-    $('opacityVal').textContent = (o * 100) + '%';
-    applyOpacity(o);
-    persistSheetState();
+    setUnderlayPct(off ? 0 : 100);
   }
 
   /** 作図中の操作ヒント帯（正典 §4-5）。多角形は確定方法が分かりにくいので常時出す */
@@ -3871,6 +5875,36 @@
     navStart(navStepOf(fig, navSavedDisp(fig) || 1));
   }
 
+  /* ---------- はじめに（🔒 §30-20） ----------
+   * ［新しい案件］で作図画面に切り替わった**直後だけ**出すかぶせ。
+   * 3つのボタンは「上部バーの同名ボタンと同じ処理」＝ navStartFig を呼ぶだけ
+   * （同じ操作は同じ結果・§26-2）。
+   * 🔴 覚えるのは「次回から表示しない」だけ。案件には保存しない（このパソコンの設定）。
+   *    キーの名前は §19-7 の shakomap.* に揃える（store.js の KEY_LAST / KEY_SEQ と同族）。
+   * 🔴 利用者に見える文言に「ブラウザ／端末」は使わない（正典 §30-20）。 */
+  var KEY_SKIP_WELCOME = 'shakomap.skipWelcome';
+
+  function welcomeSkipped() {
+    try { return localStorage.getItem(KEY_SKIP_WELCOME) === '1'; }
+    catch (e) { return false; }       // 読めない時は「覚えていない」＝出す
+  }
+
+  function welcomeOpen() {
+    if (welcomeSkipped()) return;
+    $('wcNoMore').checked = false;    // 前に開いた時のチェックを持ち越さない
+    $('welcomeBox').hidden = false;
+  }
+
+  /** 閉じる（3つのボタン・Esc の共通の出口）。チェックが入っていれば以後出さない */
+  function welcomeClose() {
+    if ($('welcomeBox').hidden) return;
+    if ($('wcNoMore').checked) {
+      try { localStorage.setItem(KEY_SKIP_WELCOME, '1'); }
+      catch (e) { /* 覚えられないだけ。操作は止めない */ }
+    }
+    $('welcomeBox').hidden = true;
+  }
+
   /** 案件に保存してあるその図の段（無ければ 0）。🔒 §30-1: nav:{shozaizu,haichizu} */
   function navSavedDisp(fig) {
     var nv = state.current && state.current.nav;
@@ -3892,7 +5926,7 @@
     var aside = document.querySelector('.side');
     $('sideNav').hidden = !on;
     if (aside) aside.classList.toggle('is-guide', !!on);
-    /* 🔒 §28-4 / §28-7: 所在図の設定盤（12項目）は**部品ごと**行き来する。
+    /* 🔒 §28-4 / §28-7: 所在図の設定盤（14項目・🔒 §30-21-4 5: 11→13・🔒 §30-22-2 3: →14）は**部品ごと**行き来する。
      * ガイダンス中＝③の中／ガイダンス外＝右の浮き窓（同じ設定が2か所に出ない）。 */
     szSetHost(!!on);
     /* 幅が変わる＝地図の大きさが変わるが、mapview は ResizeObserver で
@@ -3912,6 +5946,10 @@
     state.nav.step = n;
     // 🔒 §30-10: 段を離れたら前の字幕は消す（新しい段の字幕は sgRenderNums が出す）
     if (prev !== n) sgCaptionHide(true);
+    // 🔒 §30-16: 段を移ったら拾う状態は終わる（④のボタンの状態なので）
+    if (prev !== n) stopNamePick();
+    // 🔒 §30-19-1: ［枠をまとめて］の置く状態も段をまたがない（配置図③のボタンの状態）
+    if (prev !== n) stopStampArm();
     // 🔒 §28-1 / §29 Step 7: 器は左面のガイダンス面ひとつだけ
     navShowHost();
     if (n !== 1) navPinArm(null);
@@ -3990,7 +6028,8 @@
     /* 🔒 §18-v: ⑨（道幅）・⑩（出入口の幅）へ入ったら幅の欄を空にする（🔒 §29 で改番）。
        ⑨で入れた 6m がそのまま⑩の出入口の幅として矢印に付く事故を防ぐ。
        🔒 §25-5: 空欄のまま引いた矢印は地図から計算した距離が入る（手入力があればそちら優先）。 */
-    if (prev !== n && (n === 9 || n === 10)) setArrowWidth('');
+    /* 🔒 §30-18-4: 決め方のトグルも「自動入力」へ戻す（欄が空＝自動と同じ意味） */
+    if (prev !== n && (n === 9 || n === 10)) setArrowMode('auto');
     /* ⑪の凡例（4項目）は 🔒 §18-l で**カスタム行なし**から始める
        （［＋ 項目を追加］を押した分だけ行が増える）。行そのものは1度だけ作る。 */
     if (n === 11) labelBuildRows('lb');
@@ -4000,6 +6039,25 @@
     // 🔒 §28-6 ⑤: 段を案件に覚えさせる（F5・開き直しで①へ戻されない）
     navSaveStep();
     navRender();
+    /* 🔒 §30-25-32（2026-09-14 オーナー指示「次へで進めても表示位置が下のまま。
+     * 常に上に戻るように」）: **段を移った時だけ**左面を一番上へ戻す
+     * （［次へ］［戻る］・足跡クリックの全部がここを通る。段の中の▼の開閉では
+     * 通らない＝戻さない）。面を組み直した後に呼ぶ。 */
+    if (prev !== n) sgScrollTop();
+  }
+
+  /**
+   * 🔒 §30-25-32: 左のガイダンス面のスクロールを一番上へ。
+   * 🔴 実際にスクロールしているのは #sideNav を包む `.side`（style.css の
+   *    `overflow-y: auto`）。面そのものが将来スクロールする作りになっても効くよう
+   *    両方を 0 にする（呼ぶ所は navGo の1か所）。
+   */
+  function sgScrollTop() {
+    var host = $('sideNav');
+    if (!host) return;
+    host.scrollTop = 0;
+    var box = host.closest ? host.closest('.side') : host.parentNode;
+    if (box) box.scrollTop = 0;
   }
 
   /**
@@ -4067,40 +6125,126 @@
    *    押した番号は✓になり、青は次の番号へ動く＝どこまで進んだかはそれで分かる。 */
 
   /**
-   * 🔒 §22-z: 定型の文字を**地図の中央へ確定済みで**置き、道具を［選択］にする。
-   * ⑨［道路（文字）］・⑩［出入口（文字）］から使う。
-   * 🔴 テキスト入力欄を経由しない。置く言葉は決まっているので、
-   *    「クリックする場所を決める → 文字を確定する」の2手が要らなかった。
-   *    中央に出しておけば、そのままドラッグで置きたい場所へ運べる。
+   * 🔒 §30-18-4（2026-09-13 オーナー指示）: ⑤⑥の「文字を置く」欄の定型ボタン。
+   * 押した後に**地図をクリックした所**へ置く（1回で解除）。
+   * 🔴 仕組みは1つ ＝ state.editor.textPreset を立てて文字道具にするだけ。
+   *    置く処理も解除も editor の 'text' を受ける1か所（§22-ab）がやる。
+   * 🔴 旧 §22-z の「押した瞬間に地図の中央へ置く」は、置き場所を選べないので廃止。
+   * 🔒 §30-29-1 2: 上部バー2行目の［A］→ #textPick の言葉のボタンも**ここへ来る**
+   *    （共通ハンドラ1つ・言葉の出どころは TEXT_PRESETS 1か所）。
    */
-  function navPlaceTextAtCenter(text) {
-    if (!state.editor || !state.map) return;
-    var at = state.map.getCenter();
-    state.editor.commitText(null, at, text, $('textSize').value);
-    state.editor.setTool('select');
-    updateHistoryButtons();
-    hint('「' + text + '」を図の中央に置きました。ドラッグで動かせます', 4500);
+  function navTextPreset(text) {
+    if (!state.editor || !text) return;
+    textPickClose();          // 🔒 §30-29-1 2: 選んだら窓は閉じる
+    state.editor.textPreset = text;
+    state.editor.setTool('text');
+    hint('地図上をクリックすると「' + text + '」を置きます', 4000);
+  }
+
+  /** 🔒 §30-18-4: ［自由に入力…］＝文字道具（クリックした所に入力欄・§30-15-4 の OK 付き） */
+  function navTextFree() {
+    if (!state.editor) return;
+    textPickClose();          // 🔒 §30-29-1 2
+    state.editor.textPreset = '';
+    state.editor.setTool('text');
+    hint('地図上をクリックすると、文字の入力欄が出ます', 4000);
   }
 
   /**
-   * 🔒 §25-7（2026-08-29 オーナー指示）: ［枠をまとめて］は
-   * **押した瞬間に1枠だけ地図の中央へ置く**（台数を数えて入力させない）。
+   * 🔒 §25-7（2026-08-29 オーナー指示）: ［枠をまとめて］は1枠だけ置く
+   * （台数を数えて入力させない）。
+   * 🔒 §30-19-1（2026-09-13 改定）: **押した瞬間に置く**のはやめて、
+   *    押した後に**地図をクリックした所**へ置く（→ startStampArm）。
    * 枠の大きさ・並べ方は［台数を指定して置く…］の窓で最後に選んだ物を引き継ぐ。
    * 🔴 道具は［選択］に戻す（§22-z-5 の作法）。置いた枠をそのまま掴んで直せる。
+   * @param origin {lat,lng}＝置く場所。省略時は地図の中央（従来の呼び方）
    */
-  function placeStampOne() {
+  function placeStampOne(origin) {
     if (!state.editor || !state.map) return;
     var s = (state.stamp && state.stamp.state) || {};
-    state.editor.placeStamp({
+    var o = state.editor.placeStamp({
       count: 1,
+      origin: origin || null,
       cell_w_m: s.w || 2.5, cell_h_m: s.h || 5.0,
       direction: s.direction || 'row'
     });
+    /* 🔒 §30-19-1: 置いた塊を選んだまま［選択］へ戻す（±・回転がすぐ使える）。
+     * 🔴 placeStamp → _pushNew が selection を立てる。setTool は 'select' の時だけ
+     *    選択を残して 'select' を鳴らし直すので、ここで選び直す必要はない。 */
+    if (o) state.editor.selection = [o.id];
     state.editor.setTool('select');
     if (state.stamp) state.stamp.close();
     updateHistoryButtons();
     hint('枠を1つ置きました。まわりの ＋ を押すとその向きに枠が増えます'
        + '（矢印キーでも増減／Shift＋矢印で回転）', 6000);
+  }
+
+  /* ---------- 🔒 §30-19-1: ［枠をまとめて］の「置く状態」 ----------
+   * オーナー:「枠をまとめて ボタンを押したら即設置ではなく、クリックで設置に」
+   * 🔴 状態（state.stampArm）は**画面の状態**。案件には保存しない。
+   * 🔴 地図クリックの拾い方は §30-16 の拾う状態（startNamePick）と**同じ作法**
+   *    ＝ .map-wrap の capture で pointerdown / click を先取りする。 */
+
+  /** ［枠をまとめて］2か所（道具メニュー・配置図③）の押された見た目を揃える */
+  function syncStampArmBtn() {
+    document.querySelectorAll('.tool[data-tool="stamp"]').forEach(function (b) {
+      b.classList.toggle('is-on', !!state.stampArm);
+    });
+  }
+
+  function toggleStampArm() {
+    if (state.stampArm) {
+      stopStampArm();
+      hint('枠を置くのをやめました', 2000);
+      return;
+    }
+    startStampArm();
+  }
+
+  function startStampArm() {
+    if (state.stampArm) return;
+    if (!state.editor || !state.map) return;
+    state.stampArm = true;
+    $('map').style.cursor = 'crosshair';
+    var wrap = document.querySelector('.map-wrap');
+    wrap.addEventListener('pointerdown', onStampArmDown, true);
+    wrap.addEventListener('click', onStampArmClick, true);
+    syncStampArmBtn();
+    hint('枠を置く場所を地図でクリックしてください（Esc でやめる）', 0);
+  }
+
+  /** 置く状態を終える。🔴 掴んだままにすると地図クリックを全部横取りしてしまう */
+  function stopStampArm() {
+    if (!state.stampArm) return;
+    state.stampArm = false;
+    $('map').style.cursor = '';
+    var wrap = document.querySelector('.map-wrap');
+    wrap.removeEventListener('pointerdown', onStampArmDown, true);
+    wrap.removeEventListener('click', onStampArmClick, true);
+    syncStampArmBtn();
+    hintHide();                  // 出しっぱなしにしていた案内を消す
+  }
+
+  function onStampArmDown(e) {
+    if (!state.stampArm || !state.map) return;
+    if (e.button !== 0) return;                     // 中ボタン等の従来のパンは残す
+    if (!$('spaceBadge').hidden) return;            // スペース＝一時パンには譲る
+    if (!state.map.el.contains(e.target)) return;   // 地図の外（＋−ボタン等）は素通し
+    var r = $('map').getBoundingClientRect();
+    var px = e.clientX - r.left, py = e.clientY - r.top;
+    if (px < 0 || py < 0 || px > r.width || py > r.height) return;
+    e.preventDefault();
+    e.stopPropagation();                            // 左ドラッグの地図パンを飲む
+    var ll = state.map.unproject(px, py);
+    stopStampArm();                                 // 先に解いてから置く（1回で終わる）
+    placeStampOne(ll);
+  }
+
+  /** pointerdown を止めても click は届くので、こちらも飲む */
+  function onStampArmClick(e) {
+    if (!state.stampArm || !state.map) return;
+    if (!state.map.el.contains(e.target)) return;
+    e.stopPropagation();
   }
 
   /** ［戻る］。表示だけが戻る（作った図形・データは一切消さない・🔒 §18-f） */
@@ -4129,7 +6273,11 @@
      *    （左面を前に出す .is-front も付いたままになる）。図・保存には触らない。 */
     if (state.navPreview) closeExportPreview();
     sgShow(false);               // 🔒 §28-1: 左面は道具メニューへ戻す（何も消えない）
+    // 🔒 §30-17-2: ガイダンスを閉じたら図ごとの色（緑）も外す
+    document.body.classList.remove('sg-hz');
     sgCaptionHide(true);         // 🔒 §30-3: 字幕もここで消す（次の行動が無くなるので）
+    stopNamePick();              // 🔒 §30-16: 拾う状態もガイダンスと一緒に終わる
+    stopStampArm();              // 🔒 §30-19-1: 枠を置く状態も一緒に終わる
     state.nav = null;
     if (!keepStep) navSaveStep();
     navPinArm(null);
@@ -4147,16 +6295,16 @@
   }
 
   /** 図形が増えた時に呼ぶ。
-   *  🔒 §18-p: ⑤で輪郭が確定したら**自動で⑥（駐車枠）へ**進む（正典 §18-10 の作法に戻した）。
-   *  手動の［次へ］でも進めるので、輪郭を描かずに先へ行くこともできる。 */
+   *  🔒 §30-25-11（2026-09-13 オーナー指示）: 配置図②で多角形を Enter で確定しても
+   *  **勝手に次の段へ進まない**（旧 §18-p の自動送りは廃止）。一言だけ出して、
+   *  進むのは一番下の［次へ］。②の［次へ］の済み判定（多角形1つ以上）は今のまま。 */
   function navOnObjects() {
     if (!state.nav) return;
     navStampRoads();
     /* 🔒 §29 Step 6: 土地の輪郭は⑥（旧⑤）、駐車枠は⑦（旧⑥） */
     if (state.nav.step === 6 && navPolyCount() > (state.nav.polyBase || 0)) {
-      navGo(7);
-      hint('輪郭を確定しました。つづけて駐車枠を描けます', 3500);
-      return;
+      state.nav.polyBase = navPolyCount();       // 同じ多角形で何度も言わない
+      hint('輪郭を確定しました。よければ［次へ］を押してください', 3500);
     }
     if (state.nav.step >= 5) sgRenderStatus();
     // 🔒 §16-5 B: ⑫の提出前チェックは、図形が変わったら数え直す
@@ -4197,7 +6345,10 @@
     return objs.filter(function (o) {
       // 🔒 §18-t: 手で引いた直線・曲線。自動下書きの道路縁は数えない
       if ((o.type === 'line' || o.type === 'curve') && o.source !== 'auto') return true;
-      return (o.type === 'path' || o.type === 'polygon') && o.source === 'road';
+      /* 🔒 §30-25-22 5: ［道路を描く］が置いた**縁の線**（type:'path'）も道路として
+       * 数える（押した人にとっては「道路を描いた」ので、⑥の済み判定が立つ）。 */
+      return (o.type === 'path' || o.type === 'polygon')
+          && (o.source === 'road' || o.source === 'roadauto');
     }).length;
   }
 
@@ -4250,7 +6401,62 @@
     var box = $(pre + 'Rows');
     if (!box || box.childElementCount) return;      // 1度だけ作る
     box.innerHTML = labelRowsHTML(pre);
+    /* 🔒 §30-22-4 10: 前回入れた値を最初から入れておき、変えたら覚え直す */
+    labelFillLast(pre);
+    LABEL_ROWS.forEach(function (r) {
+      var inp = $(pre + r.key);
+      if (inp) inp.addEventListener('change', function () { labelLastSave(pre); });
+    });
   }
+
+  /* ---- 長さ・幅の「前に入れた値」（🔒 §30-22-4 10・2026-09-13 オーナー指示）----
+   * 🔴 この PC の設定（§19-7 の shakomap.* に揃える）。**案件には保存しない**
+   *    ＝案件を移しても付いていかない／案件データは太らない。
+   * 🔴 読み書きは必ず try/catch（保存領域が使えない環境でも図は作れる）。 */
+  var LABEL_LAST_KEY = 'shakomap.labelLast';
+  /* 🔒 §30-22-6 1（オーナー回答）: ［標準の値］は 5.5m×2.5m（§30-22-4 10 の 5.0 を訂正） */
+  var LABEL_STD = { Len: '5.5', Wid: '2.5' };
+
+  function labelLastLoad() {
+    try {
+      var s = localStorage.getItem(LABEL_LAST_KEY);
+      var o = s ? JSON.parse(s) : null;
+      return (o && typeof o === 'object') ? o : {};
+    } catch (e) { return {}; }
+  }
+  function labelLastSave(pre) {
+    var o = {};
+    LABEL_ROWS.forEach(function (r) {
+      var inp = $(pre + r.key);
+      if (inp) o[r.key] = String(inp.value || '').trim();
+    });
+    try { localStorage.setItem(LABEL_LAST_KEY, JSON.stringify(o)); } catch (e) { /* 使えなくてよい */ }
+  }
+  /** 空の欄にだけ前回の値を入れる（人が入れた値は上書きしない） */
+  function labelFillLast(pre) {
+    var last = labelLastLoad();
+    LABEL_ROWS.forEach(function (r) {
+      var inp = $(pre + r.key);
+      if (!inp || inp.value) return;
+      if (last[r.key]) inp.value = last[r.key];
+    });
+  }
+  /** ［標準の値］＝長さ 5.5m・幅 2.5m を入れる（🔒 §30-22-6 1） */
+  function labelSetStd(pre) {
+    Object.keys(LABEL_STD).forEach(function (k) {
+      var inp = $(pre + k), on = $(pre + k + 'On');
+      if (inp) inp.value = LABEL_STD[k];
+      if (on) on.checked = true;
+    });
+    labelLastSave(pre);
+    labelHint(pre, '標準の値（長さ ' + LABEL_STD.Len + 'm・幅 '
+      + LABEL_STD.Wid + 'm）を入れました');
+  }
+
+  /* 🔒 §30-25-36 2（2026-09-14 オーナー指示）: ［配置］の名前は［保管場所ラベル配置］。
+   * 🔴 名前の出どころはこの1か所（ガイダンス⑦の字幕・案内の一言・SG_NUM の label が
+   *    ここを読む。ボタンそのものの文字は index.html の #sgLabelPlace / #plPlace）。 */
+  var LABEL_PLACE_JA = '保管場所ラベル配置';
 
   /** 案内の一言（⑪＝#lbHint ／ 小ウィンドウ＝#plHint） */
   function labelHint(pre, msg) {
@@ -4265,7 +6471,9 @@
      * 先に塊スタンプの方を閉じる。2枚重なるとボタンが押せなくなる */
     if (state.stamp) state.stamp.close();
     $('plPanel').hidden = false;
-    labelHint('pl', '［配置］のあと、地図を2回クリックします。');
+    /* 🔒 §30-25-36 2: 名前は LABEL_PLACE_JA。
+     * 🔒 §30-22-4 10: 置き方はワンクリック（plDisarm の一言と同じ文にそろえる）。 */
+    labelHint('pl', '［' + LABEL_PLACE_JA + '］のあと、対象の駐車枠をクリックします。');
   }
 
   function plClose() {
@@ -4281,19 +6489,21 @@
       labelHint(pre, '⚠ チェックを入れて数値を入力してください');
       return;
     }
-    state.plPlace = { pre: pre, lines: lines, arrowTo: null };
+    labelLastSave(pre);          // 🔒 §30-22-4 10: 入れた値を覚える
+    state.plPlace = { pre: pre, lines: lines };
     $('map').style.cursor = 'crosshair';
     // 地図・描画エンジンより先に受け取る（①マーカー設置と同じ作法）
     document.querySelector('.map-wrap')
       .addEventListener('pointerdown', onPlPlaceClick, true);
-    labelHint(pre, '① 対象の駐車枠をクリック（矢印の先）');
-    hint('① 矢印の先にする駐車枠をクリックしてください', 4000);
+    labelHint(pre, '対象の駐車枠をクリックしてください');
+    hint('ラベルを付ける駐車枠をクリックしてください（Esc でやめる）', 4000);
     if (navOnSide()) sgRenderStatus();
   }
 
   function plDisarm() {
     if (!state.plPlace) return;
-    labelHint(state.plPlace.pre, '［配置］のあと、地図を2回クリックします。');
+    // 🔒 §30-25-36 2: 名前は LABEL_PLACE_JA（index.html の初期文言と同じ）
+    labelHint(state.plPlace.pre, '［' + LABEL_PLACE_JA + '］のあと、対象の駐車枠をクリックします。');
     state.plPlace = null;
     $('map').style.cursor = '';
     document.querySelector('.map-wrap')
@@ -4311,24 +6521,84 @@
     if (px < 0 || py < 0 || px > r.width || py > r.height) return;
     e.preventDefault();
     e.stopPropagation();
-    var ll = state.map.unproject(px, py);
     var pre = state.plPlace.pre;
-    if (!state.plPlace.arrowTo) {                   // ①矢印の先
-      state.plPlace.arrowTo = { lat: ll.lat, lng: ll.lng };
-      labelHint(pre, '② ラベルを置く場所をクリック');
-      hint('② ラベルを置く場所をクリックしてください', 4000);
-      if (navOnSide()) sgRenderStatus();
+    /* 🔒 §30-22-4 10（2026-09-13 オーナー指示）: ［配置］は**ワンクリック**。
+     * 対象の駐車枠をクリックしたら、その枠の**右上（枠の外・紙で 6mm）**に
+     * ラベルを置き、矢印の先はその枠の中心にする（2回目のクリックは無い）。
+     * 🔴 対象は駐車枠だけ（塊の1枠 or 単独の四角）。主役マークは対象外（§25-4）。 */
+    var spot = labelSpotAt(px, py);
+    if (!spot) {
+      labelHint(pre, '⚠ 駐車枠の上をクリックしてください');
+      hint('ラベルを付ける駐車枠の上をクリックしてください（Esc でやめる）', 3000);
       return;
     }
-    var lines = state.plPlace.lines, to = state.plPlace.arrowTo;   // ②置く場所
+    var lines = state.plPlace.lines;
     plDisarm();
     // 置いた直後にそのまま掴んで動かせるように「選択」にしておく
     state.editor.setTool('select');
-    state.editor.addLabelBlock({ at: ll, arrowTo: to, lines: lines });
+    state.editor.addLabelBlock({ at: spot.at, arrowTo: spot.arrowTo, lines: lines });
     updateHistoryButtons();
     if (pre === 'pl') plClose();
     else if (navOnSide()) sgRenderStatus();          // ⑪の「ラベル n 個」を引き直す
     hint('塊はドラッグで移動・右下のつまみで大きさ・矢印の先だけ別に動かせます', 5000);
+  }
+
+  /**
+   * 🔒 §30-22-4 10: クリックした所の駐車枠から「ラベルの置き場所」を決める。
+   * @return {at, arrowTo} か null（駐車枠でなければ null）
+   */
+  function labelSpotAt(px, py) {
+    var ed = state.editor;
+    if (!ed || !state.map) return null;
+    var corners = null;
+    var cell = ed.hitStampCell ? ed.hitStampCell(px, py) : null;
+    if (cell) {
+      corners = ed.stampCellCorners(cell.group, cell.index);
+    } else {
+      var o = ed.hitObject(px, py);
+      // 🔒 §25-4: 主役マークは車両枠ではないので対象外（保管場所マークと同じ扱い）
+      if (o && o.type === 'rect' && o.role !== 'mainmark') corners = ed.rectCorners(o);
+    }
+    if (!corners || !corners.length) return null;
+    var maxX = -Infinity, minY = Infinity, cx = 0, cy = 0;
+    corners.forEach(function (p) {
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      cx += p.x; cy += p.y;
+    });
+    cx /= corners.length; cy /= corners.length;
+    var gap = paperMmToPx(LABEL_GAP_MM);
+    return { at: state.map.unproject(maxX + gap, minY - gap),
+             arrowTo: state.map.unproject(cx, cy) };
+  }
+
+  /* 枠の外へ置く間隔（紙のミリ・🔒 §30-22-4 10「枠の外・6mm 相当」） */
+  var LABEL_GAP_MM = 6;
+
+  /**
+   * 紙の mm → いまの画面の px（🔴 換算は「枠の画面幅 ÷ 枠が紙に刷られる幅」1か所）。
+   * 🔴 紙の幅は export.js の placeOnPage が唯一の出どころ（余白・見出し帯こみ）。
+   */
+  function paperMmToPx(mm) {
+    var k = paperMmPxNow();
+    return mm * (k > 0 ? k : 3);
+  }
+
+  /**
+   * 🔒 §30-25-7: **紙に刷られる 1mm が、いまの画面で何 px か**。
+   * 🔴 換算は「枠の画面幅 ÷ 枠が紙に刷られる幅」のこの1か所（paperMmToPx も
+   *    editor へ挿す frameMmPx もここを読む）。紙の幅は export.js の placeOnPage が
+   *    唯一の出どころ（余白・見出し帯こみ）＝数値を app.js に書き写さない。
+   * @return px/mm（枠や画面が無ければ null）
+   */
+  function paperMmPxNow() {
+    var sh = curSheet();
+    if (!sh || !state.map || !window.Exporter) return null;
+    var r = (sh.frameFixed && sh.frame) ? fixedFrameRectPx(sh.frame) : frameRectPx();
+    var asp = sh.frame ? Exporter.frameAspect(sh.frame) : curAspect();
+    var place = Exporter.placeOnPage(sh.orient === 'landscape' ? 'landscape' : 'portrait', asp);
+    if (!r || !(r.w > 0) || !place || !(place.w > 0)) return null;
+    return r.w / place.w;
   }
 
   /* ---- ①マーカーの設置（地図クリックで置く） ---- */
@@ -4346,10 +6616,22 @@
     $('map').style.cursor = 'crosshair';
     // 地図・描画エンジンより先に受け取る（辺クリックと同じ作法・§16-7）
     wrap.addEventListener('pointerdown', onNavPinPlace, true);
-    // 🔒 §25-1: マーカーの呼び名は「使用の本拠」（ボタンの文言と揃える）
-    hint((key === 'home' ? '使用の本拠' : '駐車場')
-      + 'のマーカーを置く場所を地図でクリックしてください', 4000);
+    /* 🔒 §25-1: マーカーの呼び名は「使用の本拠」（ボタンの文言と揃える）。
+     * 🔒 §30-22-1 6: 'same'＝本拠と駐車場を**同じ場所に1つ**置く。 */
+    hint(armLabel(key) + 'のマーカーを置く場所を地図でクリックしてください', 4000);
     navRenderPins();
+  }
+
+  /** 主役のラベルの文言（🔒 §30-22-1 6: 出どころは Shozaizu.PIN_LABEL 1か所） */
+  function pinLabel(key) {
+    var T = (window.Shozaizu && Shozaizu.PIN_LABEL) || {};
+    return T[key] || '';
+  }
+
+  /** これから置く物の呼び名（🔒 §30-24-2: 同一住所は2地点ぶんを1回で置く） */
+  function armLabel(key) {
+    return (key === 'same')
+      ? (pinLabel('home') + 'と' + pinLabel('lot')) : pinLabel(key);
   }
 
   function onNavPinPlace(e) {
@@ -4363,10 +6645,21 @@
     e.stopPropagation();
     var key = state.pinPlace;
     var ll = state.map.unproject(px, py);
+    /* 🔒 §30-22-1 6（2026-09-13 オーナー指示）: ［使用の本拠と駐車場が同一住所］は
+     * **1回のクリックで2地点を同じ場所に置く**（印もラベルも紙には1つ出る）。
+     * 🔴 印の設定は本拠側を採る（§30-22-1 6）ので、駐車場側にも同じ物を写す。 */
+    if (key === 'same') {
+      placeSamePoint(ll);
+      return;
+    }
+    /* 🔒 §30-24-2（2026-09-13 オーナー指示）: 同一住所の状態で②③のどちらかを
+     * 押した時は、**共有していた印は押さなかった方の役目として残す**
+     * （押した方はこれから新しく置く）。 */
+    if (state.current.points.same) leaveSamePoint(key);
     var cur = state.current.points[key] || {};
     state.current.points[key] = {
       lat: ll.lat, lng: ll.lng,
-      label: key === 'home' ? '使用の本拠' : '駐車場',
+      label: pinLabel(key),
       /* 🔒 §28-14 ①-1: 住所の欄は使用の本拠だけになった。駐車場は欄が無いので
          既に持っている住所（案件を開き直した時・依頼文から拾った時）をそのまま残す。 */
       address: cur.address || (ADDR_EL[key] ? $(ADDR_EL[key]).value.trim() : ''),
@@ -4376,11 +6669,134 @@
     };
     if (!state.current.points[key].mark) delete state.current.points[key].mark;
     state.markPick[key] = null;
+    /* 🔒 §30-22-1 6: ②③のどちらかを置き直したら「同一住所」は外れる */
+    state.current.points.same = false;
     navPinArm(null);
+    /* 🔒 §30-24-3: 置き直しでも文字は必ず1つずつある
+     * （leaveSamePoint が押した方の文字を取り除いた直後の出口でもある）。
+     * 🔒 §30-25-28 1（2026-09-14 オーナー指示）: **マーカーを置いた瞬間**が
+     * 文字を作る契機（白紙でも作る）。続けて applyMarkChoice が■（四角の印）を
+     * 文字の直前へ作る＝置いた直後から「印＋文字」が揃い、どちらも動かせる。 */
+    ensureMainLabels();
+    applyMarkChoice(key);
     refreshPoints();
+    sgRenderMarks();         // ▼は本拠・駐車場の2つへ戻る（§30-24-2）
     Store.autosave(state.current);
-    hint((key === 'home' ? '使用の本拠' : '駐車場') + 'マーカーを置きました', 2500);
+    hint(pinLabel(key) + 'マーカーを置きました', 2500);
     navRender();
+  }
+
+  /**
+   * 🔒 §30-22-1 6 / §30-22-6 2（2026-09-13 オーナー指示）: 使用の本拠と駐車場を
+   * **同じ場所に1つ**置く。2地点の値は同じ座標になり、`points.same` が立つ。
+   * 🔒 §30-24-2: 紙に出るのは**印1つ＋文字2つ**（「使用の本拠」と「駐車場」を
+   *    上下に並べる・どちらもドラッグで動かせる）。
+   * 🔴 結線と直線距離は描かない（生成側 opts.same／追従側 syncRoleObjects）。
+   */
+  function placeSamePoint(ll) {
+    var c = state.current;
+    var h = c.points.home || {}, l = c.points.lot || {};
+    /* 印の設定は**本拠側を採る**（§30-22-1 6）。まだ置いていない時は①の控え。 */
+    var mk = h.mark || state.markPick.home || l.mark || state.markPick.lot || null;
+    /* 🔒 §30-24-2（2026-09-13 オーナー指示）: それまでに②③で置いた物
+     * （◎■・多角形・文字）は**全部消してから**置く（確認は出さない）。
+     * 🔴 消す前に控えを取るので ［戻す］（Ctrl+Z）で元に戻せる。 */
+    if (state.editor) state.editor.snapshot();
+    var wiped = clearMainMarks(['home', 'lot']);
+    if (wiped.length && state.editor) state.editor.commit();
+    /* 多角形は今ぜんぶ消えたので、印の種類が「多角形」のままだと印が無くなる＝◎へ戻す */
+    if (mk && mk.shape === 'polygon') mk = { shape: 'circle', color: mk.color };
+    ['home', 'lot'].forEach(function (key) {
+      var cur = c.points[key] || {};
+      c.points[key] = {
+        lat: ll.lat, lng: ll.lng,
+        label: pinLabel(key),
+        address: cur.address || (ADDR_EL[key] ? $(ADDR_EL[key]).value.trim() : ''),
+        title: cur.title,
+        mark: mk ? { shape: mk.shape, color: mk.color } : undefined
+      };
+      if (!c.points[key].mark) delete c.points[key].mark;
+      state.markPick[key] = null;
+    });
+    c.points.same = true;
+    navPinArm(null);
+    /* 🔒 §30-24-3: 全部消した後の紙に、文字を2つ（本拠・駐車場）置き直す
+     * （正典 §30-24-2「全部消してから置く」）。消した紙は白紙と見分けが付かない
+     * ので、どの紙だったかを clearMainMarks から受け取って渡す。
+     * その後 applyMarkChoice が印（◎／■）を文字の前へ作る＝消える経路の出口。 */
+    /* 🔒 §30-25-28 1: 置いた瞬間が契機なので**必ず**両方を通す（作った数で
+     * 分岐しない＝文字が既にある紙でも印を引き直す）。 */
+    ensureMainLabels(wiped);
+    applyMarkChoice('home');
+    applyMarkChoice('lot');
+    refreshPoints();
+    sgRenderMarks();         // ▼は［同一住所］の直下の1つだけになる（§30-24-2）
+    Store.autosave(c);
+    hint('使用の本拠と駐車場を同じ場所に置きました（結線と直線距離は出ません）', 3500);
+    navRender();
+  }
+
+  /**
+   * 🔒 §30-24-2: その地点の主役の印（◎・四角・多角形）と文字を紙から取り除く。
+   * 🔴 消すのは自動生成物・主役の印だけ（source:'shozaizu' ＋ role で判定）。
+   * 🔴 配列は差し替えず splice だけ（§23-7-1 / §26-2 注意①）。
+   * @param {Array} keys 'home' / 'lot'
+   * @returns 消した紙の一覧（🔒 §30-24-3: 「置き直す紙」でもある。全部消した紙は
+   *          白紙と見分けが付かなくなるので、ensureMainLabels へそのまま渡す）
+   */
+  function clearMainMarks(keys) {
+    var hit = [];
+    sheetsOf('shozaizu').forEach(function (sh) {
+      var objs = sh.objects || [], n = 0;
+      for (var i = objs.length - 1; i >= 0; i--) {
+        var o = objs[i];
+        if (!o || o.source !== 'shozaizu') continue;
+        var mine = (o.role === 'mainmark' && keys.indexOf(o.markRole || 'home') >= 0)
+               || (o.role === 'pinlabel' && o.type === 'text'
+                   && keys.indexOf(pinKeyOf(o)) >= 0);
+        if (mine) { objs.splice(i, 1); n++; }
+      }
+      if (n) hit.push(sh);
+    });
+    return hit;
+  }
+
+  /**
+   * 🔒 §30-24-2（2026-09-13 オーナー指示）: 同一住所をやめる。
+   * ・`same` を外す
+   * ・共有していた印（◎■・四角・多角形）は**押さなかった方の役目**として残す
+   *   （markRole を付け替える。せっかく描いた多角形を捨てない）
+   * ・押した方の文字は、これから置き直すので取り除く
+   * @param {'home'|'lot'} pressed 押した方（これから新しく置く地点）
+   */
+  function leaveSamePoint(pressed) {
+    var c = state.current;
+    if (!c || !c.points.same) return;
+    var keep = (pressed === 'home') ? 'lot' : 'home';
+    var shared = markOf('home');          // 同一の間の印の設定（本拠側＝1つの値）
+    if (state.editor) state.editor.snapshot();
+    var n = 0;
+    sheetsOf('shozaizu').forEach(function (sh) {
+      var objs = sh.objects || [];
+      for (var i = objs.length - 1; i >= 0; i--) {
+        var o = objs[i];
+        if (!o || o.source !== 'shozaizu') continue;
+        if (o.role === 'mainmark') { o.markRole = keep; n++; }
+        else if (o.role === 'pinlabel' && o.type === 'text' && pinKeyOf(o) === pressed) {
+          objs.splice(i, 1); n++;
+        }
+      }
+    });
+    c.points.same = false;
+    if (c.points[keep]) c.points[keep].mark = { shape: shared.shape, color: shared.color };
+    /* 押した方には印が1つも無い（全部 keep へ渡した）ので、多角形のままにしない */
+    if (c.points[pressed]) {
+      c.points[pressed].mark = {
+        shape: (shared.shape === 'polygon') ? 'circle' : shared.shape,
+        color: shared.color
+      };
+    }
+    if (n && state.editor) state.editor.commit();
   }
 
   function navOkMarkers() {
@@ -4543,6 +6959,13 @@
    */
   function navShowPreview(only) {
     if (!state.current) return;
+    /* 🔒 §30-27-1 1: プレビューは**1つの画面**。ここは「その図から見せる」だけを頼む。
+     * 🔒 §30-13-3: 所在図⑧から出した時だけ下部の行き先ボタン列を付ける。 */
+    openPreview({ kind: only, foot: only === 'shozaizu', nav: true });
+  }
+
+  /** かぶせの置き方だけ（中身は呼んだ側が入れる）。🔴 まとめ・ページ送りも同じ置き方 */
+  function navPreviewFrame() {
     state.navPreview = true;
     var box = $('exPreviewBox');
     var wrap = document.querySelector('.map-wrap');
@@ -4551,38 +6974,397 @@
     // 地図領域の左端まで空ける（左面の幅が変わっても崩れない）
     box.style.setProperty('--nav-gap',
       Math.round(wrap ? wrap.getBoundingClientRect().left : 360) + 'px');
-    /* 🔒 §30-13-3: 所在図だけのプレビュー（⑧）には下部のボタンを付ける。
-     * ⑫の「全部の紙」（only 無し）には付けない。 */
-    showExportPreview(only, { foot: only === 'shozaizu' });
+  }
+
+  /* ---- 所在図と配置図をまとめて（🔒 §30-18-6 2・2026-09-13 オーナー指示）----
+   * トグル2択: 「所在図と配置図を1枚にまとめる」／「別々で表示」。
+   * 🔴 まとめられる条件＝所在図・配置図が**1枚ずつ**で**紙の向きが同じ**。
+   *    満たさない時は「別々で表示」に固定して一言を出す（判定はここ1か所）。 */
+
+  /** いまの紙の顔ぶれ（まとめられるか・どの紙か）。🔴 数え方は pagesForExport 1本 */
+  function sgComboInfo() {
+    var pages = pagesForExport();
+    var sz = pages.filter(function (p) { return p.kind === 'shozaizu'; });
+    var hz = pages.filter(function (p) { return p.kind === 'haichizu'; });
+    return {
+      pages: pages, a: sz[0] || null, b: hz[0] || null,
+      ok: sz.length === 1 && hz.length === 1 && sz[0].orient === hz[0].orient
+    };
+  }
+
+  /* 🔒 §30-27-1 7: 旧「まとめる／別々」の2択（comboMode / state.comboMode /
+   * sgComboSync / comboPreview / showCombinedPreview / showPagerPreview / comboSavePDF）は
+   * 廃止した。まとめはプレビュー画面の**最後の札**（openPreview の combo）と、
+   * PDF・画像の窓の**チェック1つ**（exPick の one）になった。
+   * 🔴 「まとめられるか」の判定は sgComboInfo().ok だけ（従来と同じ1か所）。 */
+
+  /**
+   * 🔒 §30-27-1 2: プレビューの道しるべの行を引き直す。
+   * ［‹］→ 図のトグル（紙が無い側は選べない）→ その図の紙の札 →
+   * 条件を満たす時だけ「まとめ（1枚）」の札 →［次のページ ›］。
+   */
+  function exNavRender() {
+    var pg = state.exPager, nav = $('exPreviewNav');
+    if (!nav) return;
+    if (!pg) { nav.hidden = true; return; }
+    nav.hidden = false;
+    var last = exLastIndex();
+    $('exNavPrev').disabled = (pg.i <= 0);
+    $('exNavNext').disabled = (pg.i >= last);
+    // 図のトグル（🔴 どちらの図に紙があるかは pages の中身だけで決まる）
+    var has = {};
+    KINDS.forEach(function (k) {
+      has[k] = pg.pages.some(function (p) { return p.kind === k; });
+    });
+    var sw = $('exKindSw');
+    sw.checked = (pg.kindNow === 'haichizu');
+    sw.disabled = !(has.shozaizu && has.haichizu);
+    // その図の紙の札（いま見ている紙が濃い）
+    var tabs = $('exNavTabs');
+    tabs.innerHTML = '';
+    pg.pages.forEach(function (p, i) {
+      if (p.kind !== pg.kindNow) return;
+      var t = document.createElement('button');
+      t.type = 'button';
+      t.className = 'ex-pager-tab' + (i === pg.i ? ' is-now' : '');
+      t.textContent = String(p.index);
+      t.title = p.kindJa + ' ' + p.index + '/' + p.total;
+      t.addEventListener('click', function () { exPagerGo(i); });
+      tabs.appendChild(t);
+    });
+    // 🔒 §30-27-1 5: 「まとめ（1枚）」は条件を満たす時だけ、札の**最後**に付く
+    if (pg.combo) {
+      var c = document.createElement('button');
+      c.type = 'button';
+      c.className = 'ex-pager-tab' + (exIsCombo(pg.i) ? ' is-now' : '');
+      c.textContent = 'まとめ（1枚）';
+      c.title = '所在図と配置図を1枚にまとめた面';
+      c.addEventListener('click', function () { exPagerGo(pg.pages.length); });
+      tabs.appendChild(c);
+    }
+  }
+
+  /** まとめ（1枚）の面を描く（🔴 描き方は Exporter.renderCombined 1か所） */
+  function exRenderCombo(body, pg) {
+    var inf = pg.comboInfo, r;
+    try {
+      r = Exporter.renderCombined({ a: inf.a, b: inf.b, dpi: 96 });
+    } catch (e) {
+      var msg = document.createElement('p');
+      msg.className = 'ex-preview-foot-msg';
+      msg.textContent = '失敗しました: ' + (e.message || e);
+      body.appendChild(msg);
+      return;
+    }
+    /* 🔒 §30-25-10 1: まとめ描きは**見るだけ**（文字を動かす層は付けない）。
+     * 🔒 §30-25-16: 案内（文字だけ動かせます）も出さない。 */
+    exTextTip(false);
+    var fig = document.createElement('figure');
+    var cap = document.createElement('figcaption');
+    var sz = r.parts[0] && r.parts[0].r;
+    cap.textContent = '所在図と配置図をまとめて（'
+      + (r.orient === 'landscape' ? 'A4横' : 'A4縦') + ' 1ページ）'
+      + (sz && sz.scaleN ? '　所在図 1:' + sz.scaleN.toLocaleString() : '');
+    var img = new Image();
+    img.src = r.canvas.toDataURL('image/png');
+    fig.appendChild(cap);
+    fig.appendChild(img);
+    body.appendChild(fig);
+    /* 🔒 §30-26-3 4: まとめ描きにも同じトグルが効く。**それぞれの図の面**に、
+     * その図の他の紙を重ねる。
+     * 🔴 面の置き場所（mm）→ まとめの canvas px は「紙1mm あたりのピクセル数」で直す。
+     *    値は renderCombined の返り値だけから出す（canvas の幅 ÷ 紙の幅）＝1か所。 */
+    var pxmm = (r.page && r.page.w > 0) ? r.canvas.width / r.page.w : 0;
+    var srcs = [inf.a, inf.b];
+    var parts = [];
+    if (pxmm > 0) {
+      (r.parts || []).forEach(function (pt, i) {
+        if (!pt || !pt.r || !pt.rect || !srcs[i]) return;
+        parts.push({ page: srcs[i], r: pt.r,
+                     ox: pt.rect.x * pxmm, oy: pt.rect.y * pxmm });
+      });
+    }
+    exFrameLayer(fig, img, r.canvas.width, r.canvas.height, parts);
+  }
+
+  /**
+   * 🔒 §30-27-1 2: いま見ている面を1つだけ描く（画像は1度作ったら pg.url に控える）。
+   * 🔴 道しるべの行・案内・［PDF］［画像］の帯は**面が変わるたびにここで引き直す**。
+   */
+  function exPagerRender() {
+    var pg = state.exPager;
+    if (!pg) return;
+    var body = $('exPreviewBody');
+    body.innerHTML = '';
+    exPlacersReset();             // 🔒 §30-25-10: 前回の層の置き直しは捨てる
+    exFrameSwitchSync();          // 🔒 §30-26-3: どの面でも同じトグル
+    exNavRender();                // 🔒 §30-27-1 2: 道しるべの行
+    $('exPreviewBar').hidden = false;   // 🔒 §30-27-1 6: ［PDF］［画像］は常時
+    if (exIsCombo(pg.i)) { exRenderCombo(body, pg); return; }
+
+    var p = pg.pages[pg.i];
+    if (!p) return;
+    if (!pg.url[pg.i]) {
+      var r = Exporter.renderSheet({
+        objects: p.objects, frame: p.frame, orient: p.orient,
+        attributions: p.attributions, noScale: p.noScale, dpi: 96
+      });
+      pg.url[pg.i] = r.canvas.toDataURL('image/png');
+      pg.scale[pg.i] = r.scaleN;
+      // 🔒 §30-25-10: 文字の箱（textBoxes）も控える＝札で戻っても掴める
+      pg.r[pg.i] = r;
+    }
+    var fig = document.createElement('figure');
+    var cap = document.createElement('figcaption');
+    // 🔒 §18-ae: 縮尺を持たない図（配置図）には比率を出さない
+    cap.textContent = p.kindJa + ' ' + p.index + '/' + p.total
+      + '（' + (p.orient === 'landscape' ? 'A4横' : 'A4縦') + '）'
+      + (pg.scale[pg.i] ? '  1:' + pg.scale[pg.i].toLocaleString() : '');
+    var img = new Image();
+    img.src = pg.url[pg.i];
+    fig.appendChild(cap);
+    fig.appendChild(img);
+    // 🔒 §30-25-16: 案内は見出しのすぐ下の行（紙の器には足さない）
+    exTextTip(true);
+    body.appendChild(fig);
+    /* 🔒 §30-25-10: 文字だけ動かす層。描き直したら**その面の控えを更新**する
+     * （札で戻ってきた時に古い画像が出ないように）。 */
+    var idx = pg.i;
+    exTextLayer(fig, img, p, pg.r[idx], function (url, r2) {
+      pg.url[idx] = url;
+      pg.r[idx] = r2;
+      pg.scale[idx] = r2.scaleN;
+    });
+    // 🔒 §30-26-3: 他の紙の枠を重ねる層（どの面でも同じ）
+    var rr = pg.r[idx];
+    exFrameLayer(fig, img, rr.canvas.width, rr.canvas.height,
+                 [{ page: p, r: rr, ox: 0, oy: 0 }]);
+  }
+
+  /**
+   * 面を移る（札・トグル・‹ ›・← → から。範囲外は何もしない）。
+   * 🔒 §30-27-1 2: 次のページは**所在図の最後から配置図の1へ続く**（並びが
+   *    pagesForExport のままなので、番号を1つ進めるだけでそうなる）。
+   * 🔒 §30-27-1 3: 図が変わった時（自動でも手でも）だけ約3秒の帯を出す。
+   */
+  function exPagerGo(i) {
+    var pg = state.exPager;
+    if (!pg || i < 0 || i > exLastIndex() || i === pg.i) return;
+    var before = pg.kindNow;
+    pg.i = i;
+    var now = exKindAt(i);
+    if (now) pg.kindNow = now;        // まとめの面は直前の図のまま
+    exPagerRender();
+    if (now && before && now !== before) exKindNoteShow(now);
+  }
+
+  /* ================= 🔒 §30-27-2: PDF・画像の小さな窓（出す紙を選ぶ） =================
+   * オーナー指示 2026-09-14:「PDF 出力はボタンで小さいウィンドウ。初期状態はいま
+   *   表示されている項目のみチェック。所在図と配置図でチェック、どちらもチェック
+   *   すれば一括で1つの PDF」。
+   * 🔴 ［PDF］［画像］はこの窓を開くだけ＝**直接「全部の紙」を出す経路は無い**（出口は1つ）。
+   * 🔴 判定は紙の id（data-sheet）と図の種類（data-kind）だけ（表示文字では分岐しない）。
+   * 🔴 件数の数え方は §22 のまま（書き出し1回で1件）。保存は saveBlob 1本（§21-1）。 */
+
+  /** チェックされている枚数（まとめは1） */
+  function exPickCount() {
+    var pk = state.exPick;
+    if (!pk) return 0;
+    if (pk.one) return 1;
+    return pk.pages.filter(function (p) { return !!pk.sel[p.sheetId]; }).length;
+  }
+
+  /** 開く。mode='pdf'（PDF）／'png'（画像） */
+  function exPickOpen(mode) {
+    if (!state.current) return;
+    var list = pagesForExport().filter(function (p) { return !!p.frame; });
+    var inf = sgComboInfo();          // 🔴 まとめられるかの判定は1か所
+    if (!list.length) {
+      hint('書き出せる図がありません。先に図を作ってください。', 3500);
+      return;
+    }
+    var pdf = (mode !== 'png');
+    var pk = { mode: pdf ? 'pdf' : 'png', pages: list, combo: !!inf.ok,
+               comboInfo: inf, sel: {}, one: false };
+    state.exPick = pk;
+    /* 🔒 §30-27-2 2: 最初は**いま見ている紙だけ**にチェック。
+     * プレビューを出していない時（上部バーの［書き出し］から）は編集中の紙。 */
+    var pg = state.exPager, open = !$('exPreviewBox').hidden;
+    if (open && pg && exIsCombo(pg.i) && pk.combo) {
+      pk.one = true;
+    } else {
+      var cur = curSheet();
+      var id = (open && pg && pg.pages[pg.i]) ? pg.pages[pg.i].sheetId
+             : (cur ? cur.id : null);
+      var hit = list.filter(function (p) { return p.sheetId === id; }).length;
+      pk.sel[hit ? id : list[0].sheetId] = true;
+    }
+    // 🔴 見出しと実行ボタンの文は「どちらの窓か」で決まる（mode 1か所）
+    $('exPickTitle').textContent = pdf ? 'PDFにして保存' : '画像を保存';
+    $('exPickGo').textContent = pdf ? 'PDFにして保存' : '画像を保存';
+    $('exPickNote').hidden = pdf;     // 🔒 §30-27-2 4: 注意書きは画像の時だけ
+    $('exPickMsg').textContent = '';
+    $('exPick').hidden = false;
+    exPickRender();
+    $('exPickGo').focus();
+  }
+
+  function exPickClose() {
+    $('exPick').hidden = true;
+    state.exPick = null;
+  }
+
+  /** 窓の中身を引き直す（区画の見出し・紙の札・まとめ・実行ボタンの可否） */
+  function exPickRender() {
+    var pk = state.exPick;
+    if (!pk) return;
+    var body = $('exPickBody');
+    body.innerHTML = '';
+    KINDS.forEach(function (k) {
+      var rows = pk.pages.filter(function (p) { return p.kind === k; });
+      if (!rows.length) return;       // 🔒 §30-27-2 1: 白紙・紙の無い図は出さない
+      var sec = document.createElement('div');
+      sec.className = 'ex-pick-sec';
+      sec.setAttribute('data-kind', k);
+      // 区画の見出し＝その図の紙を全部（半端な時は indeterminate）
+      var h = document.createElement('label');
+      h.className = 'ex-pick-h';
+      var ha = document.createElement('input');
+      ha.type = 'checkbox';
+      ha.setAttribute('data-all', k);
+      var on = rows.filter(function (p) { return !!pk.sel[p.sheetId]; }).length;
+      ha.checked = (on === rows.length);
+      ha.indeterminate = (on > 0 && on < rows.length);
+      ha.addEventListener('change', function () {
+        var v = this.checked;
+        rows.forEach(function (p) {
+          if (v) pk.sel[p.sheetId] = true; else delete pk.sel[p.sheetId];
+        });
+        if (v) pk.one = false;        // 🔒 §30-27-2 3: 紙を入れると「まとめる」は外れる
+        exPickRender();
+      });
+      h.appendChild(ha);
+      h.appendChild(document.createTextNode(KIND_JA[k]));
+      sec.appendChild(h);
+      rows.forEach(function (p) {
+        var lb = document.createElement('label');
+        lb.className = 'ex-pick-i';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.setAttribute('data-sheet', p.sheetId);
+        cb.setAttribute('data-kind', p.kind);
+        cb.checked = !!pk.sel[p.sheetId];
+        cb.addEventListener('change', function () {
+          if (this.checked) { pk.sel[p.sheetId] = true; pk.one = false; }
+          else delete pk.sel[p.sheetId];
+          exPickRender();
+        });
+        var no = document.createElement('b');
+        no.className = 'ex-pick-no';
+        no.textContent = String(p.index);
+        var sub = document.createElement('span');
+        sub.className = 'ex-pick-sub';
+        // 🔴 1:N は Exporter.scaleFor 1か所（描かずに出す・§30-15-5 規則2）
+        var n = p.noScale ? null : Exporter.scaleFor(p.frame, p.orient);
+        sub.textContent = (p.orient === 'landscape' ? 'A4横' : 'A4縦')
+          + (n ? '　1:' + n.toLocaleString() : '');
+        lb.appendChild(cb);
+        lb.appendChild(no);
+        lb.appendChild(sub);
+        sec.appendChild(lb);
+      });
+      body.appendChild(sec);
+    });
+    /* 🔒 §30-27-2 3: 「所在図と配置図を1枚にまとめる」は窓の中の1つのチェック。
+     * 条件（1枚ずつ・同じ向き）を満たす時だけ選べる。 */
+    var cl = document.createElement('label');
+    cl.className = 'ex-pick-combo' + (pk.combo ? '' : ' is-off');
+    var cc = document.createElement('input');
+    cc.type = 'checkbox';
+    cc.setAttribute('data-combo', '1');
+    cc.checked = !!pk.one;
+    cc.disabled = !pk.combo;
+    cc.addEventListener('change', function () {
+      pk.one = this.checked;
+      if (pk.one) pk.sel = {};        // 選ぶと他の紙のチェックは外れる
+      exPickRender();
+    });
+    cl.appendChild(cc);
+    cl.appendChild(document.createTextNode('所在図と配置図を1枚にまとめる'));
+    if (!pk.combo) {
+      var why = document.createElement('span');
+      why.className = 'ex-pick-sub';
+      why.textContent = '　（所在図・配置図が1枚ずつで、紙の向きが同じ時だけ選べます）';
+      cl.appendChild(why);
+    }
+    body.appendChild(cl);
+    // 🔒 §30-27-2 6: 何もチェックしていない時は押せない＋一言
+    var n2 = exPickCount();
+    $('exPickGo').disabled = !n2;
+    $('exPickWhy').hidden = !!n2;
+  }
+
+  /** ［PDFにして保存］／［画像を保存］。🔴 保存口は saveBlob 1本（§21-1） */
+  function exPickRun() {
+    var pk = state.exPick;
+    if (!pk || !exPickCount()) return;
+    $('exPickGo').disabled = true;
+    if (pk.one) {
+      // 🔒 §30-27-2 3: まとめは buildCombinedPDF（1ページ・別口）
+      FSave.prepare();                 // 🔒 §21-2: 権限はクリックの中で取る
+      $('exPickMsg').textContent = 'PDF を作成しています…';
+      setTimeout(function () {
+        var blob;
+        try {
+          blob = Exporter.buildCombinedPDF({ a: pk.comboInfo.a, b: pk.comboInfo.b })
+                   .doc.output('blob');
+        } catch (e) {
+          exPickDone('失敗しました: ' + (e.message || e), false);
+          return;
+        }
+        // 🔒 §30-18-6 2: まとめの PDF はファイル名の末尾に「_まとめ」
+        saveBlob(blob, baseFileName() + '_まとめ.pdf').then(function (r) {
+          exPickDone('PDF を保存しました（1 ページ・'
+            + (blob.size / 1048576).toFixed(2) + ' MB）。' + saveWhere(r), true);
+        });
+      }, 30);
+      return;
+    }
+    /* 🔴 並びは pagesForExport のまま（所在図→配置図・番号順）＝チェックで絞るだけ。
+     * PDF は1つにまとめて（1紙1ページ・§24-3）、画像は1枚ずつ PNG（§30-27-2 4）。 */
+    var pages = pk.pages.filter(function (p) { return !!pk.sel[p.sheetId]; });
+    $('exPickMsg').textContent =
+      (pk.mode === 'pdf' ? 'PDF' : '画像') + ' を作成しています…';
+    var fn = (pk.mode === 'pdf') ? exportPDF : exportPNG;
+    fn(function (m, ok) { exPickDone(m, ok); }, null, pages);
+  }
+
+  /** 書き出しの結果を窓とプレビューの帯に出す */
+  function exPickDone(m, ok) {
+    if ($('exPickMsg')) $('exPickMsg').textContent = m;
+    if ($('exPickGo')) $('exPickGo').disabled = !exPickCount();
+    // 窓を閉じた後も見えるように、プレビューの帯にも同じ一言を置く
+    if ($('exBarMsg')) $('exBarMsg').textContent = m;
+    /* 🔒 §30-27-1 7: 配置図⑯（PDFにして保存）の済みは従来どおり state.nav.saved。
+     * 🔴 印を付けるのは**配置図⑫（step 12）にいる時だけ**（所在図から出した
+     *    書き出しで⑯が済みになってしまわないように）。 */
+    if (ok && state.nav && state.nav.step === 12 && !state.nav.saved) {
+      state.nav.saved = true;
+      navRender();
+    }
   }
 
   /**
    * 🔒 §30-13-3: 所在図プレビューの下部ボタン。
    * 🔴 中身は**既存の関数をそのまま呼ぶ**（§28-1 ④）。新しい保存経路は作らない。
-   *   PDF保存／画像保存 … exportPDF / exportPNG に only='shozaizu' を渡すだけ
-   *                      （件数の数え方は §22 のまま＝書き出し1回で1件）
+   * 🔒 §30-27-1 6: ［PDF保存］［画像保存］は帯（#exPreviewBar → exPickOpen）へ移した
+   *    ＝ここは行き先のボタンだけ。
    *   配置図ガイダンスへ進む … プレビューを閉じて配置図①（段5）へ
    *   案件一覧に戻る       … ⑫の［案件一覧に戻る］と同じ backToList
    *   戻る                 … プレビューを閉じるだけ（④のまま・頭の×と同じ）
    */
   function exFootAct(act) {
-    var msg = $('exPreviewFootMsg');
-    function busy(on, t) {
-      ['pdf', 'png'].forEach(function (k) {
-        var b = $('exPreviewFoot').querySelector('button[data-exfoot="' + k + '"]');
-        if (b) b.disabled = on;
-      });
-      if (msg) msg.textContent = t || '';
-    }
     switch (act) {
-      case 'pdf':
-        busy(true, 'PDF を作成しています…');
-        exportPDF(function (m) { busy(false, m); }, 'shozaizu');
-        break;
-      case 'png':
-        busy(true, '画像を作成しています…');
-        exportPNG(function (m) { busy(false, m); }, 'shozaizu');
-        break;
       case 'toHz': closeExportPreview(); navGo(5); break;
       case 'toList': backToList(); break;
       case 'back': closeExportPreview(); break;
@@ -4600,25 +7382,13 @@
     syncFrameFromView();
     ensureFrames();
     sgRenderCheck();
-    navShowPreview();
+    // 🔒 §30-18-6 1: ⑧のプレビューと保存は**配置図だけ**
+    navShowPreview('haichizu');
   }
 
-  /** ⑫ 保存。既存の書き出し経路（buildPDF / renderSheet）をそのまま使う */
-  function navSave(kind) {
-    if (!state.current) return;
-    navBusy(true);
-    navSetStatus((kind === 'pdf' ? 'PDF' : 'PNG') + ' を作成しています…');
-    var fn = (kind === 'pdf') ? exportPDF : exportPNG;
-    fn(function (msg, ok) {
-      navBusy(false);
-      navSetStatus(msg);
-      if (ok) {
-        state.nav.saved = true;
-        navRender();
-        navSetStatus(msg);       // 作り直したボタン列のあとで一言を書き戻す
-      }
-    });
-  }
+  /* 🔒 §30-27-1 7: 旧 navSave（⑫の下部から「配置図の紙を全部」出す経路）は廃止した。
+   * ⑫の［PDFにして保存］（#sgSavePdf）は exPickOpen('pdf') ＝**出す紙を選ぶ窓**を開く。
+   * ⑯の済み（state.nav.saved）は exPickDone が付ける（印の付け方は従来と同じ）。 */
 
   /* ---- 描画 ---- */
 
@@ -4658,6 +7428,18 @@
         b.textContent = txt;
       });
     });
+    /* 🔒 §30-22-1 6: ［使用の本拠と駐車場が同一住所］は2行のボタンなので
+     * textContent を書き換えない（1行目だけに✓を付ける）。 */
+    /* 🔒 §30-28-2 1: ［同一住所］もガイダンス①と道具メニューの2か所（見た目は同じ） */
+    ['sgSame', 'sideSame'].forEach(function (id) {
+      var sb = $(id);
+      if (!sb) return;
+      sb.classList.toggle('is-armed', state.pinPlace === 'same');
+      var t = sb.querySelector('b');
+      if (t) {
+        t.textContent = (has.same ? '✓ ' : '') + '使用の本拠と駐車場が同一住所';
+      }
+    });
   }
 
   function navBothPins() {
@@ -4673,9 +7455,19 @@
    * 🔴 値の出どころはガイダンス①**だけ**（設定盤の「主役の印」は撤去・§18-r-4）。
    * 🔴 画面のピン（renderOverlay）と紙の印（role:'mainmark' の四角・所在図の◎）が
    *    同じこの値を見る。 */
+  /* 🔒 §30-22-1 4 (c)（2026-09-13 オーナー指示）: **「印なし（文字だけ）」を足した**
+   * （多角形で土地の形を囲んだ時など、丸や四角の印が邪魔になる場合のため）。
+   * 'none' は印を描かず「使用の本拠」の文字だけを置く。 */
+  /* 🔒 §30-24-1（2026-09-13 オーナー指示）: **多角形も印の種類の1つ**。
+   * 'polygon' は◎■を描かず（画面のピンの丸・紙の四角・所在図の◎の全部）、
+   * 文字（「使用の本拠」「駐車場」）だけが残る。
+   * 🔴 pick:false ＝ ①の形のボタンには出さない（押して選ぶ物ではなく、
+   *    ［多角形で描く］で描いた結果そうなる状態）。 */
   var MARK_SHAPES = [
-    { key: 'circle', sym: '◎', ja: '◎ 二重丸' },
-    { key: 'rect',   sym: '■', ja: '■ 四角に斜線' }
+    { key: 'circle',  sym: '◎', ja: '◎ 二重丸' },
+    { key: 'rect',    sym: '■', ja: '■ 四角に斜線' },
+    { key: 'none',    sym: 'ー', ja: '印なし（文字だけ）' },
+    { key: 'polygon', sym: '⬠', ja: '多角形', pick: false }
   ];
 
   /** 色の key が今ある3種のどれか（一覧は Editor.MARK.colors の1か所） */
@@ -4695,10 +7487,29 @@
     var kinds = (Editor.MARK && Editor.MARK.kinds) || {};
     var def = kinds[key] || kinds.home || { color: 'red' };
     var m = (c && c.points[key] && c.points[key].mark) || state.markPick[key] || null;
-    var shape = (m && (m.shape === 'circle' || m.shape === 'rect')) ? m.shape
-              : ((c && c.markStyle === 'rect') ? 'rect' : 'circle');
+    /* 🔒 §30-22-1 4 (c): 形は MARK_SHAPES の key（'circle'/'rect'/'none'）1か所で判定する */
+    var ok = false;
+    if (m) MARK_SHAPES.forEach(function (s) { if (s.key === m.shape) ok = true; });
+    var shape = ok ? m.shape : ((c && c.markStyle === 'rect') ? 'rect' : 'circle');
     var color = (m && markColorOk(m.color)) ? m.color : def.color;
-    return { shape: shape, color: color };
+    /* 🔒 §30-25-37 1: 印の大きさ（既定 1・0.5〜3）。旧案件は持たない＝1。
+     * 🔴 上下限の出どころは Editor.clampMarkScale 1か所（ここには書かない）。 */
+    var scale = Editor.clampMarkScale ? Editor.clampMarkScale(m && m.scale) : 1;
+    return { shape: shape, color: color, scale: scale };
+  }
+
+  /**
+   * 🔒 §30-25-37: 印の値（形・色・大きさ）を書き換える時の**組み立て1か所**。
+   * 🔴 どれか1つを変えても他の2つを落とさない（scale を持たない patch でも保つ）。
+   */
+  function markNext(key, patch) {
+    var cur = markOf(key);
+    var sc = (patch && patch.scale !== undefined) ? patch.scale : cur.scale;
+    // 🔴 上下限（0.5〜3）の出どころは Editor.clampMarkScale 1か所
+    if (Editor.clampMarkScale) sc = Editor.clampMarkScale(sc);
+    return { shape: (patch && patch.shape) || cur.shape,
+             color: (patch && patch.color) || cur.color,
+             scale: sc };
   }
 
   /** 生成に渡す形（両地点ぶん・shozaizu.js の opts.marks） */
@@ -4722,14 +7533,62 @@
     var c = state.current;
     if (!c) return;
     var cur = markOf(key);
-    var next = { shape: patch.shape || cur.shape, color: patch.color || cur.color };
-    if (next.shape === cur.shape && next.color === cur.color) return;
+    /* 🔒 §30-25-37 2: 形・色に**大きさ（scale）**が加わった。組み立ては markNext 1か所 */
+    var next = markNext(key, patch);
+    if (next.shape === cur.shape && next.color === cur.color
+        && next.scale === cur.scale) return;
     if (c.points[key]) c.points[key].mark = next;
     else state.markPick[key] = next;
+    /* 🔒 §30-22-1 6: 同一住所の時は印は1つ（本拠側の設定を採る）。
+     * 値が2か所に割れないよう、もう一方の地点にも同じ物を写しておく。 */
+    if (c.points.same && c.points.home && c.points.lot) {
+      c.points.home.mark = { shape: next.shape, color: next.color, scale: next.scale };
+      c.points.lot.mark = { shape: next.shape, color: next.color, scale: next.scale };
+    }
+    /* 🔒 §30-24-3: 印の種類を変えても文字は必ず1つずつ。
+     * 🔴 applyMarkChoice の**前**に呼ぶ（文字が無い紙には印も作られないので、
+     *    先に文字を戻してから印を引き直す）。 */
+    ensureMainLabels();
     applyMarkChoice(key);
+    /* 🔒 §30-24-2: 同一住所はもう一方も同じ値（印は本拠側の1つ）＝両方を引き直す */
+    if (c.points.same) applyMarkChoice(key === 'home' ? 'lot' : 'home');
     sgRenderMarks();
     renderOverlay();
     Store.autosave(c);
+  }
+
+  /**
+   * 🔒 §30-25-40 2〜4: 主役の印（◎・■）の**大きさ**を変える1か所。
+   * 値の出どころは案件の `points[key].mark.scale`（形・色と同じ器）で、
+   * 紙の印（applyMarkChoice）も画面のピン（syncPinLook）もそこから引き直す。
+   * 🔴 呼ぶ所は2つだけ: 印の右下のつまみ（editor.onMainMarkScale）と
+   *    右パネルの［小／標準／大／特大］。どちらも同じ値を書く。
+   * @param {'home'|'lot'} key
+   * @param {number} scale 倍率（上下限は markNext ＝ Editor.clampMarkScale が丸める）
+   * @param {{live:boolean}} opts live＝ドラッグの途中（保存は指を離した時に1回）
+   */
+  function setMainMarkScale(key, scale, opts) {
+    var c = state.current;
+    if (!c || (key !== 'home' && key !== 'lot')) return false;
+    var live = !!(opts && opts.live);
+    var cur = markOf(key).scale;
+    // 🔴 形・色を落とさない（組み立ては markNext 1か所）
+    var next = markNext(key, { scale: scale });
+    if (next.scale !== cur) {
+      if (c.points[key]) c.points[key].mark = next;
+      else state.markPick[key] = next;
+      /* 🔒 §30-22-1 6 / §30-24-2: 同一住所の時は印は1つ（本拠側の値）＝両方に写す
+       * （値が2か所に割れない・sgSetMark と同じ作法）。 */
+      if (c.points.same && c.points.home && c.points.lot) {
+        c.points.home.mark = { shape: next.shape, color: next.color, scale: next.scale };
+        c.points.lot.mark = { shape: next.shape, color: next.color, scale: next.scale };
+      }
+      applyMarkChoice(key);                    // 紙の◎（markScale）・■（w_m/h_m）
+      if (c.points.same) applyMarkChoice(key === 'home' ? 'lot' : 'home');
+      renderOverlay();                         // 画面のピンも同じ倍率に
+    }
+    if (!live) Store.autosave(c);
+    return true;
   }
 
   /**
@@ -4745,28 +7604,58 @@
     var c = state.current;
     if (!c) return 0;
     var want = markOf(key), p = c.points[key], changed = 0;
+    /* 🔒 §30-24-2: 同一住所の時、印は**本拠側の1つ**だけ（駐車場側は文字だけ）。
+     * 生成（shozaizu.js）と同じ規則をここでも守る＝同じ場所に印が2つ重ならない。 */
+    if (c.points.same && key === 'lot') {
+      want = { shape: 'none', color: want.color, scale: want.scale };
+    }
     var hex = Editor.markHex ? Editor.markHex({ markColor: want.color }) : '';
     sheetsOf('shozaizu').forEach(function (sh) {
       var objs = sh.objects || [];
-      var lb = null, rect = null, i, o;
+      var lb = null, rect = null, polys = [], i, o;
       for (i = 0; i < objs.length; i++) {
         o = objs[i];
         if (!o || o.source !== 'shozaizu') continue;
         if (o.type === 'text' && o.role === 'pinlabel' && pinKeyOf(o) === key) lb = o;
-        else if (o.role === 'mainmark' && (o.markRole || 'home') === key) rect = o;
+        else if (o.role === 'mainmark' && (o.markRole || 'home') === key) {
+          if (o.type === 'polygon') polys.push(o);   // 🔒 §30-24-1: 何個でもある
+          else rect = o;
+        }
       }
-      if (!lb && !rect) return;                  // この紙には主役の印がまだ無い
+      if (!lb && !rect && !polys.length) return;  // この紙には主役の印がまだ無い
+      /* 🔒 §30-24-1: ◎／■／印なしを選んだら、その地点の多角形は**全部**取り除く
+       * （印の種類は1つ）。多角形にするのは［多角形で描く］の側の仕事。
+       * 🔴 配列は差し替えず splice だけ（§23-7-1 / §26-2 注意①）。 */
+      if (want.shape !== 'polygon' && polys.length) {
+        polys.forEach(function (pg) {
+          var atG = objs.indexOf(pg);
+          if (atG >= 0) { objs.splice(atG, 1); changed++; }
+        });
+        polys.length = 0;
+      }
       if (want.shape === 'rect') {
         if (!rect && p && Editor.makeMark) {
-          rect = Editor.makeMark(key, p, undefined, want.color);
+          // 🔒 §30-25-37 1: 実寸は「基準 × 大きさ」（Editor.markRectDims が出どころ）
+          rect = Editor.makeMark(key, p, undefined, want.color, want.scale);
           var at = lb ? objs.indexOf(lb) : -1;
           if (at >= 0) objs.splice(at, 0, rect); else objs.push(rect);
           changed++;
-        } else if (rect && rect.markColor !== want.color) {
-          rect.markColor = want.color;
-          rect.style = rect.style || {};
-          if (hex) rect.style.color = hex;
-          changed++;
+        } else if (rect) {
+          if (rect.markColor !== want.color) {
+            rect.markColor = want.color;
+            rect.style = rect.style || {};
+            if (hex) rect.style.color = hex;
+            changed++;
+          }
+          /* 🔒 §30-25-37 3: 大きさを変えたら**その場で引き直す**（作り直さない）。
+           * 🔴 実寸の出どころは Editor.markRectDims 1か所（makeMark と同じ表）。 */
+          if (Editor.markRectDims) {
+            var dim = Editor.markRectDims(key, want.scale);
+            if (rect.markScale !== dim.scale) {
+              rect.w_m = dim.w_m; rect.h_m = dim.h_m; rect.markScale = dim.scale;
+              changed++;
+            }
+          }
         }
       } else if (rect) {
         var at2 = objs.indexOf(rect);
@@ -4777,6 +7666,10 @@
         var wantDot = (want.shape === 'circle') ? 'double' : 'none';
         if (lb.dotStyle !== wantDot) { lb.dotStyle = wantDot; changed++; }
         if (lb.markColor !== want.color) { lb.markColor = want.color; changed++; }
+        /* 🔒 §30-25-37 1: ◎の大きさは主役ラベルの markScale（§30-25-18 と同じ名前）。
+         * 🔴 出どころは案件の points[key].mark.scale 1つ＝ここで文字へ写すだけ。
+         *    形を◎↔■↔多角形に変えても scale は保つ（ここで毎回書き直す）。 */
+        if (lb.markScale !== want.scale) { lb.markScale = want.scale; changed++; }
         /* 🔒 §25-4: 文字を印の外へ逃がすための控え（次の作り直しで使う）。
          * 四角が無くなったら null に戻す（◎の実寸は shozaizu.js が別途出す）。 */
         var wm = rect ? { w_m: rect.w_m, h_m: rect.h_m } : null;
@@ -4792,14 +7685,162 @@
     return changed;
   }
 
-  /** ①の「マーカーの種類」の2行（形2つ＋色3つ）を組み立てる。値は markOf が真実 */
+  /* 🔒 §30-24-3: 作り直した主役ラベルを真下へずらす量。紙の1行 ≒ 4.4mm ＝
+   * 紙幅 210mm の 2.1% ＝ 枠の実幅（w_m）の 2.1%。
+   * 🔴 store.js の splitSameLabel（旧案件の1つの文字を2つに割る）と**同じ規則**。 */
+  var MAIN_LABEL_ROW = 0.021;
+
+  /**
+   * 🔒 §30-24-3（2026-09-13 オーナー実機「使用の本拠・駐車場の文字がなぜか消える」）:
+   * 主役ラベル（「使用の本拠」「駐車場」）は**印の種類・置き直し・作り直しに
+   * 関わらず必ず1つずつある**。消えていたら作り直す。
+   *
+   * 🔴 呼ぶ所は4つだけ（正典 §30-24-3 の「消える経路」の出口）:
+   *    ①生成の直後 ②印の種類を変えた後 ③同一住所の後（＋同一住所をやめた後）
+   *    ④案件を開いた後。
+   *    図形が変わるたび（change）には**呼ばない**＝消しゴムで消した文字が
+   *    その場で生え直すと消せなくなるため。
+   * 🔒 §30-25-28 1（2026-09-14 オーナー指示「マーカー設置した時から動かせるように」）:
+   *    作るのは**所在図の紙なら白紙でも**（旧: 「もう主役の物が載っている紙」だけ）。
+   *    マーカーを置いた直後（onNavPinPlace / placeSamePoint）にも呼ぶので、
+   *    生成（③）を待たずに文字が出る＝最初からドラッグ・つまみで直せる。
+   *    置き場所は**印の右隣**（名前の位置「近く」と同じ規則＝Editor.markTextAt）。
+   * 🔴 印は作らない（◎■は applyMarkChoice が、多角形は利用者が描く）。
+   * 🔴 配列は差し替えず push / splice だけ（§23-7-1 / §26-2 注意①）。
+   * @param {Array} [force] 使わない（§30-25-28 で白紙も対象になった。
+   *        呼ぶ側の「消した紙」の受け渡しは残してあるが判定には効かない）
+   * @returns 作った数
+   */
+  function ensureMainLabels(force) {
+    var c = state.current;
+    if (!c) return 0;
+    var made = 0;
+    /* 🔒 §30-24-5: noLead を揃えた回数（label 新規作成とは別に数える。
+     * `made` の意味＝「作った文字の数」を変えないため）。 */
+    var noLeadChanged = 0;
+    /* 🔒 §30-25-28 1: 「印の右隣」を解けるのは**いま開いている所在図の紙**だけ
+     * （editor は1枚の紙にしか結ばれていない・縮尺もその紙の物）。他の紙は
+     * 従来どおり地点そのものに置き、生成（③）が正しい場所へ並べ直す。 */
+    var curSh = (state.kind === 'shozaizu' && state.editor) ? curSheet() : null;
+    sheetsOf('shozaizu').forEach(function (sh) {
+      var objs = sh.objects || [];
+      var i, o;
+      var have = { home: null, lot: null }, mark = { home: null, lot: null };
+      for (i = 0; i < objs.length; i++) {
+        o = objs[i];
+        if (!o || o.source !== 'shozaizu') continue;
+        if (o.type === 'text' && o.role === 'pinlabel') have[pinKeyOf(o)] = o;
+        else if (o.role === 'mainmark' && o.type !== 'polygon') {
+          mark[(o.markRole || 'home')] = o;
+        }
+      }
+      ['home', 'lot'].forEach(function (key) {
+        var p = c.points[key];
+        if (!p || have[key]) return;     // 地点が無い／文字はもうある
+        var want = markOf(key);
+        /* 🔒 §30-24-2: 同一住所の駐車場側は印を持たない（印は本拠側の1つ）。
+         * 🔒 §30-24-1: 多角形・印なしは◎を描かない。 */
+        var shared = !!(c.points.same && key === 'lot');
+        var circleMark = (want.shape === 'circle') && !shared;
+        var rect = mark[key] || null;
+        /* 🔒 §30-25-28 1: ■を選んでいて四角がまだ紙に無い（マーカーを置いた直後）
+         * 時は、これから applyMarkChoice が作る四角の**実寸**を先に読む
+         * ＝文字を最初から■の右隣に置ける。値の出どころは Editor.makeMark
+         * （＝ Editor.MARK 表）1か所なので、後で作られる四角と必ず同じ寸法になる。 */
+        var mkSize = rect ? { w_m: rect.w_m, h_m: rect.h_m } : null;
+        if (!mkSize && want.shape === 'rect' && !shared && Editor.makeMark) {
+          // 🔒 §30-25-37 1: 実寸は「基準 × 大きさ」（後で作られる四角と同じ寸法に）
+          var prov = Editor.makeMark(key, p, undefined, want.color, want.scale);
+          mkSize = { w_m: prov.w_m, h_m: prov.h_m };
+        }
+        /* 真下へずらす基準は、同じ地点に既にある相方の文字（無ければ地点そのもの）。
+         * 枠が無い紙は 400m を仮に置く（store.js の splitSameLabel と同じ）。 */
+        var other = have[key === 'home' ? 'lot' : 'home'];
+        var wM = (sh.frame && sh.frame.w_m) || 400;
+        var dLat = (wM * MAIN_LABEL_ROW) / 111320;
+        var samePt = !!(other && other.at && other.anchor
+                        && Math.abs(other.anchor.lat - p.lat) < 1e-9
+                        && Math.abs(other.anchor.lng - p.lng) < 1e-9);
+        var at = samePt ? { lat: other.at.lat - dLat, lng: other.at.lng }
+                        : { lat: p.lat, lng: p.lng };
+        var lb = {
+          id: 'lb' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+          type: 'text', at: at,
+          mark: mkSize,
+          anchor: { lat: p.lat, lng: p.lng },
+          pinKey: key,
+          dotStyle: circleMark ? 'double' : 'none',
+          markColor: want.color || null,
+          // 🔒 §30-25-37 1: ◎の大きさ（出どころは points[key].mark.scale＝markOf）
+          markScale: want.scale,
+          text: pinLabel(key), size: 'large',
+          style: { color: '#111' },
+          source: 'shozaizu', role: 'pinlabel'
+        };
+        /* 🔒 §30-25-28 1: 置き場所は**印の右隣**（名前の位置「近く」と同じ規則）。
+         * 🔴 規則の出どころは Editor.markTextAt / markSide の1か所（右がはみ出す
+         *    時は左隣）。 */
+        if (curSh === sh) {
+          if (samePt) {
+            /* 同じ地点の2つ目（同一住所）は相方の**真下へ1行**。
+             * 🔴 1行の高さの出どころは editor の textPx（＝いま画面に描かれている
+             *    文字の高さ）1か所。枠がまだ決まっていない紙（マーカーを置いた
+             *    直後の①）では紙の物差し（MAIN_LABEL_ROW）が実距離に化けず、
+             *    2つの文字がぴたりと重なってしまうため（実測・§30-25-28）。 */
+            var op = state.map.project(other.at.lat, other.at.lng);
+            var row = Math.max(6, state.editor.textPx(lb)) * 1.15;
+            var ll = state.map.unproject(op.x, op.y + row);
+            lb.at = { lat: ll.lat, lng: ll.lng };
+          } else {
+            var np = state.editor.markTextAt(lb, lb.text,
+                                             state.editor.markSide(lb, lb.text));
+            if (np) lb.at = { lat: np.lat, lng: np.lng };
+          }
+        }
+        /* 印のすぐ後ろへ入れる（生成と同じ並び＝印の上に文字が乗らない） */
+        var at2 = rect ? objs.indexOf(rect) : -1;
+        if (at2 >= 0) objs.splice(at2 + 1, 0, lb); else objs.push(lb);
+        have[key] = lb;
+        made++;
+      });
+      /* 🔒 §30-24-5（2026-09-14 オーナー指示）: 同一住所の間だけ、主役の2つの文字
+       * には引き出し線を描かない（noLead）。値の出どころはここ1か所。
+       * 既にある文字にも、この呼び出しで今つくった文字にも同じ値を揃える。 */
+      var wantNoLead = !!(c.points && c.points.same);
+      ['home', 'lot'].forEach(function (key) {
+        var lb = have[key];
+        if (!lb) return;
+        if (wantNoLead) { if (!lb.noLead) { lb.noLead = true; noLeadChanged++; } }
+        else if (lb.noLead) { delete lb.noLead; noLeadChanged++; }
+      });
+    });
+    if (made || noLeadChanged) {
+      if (state.kind === 'shozaizu' && state.editor) state.editor.render();
+      Store.autosave(c);
+    }
+    return made;
+  }
+
+  /**
+   * ①の「印の形と色」（形3つ＋色3つ）を組み立てる。値は markOf が真実。
+   * 🔒 §30-22-1 4〜5: 器は**地点ごとに1つ**（#sgMarksHome / #sgMarksLot）＝
+   *    それぞれの［○○マーカー設置］の直下の ▼ の中に入る。
+   */
   function sgRenderMarks() {
-    var box = $('sgMarks');
-    if (!box) return;
     var cols = (Editor.MARK && Editor.MARK.colors) || [];
-    box.innerHTML = [['home', '使用の本拠'], ['lot', '駐車場']].map(function (kv) {
+    var isSame = !!(state.current && state.current.points.same);
+    /* 🔒 §30-24-2: 器は3つ（本拠／駐車場／同一住所）。同一住所の▼は本拠と
+     * **同じ値**（points.home.mark）を出す＝値が2か所に割れない。 */
+    /* 🔒 §30-28-2 1: 道具メニューの▼「印を変える」にも**同じ器**を出す
+     * （#sideMarksHome / #sideMarksLot / #sideMarksSame）。器の一覧はこの表1か所。 */
+    [['home', 'sgMarksHome'], ['lot', 'sgMarksLot'], ['home', 'sgMarksSame'],
+     ['home', 'sideMarksHome'], ['lot', 'sideMarksLot'], ['home', 'sideMarksSame']]
+    .forEach(function (kv) {
+      var box = $(kv[1]);
+      if (!box) return;
       var cur = markOf(kv[0]);
-      var shapes = MARK_SHAPES.map(function (s) {
+      var shapes = MARK_SHAPES.filter(function (s) { return s.pick !== false; })
+      .map(function (s) {
         return '<button type="button" class="mk-shape'
           + (cur.shape === s.key ? ' is-on' : '') + '" data-mk="' + kv[0]
           + '" data-shape="' + s.key + '" title="' + s.ja + '">' + s.sym + '</button>';
@@ -4810,12 +7851,39 @@
           + '" data-color="' + cc.key + '" style="background:' + cc.hex
           + '" title="' + cc.ja + '" aria-label="' + cc.ja + '"></button>';
       }).join('');
-      return '<div class="sg-mk"><span class="sg-mk-k">' + kv[1] + '</span>'
-        + '<span class="sg-mk-sh">' + shapes + '</span>'
+      /* 🔒 §30-25-40 1（2026-09-14 オーナー指示「左メニューの印の大きさの選択肢は
+       * 無くす」）: ここに「印の大きさ」の行は**出さない**。大きさは印の右下の
+       * つまみ（◎＝主役の文字／■＝主役の四角）と右パネルで変える。 */
+      box.innerHTML = '<div class="sg-mk"><span class="sg-mk-sh">' + shapes + '</span>'
         + '<span class="mark-colors">' + colors + '</span></div>';
-    }).join('');
+    });
+    /* 🔒 §30-24-1: 多角形の書式（太さ・斜線・色）は**多角形を描いた後だけ**出す
+     * （▼の中・右パネルと同じ部品）。 */
+    [['home', 'sgMpFmtHome'], ['lot', 'sgMpFmtLot'], ['home', 'sgMpFmtSame'],
+     ['home', 'sideMpFmtHome'], ['lot', 'sideMpFmtLot'], ['home', 'sideMpFmtSame']]
+    .forEach(function (kv) {
+      var box = $(kv[1]);
+      if (!box) return;
+      var on = (markOf(kv[0]).shape === 'polygon');
+      box.hidden = !on;
+      if (on) renderPolyFmt(box, kv[0]);
+    });
+    /* 🔒 §30-22-1 6 / §30-24-2: 同一住所の時は印が1つ（本拠側の設定）なので、
+     * ▼は［同一住所］の直下の1つだけを出し、本拠・駐車場の▼は出さない
+     * （触っても効かない物・同じ値が2か所に出る物を見せない）。
+     * 🔒 §30-28-2 1: 道具メニューの▼は1つなので、**中の区画**を同じ規則で出し分ける。 */
+    var wH = sgMoreBox(1, 'markHome'), wL = sgMoreBox(1, 'markLot'),
+        wS = sgMoreBox(1, 'markSame');
+    if (wH) wH.hidden = isSame;
+    if (wL) wL.hidden = isSame;
+    if (wS) wS.hidden = !isSame;
+    [['sideMarkHome', isSame], ['sideMarkLot', isSame], ['sideMarkSame', !isSame]]
+    .forEach(function (kv) {
+      var el = $(kv[0]);
+      if (el) el.hidden = kv[1];
+    });
     /* 🔒 §30-11: マーカーの種類は「やること」ではないのでバッジは付かない。
-     * 🔒 §30-12-4 2: ボタンの「いま: 本拠 ◎赤・駐車場 ◎オレンジ」を引き直す。 */
+     * 🔒 §30-12-4 2: ボタンの「いま: ◎赤」を引き直す。 */
     if (state.nav) sgMoreSync();
   }
 
@@ -4838,7 +7906,9 @@
     { n: 4, name: '描き足し' },
     /* ここから配置図（🔒 §29-1）。名前は足跡に収まる短さで */
     { n: 5,  name: '下敷き' },
-    { n: 6,  name: '輪郭' },
+    /* 🔒 §30-22-4 3: ③の名前は「多角形（土地の輪郭や建物）」。足あとは8段が1行に
+     * 並ぶので、名前の**頭**（多角形）だけを出す（ボタンと字幕は正式名のまま）。 */
+    { n: 6,  name: '多角形' },
     { n: 7,  name: '駐車枠' },
     { n: 8,  name: '道路' },
     { n: 9,  name: '道路幅' },
@@ -4865,12 +7935,16 @@
      + '駐車場を大きく写してください。'
      + '青い破線が紙になる範囲です。［枠を決定］を押すと範囲が決まり、'
      + 'あとは地図だけを動かして中を仕上げられます。',
+    /* 🔒 §30-25 夜間確認: 「確定すると自動で次の③へ進みます」は §30-25-11 で
+     * 廃止した自動遷移の説明のまま残っていた（実際は一番下の［次へ］で進む）。 */
     6: '駐車場の土地の輪郭（外周）を描きます。'
      + '［多角形］を押して、敷地の角を順にクリックし、最後に Enter で確定します。'
-     + '確定すると自動で次の③（駐車枠）へ進みます。',
+     + 'よければ一番下の［次へ］で③（駐車枠）へ進みます。',
+    /* 🔒 §30-25 夜間確認: ［駐車枠（四角）］は §30-25-12 でこの段から消え、
+     * ［写真から枠を描く］も §30-22-4 7 で配置図③から隠された（案内文だけ古いままだった）。 */
     7: '輪郭の中に駐車枠を描きます。'
-     + '1枠ずつなら［駐車枠（四角）］、同じ枠が並ぶなら［枠をまとめて］、'
-     + '写真があるなら台数を入れて［写真から枠を描く］が使えます。'
+     + '1枠ずつなら［駐車枠］を押して地図をクリック、同じ枠が並ぶなら［枠をまとめて］、'
+     + '台数と1枠の寸法が決まっているなら［台数を指定して置く…］が使えます。'
      + '対象の枠には［保管場所マーク］を付けてください（提出に要ります）。',
     8: '駐車場の前の道路を描きます。'
      + 'まっすぐな縁は［直線］、角の丸い道は［曲線］、'
@@ -4883,9 +7957,11 @@
     10: '駐車場の出入口の場所と幅を書き入れます。'
      + '幅を入れて［幅矢印］でドラッグし、［出入口（文字）］で文字を置きます。'
      + '「出入口」の文字と幅は、警察に出す配置図でよく見られる所です。',
+    /* 🔒 §30-25-36 2: ボタン名は［保管場所ラベル配置］（出どころは LABEL_PLACE_JA）。
+     * 🔒 §30-22-4 10: 置き方はワンクリック（対象の駐車枠をクリックするだけ）。 */
     11: '「保管場所」の寸法などを1つの塊にして図に置きます。'
-     + 'チェックと数値を入れて［配置］を押し、①対象の駐車枠 ②置き場所 の順に'
-     + '地図を2回クリックしてください。'
+     + 'チェックと数値を入れて［保管場所ラベル配置］を押し、'
+     + '対象の駐車枠をクリックしてください。'
      + '置いた塊は矢印つきで枠を指し、あとからドラッグで動かせます。',
     12: '提出する紙面です。図1つにつき A4 1ページ（縦・横は紙ごと）で、'
      + '所在図・配置図の全部の紙が出ます。'
@@ -4894,7 +7970,7 @@
   };
 
   /**
-   * 🔒 §28-4 / §28-7: 所在図の設定盤（12項目）の置き場を切り替える。
+   * 🔒 §28-4 / §28-7: 所在図の設定盤（14項目・🔒 §30-21-4 5: 11→13・🔒 §30-22-2 3: →14）の置き場を切り替える。
    * 🔴 **複製ではなく部品ごと移す**（同じ id・同じ配線が動く＝値が2か所に割れない）。
    *    ガイダンス中は③の中（#sgSzSet）、ガイダンス外は右の浮き窓（#szSetHome）。
    * 🔴 §28-1 ①: ガイダンス中は右の浮き窓そのものを出さない。
@@ -4904,6 +7980,7 @@
     if (!set || !want) return;
     if (set.parentNode !== want) want.appendChild(set);
     if (toGuide) $('szPanel').hidden = true;
+    syncNameLevelTitles();       // 🔒 §30-21-5 4: 段の title を実値で付け直す
   }
 
   /** 🔒 §28-4 / §28-6 ③: 描き直している間は設定盤を灰色にして「描き直しています…」 */
@@ -4936,18 +8013,39 @@
      *    1行で出す（所在図①〜④／配置図①〜⑧）。もう片方の図へは
      *    ④の［配置図ガイダンスへ］／配置図①の［所在図ガイダンスへ］で行き来する。 */
     var fig = navFigOf(n);
+    /* 🔒 §30-17-2: 図ごとの「進む」色。配置図の間だけ body に sg-hz を付けて
+     * CSS 変数（--sg-go 系）を緑へ差し替える。🔴 判定は navFigOf だけ（1か所）。 */
+    document.body.classList.toggle('sg-hz', fig === 'haichizu');
     $('sgSteps').innerHTML = sgStepsRow(
       SG_STEPS.filter(function (s) { return navFigOf(s.n) === fig; }), n, figName(fig));
-    /* 🔒 §30-12-1: ガイダンスの目指す所。足あとの直下に**全段で常に**出す。
-     * 🔴 文言はここ1か所（図の名前だけ差し替える）。 */
-    $('sgAim').textContent = '青色に強調されたボタンを順に押していくと、'
-      + figName(fig) + 'が出来上がります。';
+    /* 🔒 §30-12-1: ガイダンスの目指す所。足あとの直下に出す。
+     * 🔴 文言はここ1か所（色の名前と図の名前だけ差し替える・🔒 §30-17-2）。
+     * 🔒 §30-22-4 2（2026-09-13 オーナー指示）: **配置図は最初に開いた時の1回だけ**
+     *    （同じ案件で2回目からは出さない）。所在図は今までどおり全段で常に出す。
+     * 🔴 覚えるのは画面の状態（案件を開いている間）＝案件には保存しない。 */
+    var aimShow = true;
+    if (fig === 'haichizu') {
+      aimShow = !state.hzAimShown;
+      state.hzAimShown = true;
+    }
+    $('sgAim').textContent = aimShow
+      ? ((fig === 'haichizu' ? '緑色' : '青色')
+         + 'に強調されたボタンを順に押していくと、'
+         + figName(fig) + 'が出来上がります。')
+      : '';
+    $('sgAim').hidden = !aimShow;
     $('sgTitle').textContent = navTitle(n);
     $('sgText').textContent = SG_TEXT[n] || '';
     for (var k = 1; k <= SG_STEPS.length; k++) {
       var body = $('sgS' + k);
       if (body) body.hidden = (k !== n);
     }
+    /* 🔒 §30-22-4 1: 下敷きの操作（器は1つ）を、いまの段の一番上へ**移す** */
+    hzUnderBarTo(n);
+    /* 🔒 §30-25-23: 常設の道具の帯（器は1つ）も、いまの段へ**移す**。
+     * 🔴 hzUnderBarTo の後＝配置図は #hzUnderBar が .sg-uop-row ごと段へ
+     *    移った後でないと、その段の中に .sg-uop-row がまだ無い。 */
+    sgToolStripTo(n);
     /* 🔒 §28-14 ①: 地図の〇（上部バーと1つのデータ）とマーカーの種類（形・色）を
      * いまの値で引き直す（案件を開いた直後・マーカーを置いた直後もここを通る）。 */
     if (n === 1) { sgSyncUnderlay(); sgRenderMarks(); }
@@ -4956,15 +8054,23 @@
     if (n === 3) { szSetHost(true); syncSzPanel(); }
     // 🔒 §28-5 A: ④の「使い方1行」は、いま持っている道具の物を出す
     // 🔒 §28-5 B（Step 3）: ④の下敷き〇も、いまの上部バーの値に合わせて出す
-    if (n === 4) { sgSyncToolHint(); sgSyncUnderlay(); sgSyncEra(); }   // 🔒 §30-4
+    // 🔒 §30-22-3 1: ④へ入った時の下敷き（OpenStreetMap・濃さ 50%）
+    if (n === 4) { sgEnter4Underlay(); sgSyncToolHint(); sgSyncUnderlay(); sgSyncEra(); }
     /* 🔒 §29-1 ⑤: 下敷きの〇・紙の向き・［枠を決定］の文言・写真の濃さを引き直す
      * （どれも上部バー／シート帯と**同じ値**を見るだけ・新しい状態は持たない）。 */
-    if (n === 5) { sgSyncUnderlay(); sgSyncOrient(); sgSyncImg(); sgSyncEra(); }
+    if (n === 5) { sgSyncOrient(); sgSyncImg(); }
+    /* 🔒 §30-22-4 1: 下敷きの〇・濃さ・撮影時期・PLATEAU の一言は**配置図の全段**
+     * （器が段ごとに移るので、どの段でもいまの値に合わせる）。 */
+    if (fig === 'haichizu') { sgSyncUnderlay(); sgSyncEra(); sgSyncPlateauNote(); }
     // 🔒 §29-1 ⑥〜⑧: 選択中の道具の「使い方1行」（④と同じ出どころ）
     if (n >= 6) sgSyncToolHint();
+    // 🔒 §30-22-4 9: ⑦の保管場所マークの書式（新しく置く印の既定）
+    if (n === 11) sgRenderStorageFmt();
     // 🔒 §29 Step 7 ⑪: 凡例の4行は1度だけ作る（段へ入る前に開いても空にしない）
     if (n === 11) labelBuildRows('lb');
-    // 🔒 §16-5 B ⑫: 提出前チェックは段の中に常時出す
+    /* 🔒 §16-5 B ⑫: 提出前チェックは段の中に常時出す。
+     * 🔒 §30-27-1 7: 「まとめる／別々」の2択は廃止（まとめの可否は PDF・画像の窓の中
+     * ＝ sgComboInfo().ok を exPickRender が読む）。 */
     if (n === 12) sgRenderCheck();
     navRenderPins();             // ✓ と押している間の色を2か所で揃える（§18-ap）
     sgRenderFoot(n);
@@ -4977,6 +8083,9 @@
      * （同じ文でも引き直す・段を移る途中の古い置き場所を残さない）。 */
     sgCap.replace = true;
     sgRenderNums();
+    /* 🔒 §30-22-1 1: 枠を出すか（①では出さない）は**段で決まる**ので、
+     * 段を移った時にも地図の上を引き直す（地図を動かすまで古いままにしない）。 */
+    if (state.map && state.current) renderOverlay();
   }
 
   /**
@@ -5072,7 +8181,8 @@
       spec = [{ act: 'toSz', label: '所在図ガイダンスへ', cls: 'sg-link' },
               { act: 'next', label: '次へ ›', disabled: !sgFrameFixed() }];
     } else if (n === 6) {
-      // 🔒 §29-1 ⑥: 輪郭が1つ要る（確定すると自動で⑦へ進む・navOnObjects）
+      /* 🔒 §29-1 ⑥: 輪郭が1つ要る。
+       * 🔒 §30-25-11: 確定しても自動では進まない（進むのはこの［次へ］だけ）。 */
       spec = [back, { act: 'next', label: '次へ ›', disabled: !fillTargetPolygon() }];
     } else if (n === 7) {
       // 🔒 §29-1 ⑦: 駐車枠が1つ以上
@@ -5083,11 +8193,12 @@
          語になったため、閉じる操作に使うと「案件が完了になる」と誤読される。
          保存せず閉じたい人・保存後に編集を続けたい人の両方の出口として、
          保存前後どちらの状態にも置く。主役は保存系のまま（無印）。 */
+      /* 🔒 §30-27-1 7: 保存のボタンは段の中の［PDFにして保存］（#sgSavePdf）1つだけ
+       * （下部からは外した＝同じ事をする青いボタンが2つ並ばないように）。 */
       var closeBtn = { act: 'close', label: 'ガイダンスを閉じる' };
       spec = state.nav.saved
         ? [back, { act: 'toList', label: '案件一覧に戻る', cls: 'primary' }, closeBtn]
-        : [back, { act: 'savePdf', label: 'PDFにして保存' },
-           { act: 'savePng', label: '画像ファイルにして保存' }, closeBtn];
+        : [back, closeBtn];
     } else {
       // 🔒 §29-1 ⑧⑨⑩⑪: 道路・道路幅・出入口・ラベルは任意（条件なし）
       spec = [back, { act: 'next', label: '次へ ›' }];
@@ -5120,9 +8231,8 @@
        * 🔴 図をまたぐ移動なので「戻る」扱い＝地図の寄せ直しはしない（§18-f）。 */
       case 'toSz': navGo(navStepOf('shozaizu', navSavedDisp('shozaizu') || 1),
                          { back: true }); break;
-      /* ⑫（🔒 §29-1・Step 7）。書き出しは既存の経路をそのまま呼ぶ */
-      case 'savePdf': navSave('pdf'); break;
-      case 'savePng': navSave('png'); break;
+      /* 🔒 §30-27-1 7: ⑫の savePdf / savePng は廃止（段の中の［PDFにして保存］
+       * ＝ exPickOpen('pdf') 1つに寄せた）。 */
       case 'toList': backToList(); break;
       // 🔒 §18-ao/§19-3: 閉じる＝ガイダンスを閉じるだけ（［🧭 所在図ガイダンス］［🧭 配置図ガイダンス］で出し直せる）
       case 'close': navClose(); break;
@@ -5134,12 +8244,12 @@
    * 所在図が出来上がります。」＝**やること**にだけ番号を付け、次に押す1つを青くする。
    *
    * 🔴 番号の表は**ここ1か所**。番号の割り当ては §30-11 の表（所在図①〜⑧・
-   *    配置図①〜⑮）、字幕の指示文は §30-12-3 の表。画面（バッジ）も字幕も、
-   *    この表だけを読む。
+   *    配置図①〜⑯＝🔒 §30-25-31 で②の［次へ］が増えて⑮→⑯）、
+   *    字幕の指示文は §30-12-3 の表。画面（バッジ）も字幕も、この表だけを読む。
    * 各項目:
-   *   step     … 中の通し番号（1〜12）。表示の番号（①〜⑮）は配列の添字
+   *   step     … 中の通し番号（1〜12）。表示の番号（①〜⑯）は配列の添字
    *   sel      … その番号が指す**押す部品**（文字列 or 配列。同じ番号が複数の部品を
-   *              指すことがある＝配置図⑮「PDF／画像」）
+   *              指すことがある＝配置図⑯「PDF／画像」）
    *   label    … その番号の短い名前（§30-11 の表の見出し・読む人のための控え。
    *              🔒 §30-12-3 で字幕は say だけになったので画面には出ない）
    *   say      … 字幕の指示文（🔒 §30-12-3 の表の文言をそのまま・1か所）
@@ -5150,7 +8260,7 @@
    *              （state.sgHit・画面だけの記録で案件には保存しない）
    */
 
-  /** ⑩保管場所マークの有無（⑦の状態の一言と同じ数え方・🔒 §16-5 A） */
+  /** ⑬保管場所マークの有無（🔒 §30-25-31 で⑫→⑬。⑦の状態の一言と同じ数え方・🔒 §16-5 A） */
   function sgHasStorage() {
     return objectsOf('haichizu').some(function (o) {
       return (o.type === 'rect' && o.storage)
@@ -5166,48 +8276,62 @@
     /* ---- 所在図①〜⑧（🔒 §30-11 の表・「やること」だけ／say は §30-12-3 の表） ---- */
     shozaizu: [null,
       { step: 1, sel: '#sgSearchHome', label: '住所検索',
-        say: '使用の本拠の住所を入力し、［検索］を押してください' },
-      /* 🔒 §30-13-1: ②④⑤⑦⑧の指示文はこの表で差し替え済み（§30-12-3 の表の上書き） */
+        /* 🔒 §30-25-23 4: 最初の案内に「いつでも選択に戻れる」の一言を足す */
+        say: '使用の本拠の住所を入力し、／［検索］を押してください'
+           + '／／描いた物を動かしたい時は、上の［選択］をいつでも押せます' },
+      /* 🔒 §30-13-1: ②④⑤⑦⑧の指示文はこの表で差し替え済み（§30-12-3 の表の上書き）。
+       * 🔒 §30-17-1: さらに改行の印「／」・行間つき改行の印「／／」を入れた（表が正）。 */
       { step: 1, sel: '#sgPinHome', label: '使用の本拠マーカー設置',
-        say: '［使用の本拠マーカー設置］を押してから、地図の使用の本拠の場所を'
-           + 'クリックしてください。地図をドラッグで動かすか、マウスホイールで'
-           + 'ズームレベルを変更すると設置しやすくなります',
+        say: '［使用の本拠マーカー設置］を押してから、／地図の使用の本拠の場所を'
+           + 'クリックしてください。／／地図をドラッグで動かすか、マウスホイールで'
+           + 'ズームレベルを変更すると／設置しやすくなります',
         done: function () { return !!(state.current && state.current.points.home); } },
       { step: 1, sel: '#sgPinLot', label: '駐車場マーカー設置',
-        say: '［駐車場マーカー設置］を押してから、地図の駐車場の場所をクリックしてください',
+        say: '［駐車場マーカー設置］を押してから、／地図の駐車場の場所をクリックしてください',
         done: function () { return !!(state.current && state.current.points.lot); } },
       { step: 1, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
-        say: 'マーカーの設置場所はドラッグで修正できます。よければ［次へ］を押してください',
+        say: 'マーカーの設置場所はドラッグで修正できます。／／よければ［次へ］を押してください',
         done: sgPast(1) },
       { step: 2, sel: '#sgFix', label: '枠を決定',
-        say: '青い枠の中が所在図として紙に出ます。よければ［枠を決定］を押してください。'
-           + '紙の向きを変えると2つのマーカーが見やすくなります。'
-           + 'また［2つのマーカーが入るように地図を動かす］を押すと、'
-           + '自動でズームレベルを調整します',
+        say: '青い枠の中が所在図として紙に出ます。／よければ［枠を決定］を押してください。'
+           + '／／紙の向きを変えると2つのマーカーが見やすくなります。'
+           + '／また［2つのマーカーが入るように地図を動かす］を押すと、'
+           + '／自動でズームレベルを調整します'
+           /* 🔒 §30-23: 枠が狭いと周りの目印が枠の外に出て紙に載らない */
+           + '／拡大しすぎると周りの目印が枠に入りません',
         done: sgFrameFixed },
       { step: 2, sel: '#sgFoot button[data-act="szYes"]', label: '確認する', fin: true,
-        say: '［確認する］を押してください。所在図を自動で作ります（数秒かかります）',
+        say: '［確認する］を押してください。／所在図を自動で作ります（数秒かかります）',
         done: sgPast(2) },
       { step: 3, sel: '#sgFoot button[data-act="next"]', label: '決定', fin: true,
-        say: '文字の量がちょうどよければ［決定］を押してください。次で細かい修正ができます。'
-           + '交差点を増やしたり、文字の位置や建物名の位置を動かしたりできます。'
-           + 'ここでは、80％完成を目指してください',
+        say: '文字の量がちょうどよければ［決定］を押してください。／／次で細かい修正ができます。'
+           + '／交差点を増やしたり、文字の位置や建物名の位置を動かしたりできます。'
+           + '／／ここでは、80％完成を目指してください',
         done: sgPast(3) },
       /* 🔒 §30-13-2 所在図④-2/3: ⑧は**下部の［所在図プレビュー］**。
-       * 🔴 押しても**済みにしない**（done は常に false）＝所在図の最後は常にプレビュー。 */
+       * 🔒 §30-25-29（2026-09-14 オーナー指示）: 押したら薄い色（済み）にする。
+       * 🔴 done() を持たせない＝「押した記録」（state.sgHit・sgMarkHit）で済みになる
+       *    ＝鍵の作法は他の番号と同じ1か所。⑧は最後の番号なので次の青は無い。
+       *    プレビューを閉じても薄いまま（案件を開き直すと sgResetHits で戻る）。 */
       { step: 4, sel: '#sgFoot button[data-act="szPrev"]', label: '所在図プレビュー', fin: true,
-        say: '左メニューの「文字や線を足す・消す・動かす」を開くと、文字の位置や'
-           + '建物名の位置を動かせる選択ツール、必要のない文字や線を消す消しゴムツール、'
-           + '文字を追記する文字ツールが使えます。直線ツールで道路を描く、'
-           + '四角ツールで建物を描くこともできます。「下敷きの地図を変える」と、'
-           + '地図から得られる情報を元に書き加えることができます。'
-           + 'できあがったら［所在図プレビュー］を押してください',
-        done: function () { return false; } }
+        say: '左メニューの「文字や線を足す・消す・動かす」を開くと、／文字の位置や'
+           + '建物名の位置を動かせる選択ツール、／必要のない文字や線を消す消しゴムツール、'
+           + '／文字を追記する文字ツールが使えます。／／直線ツールで道路を描く、'
+           + '四角ツールで建物を描くこともできます。／／「下敷きの地図を変える」と、'
+           + '地図から得られる情報を元に／書き加えることができます。'
+           + '／／できあがったら［所在図プレビュー］を押してください' }
     ],
-    /* ---- 配置図①〜⑮（同上） ---- */
+    /* ---- 配置図①〜⑯（同上・🔒 §30-25-31 で②の［次へ］が増えて⑮→⑯） ---- */
     haichizu: [null,
+      /* 🔒 §30-17-1: ①の文は「駐車場を枠内に入れ…」の段落を足した（表が正）。
+       * 🔒 §30-22-4 5（2026-09-13 オーナー指示）: 配置図の字幕は**改行を減らす**
+       *   （「／」は文の区切り2〜3か所まで・「／／」は1段落まで）。🔴 文言は変えない。 */
       { step: 5, sel: '#sgFix5', label: '枠を決定',
-        say: '青い枠の中が紙に出ます。よければ［枠を決定］を押してください',
+        /* 🔒 §30-25-23 4: 最初の案内に「いつでも選択に戻れる」の一言を足す */
+        say: '青い枠の中が紙に出ます。／よければ［枠を決定］を押してください。'
+           + '／／駐車場を枠内に入れ、必要であれば公道やその他構造物を枠内に'
+           + '入れてください。／この枠内が紙に出ます'
+           + '／／描いた物を動かしたい時は、上の［選択］をいつでも押せます',
         done: sgFrameFixed },
       { step: 5, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
         say: '［次へ］を押してください', done: sgPast(5) },
@@ -5215,57 +8339,110 @@
        *    ［多角形］のボタンそのもの。 */
       /* 🔒 §30-14-3: ③の指示文（正典の文そのまま）＋字幕の中のボタン
        *   ［多角形ツールの使い方動画を見る］（btn＝この表の1か所だけ）。 */
-      { step: 6, sel: '#sgS6 .sg-tool[data-tool="polygon"]', label: '多角形（輪郭）',
+      /* 🔒 §30-22-4 5: 「／」は3か所・「／／」は1段落まで（文言はそのまま）。
+       * 🔒 §30-25-12 2 ②（2026-09-13 オーナー指示）: 道具は所在図④と同じアイコン部品に
+       *   なった＝指す先は `.tool[data-tool="polygon"]`、呼び名は［多角形］。 */
+      { step: 6, sel: '#sgS6 .tool[data-tool="polygon"]',
+        label: '多角形',
         say: '［多角形］を押してから、駐車場の敷地の角を順にクリックし、'
-           + '最後に Enter を押してください。マウスホイールで拡大すると描きやすいです。'
+           + '最後に Enter を押してください。／／マウスホイールで拡大すると描きやすいです。'
            + '地図をドラッグして駐車場の枠を描きやすくできます。'
-           + '多角形の頂点を修正したい場合は、バックスペースキーで戻れます。'
-           + '植え込みや木、駐車場の土地にある構造物を描きたい場合は、'
-           + '次のガイダンスで描きます。まずは駐車場の土地を囲います。',
+           + '／多角形の頂点を修正したい場合は、バックスペースキーで戻れます。'
+           + '／植え込みや木、駐車場の土地にある構造物を描きたい場合は、'
+           + '次のガイダンスで描きます。／まずは駐車場の土地を囲います',
         btn: { label: '多角形ツールの使い方動画を見る', act: 'vidPolygon' },
         done: function () { return !!navPolyCount(); } },
-      /* 🔒 §30-14-4: ④の指示文（正典の文そのまま）。
+      /* 🔒 §30-25-31（2026-09-14 オーナー指示）: 輪郭を描き終えたら［次へ］にも
+       * 番号を付ける（多角形を1つ描くと④が緑＝次に押す物になる）。
+       * 🔴 これで配置図の案内数字は全部で⑯になり、以降の番号が1つずつ後ろへずれた。 */
+      { step: 6, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
+        say: '輪郭が描けたら［次へ］を押してください', done: sgPast(6) },
+      /* 🔒 §30-14-4: ⑤の指示文（正典の文そのまま）。
        * 🙋 ［駐車枠を描くツールの使い方を見る］はオーナーが動画を撮ってから
        *    同じ仕組み（btn）で足す。今は文章だけ。 */
-      { step: 7, sel: '#sgS7 .sg-tool[data-tool="rect"]', label: '駐車枠（四角）',
-        say: 'ここでは駐車枠を描きます。「枠をまとめて置く」ボタンを使えば'
-           + '簡単に駐車枠を描くことができます。［駐車枠（四角）］を押してから、'
-           + '地図の上でドラッグして枠を1つ描いてください',
+      /* 🔒 §30-25-12 2 ③（2026-09-13 オーナー指示）: ［駐車枠（四角）］は消し、
+       * 所在図④と同じ［駐車枠］（data-tool="stamp"・押してから地図をクリック）を指す。 */
+      { step: 7, sel: '#sgS7 .tool[data-tool="stamp"]', label: '駐車枠',
+        say: 'ここでは駐車枠を描きます。／［駐車枠］を押してから、'
+           + '地図の置きたい場所をクリックしてください。'
+           + '／／まわりに出る ＋ を押すと、その向きに枠が増えます',
         done: function () { return !!navFrameCount(); } },
-      { step: 7, sel: '#sgS7 .sg-tool[data-tool="storage"]', label: '保管場所マーク',
-        say: '［保管場所マーク］を押してから、借りる枠をクリックしてください',
-        done: sgHasStorage },
+      /* 🔒 §30-18-2: ［保管場所マーク］は配置図⑦（step 11）へ移した。
+       * ⑥は「枠が描けたら［次へ］」（🔒 §30-25-31 で⑤→⑥）。 */
       { step: 7, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
-        say: '［次へ］を押してください', done: sgPast(7) },
-      { step: 8, sel: '#sgS8 .sg-tool[data-tool="line"]', label: '直線（前面道路）',
-        say: '［直線］を押してから、前面道路の縁の始点と終点を順にクリックしてください',
+        say: '枠が描けたら［次へ］を押してください', done: sgPast(7) },
+      /* 🔒 §30-18-1／30-18-3: ⑦（🔒 §30-25-31 で⑥→⑦）は「どれか1つ」の番号＝
+       * 同じ番号を3つのボタンに付け、
+       * 3つとも**薄い色**（one:true → data-sgone → CSS）。済み判定は道路の線が1本以上
+       * （直線・多角形・曲線のどれでも navRoadCount が数える）。 */
+      /* 🔒 §30-25-34 2（2026-09-14 オーナー指示「強調表示されていない。薄くてよい。
+       * よく使うはず」）: ［地図の道路を写す］も「どれか1つ」の仲間に入れる＝
+       * 4つとも同じ番号・薄い緑。済み＝道路の線が1本以上（navRoadCount は
+       * source:'roadauto' の縁も数える・§30-25-24 1）。 */
+      { step: 8, one: true, label: '地図の道路を写す／直線／多角形／曲線（前面道路）',
+        /* 🔒 §30-25-12 2 ④: 3つとも所在図④と同じアイコン部品になった */
+        sel: ['#sgRoadAuto',
+              '#sgS8 .tool[data-tool="line"]',
+              '#sgS8 .tool[data-tool="polygon"]',
+              '#sgS8 .tool[data-tool="curve"]'],
+        say: '［地図の道路を写す］を押すと、枠のまわりの道路が線で入ります。'
+           + '／ずれていれば線の角をドラッグで直してください。'
+           + '／／手で描くなら［直線］［多角形］［曲線］のどれかで前面道路の縁を描きます',
         done: function () { return !!navRoadCount(); } },
       { step: 8, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
         say: '［次へ］を押してください', done: sgPast(8) },
+      /* 🔒 §30-18-4: ⑨⑪（🔒 §30-25-31 で⑧⑩→⑨⑪）の指示文はトグル
+       * （自動入力／幅入力）と文字を置く欄を案内する */
       { step: 9, sel: '#sgRoadArrow', label: '幅矢印（道路幅）',
-        say: '道幅を入れて［幅矢印］を押し、道路の端から端までドラッグしてください' },
+        /* 🔒 §30-22-4 6: 文字の定型は言葉のボタン（［道路］［公道］…）になったので
+         * 文中の呼び名もそれに合わせる（ボタンの文字と字幕を食い違わせない）。 */
+        /* 🔒 §30-29-7 2: 末尾に「幅を入れなければ矢印だけ」の一言を足す
+         * （「幅を入れてください」で止める作法を差し替えたため）。 */
+        say: '道幅は「自動入力」か「道幅入力」を選び、／［幅矢印］を押して'
+           + '道路の端から端まで引いてください（2回クリックでもドラッグでも引けます）。'
+           + '／／道路の文字は下の［道路］などで置けます'
+           + '／／幅の数字を入れなければ、矢印だけが入ります'
+           + '（後から矢印を選んで「表示」欄に数字を入れられます）' },
       { step: 9, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
         say: '［次へ］を押してください', done: sgPast(9) },
       { step: 10, sel: '#sgGateArrow', label: '幅矢印（出入口）',
-        say: '出入口の幅を入れて［幅矢印］を押し、出入口の端から端までドラッグしてください' },
+        /* 🔒 §30-29-7 2: 末尾に「幅を入れなければ矢印だけ」の一言を足す（⑨と同じ） */
+        say: '出入口の幅は「自動入力」か「出入口の幅を入力」を選び、／［幅矢印］を押して'
+           + '出入口の端から端まで引いてください（2回クリックでもドラッグでも引けます）。'
+           + '／／出入口の文字は下の［出入口］などで置けます'
+           + '／／幅の数字を入れなければ、矢印だけが入ります'
+           + '（後から矢印を選んで「表示」欄に数字を入れられます）' },
       { step: 10, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
         say: '［次へ］を押してください', done: sgPast(10) },
-      { step: 11, sel: '#sgLabelPlace', label: '配置',
-        say: '長さ・幅の数値を入れてから［配置］を押し、対象の駐車枠 → 置く場所 の順に地図をクリックしてください',
+      /* 🔒 §30-18-5: ⑬［保管場所マーク］（🔒 §30-25-31 で⑫→⑬）は
+       * 配置図③からこの段（配置図⑦）へ移した */
+      { step: 11, sel: '#sgS11 .sg-tool[data-tool="storage"]', label: '保管場所マーク',
+        say: '［保管場所マーク］を押してから、／借りる枠をクリックしてください',
+        done: sgHasStorage },
+      /* 🔒 §30-22-4 10（2026-09-13 オーナー指示）: ［配置］は**ワンクリック**
+       * （対象の駐車枠をクリックすると、その枠の右上にラベルが置かれる）。 */
+      /* 🔒 §30-25-36 2: ボタン名は［保管場所ラベル配置］（LABEL_PLACE_JA が出どころ） */
+      { step: 11, sel: '#sgLabelPlace', label: LABEL_PLACE_JA,
+        say: '長さ・幅の数値を入れてから［' + LABEL_PLACE_JA + '］を押し、'
+           + '／対象の駐車枠をクリックしてください（ラベルはドラッグで動かせます）',
         done: function () { return !!navLabelCount(); } },
       { step: 11, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
         say: '［次へ］を押してください', done: sgPast(11) },
-      /* 🔒 §30-12-7 2: ⑮は［PDFにして保存］**だけ**を指す（青は常に1つ）。
-       * ［画像ファイルにして保存］は番号なし・白のまま隣に残す（sgRenderFoot は変えない）。
-       * 済み判定は従来どおり state.nav.saved＝画像で保存しても✓になる。 */
-      { step: 12, sel: '#sgFoot button[data-act="savePdf"]',
+      /* 🔒 §30-12-7 2: ⑯（🔒 §30-25-31 で⑮→⑯）は［PDFにして保存］**だけ**を指す
+       * （青は常に1つ）。
+       * 🔒 §30-27-1 7: 番号の行き先は**段の中の**［PDFにして保存］（#sgSavePdf）。
+       *    下部の savePdf / savePng は廃止した。
+       * 済み判定は従来どおり state.nav.saved＝画像で保存しても✓になる（exPickDone）。 */
+      { step: 12, sel: '#sgSavePdf',
         label: 'PDFにして保存',
-        say: '［PDFにして保存］を押してください。これで完成です（画像で出したい時は［画像ファイルにして保存］）',
+        say: '［PDFにして保存］を押すと、出す紙を選ぶ窓が開きます。'
+           + '／所在図と配置図を1つの PDF にまとめることもできます。これで完成です。'
+           + '／／画像で出したい時は、［プレビュー］を開いて下の［画像］を押してください',
         done: function () { return !!(state.nav && state.nav.saved); } }
     ]
   };
   /* 🔒 §30-12-3 の表の最後の行（保存後）。字幕はここ1か所から出る。 */
-  var SG_SAY_SAVED = '完成です。［案件一覧に戻る］を押してください';
+  var SG_SAY_SAVED = '完成です。／［案件一覧に戻る］を押してください';
 
   /* ============ 「こんな時に押すボタン」（🔒 §30-12-4）============
    * 押さなくても図が出来る機能は、**1機能＝1つのボタン**にする。
@@ -5290,16 +8467,81 @@
    *    （ボタンは sel の1つ目の部品があった場所へ挿す）。
    */
 
-  /** 今のマーカーの形と色（①の「いま:」）。値の出どころは markOf 1か所 */
-  function sgNowMarkText() {
+  /** 今の印の形と色（①の「いま:」）。値の出どころは markOf 1か所。
+   * 🔒 §30-22-1 4〜5: ▼が地点ごとになったので、1地点ぶんだけを返す。
+   * 🔒 §30-22-1 4 (c): 多角形で囲んである時はそれを言う（形と色の欄より強い情報）。 */
+  function sgNowMarkText(key) {
     var cs = (Editor.MARK && Editor.MARK.colors) || [];
-    function one(key, ja) {
-      var m = markOf(key), sym = '', col = '';
-      MARK_SHAPES.forEach(function (s) { if (s.key === m.shape) sym = s.sym; });
-      cs.forEach(function (c) { if (c.key === m.color) col = c.ja; });
-      return ja + ' ' + sym + col;
-    }
-    return one('home', '本拠') + '・' + one('lot', '駐車場');
+    /* 🔒 §30-24-1: 印の種類が「多角形」なら、形と色（◎■）より強い情報なのでそれを言う */
+    if (markOf(key).shape === 'polygon') return '多角形（建物や土地の形で囲んである）';
+    var m = markOf(key), sym = '', col = '';
+    MARK_SHAPES.forEach(function (s) { if (s.key === m.shape) sym = s.ja; });
+    cs.forEach(function (c) { if (c.key === m.color) col = c.ja; });
+    /* 🔒 §30-25-40 1: 大きさの言葉は出さない（形と色だけ）。
+     * 大きさは印の右下のつまみ・右パネルで変える物になった。 */
+    return (m.shape === 'none') ? sym : (sym + '・' + col);
+  }
+
+  /** 🔒 §30-22-1 4: その地点の主役の印が多角形か（所在図のどれかの紙にあれば真） */
+  function sgHasMainPoly(key) {
+    return sheetsOf('shozaizu').some(function (sh) {
+      return (sh.objects || []).some(function (o) {
+        return o && o.role === 'mainmark' && o.type === 'polygon'
+            && (o.markRole || 'home') === key;
+      });
+    });
+  }
+
+  /**
+   * 🔒 §30-24-1: 多角形を**全部消したら**印の種類を◎へ戻す
+   * （印が1つも無い状態を作らない）。消しゴム・Delete・戻す のどの経路でも
+   * 「図形が変わった」1か所で面倒を見る（editor の change から呼ぶ）。
+   */
+  function syncMarkShapeFromPolys() {
+    var c = state.current;
+    if (!c) return 0;
+    var n = 0;
+    ['home', 'lot'].forEach(function (key) {
+      if (markOf(key).shape !== 'polygon' || sgHasMainPoly(key)) return;
+      var p = c.points[key];
+      var m = (p && p.mark) || state.markPick[key];
+      // 🔒 §30-25-37 3: 形が◎へ戻っても大きさ（scale）は保つ（markNext が組み立てる）
+      if (m) m.shape = 'circle';
+      else if (p) p.mark = markNext(key, { shape: 'circle' });
+      applyMarkChoice(key);
+      n++;
+    });
+    if (n) { sgRenderMarks(); renderOverlay(); Store.autosave(c); }
+    return n;
+  }
+
+  /**
+   * 🔒 §30-24-1（正典「最初の物を消したら次の物の重心へ」）: その地点の多角形の
+   * **先頭**（＝ピンを持つ「最初に描いた物」）が入れ替わったら、ピンを新しい先頭の
+   * 重心へ動かす。
+   * 🔴 「入れ替わった」は**先頭の id**で見る。重心がずれただけ（＝ドラッグ）の時は
+   *    editor の syncMarkPin が既にピンを動かしているので、ここでは何もしない
+   *    （二重に動かすと2つ目以降が先頭の上へ飛ぶ）。
+   * 🔴 並び（どれが先頭か）の出どころは Editor.mainPolysOf 1か所。
+   * 🔴 見るのは**いま開いている所在図の紙**（change はその紙でしか起きない）。
+   *    先頭の id の控えは画面の状態（state.mainPolyHead）で、案件には保存しない。
+   */
+  function syncMainPolyHead() {
+    var c = state.current;
+    if (!c || !state.editor || !Editor.mainPolysOf) return 0;
+    var objs = objectsOf('shozaizu'), n = 0;
+    ['home', 'lot'].forEach(function (key) {
+      var list = Editor.mainPolysOf(objs, key);
+      var head = list.length ? list[0] : null;
+      var prev = state.mainPolyHead[key];
+      state.mainPolyHead[key] = head ? head.id : null;
+      if (!head || !prev || prev === head.id) return;   // 先頭は変わっていない
+      var ctr = Editor.polyCentroid(head.points);
+      var p = c.points[key];
+      if (!ctr || !p || (ctr.lat === p.lat && ctr.lng === p.lng)) return;
+      if (state.editor.movePin(key, ctr.lat, ctr.lng)) n++;
+    });
+    return n;
   }
 
   /* 🔒 §30-14-1: 「いま: A4 縦」を▼の3行目に出す sgNowOrientText は用が無くなった
@@ -5335,12 +8577,9 @@
     return (u && u.photoEra) || '';
   }
 
-  /** 🔒 §30-12-4 5: いま選んでいる下敷きの撮影時期が取れていない（＝見て判断できない） */
-  function sgEraUnknown() {
-    if ($('underlayOff') && $('underlayOff').checked) return false;
-    var id = $('underlaySel') ? $('underlaySel').value : '';
-    return id === 'gsi-photo' && eraState.gsiPhoto === '時期不明';
-  }
+  /* 🔒 §30-22-4 1 で廃止: sgEraUnknown（▼「下敷きの写真を変える」を自動で開く条件）。
+   * 下敷きの操作は常に見えている（#hzUnderBar）ので「開く条件」そのものが要らない。
+   * 撮影時期は〇の行にそのまま出る（sgSyncEra）・PLATEAU 範囲外も行の中の一言。 */
 
   var SG_MORE = {
     shozaizu: {
@@ -5349,9 +8588,22 @@
           when: 'マーカーを置く場所が分かりにくいとき'
               + '（道路名やバス停の名前なら OpenStreetMap、お店や建物の名前なら Google マップ）',
           now: sgNowUnderText, sel: ['#sgMoreSzMap'] },
-        { key: 'mark', title: 'マーカーの形と色を変える',
-          when: '紙に出る印を変えたいとき（形 ◎／■・色 赤／オレンジ／黄）',
-          now: sgNowMarkText, sel: ['#sgMoreSzMark'] }
+        /* 🔒 §30-22-1 4〜5（2026-09-13 オーナー指示）: 印の設定は**地点ごと**の▼にして、
+         * それぞれの［○○マーカー設置］の**直下**へ置く（旧・共通の1つは廃止）。 */
+        { key: 'markHome', title: '使用の本拠の印を変える',
+          when: '紙に出る印を変えたいとき（形と色／建物や土地の形を多角形で囲む／印なし）',
+          now: function () { return sgNowMarkText('home'); },
+          sel: ['#sgMoreSzMarkHome'] },
+        { key: 'markLot', title: '駐車場の印を変える',
+          when: '紙に出る印を変えたいとき（形と色／建物や土地の形を多角形で囲む／印なし）',
+          now: function () { return sgNowMarkText('lot'); },
+          sel: ['#sgMoreSzMarkLot'] },
+        /* 🔒 §30-24-2（2026-09-13 オーナー指示）: ［同一住所］の直下にも▼。
+         * 値は本拠の物（印は1つ）＝同一住所の間はこの▼だけを出す。 */
+        { key: 'markSame', title: '印を変える',
+          when: '紙に出る印を変えたいとき（形と色／建物や土地の形を多角形で囲む／印なし）',
+          now: function () { return sgNowMarkText('home'); },
+          sel: ['#sgMoreSzMarkSame'] }
       ],
       /* 🔒 §30-13-2 所在図②: 紙の向きは「こんな時に押すボタン」をやめて、
        * ［紙の向きを変える］＝押すとその場で縦↔横が切り替わる普通のボタンにした
@@ -5375,14 +8627,12 @@
     },
     haichizu: {
       5: [
-        /* 🔒 §30-12-5 配置図①-3: PLATEAU 範囲外・時期不明で自動で開く。
+        /* 🔒 §30-22-4 1（2026-09-13 オーナー指示）: ▼「下敷きの写真を変える」は廃止。
+         * 下敷きの操作（種類の〇・濃さ・表示／非表示）は**全段の一番上**に常に出す
+         * （器 #hzUnderBar・hzUnderBarTo が段ごとに移す）＝畳まれていて気付かない、
+         * 他の段では触れない、という詰まりが両方なくなる。
          * 🔴 §30-11-b 5: 「写真を取り込んだ直後」は**注意ではなく一度きりの合図**
-         *   （state.sgMoreImgNew）で、開くのは下の 'img' の方。ここには混ぜない。 */
-        { key: 'under', title: '下敷きの写真を変える',
-          when: '写真が古い・今の現地と違うとき（撮影時期を見て選びます）',
-          now: sgNowUnderText,
-          warn: function () { return sgPlateauOut() || sgEraUnknown(); },
-          sel: ['#sgMoreHzUnder'] },
+         *   （state.sgMoreImgNew）で、開くのは下の 'img' の方。 */
         { key: 'img', title: '自分で撮った写真・図面を使う',
           when: '現地の写真や図面を持っているとき',
           now: sgNowImgText, sel: ['#sgMoreHzImg'] }
@@ -5390,31 +8640,20 @@
          * ［紙の向きを変える］＝ #sgOri5Toggle を①［枠を決定］の上に置いた）。 */
       ],
       /* 🔒 §30-12-5 配置図②: 注記1本だけなので「こんな時に押すボタン」を作らない */
-      7: [
-        { key: 'stamp', title: '枠をまとめて置く',
-          when: '同じ大きさの枠を何台分も並べたいとき', sel: ['#sgMoreHzStamp'] },
-        { key: 'fill', title: '写真から自動で枠を描く',
-          when: '取り込んだ写真に白線が写っているとき', sel: ['#sgMoreHzFill'] },
-        { key: 'num', title: '枠に番号を付ける',
-          when: 'どの枠か分かるように番号を入れたいとき', sel: ['#sgMoreHzNum'] }
-      ],
-      8: [
-        { key: 'road', title: '曲がった道を描く',
-          when: 'カーブした道・何度も折れ曲がる縁のとき', sel: ['#sgMoreHzRoad'] }
-      ],
-      /* 🔒 §30-12-4 7: 「見るだけ」の見本も同じボタン */
-      9: [
-        { key: 'ex', title: '見本を見る', when: '書き上がりの形を確かめたいとき',
-          sel: ['#sgGuideRoad'] }
-      ],
-      10: [
-        { key: 'ex', title: '見本を見る', when: '書き上がりの形を確かめたいとき',
-          sel: ['#sgGuideGate'] }
-      ],
-      11: [
-        { key: 'ex', title: '見本を見る', when: '書き上がりの形を確かめたいとき',
-          sel: ['#sgGuideLabel'] }
-      ]
+      /* 🔒 §30-25-12 2 ③（2026-09-13 オーナー指示）: ▼「枠をまとめて置く」
+       * （#sgMoreHzStamp）と ▼「枠に番号を付ける」（#sgMoreHzNum）は**廃止**した。
+       * 中身（［駐車枠］［番号］［開始番号］［台数を指定して置く…］）はそのまま
+       * 「駐車枠」の行に出ている＝所在図④とまったく同じ部品・同じ並び。
+       * 🔒 §30-22-4 7: ▼「写真から自動で枠を描く」も消してある（器 #sgMoreHzFill は
+       *   hidden のまま残す＝📷 の取り込み・右パネル「枠を並べる」の配線を落とさない）。 */
+      7: [],
+      /* 🔒 §30-18-3: ▼「曲がった道を描く」は廃止（［直線］［多角形］［曲線］の横並びへ） */
+      8: [],
+      /* 🔒 §30-18-4／30-18-5: ▼「見本を見る」は廃止。見本（<img class="sg-guide">）は
+       * 段の**先頭に常時**出す（index.html の並びがそのまま出る）。 */
+      9: [],
+      10: [],
+      11: []
     }
   };
 
@@ -5490,15 +8729,24 @@
     if (n === 5 && key === 'img') state.sgMoreImgNew = false;
   }
 
-  /** 画面に開閉を映す（値は state 側が持つ） */
-  function sgMoreApply(n, key, open) {
-    var w = sgMoreBox(n, key);
+  /**
+   * ▼の器（.sg-more-w）1つに開閉を映す。
+   * 🔒 §30-25-35: 配置図の下敷きの▼（#hzUnderMore・index.html に固定で置いた物）も
+   *    同じ見た目にするため、開閉の描き方は**この1か所**にまとめてある。
+   */
+  function sgMorePaint(w, open) {
     if (!w) return;
     var btn = w.querySelector('.sg-more'), body = w.querySelector('.sg-more-body');
+    if (!btn || !body) return;
     body.hidden = !open;
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     w.classList.toggle('is-open', !!open);
     btn.querySelector('.sg-more-a').textContent = open ? '閉じる ▲' : '開く ▼';
+  }
+
+  /** 画面に開閉を映す（値は state 側が持つ） */
+  function sgMoreApply(n, key, open) {
+    sgMorePaint(sgMoreBox(n, key), open);
   }
 
   /**
@@ -5514,14 +8762,8 @@
       var row = w.querySelector('.sg-more-now');
       var v = spec.now ? (spec.now() || '') : '';
       row.textContent = v ? ('いま: ' + v) : '';
-      /* 🔒 §30-12-5 配置図①-3: PLATEAU 範囲外は「いま:」の行に添える */
-      if (spec.key === 'under' && n === 5 && sgPlateauOut()) {
-        var b = document.createElement('b');
-        b.className = 'sg-more-warn';
-        b.textContent = '⚠ この場所は PLATEAU の範囲外です';
-        row.appendChild(b);
-        v = v || ' ';
-      }
+      /* 🔒 §30-22-4 1: 配置図①の「いま: …⚠ PLATEAU の範囲外」は廃止した
+       * （▼が無くなり、下敷きの〇が常に見えている＝一言は〇の行の中に出る）。 */
       row.hidden = !v;
       /* 🔒 §30-11-b 5: 注意で開くのは**出た瞬間の1回だけ**（出っぱなしの注意で
        * 毎回開き直すと、読んだあと閉じられなくなるため）。 */
@@ -5538,6 +8780,8 @@
       state.sgMoreImgNew = false;
       sgMoreSet(5, 'img', true);
     }
+    /* 🔒 §30-25-35 1: 配置図の下敷きの▼（#hzUnderMore）の「いま: …」も同じ契機で */
+    hzUnderMoreSync();
   }
 
   /** 段に入った時の開閉（覚えた値・無ければ閉じ）。sgRender から */
@@ -5554,6 +8798,15 @@
     state.sgMoreOpen = { shozaizu: {}, haichizu: {} };
     state.sgMoreWarn = {};
     state.sgMoreImgNew = false;
+    /* 🔒 §30-25-35 2: 配置図の下敷きの▼も仕切り直す（案件には保存しない） */
+    state.hzUnderOpenAt = 0;
+    /* 🔒 §30-22-3 1: ④の「下敷きを出す」の1回だけの仕掛けも案件をまたいで残さない */
+    state.sg4Under = false;
+    /* 🔒 §30-22-4 2: 配置図の「緑色に強調された…」の1行も案件ごとに仕切り直す */
+    state.hzAimShown = false;
+    /* 🔒 §30-28-1 2: 道具メニューの▼も案件をまたいで残さない（全部閉じへ戻す） */
+    state.toolMoreOpen = {};
+    toolMoreApply();
   }
 
   /** その番号が指す部品（無ければ空配列＝落とさない） */
@@ -5621,6 +8874,7 @@
       el.removeAttribute('data-sgnum');
       el.removeAttribute('data-sgstate');
       el.removeAttribute('data-sgn');
+      el.removeAttribute('data-sgone');    // 🔒 §30-18-1「どれか1つ」の印
     });
     var next = sgNextNum(fig, n);
     for (var i = 1; i < list.length; i++) {
@@ -5629,10 +8883,16 @@
       var st = done ? 'done' : (i === next ? 'next' : (list[i].optional ? 'opt' : 'todo'));
       /* 済んだ番号は薄い✓（正典 §30-2）。番号の役目は終わっているので数字は出さない */
       var txt = done ? '✓' : circ(i);
+      /* 🔒 §30-18-1: 「どれか1つ」の番号（配置図⑦・🔒 §30-25-31 で⑥→⑦）は、
+       * 同じ番号を3つのボタンに付け、
+       * 3つとも**薄い色**で強調する（「青は常に1つ」の例外＝どれを押してもよい）。
+       * 🔴 色分けは data-sgone を見る CSS 1か所（表示文字列では分岐しない）。 */
+      var one = !!list[i].one;
       sgNumEls(list[i]).forEach(function (el) {
         el.setAttribute('data-sgnum', txt);
         el.setAttribute('data-sgstate', st);
         el.setAttribute('data-sgn', i);     // 押した記録の逆引き用（表示には使わない）
+        if (one) el.setAttribute('data-sgone', '1');
       });
     }
     sgCaptionSync(fig, next);
@@ -5660,13 +8920,61 @@
    * 🔴 sgCaptionShow は**地図を動かすたびに**も通る（renderOverlay →
    *    sgRenderStatus → sgRenderNums）ので、印なしで置き直すと枠に合わせて
    *    字幕が飛ぶ＝裁定 3 が禁じた「地図の移動が契機になる」状態になる。 */
-  var sgCap = { last: '', replace: false };
+  /* 🔒 §30-25-1 2: say（印つきの元の文）も控える。横長／縦長で組み方が変わるので、
+   * sgCaptionPlace が置き場所を決めた後に文を組み直せるようにする。 */
+  var sgCap = { last: '', replace: false, say: '' };
 
   /* 🔒 §30-14-3: 字幕の中のボタンが押された時にすることの表（鍵は SG_NUM[].btn.act）。
    * 🔴 ここ1か所。表示文字列では分岐しない。 */
   var SG_CAP_ACT = {
     vidPolygon: function () { vidOpen(); }
   };
+
+  /* ---- 字幕の改行と行間（🔒 §30-17-1・2026-09-13 オーナー指示）----
+   * 指示文（SG_NUM[].say）の中の印:
+   *   「／」  … 改行だけ（<br>）
+   *   「／／」… 改行＋行間（段落＝<span class="sg-cap-p">・行間 .55em は CSS）
+   * 🔴 文言はデータ（SG_NUM[].say）のまま。ここは**印を描き方に変える**だけ。
+   * 🔴 行間が付くのは A4 縦の縦長の箱（.is-side）だけ。横長では 0（CSS の1か所）。
+   * 🔴 下に長くなる時は sgCaptionPlace が .is-tight（行間 0）→ .is-flow（改行も外す）
+   *    の順に削る（高さを測ってから）。 */
+  var SG_CAP_BR = '／';          // 改行の印
+  var SG_CAP_PARA = '／／';      // 行間つき改行の印
+
+  /** innerHTML に入れる前のエスケープ（🔴 文言は利用者に見える文字なので必ず通す） */
+  function sgEsc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /**
+   * 指示文（印つき）→ 表示用の HTML（段落の箱と <br> だけ・🔒 §30-17-1）
+   * 🔒 §30-25-1 2（2026-09-13 オーナー指示）: **横長の箱（.is-wide）では改行を減らす**。
+   *   wide … 「／」は改行せず**全角空白1つ**（文がくっつかないように）。
+   *          「／／」は段落のまま（改行・行間 0）
+   *   flow … さらに「／／」も外して**1段落**にする（sgCaptionPlace の削り (a)）
+   * 🔴 文言はデータ（SG_NUM[].say）のまま。ここは印を描き方に変えるだけ。
+   */
+  function sgSayHtml(say, wide, flow) {
+    var s = String(say == null ? '' : say);
+    if (wide && flow) {
+      var flat = [];
+      s.split(SG_CAP_PARA).forEach(function (para) {
+        para.split(SG_CAP_BR).forEach(function (t) { flat.push(sgEsc(t)); });
+      });
+      return '<span class="sg-cap-p">' + flat.join('　') + '</span>';
+    }
+    return s.split(SG_CAP_PARA)
+      .map(function (para) {
+        return '<span class="sg-cap-p">'
+          + para.split(SG_CAP_BR).map(sgEsc).join(wide ? '　' : '<br>')
+          + '</span>';
+      })
+      .join('');
+  }
 
   /**
    * 字幕を出す。
@@ -5694,7 +9002,12 @@
     sgCap.last = key;
     $('sgCapL1').textContent = l1 || '';
     $('sgCapL1').hidden = !l1;      // 番号が無い時（保存後の一言）は数字の枠も出さない
-    $('sgCapL2').textContent = l2 || '';
+    /* 🔒 §30-17-1: 指示文は「／」で改行・「／／」で改行＋行間にして描く
+     * （中身は sgSayHtml が組む＝エスケープ済み）。
+     * 🔒 §30-25-1 2: 横長の箱かどうかは sgCaptionPlace が決めるので、元の文を控えて
+     *    あちらで組み直す（ここでは縦長の組み方で一度描いておく）。 */
+    sgCap.say = l2 || '';
+    $('sgCapL2').innerHTML = sgSayHtml(l2);
     $('sgCapL2').hidden = !l2;
     /* 🔒 §30-14-3: 文の下の小さなボタン（持っている番号だけ）。
      * 🔴 何をするかは data-act（SG_CAP_ACT の鍵）で持つ＝文字列では分岐しない。 */
@@ -5729,23 +9042,84 @@
    *    字幕が枠に合わせて飛ぶため）。 */
   var SG_CAP_SIDE_MIN = 220;   // 🙋 仮値: これ未満の空きには縦長の箱を置かない
   var SG_CAP_SIDE_PAD = 24;    // 空きの内側に取る余白（左 8px ＋ 枠との間 16px）
+  var SG_CAP_TOP = 8;          // 字幕の上（CSS の top: 8px と同じ値）
+  /* 🔒 §30-25-1 1: 横長の箱（.is-wide）の左右の余白。幅＝地図領域の幅 − これ×2 */
+  var SG_CAP_WIDE_PAD = 8;
+  /* 🔒 §30-25-1 3: 横長の箱が枠に触らない隙間（枠の上端−これ／枠の下端＋これ） */
+  var SG_CAP_FRAME_GAP = 8;
 
+  /**
+   * 🔒 §30-13-4（2026-09-10 オーナー指示）／🔒 §30-25-1（2026-09-13 オーナー指示）:
+   *   A4 縦で左の空きが足りる … 縦長の箱（.is-side・左 8px・幅＝空き−24px、最大 360px）
+   *   それ以外（A4 横・空き 220px 未満） … **横長の箱（.is-wide）**
+   *     左 8px・上 8px・幅＝地図領域の幅−16px。〇数字の**右から**文が始まる
+   *     （CSS の `.is-wide i { flex: 1 1 0 }`）。「／」は改行せず全角空白（sgSayHtml）
+   * 🔴 判定に使うのは枠の矩形だけ（表示文字列では分岐しない）。
+   */
   function sgCaptionPlace() {
     var box = $('sgCaption');
     if (!box || box.hidden) return;
     if (box.classList.contains('is-moved')) return;
-    var side = false, w = 0;
-    var sh = curSheet();
-    if (sh && sh.orient !== 'landscape' && state.map) {
-      var r = null;
+    var wrap = box.parentElement;
+    if (!wrap) return;
+    var wrapR = wrap.getBoundingClientRect();
+    /* 枠の矩形（決定済み＝固定枠／未決定＝画面中央の紙1枚）。🔒 §30-25-1 4 */
+    var sh = curSheet(), fr = null;
+    if (sh && state.map) {
       try {
-        r = (sh.frameFixed && sh.frame) ? fixedFrameRectPx(sh.frame) : frameRectPx();
-      } catch (e) { r = null; }
-      // r.x ＝ 地図領域の左端から枠の左端までの空き（#map は .map-wrap に inset:0）
-      if (r && r.x >= SG_CAP_SIDE_MIN) { side = true; w = Math.min(r.x - SG_CAP_SIDE_PAD, 360); }  // 🔒 §30-13-8 3: 縦長の箱は最大 360px
+        fr = (sh.frameFixed && sh.frame) ? fixedFrameRectPx(sh.frame) : frameRectPx();
+      } catch (e) { fr = null; }
     }
+    // fr.x ＝ 地図領域の左端から枠の左端までの空き（#map は .map-wrap に inset:0）
+    var side = !!(sh && sh.orient !== 'landscape' && fr && fr.x >= SG_CAP_SIDE_MIN);
+    var wide = !side;                                   // 🔒 §30-25-1 1
+    var w = side ? Math.min(fr.x - SG_CAP_SIDE_PAD, 360)  // 🔒 §30-13-8 3: 最大 360px
+                 : Math.max(160, wrapR.width - SG_CAP_WIDE_PAD * 2);
+    /* 行間・改行は毎回いったん元に戻してから測る（前の段の削り方を引きずらない） */
+    box.classList.remove('is-tight');
+    box.classList.remove('is-flow');
+    box.classList.remove('is-below');
     box.classList.toggle('is-side', side);
-    box.style.width = side ? (Math.round(w) + 'px') : '';
+    box.classList.toggle('is-wide', wide);
+    box.style.top = '';
+    box.style.width = Math.round(w) + 'px';
+
+    /** 文を組み直す（横長なら「／」は全角空白・flow なら「／／」も外す）*/
+    function say(flow) {
+      var l2 = $('sgCapL2');
+      if (l2 && !l2.hidden) l2.innerHTML = sgSayHtml(sgCap.say, wide, flow);
+    }
+    say(false);
+
+    if (wide) {
+      /* 🔒 §30-25-1 3: 箱の下端が**枠の上端−8px** より下なら
+       *   (a) 「／／」も外して1段落 → (b) 枠の下の空きに入るなら下へ → (c) 上のまま */
+      if (!fr) return;
+      var top0 = wrapR.top;
+      var bottomPx = function () { return box.getBoundingClientRect().bottom - top0; };
+      var limitTop = fr.y - SG_CAP_FRAME_GAP;
+      if (bottomPx() <= limitTop) return;
+      box.classList.add('is-flow');
+      say(true);                                        // (a)
+      if (bottomPx() <= limitTop) return;
+      var h = box.getBoundingClientRect().height;       // (b)
+      var below = fr.y + fr.h;
+      if (wrapR.height - below >= h + SG_CAP_FRAME_GAP * 2) {
+        box.classList.add('is-below');
+        box.style.top = Math.round(below + SG_CAP_FRAME_GAP) + 'px';
+      }
+      return;                                           // (c) 触るのは許容（ドラッグで動く）
+    }
+
+    /* 🔒 §30-17-1「下に長くなる時は削る」（縦長の箱）: 箱の高さが地図領域の高さ−16px を
+     * 超えたら、まず行間を 0（.is-tight）に。それでも超えたら改行も外して
+     * 普通の折り返しだけ（.is-flow）にする。🔴 描いた後に測る。 */
+    var limit = wrapR.height - SG_CAP_TOP * 2;
+    if (!(limit > 0)) return;
+    if (box.getBoundingClientRect().height <= limit) return;
+    box.classList.add('is-tight');
+    if (box.getBoundingClientRect().height <= limit) return;
+    box.classList.add('is-flow');
   }
 
   /**
@@ -5763,6 +9137,10 @@
       box.hidden = true;
       box.classList.remove('is-moved');
       box.classList.remove('is-side');    // 🔒 §30-13-4: 置き方も仕切り直す
+      box.classList.remove('is-tight');   // 🔒 §30-17-1: 行間・改行の削りも仕切り直す
+      box.classList.remove('is-flow');
+      box.classList.remove('is-wide');    // 🔒 §30-25-1: 横長の箱と「枠の下へ」も
+      box.classList.remove('is-below');
       box.style.left = '';
       box.style.top = '';
       box.style.width = '';
@@ -5885,10 +9263,13 @@
     var n = state.nav.step;
     /* 🔒 §28-4: ③④の一言は**処理側が入れた文言**（生成結果・§22-as の案内）。
      * 地図を動かすたびに書き換えて消してしまわない（navRenderStatus と同じ作法）。 */
-    if (n === 1) $('sgStatus').textContent = sgStatus1();
+    /* 🔒 §30-22-1 4: ①の▼の「いま: …」は印の形（多角形で囲んだか）で変わるので、
+     * 図形が変わるたびに通るここで引き直す（sgMoreSync は3件だけなので軽い）。 */
+    if (n === 1) { $('sgStatus').textContent = sgStatus1(); sgMoreSync(); }
     else if (n === 2) $('sgStatus').textContent = sgStatus2();
     /* 🔒 §29-1: 配置図の段（⑤〜⑪）の一言は navStatusText が唯一の出どころ。
-     * 🔴 ⑫は**書き出しの結果**（navSave が navSetStatus で入れる）を消さないので除く。 */
+     * 🔴 ⑫は**書き出しの結果**（🔒 §30-27-2 では PDF・画像の窓が出す）を
+     *    上書きしないので除く。 */
     else if (n >= 5 && n !== 12) $('sgStatus').textContent = navStatusText(n);
     /* 枠の中に入った・輪郭や枠が増えたら［次へ］の可否が変わるので、
      * 理由文だけでなくボタン列も引き直す（地図を動かすたびにここを通る）。 */
@@ -5922,6 +9303,8 @@
     var c = state.current;
     if (!c) return '';
     if (state.pinPlace) return '地図をクリックして置いてください';
+    /* 🔒 §30-22-1 6: 同一住所の時は1地点しか無い（結線も距離も出ない） */
+    if (c.points.same) return '✓ 使用の本拠・駐車場（同一）';
     var h = !!c.points.home, l = !!c.points.lot;
     if (!h && !l) return 'まだどちらのマーカーも置かれていません';
     if (!h) return '使用の本拠のマーカーがまだ置かれていません';
@@ -5992,7 +9375,9 @@
     if (n === 7) {
       if (navFrameCount()) return '';
       return '駐車枠を1つ以上描いてください'
-        + '（［駐車枠（四角）］でドラッグ、または［枠をまとめて］で1つ置けます）';
+        /* 🔒 §30-25 夜間確認: ［駐車枠（四角）］は §30-25-12 で消え、今は
+         * ［駐車枠］を押してから地図をクリックする作法（ドラッグではない）。 */
+        + '（［駐車枠］を押してから地図をクリック、または［枠をまとめて］で1つ置けます）';
     }
     /* 🔒 §28-4 / §28-5 / §29-1 ⑧⑨⑩⑪⑫: ③④⑧⑨⑩⑪⑫の［決定］［次へ］は
      * いつでも押せる（量も描き足しも道路も幅もラベルも「これで良し」を決めるのは人）。 */
@@ -6009,25 +9394,131 @@
      * 「いま: A4 縦 → 押すと A4 横」。🔴 値の出どころはシートの orient 1か所。 */
     var otxt = 'いま: ' + (o === 'landscape' ? 'A4 横 → 押すと A4 縦'
                                              : 'A4 縦 → 押すと A4 横');
+    /* 🔒 §30-29-2: 道具メニューの #sideOriToggleNow は廃止（器は②⑤の2つ） */
     ['sgOriToggleNow', 'sgOri5ToggleNow'].forEach(function (id) {
       var ot = $(id);
       if (ot) ot.textContent = otxt;
     });
     var fixed = sgFrameFixed();
     /* 🔒 §18-ag: ②（所在図）は［枠を決定］で方位記号が置かれるが、
-     * ⑤（配置図）は置かれない。title の文言だけ器ごとに変える。 */
+     * ⑤（配置図）は置かれない。title の文言だけ器ごとに変える。
+     * 🔒 §30-29-2: 道具メニューの #sideFix は廃止した。 */
     ['sgFix', 'sgFix5'].forEach(function (id) {
       var b = $(id);
       if (!b) return;
       // 🔒 §30-14-1: 決定した後の文言は「枠を決めなおす」（②⑤とも同じ）
       b.textContent = fixed ? '枠を決めなおす' : '枠を決定';
+      /* 🔒 §30-17-3: 決定した後の［枠を決めなおす］は**薄い色**（存在は分かるが
+       * 進むボタンと同じ濃さにしない）。色は §30-17-2 の変数（図で青／緑）。
+       * 🔴 決定前は next（濃い色）になり得るので印は外す。 */
+      b.classList.toggle('is-redo', fixed);
+      var withCompass = (id === 'sgFix');   // 🔒 §30-29-2: #sideFix は廃止
       b.title = fixed
         ? ('枠の決定をやめて、地図を動かすと枠も動く状態に戻します'
-           + (id === 'sgFix' ? '（方位記号は残ります）' : ''))
+           + (withCompass ? '（方位記号は残ります）' : ''))
         : 'いま見えている枠でこの紙の範囲を決めます（決めたあとは地図だけ動かせます）';
     });
     sgMoreSync();     // 🔒 §30-12-4 2: ボタンの「いま: A4 縦」も同じ値で
     sgCaptionPlace(); // 🔒 §30-13-4: 紙の向きが変わると字幕の置き場所も変わる
+  }
+
+  /**
+   * 🔒 §30-22-4 1（2026-09-13 オーナー指示）: 下敷きの操作（種類の〇・濃さ・
+   * 表示／非表示）を**配置図の全段の一番上**に出す。
+   * 🔴 器（#hzUnderBar）は**1つだけ**。段に入るたびに、その段の本体（.sg-body）の
+   *    先頭へ**移す**（複製しない＝id も配線も1組のまま）。
+   * 🔴 §29-5 の2段落の案内（#hzUnderNote）は①（下敷きと枠）だけに出す。
+   * 🔴 所在図の段では何もしない（器は配置図①に置いたまま・見えない）。
+   */
+  function hzUnderBarTo(n) {
+    var bar = $('hzUnderBar');
+    if (!bar) return;
+    if (navFigOf(n) !== 'haichizu') return;
+    var body = $('sgS' + n);
+    if (body && body.firstChild !== bar) body.insertBefore(bar, body.firstChild);
+    var note = $('hzUnderNote');
+    if (note) note.hidden = (n !== 5);
+    /* 🔒 §30-25-35 2: ▼「下敷きの地図を変える」は**段を移るたびに閉じる**。
+     * 🔴 開いた状態は「どの段で開いたか」だけを画面の状態で持つ（sgMoreOpen には
+     *    入れない＝段をまたいで覚えない）。同じ段にいる間は開いたまま。 */
+    if (state.hzUnderOpenAt !== n) state.hzUnderOpenAt = 0;
+    sgMorePaint($('hzUnderMore'), state.hzUnderOpenAt === n);
+    hzUnderMoreSync();
+  }
+
+  /** 🔒 §30-25-35 1: ▼の3行目「いま: …」（値の出どころは sgNowUnderText 1か所） */
+  function hzUnderMoreSync() {
+    var w = $('hzUnderMore');
+    if (!w) return;
+    var row = w.querySelector('.sg-more-now');
+    if (!row) return;
+    var v = sgNowUnderText() || '';
+    row.textContent = v ? ('いま: ' + v) : '';
+    row.hidden = !v;
+  }
+
+  /** 🔒 §30-25-35: ▼の開閉（開いた段の番号だけを覚える＝段を移ると閉じる） */
+  function hzUnderMoreSet(open) {
+    state.hzUnderOpenAt = open ? ((state.nav && state.nav.step) || 0) : 0;
+    sgMorePaint($('hzUnderMore'), !!open);
+  }
+
+  /* ===== 🔒 §30-28-1 2: 道具メニューの▼（3つだけ）=====
+   * 🔴 見た目はガイダンス面の▼と**同じ**（描くのは sgMorePaint 1か所）。
+   * 🔴 開いた状態は**同じ案件を開いている間だけ**覚える（案件には保存しない）。
+   * 🔴 どの▼かは data-tmore（属性）で見る＝表示文字では分岐しない。 */
+  var TOOL_MORE_KEYS = ['mark', 'name', 'auto'];
+
+  function toolMoreBox(key) { return $('sideMore_' + key); }
+
+  function toolMoreSet(key, open) {
+    state.toolMoreOpen[key] = !!open;
+    sgMorePaint(toolMoreBox(key), !!open);
+  }
+
+  /** 覚えている開閉を画面に映す（案件を開いた直後・全部閉じ） */
+  function toolMoreApply() {
+    TOOL_MORE_KEYS.forEach(function (k) {
+      sgMorePaint(toolMoreBox(k), !!state.toolMoreOpen[k]);
+    });
+  }
+
+  /**
+   * 🔒 §30-25-23（2026-09-14 オーナー指示）: 常設の道具の帯（［選択］［消しゴム］）を
+   * 1つだけの器（#sgToolStrip）で持ち、段に入るたびに**その段へ移す**
+   * （hzUnderBarTo と同じ作法・複製しない＝ id も配線も1組のまま）。
+   * 🔴 置き場所（§30-25-23 2）: その段に「下敷きの濃さ」があれば、それを包む
+   *    `.sg-uop-row` の先頭（＝同じ行の左側）。無い段は `.sg-body` の先頭に単独で。
+   * 🔴 呼び出しは必ず hzUnderBarTo(n) の**後**（配置図は #hzUnderBar が段ごとに
+   *    .sg-uop-row ごと移った**後**でないと、その段の中に .sg-uop-row が無い）。
+   */
+  function sgToolStripTo(n) {
+    var strip = $('sgToolStrip');
+    if (!strip) return;
+    var body = $('sgS' + n);
+    if (!body) return;
+    var row = body.querySelector('.sg-uop-row');
+    if (row) {
+      if (row.firstChild !== strip) row.insertBefore(strip, row.firstChild);
+    } else if (body.firstChild !== strip) {
+      body.insertBefore(strip, body.firstChild);
+    }
+  }
+
+  /* 🔒 §30-22-3 1（2026-09-13 オーナー指示）: ④（描き足し）へ入った時の下敷き。
+   * ③の確認は白地（地図OFF・§18-x-4）で行うので、そのまま④へ来ると
+   * 「地図を見ながら描き足す」段なのに地図が無い。OSM を薄く（50%）出す。 */
+  var SG4_UNDER_PCT = 50;
+  var SG4_UNDER_ID = 'osmfj';
+  function sgEnter4Underlay() {
+    var c = state.current;
+    /* 🔴 案件を開いている間**1回だけ**（そのあと利用者が選び直した物は尊重する）。
+     * 🔴 案件に保存された濃さがある（＝0 でない）ならそれを使う＝勝手に変えない。 */
+    if (!c || state.sg4Under || state.kind !== 'shozaizu') return;
+    state.sg4Under = true;
+    if (underlayPct() > 0) return;
+    setUnderlayChoice(SG4_UNDER_ID);
+    setUnderlayPct(SG4_UNDER_PCT);
   }
 
   /**
@@ -6057,6 +9548,22 @@
   function sgSyncUnderlay() {
     var v = ($('underlayOff') && $('underlayOff').checked) ? 'off'
           : ($('underlaySel') ? $('underlaySel').value : '');
+    /* 🔒 §30-22-3 1 / §30-22-4 1: 濃さのスライダーと表示／非表示（所在図④と
+     * 配置図の全段 #hzUnderBar）も**同じ値**に合わせる。
+     * 🔴 0 でない濃さは控えておく（「表示する」に戻した時にそこへ戻す）。 */
+    var pct = underlayPct();
+    if (pct > 0) state.sgUnderLastPct = pct;
+    document.querySelectorAll('.js-uop-range').forEach(function (r) { r.value = pct; });
+    document.querySelectorAll('.js-uop-val').forEach(function (b) {
+      b.textContent = pct + '%';
+    });
+    document.querySelectorAll('.js-uop-show').forEach(function (c) {
+      c.checked = (pct > 0);
+    });
+    /* 🔒 §30-22-1 2: 下敷きが変われば枠の破線の色も変わる（写真＝赤） */
+    if (state.frameEls && state.frameEls.rect) {
+      state.frameEls.rect.classList.toggle('is-photo', underlayIsPhoto());
+    }
     /* 🔒 §28-14 ①-3: ①の〇（2つ）も同じ値を見る。今の下敷きが2つのどちらでも
      * ない時は、どれも選ばれない（①の〇は「よく使う2つ」の近道なのでそれでよい）。
      * 🔒 §29-1 ⑤ / §29-5-a 裁定2: 配置図の〇（4つ）も同じ。写真を取り込んで
@@ -6184,7 +9691,9 @@
    *    .sg-era の器を置いていない。
    */
   function sgSyncEra() {
-    if (!(navAtStep(4) || navAtStep(5))) return;
+    /* 🔒 §30-22-4 1: 下敷きの〇は**配置図の全段**に出る（#hzUnderBar が段ごとに移る）
+     * ので、所在図④と配置図のどの段でも撮影時期を引き直す。 */
+    if (!(navAtStep(4) || (state.nav && navFigOf(state.nav.step) === 'haichizu'))) return;
     var pl = underlayById('plateau'), gp = underlayById('google-photo'), ort = underlayById('gsi-ort');
     setEraSpan('sgEraPlateau', pl && ('・' + pl.photoEra));
     setEraSpan('sgEraGooglePhoto', gp && ('・' + gp.photoEra));
@@ -6234,7 +9743,7 @@
     // 枠が未決定の紙は「いま見えている範囲」が紙になる（§7）。決定済みなら触らない
     syncFrameFromView();
     ensureFrames();
-    showExportPreview('shozaizu');
+    openPreview({ kind: 'shozaizu' });   // 🔒 §30-27-1 1: プレビューは1つの画面
   }
 
   function navStatusText(n) {
@@ -6270,7 +9779,8 @@
       return frames
         ? ('✓ 駐車枠 ' + frames + ' 個（保管場所マーク: '
            + (mark ? 'あり' : 'なし') + '）')
-        : '［駐車枠（四角）］でドラッグ、または［枠をまとめて］で一度に置けます';
+        /* 🔒 §30-25 夜間確認: 同上（［駐車枠（四角）］は廃止済み） */
+        : '［駐車枠］を押してから地図をクリック、または［枠をまとめて］で一度に置けます';
     }
     if (n === 8) {
       // 🔒 §22-ag: 直線・曲線に加え、多角形で引いた道路（source:'road'）も数える
@@ -6285,8 +9795,10 @@
       if (arrows) return '✓ 数値の入った矢印 ' + arrows + ' 本';
       // 🔒 §18-l: 道幅欄に値があれば、引いた矢印にその値がそのまま入る
       var w = $('sgRoadW').value.trim();
+      // 🔒 §30-30-3 3: §30-29-7 の🙋（古い一言）の直し。「空欄のまま引くと地図から
+      // 計算した幅が入ります」→ 空欄でも矢印だけ引ける仕様（§30-29-7）に合わせる
       return w ? ('道幅 ' + w + (/m$/.test(w) ? '' : 'm') + ' を添えて矢印を書き込みます')
-               : '幅の矢印がまだありません（空欄のまま引くと地図から計算した幅が入ります）';
+               : '幅の矢印がまだありません（幅を入れなければ矢印だけが入ります）';
     }
     if (n === 10) {
       var gate = objs.some(function (o) {
@@ -6300,16 +9812,14 @@
                    + ' を添えて矢印を書き込みます')
                 : '✓ 「出入口」が入っています';
     }
-    /* 🔒 §29-1 ⑪（Step 7）: 置いた塊ラベルの数。2クリック待ちの間はその案内を出す */
+    /* 🔒 §29-1 ⑪（Step 7）: 置いた塊ラベルの数。
+     * 🔒 §30-22-4 10: ［配置］はワンクリック（対象の駐車枠をクリックするだけ）。 */
     if (n === 11) {
-      if (state.plPlace) {
-        return state.plPlace.arrowTo
-          ? '② ラベルを置く場所を地図でクリックしてください'
-          : '① 矢印の先にする駐車枠を地図でクリックしてください';
-      }
+      if (state.plPlace) return '対象の駐車枠を地図でクリックしてください';
       var labels = navLabelCount();
       return labels ? ('✓ ラベル ' + labels + ' 個')
-                    : 'チェックと数値を入れて［配置］→ 地図を2回クリックします';
+                    : ('チェックと数値を入れて［' + LABEL_PLACE_JA
+                       + '］→ 対象の駐車枠をクリックします');   // 🔒 §30-25-36 2
     }
     return '';
   }
@@ -6408,36 +9918,100 @@
 
   /* ---------- テキストのその場入力（正典 §4-8） ---------- */
 
+  /* 🔒 §30-15-5 規則3: 入力欄を地図の中に収める時の縁の余白(px) */
+  var EDGE_PAD = 4;
   var textReq = null;
   function openTextInput(req) {
     textReq = req;
-    var inp = $('textInput');
-    var p = state.map.project(req.at.lat, req.at.lng);
+    /* 🔒 §30-15-4: 入力欄は器（#textBox＝入力欄＋［OK］）ごと置く。
+     * 出す／隠す／位置の判定は**器**を見る（入力欄そのものではない）。 */
+    var box = $('textBox'), inp = $('textInput');
     var r = $('map').getBoundingClientRect(), wrap = $('map').parentNode.getBoundingClientRect();
-    inp.style.left = (p.x + (r.left - wrap.left)) + 'px';
-    inp.style.top = (p.y + (r.top - wrap.top)) + 'px';
+    var ox = r.left - wrap.left, oy = r.top - wrap.top;
+    /* 🔒 §30-15-3: 信号機・バス停を置いた直後は、入力欄を**印の右隣**に出す。
+     * クリック位置の真ん中に出すと印が入力欄の下に隠れて、置けたのかが分からない。
+     * 🔴 置き場所の規則は editor.js の markSlot **1か所**（確定した文字と同じ場所）。
+     *    既に動かした文字の編集・ふつうの文字は null が返る＝従来どおり。 */
+    var slot = (req.obj && state.editor.markSlot) ? state.editor.markSlot(req.obj) : null;
+    box.classList.toggle('is-mark', !!slot);
+    box.classList.remove('is-mark-left');
+    req.side = null;
     inp.value = req.obj ? (req.obj.text || '')
                         : (state.editor.textPreset || '');
-    inp.hidden = false;
+    box.hidden = false;                          // 器の実寸を測るので先に出す
+    if (slot) {
+      box.style.left = (slot.x + ox) + 'px';     // 左端＝印の右端＋隙間
+      box.style.top = (slot.y + oy) + 'px';      // 上下の中心＝印（板）の中心
+      /* 🔒 §30-15-5 規則3: 右隣だと地図の右端をはみ出す時は**左隣**に出す
+       * （出せないと［OK］が画面の外に隠れて押せない）。
+       * 🔴 側を決めるのはここ**1か所**。確定した文字（commitText）は
+       *    この答え（req.side）をそのまま受け取るので、入力欄と文字が必ず同じ側。 */
+      var bw = box.offsetWidth, bh = box.offsetHeight;
+      var mw = $('map').clientWidth, mh = $('map').clientHeight;
+      var over = (slot.x + bw > mw - EDGE_PAD);
+      var side = (over && (slot.xl - bw >= EDGE_PAD
+                           || slot.xl > mw - slot.x)) ? 'left' : 'right';
+      var lx;
+      if (side === 'left') {
+        // 器の右端＝印の左端−隙間。左へはみ出す分だけ戻す（translate(-100%) の分を足す）
+        lx = Math.max(slot.xl, EDGE_PAD + bw);
+        box.classList.add('is-mark-left');
+      } else {
+        lx = Math.max(EDGE_PAD, Math.min(slot.x, mw - bw - EDGE_PAD));
+      }
+      // 上下も地図の中へ（中心そろえなので、はみ出す分だけ中心を寄せる）
+      var cy = Math.max(bh / 2 + EDGE_PAD, Math.min(slot.y, mh - bh / 2 - EDGE_PAD));
+      box.style.left = (lx + ox) + 'px';
+      box.style.top = (cy + oy) + 'px';
+      req.side = side;
+    } else {
+      var p = state.map.project(req.at.lat, req.at.lng);
+      box.style.left = (p.x + ox) + 'px';
+      box.style.top = (p.y + oy) + 'px';
+    }
     inp.focus();
     inp.select();
   }
   function commitTextInput() {
-    var inp = $('textInput');
-    if (inp.hidden || !textReq) return;
+    var box = $('textBox'), inp = $('textInput');
+    if (box.hidden || !textReq) return;
     var val = inp.value;
-    inp.hidden = true;
+    box.hidden = true;
     var req = textReq;
     textReq = null;
-    state.editor.commitText(req.obj, req.at, val, $('textSize').value);
+    // 🔒 §30-15-5 規則3: 入力欄が左隣に出ていたら、確定した文字も左隣へ
+    var o = state.editor.commitText(req.obj, req.at, val, $('textSize').value, req.side);
     updateHistoryButtons();
     // 定型文は1回で解除（続けて同じ物を置きたい時は選び直す）
-    $('textPreset').value = '';
+    // 🔒 §30-29-1 2: 値の置き場所は state.editor.textPreset 1つだけ（選択肢は廃止）
     state.editor.textPreset = '';
+    /* 🔒 §30-15-6: 文字道具（req.obj なし）で置いた時は選択道具に戻す。
+     * 印つき文字（req.obj あり＝信号機・バス停）・既存文字の編集は道具が
+     * 既に select（placeMark／ダブルクリック編集で先に select 済み）なので
+     * ここは素通りする（表示文字列でなく道具の状態で分ける・空で取消した時も同じ）。
+     * commitText は新規を置いた時だけオブジェクトを返す＝選び直す（§30-16-4 と同じ作法。
+     * setTool('select') 自体は選択を消さないが、_pushNew の後に念のため明示する）。 */
+    if (state.editor.tool === 'text') {
+      if (o) state.editor.selection = [o.id];
+      state.editor.setTool('select');
+    }
   }
   function hideTextInput() {
-    $('textInput').hidden = true;
+    var box = $('textBox');
+    /* 🔒 §30-15-6: 選択道具への引き戻しは**実際に入力欄が開いていた Esc**の
+     * 時だけ行う。on('tool') は道具の持ち替えのたびに（text 道具へ入る時も
+     * 含めて）このただの後片付け関数を無条件で呼ぶので、開いてもいない
+     * 入力欄を理由に判定すると、文字道具そのものへ切り替えられなくなる
+     * （setTool('text') の直後に this.tool==='text' の状態でここへ来るため）。 */
+    var wasOpen = !box.hidden;
+    box.hidden = true;
     textReq = null;
+    /* Esc／空欄で取り消した時も選択道具に戻す（1回1個の作法。続けて置きたい
+     * 時は道具をもう一度押す）。既存文字の編集中の Esc は道具が既に select
+     * なのでここは素通りする。
+     * 🔴 on('tool') がここを呼ぶ側でもあるが、setTool('select') した2周目は
+     *    box が既に hidden＝wasOpen が false でこの条件が外れる＝無限に呼び合わない。 */
+    if (wasOpen && state.editor.tool === 'text') state.editor.setTool('select');
   }
 
   /* 案件を開く。🔴 §16-13: 復元に失敗しても**きれいな TOP ページ**に落ちる
@@ -6445,7 +10019,9 @@
    * 🔴 §27-7②: **ここだけが非同期**（案件フォルダのファイルを1件読む）。
    *    読み終えた案件オブジェクトを openCaseInner へ渡す形にして、
    *    openCaseInner の中身＝作図側のコードは一切変えない。 */
-  function openCase(id) {
+  /* @param opt.fresh 🔒 §30-20: ［新しい案件］から来た＝作図画面に入った直後に
+   *   「はじめに」を出す。既存の案件を開いた時（一覧・取り込み）は渡さない。 */
+  function openCase(id, opt) {
     function bail(msg) {
       closeAllOverlays();
       state.current = null;
@@ -6456,7 +10032,7 @@
     Store.loadAsync(id).then(function (c) {
       if (!c) { alert('この案件を読み込めませんでした'); renderTop(); return; }
       try {
-        openCaseInner(c);
+        openCaseInner(c, opt);
       } catch (e) {
         bail('この案件を開けませんでした（' + (e.message || e) + '）');
       }
@@ -6465,7 +10041,7 @@
     });
   }
 
-  function openCaseInner(c) {
+  function openCaseInner(c, opt) {
     if (!c) { alert('この案件を読み込めませんでした'); renderTop(); return; }
     navClose(true);              // ガイダンスも案件ごとに仕切り直す（正典 §18）
                                  // 🔒 §28-6 ⑤: 前の案件の段は消さない
@@ -6488,8 +10064,9 @@
     /* 🔴 2026-08-31: エディタの ☑完了 は削除（done は案件一覧の行トグルで指定する）。
        c.done のデータ自体は今までどおり読み書きされる＝旧案件・JSON 往復は不変 */
     $('addrHome').value = (c.points.home && c.points.home.address) || '';
-    // 🔒 §28-2: ガイダンス①の欄は上部バーと同じ値（1つのデータ）
-    $('sgAddrHome').value = $('addrHome').value;
+    /* 🔒 §28-2 / §30-28-2 1: ガイダンス①・道具メニューの欄も上部バーと同じ値
+     * （1つのデータ・写す先は ADDR_HOME_FIELDS の表1か所）。 */
+    syncAddrHome($('addrHome').value, 'addrHome');
     /* 🔒 §28-14 ①-1: 駐車場の住所欄は撤去したので復元先も無い
        （c.points.lot.address のデータ自体は今までどおり保存・検索に使う）。 */
     searchMsg('');
@@ -6506,6 +10083,8 @@
     /* 🔒 §28-13 決定3: ④の重ね表示も案件をまたいで残さない（画面の状態）。
      * 🔴 残ったままだと案件を開いた直後に意図しない OSM 取得が走る（§23-6）。 */
     resetNameLay();
+    /* 🔒 §30-19-1: ［枠をまとめて］の置く状態も案件をまたいで残さない（画面の状態） */
+    stopStampArm();
     /* 🔒 §30-2: 案内数字の「押した」記録も案件をまたいで残さない
      * （画面だけの状態。案件には保存しない＝別の案件では①から案内し直す）。 */
     sgResetHits();
@@ -6514,19 +10093,37 @@
     sgResetMore();
     eraState.gsiPhoto = '';
     state.editor.numberStart = c.numberCounter || 1;
-    $('numStart').value = state.editor.numberStart;
+    syncNumberStartUI(state.editor.numberStart);   // 2つの開始番号の欄（🔒 §30-18-2）
     setArrowWidth($('arrowWidth').value);       // 2つの幅欄を揃える（§18-l）
+    /* 🔒 §30-18-4: 幅の決め方は案件に保存しない画面の状態。開いた時は「自動入力」
+     * （ただし依頼文から拾った幅などで値が入っていれば「道幅入力」側に合わせる）。 */
+    setArrowMode($('arrowWidth').value.trim() ? 'manual' : 'auto');
     /* 🔒 2026-09-03: 所在図の設定盤（6項目）を**案件の保存値から**引き直す。
      * 🔴 既存案件の値をここで既定へ丸めない＝開いただけで図が変わらない。 */
     syncSzPanel();
     bindCurrentSheet();                         // 🔒 §24-1: いま開いているシートの図形
     renderSheetBar();                           // シート帯（何の図の何枚目か）
     applySheetToMap();
+    /* 🔒 §30-24-1: 多角形の「先頭」の控えは案件をまたいで残さない（画面の状態）。
+     * 残っていると、開いた直後の最初の change でピンが勝手に動く。 */
+    state.mainPolyHead = { home: null, lot: null };
+    /* 🔒 §30-24-3: 前に文字が消えたまま保存された案件を、開いた時に直す
+     * （文字は印の種類・置き直し・作り直しに関わらず必ず1つずつある）。 */
+    ensureMainLabels();
     refreshPoints();
+    /* 🔒 §30-28-1 1: 道具メニューにもガイダンスと同じ部品が出るので、
+     * 案件を開いた時点で**ガイダンスの外でも**引き直す（✓印・印の形と色・
+     * 多角形の書式・保管場所マークの書式）。値の出どころは今までどおり1か所。 */
+    navRenderPins();
+    sgRenderMarks();
+    sgRenderStorageFmt();
     /* 🔒 §28-6 ⑤: 前に開いていた段からガイダンスを再開する（無ければ道具メニュー）。
      * 🔴 画面（シート・地図）を組み終えてから呼ぶ＝②の枠の判定が正しく出る。 */
     navResume();
     showSaveState('saved');
+    /* 🔒 §30-20: ［新しい案件］で入った直後だけ「はじめに」を出す。
+     * 🔴 画面を組み終えた**最後**に出す（closeAllOverlays が先に走るため）。 */
+    if (opt && opt.fresh) welcomeOpen();
   }
 
   function ensureMap() {
@@ -6555,7 +10152,6 @@
       persistSheetState();
       // 書き出し範囲は「いま見えている枠の中」。地図を動かしたら追従させる
       syncFrameFromView();
-      if (!$('exPanel').hidden) renderExportInfo();
       // 🔒 §29-5 決定2 / §30-4: ④⑤にいる間、枠の中心が動いたら撮影時期を引き直す（自身が navAtStep で絞る）
       sgSyncEra();
       /* 🔒 §30-13-7 3: ここでは**字幕を置き直さない**。枠を決めた後に地図を
@@ -6563,11 +10159,6 @@
        * 重なっても害はない）。置き直しの契機は sgCaptionShow・窓の大きさ・
        * 紙の向き（setSheetOrient／sgSyncOrient）・枠の決定／解除だけ。 */
     });
-    // 動かしている最中も枠の数値を出しておく
-    state.map.on('change', function () {
-      if (state.showFrame && !$('exPanel').hidden) renderExportInfo();
-    });
-
     // 描画エンジン（正典 §4/§6）。ピンより先に作ってレイヤーを下に敷く
     state.editor = new Editor(state.map);
 
@@ -6576,14 +10167,53 @@
      * ピンが動けば syncRoleObjects（refreshPoints 経由）が四角・役割ラベル・
      * 結線・距離ラベルを一式追従させる ＝ 四角だけが単独でさまようことがない。
      * 戻り値 false（ピンが無い）の時は editor 側がふつうの四角として動かす。 */
+    /* 🔒 §30-24-1: 次に描く多角形の書式（画面の状態）。値は state 側が持ち、
+     * editor は描く時に読むだけ（値の出どころを2つに割らない）。 */
+    state.editor.mainPolyDefault = state.mainPolyDefault;
+
     state.editor.movePin = function (key, lat, lng) {
       var c = state.current;
-      if (!c || !c.points[key]) return false;
+      if (!c) return false;
+      /* 🔒 §30-24-1: 多角形で囲む＝**その地点の印を置いた**ということ
+       * （多角形は印の種類の1つ）。マーカーをまだ置いていない時は、
+       * 多角形の重心にその地点を作る。作らないと「使用の本拠」の文字が
+       * 出ない（＝オーナー報告「多角形を使うと文字が消える」）。 */
+      if (!c.points[key]) {
+        c.points[key] = {
+          lat: lat, lng: lng, label: pinLabel(key),
+          address: ADDR_EL[key] ? $(ADDR_EL[key]).value.trim() : '',
+          mark: state.markPick[key] || undefined
+        };
+        if (!c.points[key].mark) delete c.points[key].mark;
+        state.markPick[key] = null;
+        c.points[key].moved = true;
+        refreshPoints();
+        navRender();
+        Store.autosave(c);
+        return true;
+      }
       var p = c.points[key];
       p.lat = lat; p.lng = lng;
       p.moved = true;          // 住所検索の位置から手で動かした印（ピンのドラッグと同じ）
+      /* 🔒 §30-22-1 6: 同一住所の間は2地点は同じ場所。主役の印（四角・多角形）を
+       * 掴んで動かした時も、もう一方を置き去りにしない（ピンのドラッグと同じ作法）。 */
+      if (c.points.same) {
+        var other = c.points[key === 'home' ? 'lot' : 'home'];
+        if (other) { other.lat = lat; other.lng = lng; other.moved = true; }
+      }
       refreshPoints();
       return true;
+    };
+
+    /* 🔒 §30-25-40 2〜3: 主役の印（◎・■）の右下のつまみ。editor は値を図形へ
+     * 直接書かず**この口**へ渡す＝書き先は案件の points[key].mark.scale 1か所。
+     * 🔴 どちらの地点かは図形から読み直す（旧案件の主役ラベルは pinKey を持たない
+     *    ことがあるので、保険つきの pinKeyOf を通す＝ mainMarkKeyOf）。
+     * 🔴 ドラッグ中（done:false）は保存しない＝指を離した時に1回だけ書く。 */
+    state.editor.onMainMarkScale = function (key, scale, opts) {
+      var o = opts && opts.obj;
+      var k = (o && mainMarkKeyOf(o)) || key;
+      return setMainMarkScale(k, scale, { live: !(opts && opts.done) });
     };
 
     state.editor.on('change', function () {
@@ -6598,12 +10228,51 @@
       renderOverlay();
       // ドラッグで伸縮・回転した結果を右パネルの数値にも反映する
       renderPropPanel(state.editor.getSelected());
-      navOnObjects();          // ⑥の輪郭が確定したら⑦へ（正典 §18-10）
+      /* 🔒 §30-24-1: 「最初に描いた多角形」を消したら、ピンを次の物の重心へ動かす
+       * （消しゴム・Delete・戻す のどれでも通る1か所・syncMarkShapeFromPolys の手前）。 */
+      syncMainPolyHead();
+      /* 🔒 §30-24-1: 主役の多角形を全部消したら印の種類を◎へ戻す
+       * （消しゴム・Delete・戻す のどれでも通る1か所）。 */
+      syncMarkShapeFromPolys();
+      navOnObjects();          // 🔒 §30-25-11: 一言を出すだけ（自動では進まない）
       /* 🔒 §28-13 決定3: 重ね表示は「紙に無い名前」だけを出すので、
        * 図形が変わったら引き直す（文字を消したらその名前がまた薄く出る）。 */
       if (state.namelay) state.namelay.invalidate();
     });
-    state.editor.on('select', renderPropPanel);
+    state.editor.on('select', function (sel) {
+      renderPropPanel(sel);
+      /* 🔒 §30-24-1: ①の▼の中の書式は「選んでいる多角形」に効くので、
+       * 選択が変わったら引き直す（右パネルと同じ値・同じ部品）。
+       * 🔒 §30-28-2 1: 道具メニューの▼にも同じ書式が出るので、ガイダンスの
+       *    外でも引き直す（器が無ければ sgRenderMarks は何もしない）。 */
+      sgRenderMarks();
+    });
+    /* 🔒 §30-24-1（2026-09-13 オーナー指示）: ［多角形で描く］で囲んだら、
+     * その地点の**印の種類が「多角形」**になる（◎■は描かない・文字は残る）。
+     * 🔴 印の真実は案件（points[key].mark）1か所。editor は「描いた」とだけ言う。 */
+    state.editor.on('mainpoly', function (ev) {
+      var c = state.current;
+      if (!c || !ev) return;
+      var key = (ev.key === 'lot') ? 'lot' : 'home';
+      // 🔒 §30-25-37 3: 多角形にしても大きさ（scale）は保つ（markNext が組み立てる）
+      var next = markNext(key, { shape: 'polygon' });
+      if (c.points[key]) c.points[key].mark = next;
+      else state.markPick[key] = next;
+      /* 🔒 §30-24-2: 同一住所の時は印が1つ（本拠側）＝値を両方に写す */
+      if (c.points.same && c.points.home && c.points.lot) {
+        c.points.home.mark = { shape: 'polygon', color: next.color, scale: next.scale };
+        c.points.lot.mark = { shape: 'polygon', color: next.color, scale: next.scale };
+      }
+      /* 🔒 §30-24-3: 多角形にしても「使用の本拠」「駐車場」の文字は必ずある
+       * （オーナー実機「多角形を使うと文字が消える」の出口）。
+       * 🔴 applyMarkChoice の**前**に呼ぶ（文字が無いと印の引き直しが素通りする）。 */
+      ensureMainLabels();
+      applyMarkChoice(key);            // 残っていた◎／■を取り除き、文字を印なしに
+      if (c.points.same) applyMarkChoice(key === 'home' ? 'lot' : 'home');
+      sgRenderMarks();
+      renderOverlay();
+      Store.autosave(c);
+    });
     // 作図中は「戻す」が1クリック取り消しになるので、状態を追従させる
     state.editor.on('draft', function () {
       updateHistoryButtons();
@@ -6645,13 +10314,19 @@
       if (state.imglay) state.imglay.setToolOk(t === 'select');
       updateDrawBadge();
       hideTextInput();
+      // 🔒 §30-16: 他の道具を選んだら拾う状態は終わる（道具の取り合いを作らない）
+      stopNamePick();
+      // 🔒 §30-19-1: ［枠をまとめて］の置く状態も同じ（地図クリックの取り合いを作らない）
+      stopStampArm();
     });
     // Ctrl を押している間は「選択」として振る舞う（作図中でも掴める）
     state.editor.on('ctrl', function (on) {
       $('ctrlBadge').hidden = !on;
       updateDrawBadge();
-      document.querySelectorAll('.side .tool').forEach(function (b) {
-        if (b.dataset.tool === 'select') b.classList.toggle('is-temp', on);
+      /* 🔒 §30-29-1 1: ［選択］は上部バー2行目にも出るので、範囲を .side に
+       * 絞らない（is-active と同じ document 全体＝出どころ1か所）。 */
+      document.querySelectorAll('.tool[data-tool="select"]').forEach(function (b) {
+        b.classList.toggle('is-temp', on);
       });
     });
     /* 🔒 §23-7-b: スペースを押している間は「一時パン」。道具は変わらないので
@@ -6672,7 +10347,7 @@
     });
     // 番号カウンターを画面と往復させる（正典 §4-7「抜け番は書き換えて再開」）
     state.editor.on('number', function (n) {
-      $('numStart').value = n;
+      syncNumberStartUI(n);      // 🔒 §30-18-2: 欄は2か所・値は1つ
       if (state.current) { state.current.numberCounter = n; Store.autosave(state.current); }
     });
     /* 🔒 §22-ab（2026-08-28 オーナー指示）: **定型文を選んでいる時は入力欄を出さず、
@@ -6683,11 +10358,15 @@
     state.editor.on('text', function (req) {
       var preset = state.editor.textPreset;
       if (preset && !req.obj) {
-        state.editor.commitText(null, req.at, preset, $('textSize').value);
+        var o = state.editor.commitText(null, req.at, preset, $('textSize').value);
         updateHistoryButtons();
         // 定型文は1回で解除（従来の commitTextInput と同じ作法）
-        $('textPreset').value = '';
         state.editor.textPreset = '';
+        /* 🔒 §30-15-6: 定型の文字を置いた時も自由入力と同じく選択道具へ戻す */
+        if (state.editor.tool === 'text') {
+          if (o) state.editor.selection = [o.id];
+          state.editor.setTool('select');
+        }
         return;
       }
       openTextInput(req);
@@ -6699,8 +10378,32 @@
      * 🔴 文字入力欄・スライダーは editor.js 側でも弾いているが、
      *    「見えているが focus が外れている入力欄」はここでしか判らない。 */
     state.editor.keysBusy = function () {
-      return !$('textInput').hidden || !$('vidBox').hidden
-          || !$('exPreviewBox').hidden || !$('chkBox').hidden;
+      return !$('textBox').hidden || !$('vidBox').hidden
+          || !$('exPreviewBox').hidden || !$('chkBox').hidden
+          || !$('exPick').hidden           // 🔒 §30-27-2: 紙を選ぶ窓も同じ扱い
+          || !$('welcomeBox').hidden;      // 🔒 §30-20: 「はじめに」も同じ扱い
+    };
+
+    /* 🔒 §30-15-5 規則2: 印つき文字の置き場所を**紙の物差し**で解くための縁。
+     * editor はシートを知らないので、いま編集している紙の縮尺 1:N をここで渡す
+     * （keysBusy / movePin と同じ作法）。枠が未定の紙は null ＝画面px に落ちる。 */
+    state.editor.paperScale = function () {
+      var sh = curSheet();
+      if (!sh || !sh.frameFixed || !sh.frame || !window.Exporter) return null;
+      return Exporter.scaleFor(sh.frame, sh.orient);
+    };
+
+    /* 🔒 §30-25-7（2026-09-13 オーナー実機「ZL を変えたらテキストの大きさも
+     * 一緒に変わるべき」）: 紙のミリ → 画面px の換算率を editor へ渡す。
+     * 🔴 editor の中の mm（SHEET_TEXT_MM・MARK.hatchMm・COMPASS.rMm…）は
+     *    「記載欄 138mm 基準の mm」で、紙には SHEET_SCALE 倍で刷られる。
+     *    だから **紙1mmのpx（paperMmPxNow）× SHEET_SCALE** を渡すと、
+     *    画面の「文字 ÷ 枠」＝ 紙の「文字 ÷ 図」＝ 紙と同じ見え方になる。
+     * 🔴 枠や画面がまだ無い時は null ＝ editor 側の定数（SHEET_MM_PX）に落ちる。 */
+    state.editor.frameMmPx = function () {
+      if (!window.Exporter || !(Exporter.SHEET_SCALE > 0)) return null;
+      var k = paperMmPxNow();
+      return (k > 0) ? k * Exporter.SHEET_SCALE : null;
     };
 
     /* 🔒 §23（なぞり出し・Step 7）。曇り下書きの canvas は下敷きと SVG の間に入る。
@@ -6916,10 +10619,10 @@
     /* 🔒 §28-13 決定4 / §28-14 ④: ガイダンス④の〇も**同じ判断**で出し入れする（1か所）。
      * キーが無い／拒否された環境では Google の2つを出さない。
      * 🔒 §29-1 ⑤: 配置図の⑤（Google 航空写真の1つ）も同じ判断で出し入れする。 */
+    /* 🔒 §30-22-1 3: ガイダンス①の［Google 航空写真］（#sgU1Photo）も同じ判断で出し入れ */
     var ok = googleAvailable();
-    document.querySelectorAll('#sgUnderlay .gopt, #sgUnder5 .gopt').forEach(function (g) {
-      g.hidden = !ok;
-    });
+    document.querySelectorAll('#sgUnderlay .gopt, #sgUnder5 .gopt, #sgUnder1 .gopt')
+      .forEach(function (g) { g.hidden = !ok; });
     /* 🔒 §30-10: ガイダンス①の2つ目の〇。キーがあれば Google マップ、
      * 無ければ地理院 地図（淡色）に**自動で差し替える**。①は場所を探す段なので
      * 地図でよい（航空写真は要らない）。撮影時期は地図系なので出さない
@@ -7010,11 +10713,31 @@
     applyNameCats();
   }
 
-  /** 🔒 §28-13 決定3: ④の重ね表示を OFF へ戻す（案件を開いた時・画面の状態） */
+  /**
+   * 交差点名・バス停名の重ね表示（🔒 §28-13 決定3）。
+   * 🔒 §30-28-2 9: 出す所は**2か所**（所在図④の▼ ／ 道具メニューの▼）だが、
+   *    値は1つ（state.namelay.on）。欄・ボタン・一言の一覧はこの表1か所。
+   */
+  var NAME_LAY_BOXES = ['sgNameLay', 'sideNameLay'];
+  var NAME_LAY_STATS = ['sgNameLayStat', 'sideNameLayStat'];
+  var NAME_LAY_PICKS = ['sgNamePick', 'sideNamePick'];
+
+  /** 重ね表示の入り切り（チェックはどちらを触っても両方が揃う） */
+  function setNameLay(on) {
+    NAME_LAY_BOXES.forEach(function (id) {
+      var b = $(id);
+      if (b) b.checked = !!on;
+    });
+    if (state.namelay) state.namelay.setOn(!!on);
+    // 🔒 §30-16: 重ね表示を OFF にしたら拾う状態も終わる（拾う物が無くなるので）
+    if (!on) stopNamePick();
+    syncNamePickBtn();
+  }
+
+  /** 🔒 §28-13 決定3: 重ね表示を OFF へ戻す（案件を開いた時・画面の状態） */
   function resetNameLay() {
-    var box = $('sgNameLay');
-    if (box) box.checked = false;
-    if (state.namelay) state.namelay.setOn(false);
+    stopNamePick();                 // 🔒 §30-16: 拾う状態も持ち越さない
+    setNameLay(false);
     renderNameLayStat({ on: false });
   }
 
@@ -7068,21 +10791,122 @@
    *    （再試行ボタンは付けない＝なぞり出しと違い、押す理由が無い見るだけの層）。
    */
   function renderNameLayStat(st) {
-    var box = $('sgNameLayStat');
-    if (!box) return;
-    if (!st || !st.on) { box.hidden = true; return; }
-    box.hidden = false;
-    if (st.state === 'loading') { box.textContent = '取得中…'; return; }
-    if (st.state === 'error') {
-      box.textContent = 'いまは交差点名・バス停名を取れません（作図はそのまま続けられます）';
-      return;
+    var msg = '';
+    if (st && st.on) {
+      if (st.state === 'loading') msg = '取得中…';
+      else if (st.state === 'error') {
+        msg = 'いまは交差点名・バス停名を取れません（作図はそのまま続けられます）';
+      } else if (st.state === 'wide') msg = '範囲が広すぎます。少し拡大してください';
+      else {
+        msg = '重ねて表示中：' + st.shown + ' 個'
+          + '（この文字は図に入りません・書き出しにも出ません）';
+      }
     }
-    if (st.state === 'wide') {
-      box.textContent = '範囲が広すぎます。少し拡大してください';
-      return;
-    }
-    box.textContent = '重ねて表示中：' + st.shown + ' 個'
-      + '（この文字は図に入りません・書き出しにも出ません）';
+    /* 🔒 §30-28-2 9: 一言の出し先は2か所（所在図④ ／ 道具メニューの▼）だが
+     * 文面の出どころはこの1か所。 */
+    NAME_LAY_STATS.forEach(function (id) {
+      var box = $(id);
+      if (!box) return;
+      box.hidden = !msg;
+      box.textContent = msg;
+    });
+  }
+
+  /* ---------- 🔒 §30-16: 重ねた交差点名・バス停名をクリックで図に入れる ----------
+   * オーナー:「交差点名・バス停名を地図に重ねる のチェックをした後に、クリックで
+   * バス停名を表示できるボタンが欲しい」＝ なぞって表示を、ここでは**1個ずつ**適用する。
+   * 🔴 拾う状態（state.namePick）は**画面の状態**。案件には保存しない。
+   * 🔴 図に入る物は印つき文字（§28-7）。作るのは editor.placeNamed の1か所。 */
+
+  /** ボタンの出方を重ね表示のチェックに合わせる（OFF なら押せない） */
+  function syncNamePickBtn() {
+    var on = !!(state.namelay && state.namelay.on);
+    /* 🔒 §30-28-2 9: ボタンは2か所（所在図④ ／ 道具メニューの▼）だが値は1つ */
+    NAME_LAY_PICKS.forEach(function (id) {
+      var b = $(id);
+      if (!b) return;
+      b.disabled = !on;
+      b.title = on ? '押してから、地図に薄く出ている交差点名・バス停名をクリックすると'
+                   + '、その名前が図に入ります'
+                   : '先に上のチェックを入れてください';
+      b.classList.toggle('is-on', !!state.namePick);
+    });
+  }
+
+  function toggleNamePick() {
+    if (state.namePick) { stopNamePick(); return; }
+    startNamePick();
+  }
+
+  function startNamePick() {
+    if (state.namePick) return;
+    if (!state.namelay || !state.namelay.on) return;
+    state.namePick = true;
+    $('map').style.cursor = 'crosshair';
+    /* 地図・描画エンジンより**先**に受け取るため、親要素の capture で拾う
+     * （§16-5 C の［辺に沿わせる］startEdgePick と同じ作法）。 */
+    var wrap = document.querySelector('.map-wrap');
+    wrap.addEventListener('pointerdown', onNamePickDown, true);
+    wrap.addEventListener('click', onNamePickClick, true);
+    syncNamePickBtn();
+    hint('図に入れたい交差点名・バス停名をクリック。'
+       + '終わるには Esc か、もう一度このボタン', 0);
+  }
+
+  /** 拾う状態を終える。🔴 掴んだままにすると地図クリックを全部横取りしてしまう */
+  function stopNamePick() {
+    if (!state.namePick) return;
+    state.namePick = false;
+    $('map').style.cursor = '';
+    var wrap = document.querySelector('.map-wrap');
+    wrap.removeEventListener('pointerdown', onNamePickDown, true);
+    wrap.removeEventListener('click', onNamePickClick, true);
+    syncNamePickBtn();
+    hintHide();                  // 出しっぱなしにしていた案内を消す
+  }
+
+  function onNamePickDown(e) {
+    if (!state.namePick || !state.map) return;
+    if (e.button !== 0) return;                     // 中ボタン等の従来のパンは残す
+    if (!$('spaceBadge').hidden) return;            // スペース＝一時パンには譲る
+    if (!state.map.el.contains(e.target)) return;   // 地図の外（＋−ボタン等）は素通し
+    var r = $('map').getBoundingClientRect();
+    var px = e.clientX - r.left, py = e.clientY - r.top;
+    if (px < 0 || py < 0 || px > r.width || py > r.height) return;
+    /* 🔒 §30-16-1: 拾えなかった時も**何もしない**（選択の解除・マーカー設置・
+     * 地図の移動を起こさない）ので、拾えても拾えなくてもここで止める。 */
+    e.preventDefault();
+    e.stopPropagation();
+    pickNameAt(px, py);
+  }
+
+  /** pointerdown を止めても click は届くので、こちらも飲む（幅矢印の2点目よけ） */
+  function onNamePickClick(e) {
+    if (!state.namePick || !state.map) return;
+    if (!state.map.el.contains(e.target)) return;
+    e.stopPropagation();
+  }
+
+  function pickNameAt(px, py) {
+    var hit = state.namelay && state.namelay.hitName(px, py);
+    if (!hit) { hint('近くに名前がありません', 1800); return; }
+    /* 🔒 §30-16-1: 分類 → 印の種類。表示文字列ではなく分類 id で分ける（§26-2 注意②） */
+    var kind = (hit.cat === 'bus') ? 'bus' : 'signal';
+    var o = state.editor.placeNamed(kind, { lat: hit.lat, lng: hit.lng }, hit.name);
+    if (!o) return;
+    /* 🔒 §23-6（ODbL）: OSM 由来の名称を紙に載せたら、その紙に出典を足す */
+    noteOsmAttribution();
+    /* 入れた名前は重ね表示から消える（「紙に既にある名前は重ねない」の既存規則）。
+     * editor の 'change' でも invalidate は走るが、順番に依らず必ず引き直す。 */
+    if (state.namelay) state.namelay.invalidate();
+    updateHistoryButtons();
+    /* 🔒 §30-16-4: 入れたら拾う状態を解いて選択道具に戻し、入れた文字を選んだ
+     * 状態にする（すぐドラッグで場所を直せる）。§30-19-1（placeStampOne）と
+     * 同じ作法。placeNamed → _pushNew が既に selection を立てているが明示しておく。 */
+    stopNamePick();
+    state.editor.selection = [o.id];
+    state.editor.setTool('select');
+    hint('「' + hit.name + '」を図に入れました。ドラッグで場所を直せます', 2500);
   }
 
   /**
@@ -7122,11 +10946,17 @@
     $('sbNow').textContent = KIND_JA[state.kind]
       + (list.length > 1 ? ' ' + (idx + 1) + '/' + list.length + '枚目' : '');
 
+    /* 🔒 §30-26-2（2026-09-14 オーナー指示）: 紙は「番号＋ルーペ」のひと組。
+     * 番号を押す＝その紙へ切り替え（今までどおり）／ルーペを押す＝その紙だけの
+     * プレビュー。紙が1枚でも組は出す（1＋ルーペ）。 */
     var chips = $('sbChips');
     chips.innerHTML = '';
     list.forEach(function (s, i) {
+      var wrap = document.createElement('span');
+      wrap.className = 'sheet-chip' + (i === idx ? ' is-active' : '');
       var b = document.createElement('button');
-      b.className = 'sb-chip' + (i === idx ? ' is-active' : '');
+      b.type = 'button';
+      b.className = 'sheet-no';
       b.textContent = String(i + 1);
       /* 🔒 §28-10 裁定6: 数え方は書き出しの一覧と同じ（sheetDrawCount）。
          方位記号だけの紙は「図形 0 個」＝そのまま白紙として書き出されない紙。 */
@@ -7134,7 +10964,16 @@
         + '（' + (s.orient === 'landscape' ? 'A4横' : 'A4縦') + '・図形 '
         + sheetDrawCount(s) + ' 個）';
       b.addEventListener('click', function () { selectSheet(i); });
-      chips.appendChild(b);
+      var lp = document.createElement('button');
+      lp.type = 'button';
+      lp.className = 'sheet-loupe';
+      // 🔴 絵と説明は TOOL_ICONS.loupe の1か所（applyToolIcon が入れる）
+      lp.dataset.icon = 'loupe';
+      applyToolIcon(lp);
+      lp.addEventListener('click', function () { previewSheet(s); });
+      wrap.appendChild(b);
+      wrap.appendChild(lp);
+      chips.appendChild(wrap);
     });
 
     var cur = list[idx];
@@ -7175,17 +11014,23 @@
     applySheetToMap();
     renderOverlay();
     updateScale();
-    if (!$('exPanel').hidden) renderExportInfo();
     Store.autosave(c);
     hint(KIND_JA[state.kind] + ' ' + (i + 1) + '枚目に切り替えました', 2200);
+  }
+
+  /** 図形の id（🔒 値の出どころは1か所。editor.js の uid と同じ形） */
+  function newObjId() {
+    return 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
   /**
    * 紙を1枚足す（src を渡すと複製・🔒 §24-5「前の枚を写して微調整する逃げ道」）。
    * 🔴 複製は**深いコピー**。浅くすると図形オブジェクトを2枚で共有してしまい、
    *    片方を直すともう片方も変わる＝§24-1「完全に独立」が壊れる。
+   * 🔒 §30-26-1: opt.extract＝［枠を抜出し追加］から。**紙の作り方は同じ**で、
+   *    違うのは押した後の案内（字幕とガイダンスの段）だけ。
    */
-  function addSheet(src) {
+  function addSheet(src, opt) {
     var c = state.current;
     if (!c) return;
     persistSheetState();
@@ -7200,10 +11045,10 @@
         attributions: src.attributions || []
       }));
       /* 図形の id も振り直す。同じ id が別の紙に居ても今は害が無いが、
-         複数枚をまとめて扱う Step 6 以降で取り違えの種になる */
-      init.objects.forEach(function (o) {
-        o.id = 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-      });
+         複数枚をまとめて扱う Step 6 以降で取り違えの種になる。
+         🔴 source / role / pinKey / markRole はそのまま（§30-26-1 2）＝
+            写した紙でも役割オブジェクトの追従・掃除が紙ごとに効く。 */
+      init.objects.forEach(function (o) { o.id = newObjId(); });
     } else {
       // 新しい紙は「いま見えている場所」から始める（続けて描き始められる）
       init = { orient: (list[at] && list[at].orient) || 'portrait',
@@ -7219,10 +11064,65 @@
     applySheetToMap();
     renderOverlay();
     // 🔒 §24-3: 書き出しは全シートなので、枚数が変わったら一覧も出し直す
-    if (!$('exPanel').hidden) renderExportInfo();
     Store.autosave(c);
-    hint(KIND_JA[state.kind] + ' を1枚' + (src ? '複製' : '追加')
-      + 'しました（' + (at + 2) + '/' + list.length + '枚目）', 3200);
+    var did = (opt && opt.extract) ? '抜き出しました'
+            : (src ? '複製しました' : '追加しました');
+    hint(KIND_JA[state.kind] + ' を1枚' + did
+      + '（' + (at + 2) + '/' + list.length + '枚目）', 3200);
+    // 🔒 §30-26-1 4: 押した直後の案内（字幕＋「枠を決める」の段へ）
+    if (opt && opt.extract) afterExtractSheet();
+  }
+
+  /* ---- 🔒 §30-26-1（2026-09-14 オーナー指示）: ［枠を抜出し追加］ ----
+   * > 「広い駐車場は4つに分割して抜き出せば、それぞれが A4 で出るので文字が大きくなる」
+   * 紙の作り方は addSheet(src) 1本（＝［複製］と同じ deep copy の経路）。
+   * 違うのは**押した後の案内**だけ＝ここに閉じ込める。 */
+
+  /** 押した直後の字幕（番号なし）。🔴 文の出どころはこの1か所（「／」＝改行） */
+  var SG_EXTRACT_SAY = 'この紙は、いまの紙の中身を写した新しい紙です。'
+    + '／広い駐車場の一部を大きく出したい時に使います。'
+    + '／／地図を寄せて、出したい範囲で［枠を決定］してください。'
+    + '／この紙で直した文字や印は、元の紙には影響しません';
+
+  /* その図の「枠を決める」段（その図の中での番号）。
+   * 🔴 所在図は②「所在図の枠を決める」／配置図は①「下敷きと枠」＝図ごとに違う。
+   *    通し番号への読み替えは navStepOf 1本（NAV の番号を直に書かない）。 */
+  var FRAME_DISP = { shozaizu: 2, haichizu: 1 };
+  function frameStepOf(kind) { return navStepOf(kind, FRAME_DISP[kind] || 1); }
+
+  function afterExtractSheet() {
+    /* ガイダンス中なら、その図の「枠を決める」の段へ移る（§30-26-1 4）。
+     * 🔴 navGo は段を移る時に前の字幕を消すので、**字幕はそのあと**に出す。
+     * 🔴 入り方は必ず「戻る」扱い（back:true）。navGo は配置図①へ**進んで**入った時に
+     *    駐車場マーカー中心・ZL20 へ寄せ直すので、そのまま呼ぶと抜き出した紙が
+     *    元の紙と違う場所で開いてしまう（§30-26-1 2「表示は元の紙と同じ中心・ズーム」）。 */
+    if (state.nav) {
+      var n = frameStepOf(state.kind);
+      if (state.nav.step !== n) navGo(n, { back: true });
+    }
+    sgCaptionShow('', SG_EXTRACT_SAY);
+  }
+
+  /** ［枠を抜出し追加］。🔴 紙を作るのは addSheet 1本 */
+  function extractSheet() {
+    var src = curSheet();
+    if (!state.current || !src) return;
+    addSheet(src, { extract: true });
+  }
+
+  /**
+   * 🔒 §30-26-2: 紙の帯のルーペ＝**その紙**のプレビュー。
+   * 🔒 §30-27-1 1: 出す画面は他と同じ1つ（違うのは「どの紙から見せるか」だけ）。
+   *    他の紙は札と［次のページ ›］でそのまま見に行ける。
+   */
+  function previewSheet(sh) {
+    if (!state.current || !sh) return;
+    // 図形が1個も無い紙は書き出されない（§26-4-e）＝空のプレビューを出さない
+    if (!sheetHasDrawing(sh)) {
+      hint('この紙にはまだ図形がありません（図を描いてから確かめてください）', 3200);
+      return;
+    }
+    openPreview({ kind: state.kind, sheetId: sh.id });
   }
 
   function deleteSheet() {
@@ -7243,7 +11143,6 @@
     renderSheetBar();
     applySheetToMap();
     renderOverlay();
-    if (!$('exPanel').hidden) renderExportInfo();
     Store.autosave(c);
     hint(KIND_JA[state.kind] + ' を1枚削除しました', 2800);
   }
@@ -7261,7 +11160,6 @@
     //    取り違えを防ぐため入口を1つに保つ（§26-2 注意①）
     bindCurrentSheet();
     renderSheetBar();
-    if (!$('exPanel').hidden) renderExportInfo();
     Store.autosave(c);
     hint(KIND_JA[state.kind] + ' の順番を入れ替えました（' + (j + 1) + '枚目）', 2500);
   }
@@ -7290,7 +11188,6 @@
     }
     renderSheetBar();
     renderOverlay();              // 枠の線を新しい形で引き直す
-    if (!$('exPanel').hidden) renderExportInfo();
     Store.autosave(c);
     // 🔒 §30-13-4: 紙の向きが変わると枠の形＝左の空きも変わる（字幕の置き場所の契機）
     sgCaptionPlace();
@@ -7324,7 +11221,6 @@
     }
     renderSheetBar();
     renderOverlay();
-    if (!$('exPanel').hidden) renderExportInfo();
     Store.autosave(c);
     // 🔒 §30-13-4: 枠の決定／解除で枠の位置が変わる（字幕の置き場所の契機）
     sgCaptionPlace();
@@ -7359,7 +11255,6 @@
                          { lat: b.south, lng: b.east }], -0.005, frameRectPx());
     syncFrameFromView();          // 固定中なら何もしない（枠は動かない）
     renderOverlay();
-    if (!$('exPanel').hidden) renderExportInfo();
     hint('この紙の枠の場所へ戻りました', 2500);
   }
 
@@ -7453,8 +11348,12 @@
   /* 🔒 §28-14 ①-1: 駐車場の［検索］（#btnSearch）は撤去したので、
      止めるのは使用の本拠の2つ（上部バー／ガイダンス①）だけ。 */
   function searchBusy(on) {
-    $('btnSearchHome').disabled = on;
-    $('sgSearchHome').disabled = on;   // 🔒 §28-2: ガイダンス①の［検索］も同じ扱い
+    /* 🔒 §28-2 / §30-28-2 1: ［検索］は3か所（上部バー／ガイダンス①／道具メニュー）
+     * だが止め方は1つ。 */
+    ['btnSearchHome', 'sgSearchHome', 'sideSearchHome'].forEach(function (id) {
+      var b = $(id);
+      if (b) b.disabled = on;
+    });
   }
 
   /* 🔴 setPointFrom（検索結果を points へ入れる関数）は 2026-09-06 に**削除**した。
@@ -7489,7 +11388,11 @@
       searchMsg('住所を拾えませんでした。手で入力してください。', true);
       return;
     }
-    if (r.home) $('addrHome').value = r.home.address;
+    /* 🔒 §30-28-2 1: 住所の欄は3か所だが値は1つ（写す先は ADDR_HOME_FIELDS 1か所） */
+    if (r.home) {
+      $('addrHome').value = r.home.address;
+      syncAddrHome(r.home.address, 'addrHome');
+    }
     /* 🔒 §28-14 ①-1: 駐車場の住所欄は無くなった。拾えた住所は、**既にマーカーが
        置いてある時だけ**その地点の住所として控える（案件の検索・§19-2 で効く）。
        置いていない時は何もしない（勝手に地点は作らない・§18-ap）。 */
@@ -7501,12 +11404,13 @@
       var n = parseInt(r.extras.stallNo, 10);
       if (!isNaN(n)) {
         state.editor.numberStart = n;
-        $('numStart').value = n;
+        syncNumberStartUI(n);        // 🔒 §30-18-2: 欄は2か所・値は1つ
         if (state.current) state.current.numberCounter = n;
       }
     }
     // 依頼文から拾った幅員は両方の欄へ入れる（§18-l）
-    if (r.extras.roadWidth) setArrowWidth(r.extras.roadWidth);
+    // 🔒 §30-18-4: 値が入るので幅の決め方も「道幅入力」側にしておく
+    if (r.extras.roadWidth) { setArrowMode('manual'); setArrowWidth(r.extras.roadWidth); }
     $('pastePanel').hidden = true;
     searchMsg('依頼文から住所を入れました。内容を確かめて［検索］を押してください。');
     hint('拾った内容は必ずご確認ください（自動判定です）', 4500);
@@ -7532,6 +11436,10 @@
 
   /* ---------- ピンと距離 ---------- */
 
+  /* 🔒 §30-25-37 1: 画面のピンの◎の半径（px）。文字の縦位置（y）もここから出す
+   * ＝印を大きくしても文字との隙間が変わらない。🔴 値の出どころはこの1か所。 */
+  var PIN_R = 8;
+
   function buildPins() {
     var svg = state.map.overlay;
 
@@ -7544,8 +11452,8 @@
 
     ['home', 'lot'].forEach(function (key) {
       var g = svgEl('g', { class: 'pin pin-' + key + ' hit' });
-      /* ◎（二重丸）の形 */
-      var body = svgEl('circle', { class: 'pin-body', r: 8 });
+      /* ◎（二重丸）の形。🔒 §30-25-37 1: 半径は PIN_R（文字の y もここから出す） */
+      var body = svgEl('circle', { class: 'pin-body', r: PIN_R });
       var core = svgEl('circle', { class: 'pin-core', r: 3.4 });
       /* 🔒 §28-14 ①-4: ■（四角に斜線）の形。紙の主役マーク（四角＋45°の斜線ハッチ）と
        * 同じ見た目を画面でも出す。斜線は x+y=k（k=-8,0,8）の3本＝四角の中で閉じる。 */
@@ -7557,13 +11465,43 @@
       g.appendChild(box);
       g.appendChild(hat);
       var t = svgEl('text', { class: 'pin-label', y: 26 });
-      t.textContent = key === 'home' ? '使用の本拠' : '駐車場';
+      // 🔒 §30-22-1 6: 文言は PIN_LABEL 1か所（同一住所の時は renderOverlay が差し替える）
+      t.textContent = pinLabel(key);
       g.appendChild(t);
+      /* 🔒 §30-24-2: 同一住所の時は文字が**2つ**（「使用の本拠」と「駐車場」）。
+       * 画面のピンは1つなので、2行目をここに用意して同じ場所に並べる
+       * （紙では別々の文字なのでドラッグで動かせる）。 */
+      var t2 = svgEl('text', { class: 'pin-label', y: 40 });
+      t2.textContent = pinLabel('lot');
+      t2.style.display = 'none';
+      g.appendChild(t2);
       svg.appendChild(g);
       state.pins[key] = g;
-      state.pinEls[key] = { body: body, core: core, box: box, hatch: hat };
+      state.pinEls[key] = { body: body, core: core, box: box, hatch: hat,
+                            label: t, label2: t2 };
       makePinDraggable(g, key);
     });
+  }
+
+  /**
+   * 🔒 §30-30-3 1: その地点の主役の印（■／◎／多角形）が、いま開いている所在図の
+   * 紙に**既にある**か（role:'mainmark' の rect／polygon＝markRole で見る、または
+   * role:'pinlabel' の文字＝◎は文字が dotStyle:'double' で持つので文字の有無で見る）。
+   * 🔴 判定は pinKey／markRole（表示文字では分岐しない・§26-2 注意②）。
+   * 🔴 所在図の紙だけを見る（§18-ab の onPaper と同じ範囲）。配置図タブでは常に false
+   *    ＝ 配置図には紙の印が無いので、画面のピンが唯一の見た目のまま（今のまま）。
+   */
+  function mainMarkOnPaper(key) {
+    if (state.kind !== 'shozaizu') return false;
+    var objs = objectsOf('shozaizu');
+    for (var i = 0; i < objs.length; i++) {
+      var o = objs[i];
+      if (!o || o.source !== 'shozaizu') continue;
+      if ((o.type === 'rect' || o.type === 'polygon') && o.role === 'mainmark'
+          && (o.markRole || 'home') === key) return true;
+      if (o.type === 'text' && o.role === 'pinlabel' && pinKeyOf(o) === key) return true;
+    }
+    return false;
   }
 
   /**
@@ -7577,10 +11515,63 @@
     var m = markOf(key);
     var hex = Editor.markHex ? Editor.markHex({ markColor: m.color }) : '';
     var circle = (m.shape === 'circle');
-    e.body.style.display = circle ? '' : 'none';
-    e.core.style.display = circle ? '' : 'none';
-    e.box.style.display = circle ? 'none' : '';
-    e.hatch.style.display = circle ? 'none' : '';
+    /* 🔒 §30-22-1 4 (c): 「印なし（文字だけ）」は◎も■も出さない
+     * （文字だけが残る＝紙と同じ見え方。文字は掴めるのでピンは動かせる）。
+     * 🔒 §30-24-1: 「多角形」も同じ（囲んだ多角形が印なので、丸も四角も出さない。
+     *    ピンは多角形の重心＝見えない基準点。文字だけが見える）。 */
+    var none = (m.shape === 'none') || (m.shape === 'polygon');
+    e.body.style.display = (circle && !none) ? '' : 'none';
+    e.core.style.display = (circle && !none) ? '' : 'none';
+    e.box.style.display = (circle || none) ? 'none' : '';
+    e.hatch.style.display = (circle || none) ? 'none' : '';
+    /* 🔒 §30-25-37 1: 画面のピンの見た目にも同じ倍率を掛ける（紙の◎■と揃える）。
+     * 🔴 4つの絵はどれも原点（0,0）が中心なので scale(s) だけで済む。
+     * 🔴 文字は拡大しない（読みにくくなるだけ）。代わりに**印の縁からの隙間を保つ**
+     *    位置へ下げる（PIN_R=8 が◎の半径・16px が四角の一辺＝ buildPins と同じ値）。 */
+    var s = m.scale || 1;
+    var tr = (Math.abs(s - 1) < 0.005) ? '' : ('scale(' + s + ')');
+    e.body.setAttribute('transform', tr);
+    e.core.setAttribute('transform', tr);
+    e.box.setAttribute('transform', tr);
+    e.hatch.setAttribute('transform', tr);
+    if (e.label) e.label.setAttribute('y', (PIN_R * s + 18).toFixed(1));
+    if (e.label2) e.label2.setAttribute('y', (PIN_R * s + 32).toFixed(1));
+    /* 🔒 §30-24-2: 同一住所の時は文字が2つ（「使用の本拠」と「駐車場」）。
+     * 画面のピンは1つなので上下に並べて出す（紙でも別々の文字）。 */
+    var isSame = !!(state.current && state.current.points.same);
+    if (e.label) e.label.textContent = pinLabel(key);
+    if (e.label2) e.label2.style.display = isSame ? '' : 'none';
+    /* 🔒 §30-30-3 1: **■が紙と二重に見える不具合の直し**。
+     * 原因: 紙の■（`role:'mainmark'` の四角＋斜線ハッチ）と画面のピンの■
+     * （このすぐ下で `box.style.stroke` に色を入れる所）が同じ場所に重なって
+     * 描かれていた。`.pin.is-quiet`（renderOverlay の onPaper・pinlabel の有無だけで
+     * 判定）は body/box/hatch を fill・stroke ともに transparent にする CSS を
+     * 持っているが、**ここで色を inline style に入れると CSS のクラス指定より
+     * inline が必ず勝つ**ので、is-quiet が付いていても色が残って二重に見えていた
+     * （◎ は紙の◎と同じ位置・同じ太さの輪なので重なっても目立たなかっただけで、
+     * 実質は同じ穴があった）。
+     * 直し: 紙にその地点の主役の印が**既にある間**（mainMarkOnPaper）は、
+     * 色を入れずに透明のまま止める＝旧: 「◎の時だけ四角側を隠す」だった判定
+     * （circle||none）を「紙にもう印がある（■・多角形も含む）」の1つの判定に広げた。
+     * 🔴 `display:none` にはしない（掴むための透明な当たりが消え、§30-25-24 9
+     *    「画面のピン本体を掴んでピンが動く」が壊れるため）。要素は残したまま
+     *    fill/stroke を transparent・pointer-events を all にする
+     *    （＝ `.pin.is-quiet` と同じ考え方を、CSS の勝ち負けに頼らずここで担保する）。 */
+    var onPaper = mainMarkOnPaper(key);
+    var parts = [e.body, e.core, e.box, e.hatch];
+    if (onPaper) {
+      parts.forEach(function (el) {
+        el.style.fill = 'transparent';
+        el.style.stroke = 'transparent';
+        el.style.pointerEvents = 'all';
+      });
+      return;
+    }
+    parts.forEach(function (el) {
+      el.style.fill = '';
+      el.style.stroke = '';
+      el.style.pointerEvents = '';
+    });
     if (!hex) return;
     e.body.style.stroke = hex;
     e.core.style.fill = hex;
@@ -7612,6 +11603,12 @@
       var p = state.current.points[key];
       p.lat = ll.lat; p.lng = ll.lng;
       p.moved = true;          // 住所検索の位置から手で動かした印
+      /* 🔒 §30-22-1 6: 同一住所の間は2地点は**同じ場所**（画面のピンも1つ）。
+       * 掴んで動かした時は、もう一方も一緒に動かす（食い違わせない）。 */
+      if (state.current.points.same) {
+        var other = state.current.points[key === 'home' ? 'lot' : 'home'];
+        if (other) { other.lat = ll.lat; other.lng = ll.lng; other.moved = true; }
+      }
       renderOverlay();
       refreshPoints();
     });
@@ -7627,6 +11624,11 @@
     g.addEventListener('pointercancel', end);
   }
 
+  /** 🔒 §30-22-1 1: いま枠を隠す段か（所在図①＝マーカーを置く段だけ） */
+  function sgFrameHidden() {
+    return !!(state.nav && navOnSide() && state.nav.step === 1);
+  }
+
   /** 書き出し範囲を地図の上に描く（正典 §4-10）。外側は薄く覆う */
   function renderExportFrame() {
     var svg = state.map.overlay;
@@ -7635,11 +11637,16 @@
       var NS = 'http://www.w3.org/2000/svg';
       g = state.frameEls = {
         mask: document.createElementNS(NS, 'path'),
+        /* 🔒 §30-25-30 3: 色の破線の**下に敷く白い縁**（同じ矩形を2本描く）。
+         * 色の線より先に入れる＝下になる。値は style.css の --frame-* 1か所。 */
+        halo: document.createElementNS(NS, 'rect'),
         rect: document.createElementNS(NS, 'rect')
       };
       g.mask.setAttribute('class', 'frame-mask');
+      g.halo.setAttribute('class', 'frame-halo');
       g.rect.setAttribute('class', 'frame-rect');
       svg.appendChild(g.mask);
+      svg.appendChild(g.halo);
       svg.appendChild(g.rect);
     }
     /* 🔒 §24-2-3: 枠は**案件を開いている間ずっと**出す。
@@ -7653,16 +11660,29 @@
      * 作図の邪魔をしない（is-soft）。 */
     var sh = curSheet();
     var fixed = !!(sh && sh.frameFixed && sh.frame);
-    var show = !!(state.current && sh);
-    var strong = !!(fixed || state.showFrame);
+    /* 🔒 §30-22-1 1（2026-09-13 オーナー指示）: **所在図①（マーカーを置く段）では
+     * 枠の破線を出さない**（枠を決めるのは②なので、①で枠を見せても意味が無く、
+     * 「この中に入れないといけないのか」と誤解させる）。②に入れば出る／①へ戻れば消える。
+     * 🔴 覆い（frame-mask）も一緒に消す＝破線だけ消すと「薄い四角」が残って
+     *    枠に見えてしまう（消す目的を果たさない）。 */
+    var show = !!(state.current && sh) && !sgFrameHidden();
+    /* 🔒 §30-29-1 3: 旧 state.showFrame（［書き出し］の窓を開いている間）は
+     * 廃止した。枠は常に破線で見えているので、強調（外側の濃い覆いと帯）は
+     * 【枠を決定した紙】だけ。 */
+    var strong = fixed;
+    /* 🔒 §30-22-1 2: 写真の下敷きの時だけ枠の破線を**赤**にする（決定後の枠も同じ）。
+     * 色そのものは CSS の変数 1か所（--frame-ink / .frame-rect.is-photo）。 */
+    g.rect.classList.toggle('is-photo', underlayIsPhoto());
     g.mask.style.display = show ? '' : 'none';
     g.rect.style.display = show ? '' : 'none';
+    g.halo.style.display = show ? '' : 'none';   // 🔒 §30-25-30 3
     g.mask.classList.toggle('is-soft', !strong);
-    // 帯（説明）は従来どおり「決定中」か「書き出しパネルを開いている間」だけ
+    /* 🔒 §30-29-1 3: 帯（説明）は【枠を決定した紙】の間だけ＝文も1つ
+     * （旧・書き出しの窓を開いている間に出していた「地図を動かすと枠も動きます」は、
+     *  その窓ごと廃止したので出る場面が無い）。 */
     $('frameHint').hidden = !(show && strong);
-    $('frameHint').textContent = fixed
-      ? 'この枠の中が書き出されます（枠は固定中。地図だけ動かせます）'
-      : 'この枠の中が書き出されます（地図を動かすと枠も動きます）';
+    $('frameHint').textContent =
+      'この枠の中が書き出されます（枠は固定中。地図だけ動かせます）';
     if (!show) { g.lastRectPx = null; return; }   // §24-6: 他枠の札の位置計算に使う値も消しておく
 
     /* 決めていない枠は**いまの画面**から直接引く（保存値を描くと更新し忘れでずれる）。
@@ -7674,6 +11694,11 @@
     g.rect.setAttribute('y', y.toFixed(1));
     g.rect.setAttribute('width', w.toFixed(1));
     g.rect.setAttribute('height', h.toFixed(1));
+    // 🔒 §30-25-30 3: 白い縁は色の線と**まったく同じ矩形**（ずれない）
+    g.halo.setAttribute('x', x.toFixed(1));
+    g.halo.setAttribute('y', y.toFixed(1));
+    g.halo.setAttribute('width', w.toFixed(1));
+    g.halo.setAttribute('height', h.toFixed(1));
     // 画面全体から枠を抜いた形（外側を薄く覆う）
     g.mask.setAttribute('d',
       'M0 0H' + s.w + 'V' + s.h + 'H0Z'
@@ -7718,18 +11743,23 @@
     // 自分以外の枚数ぶんだけ枠・札の要素を用意する（増減したら作り直す）
     var wanted = many ? list.length - 1 : 0;
     while (g.siblings.length < wanted) {
+      // 🔒 §30-25-30 3: 白い縁 → 色の破線 の順で入れる（白が下）
+      var sha = svgEl('rect', { class: 'frame-halo' });
       var sr = svgEl('rect', { class: 'frame-rect is-sibling' });
       var sbg = svgEl('g', { class: 'frame-badge' });
       var sbr = svgEl('rect', { rx: 4, ry: 4 });
       var sbt = svgEl('text', { 'text-anchor': 'middle' });
       sbg.appendChild(sbr);
       sbg.appendChild(sbt);
+      svg.appendChild(sha);
       svg.appendChild(sr);
       svg.appendChild(sbg);
-      g.siblings.push({ rect: sr, badge: { g: sbg, rect: sbr, text: sbt } });
+      g.siblings.push({ halo: sha, rect: sr,
+                        badge: { g: sbg, rect: sbr, text: sbt } });
     }
     while (g.siblings.length > wanted) {
       var extra = g.siblings.pop();
+      if (extra.halo) svg.removeChild(extra.halo);
       svg.removeChild(extra.rect);
       svg.removeChild(extra.badge.g);
     }
@@ -7747,6 +11777,7 @@
       var ok = sh2.frame && sh2.frame.center && sh2.frame.w_m;
       if (!ok) {
         pair.rect.style.display = 'none';
+        pair.halo.style.display = 'none';       // 🔒 §30-25-30 3
         pair.badge.g.style.display = 'none';
         pair.badge.g.onclick = null;
         return;
@@ -7757,6 +11788,12 @@
       pair.rect.setAttribute('y', r2.y.toFixed(1));
       pair.rect.setAttribute('width', r2.w.toFixed(1));
       pair.rect.setAttribute('height', r2.h.toFixed(1));
+      // 🔒 §30-25-30 3: 白い縁は同じ矩形
+      pair.halo.style.display = '';
+      pair.halo.setAttribute('x', r2.x.toFixed(1));
+      pair.halo.setAttribute('y', r2.y.toFixed(1));
+      pair.halo.setAttribute('width', r2.w.toFixed(1));
+      pair.halo.setAttribute('height', r2.h.toFixed(1));
       pair.badge.g.style.display = '';
       placeFrameBadge(pair.badge, r2, i + 1);
       // 🙋 §24-6 規則6: 札のクリックでそのシートへ切り替える
@@ -7799,23 +11836,48 @@
      * ピンは**掴むための当たり判定として残す**（◎の位置＝ピンの位置なので、
      * そのままドラッグでき、§18-x-5 の追従で◎が付いてくる）。
      * 生成前（①②）は役割物が無いので従来どおりピンが見える。配置図タブも従来どおり。 */
-    var quiet = state.kind === 'shozaizu' && objectsOf('shozaizu').some(
-      function (o) { return o.source === 'shozaizu' && o.role; });
+    /* 🔒 §30-24-1: 引っ込めるのは「同じ物が紙にもある時」だけ。
+     * 🔴 主役の多角形（role:'mainmark'）は利用者が描いた印で、文字はまだ紙に無い。
+     *    これも「役割あり」と数えていたため、多角形を描いた瞬間に画面から
+     *    「使用の本拠」の文字が消えていた（オーナー報告の一部）。
+     * 🔒 §30-25-28 2（2026-09-14 オーナー指示）: 判定は**その紙に主役の文字が
+     *    あるか**の1か所（pinKey ごと）。マーカーを置いた瞬間に紙の文字ができる
+     *    ので、画面のピンの文字は置いた瞬間から出さない＝二重に見えない。
+     *    紙の文字を消しゴムで消せば、画面のピンの文字がまた出る。 */
+    var onPaper = { home: false, lot: false };
+    if (state.kind === 'shozaizu') {
+      objectsOf('shozaizu').forEach(function (o) {
+        if (o && o.source === 'shozaizu' && o.type === 'text'
+            && o.role === 'pinlabel') onPaper[pinKeyOf(o)] = true;
+      });
+    }
+    /* 結線と直線距離の画面表示は、**生成した結線（role:'distance'）がある間**は出さない
+     * （紙の物と二重になる）。文字とは別の判定＝主役の文字ができても距離は消えない。 */
+    var hasDistObj = state.kind === 'shozaizu' && objectsOf('shozaizu').some(
+      function (o) { return o && o.source === 'shozaizu' && o.role === 'distance'; });
 
+    /* 🔒 §30-22-1 6: 同一住所の時は**画面のピンも1つ**（駐車場の分は出さない）。
+     * 2つ重ねると掴めない・文字が二重になるだけで良いことが何も無い。 */
+    var oneSpot = !!c.points.same;
     ['home', 'lot'].forEach(function (key) {
       var g = state.pins[key], p = c.points[key];
       if (!g) return;
-      if (!p) { g.style.display = 'none'; return; }
+      if (!p || (oneSpot && key === 'lot')) { g.style.display = 'none'; return; }
       g.style.display = '';
-      g.classList.toggle('is-quiet', quiet);
+      /* 🔒 §30-25-28 2: 同一住所の時は画面のピンが1つで文字が2つ（本拠・駐車場）。
+       * どちらの文字も紙にある時だけ引っ込める。 */
+      g.classList.toggle('is-quiet',
+        oneSpot ? (onPaper.home && onPaper.lot) : onPaper[key]);
       syncPinLook(key);          // 🔒 §28-14 ①-4: ①で選んだ形と色にする
       var s = state.map.project(p.lat, p.lng);
       g.setAttribute('transform', 'translate(' + s.x.toFixed(1) + ','
         + s.y.toFixed(1) + ')');
     });
 
-    // 2点間の破線と距離は所在図でのみ出す（正典 §5）。役割物があるならそちらに任せる
-    var show = !quiet && state.kind === 'shozaizu' && c.points.home && c.points.lot;
+    /* 2点間の破線と距離は所在図でのみ出す（正典 §5）。役割物があるならそちらに任せる。
+     * 🔒 §30-22-1 6: 同一住所の時は**描かない**（長さ0の線と「約0m」は嘘の情報）。 */
+    var show = !hasDistObj && !oneSpot && state.kind === 'shozaizu'
+             && c.points.home && c.points.lot;
     var d = state.distEls;
     if (!show) {
       d.line.style.display = 'none';
@@ -7865,9 +11927,46 @@
     });
     var home = c.points.home, lot = c.points.lot;
     var moved = 0;
+    /* 🔒 §30-22-1 6 / §30-22-6 2: 同一住所になったら、**前に生成してある結線と
+     * 直線距離を取り除く**（作り直さなくてもその場で正しくなる＝追従の作法）。
+     * 🔴 配列は差し替えず splice だけ（§23-7-1 / §26-2 注意①）。
+     * 🔴 消すのは自動生成物（source:'shozaizu'）の role:'distance' だけ。 */
+    if (c.points.same) {
+      sheetsOf('shozaizu').forEach(function (s) {
+        var arr = s.objects || [];
+        for (var i = arr.length - 1; i >= 0; i--) {
+          if (arr[i] && arr[i].source === 'shozaizu' && arr[i].role === 'distance') {
+            arr.splice(i, 1);
+            moved++;
+          }
+        }
+      });
+      if (moved) objs = objs.filter(function (o) { return !(o && o.role === 'distance'); });
+    }
     var same = function (a, b) {
       return a && b && a.lat === b.lat && a.lng === b.lng;
     };
+
+    /* 🔒 §30-24-1: 主役の**多角形**。ピンの位置は「最初に描いた多角形」の重心なので、
+     * その重心がピンに乗るように動かし、同じ地点の2つ目以降（建物と土地など）は
+     * **同じ量だけ**一緒に動かす（互いの位置関係を崩さない）。
+     * 🔴 並び（＝どれが最初か）の出どころは Editor.mainPolysOf 1か所。
+     * 🔴 1つだけ掴んで動かした時は editor 側で動き終わっていて、
+     *    ここでは「重心＝ピン」がもう成り立つので何もしない（行ったり来たりしない）。 */
+    sheetsOf('shozaizu').forEach(function (s) {
+      ['home', 'lot'].forEach(function (key) {
+        var list = Editor.mainPolysOf(s.objects || [], key);
+        if (!list.length) return;
+        var pp = c.points[key];
+        var ctr = Editor.polyCentroid(list[0].points);
+        if (!pp || !ctr || same(ctr, pp)) return;
+        var dLa = pp.lat - ctr.lat, dLn = pp.lng - ctr.lng;
+        list.forEach(function (g) {
+          (g.points || []).forEach(function (q) { q.lat += dLa; q.lng += dLn; });
+        });
+        moved++;
+      });
+    });
 
     objs.forEach(function (o) {
       if (o.source !== 'shozaizu') return;
@@ -7881,6 +11980,10 @@
         moved++;
         return;
       }
+
+      /* ⓪-2 主役の**多角形**は、この上の「紙1枚ずつ・地点ごと」のまとまりで
+       * 動かし終わっている（🔒 §30-24-1）。ここでは触らない。 */
+      if (o.role === 'mainmark' && o.points) return;
 
       // ①◎（または四角）と名前（anchor＝地点そのもの・at＝文字。ずれは保つ）
       if (o.role === 'pinlabel' && o.type === 'text' && o.anchor) {
@@ -7944,7 +12047,11 @@
     $('ptLot').textContent = ptText(c.points.lot);
 
     var el = $('distInfo');
-    if (c.points.home && c.points.lot) {
+    /* 🔒 §30-22-1 6: 同一住所の時に「直線距離 約0m」は嘘なので出さない */
+    if (c.points.same) {
+      el.textContent = '使用の本拠と駐車場は同一住所です（直線距離は出ません）';
+      el.className = 'dist-info';
+    } else if (c.points.home && c.points.lot) {
       var m = GSI.distanceMeters(c.points.home, c.points.lot);
       var over = m > 2000;
       el.textContent = '直線距離 ' + fmtDist(m)
@@ -7983,13 +12090,24 @@
   /* ---------- 補助 ---------- */
 
   var hintTimer = null;
+  /**
+   * 地図の下に一言出す。
+   * @param ms 出しておく長さ(ms)。🔒 §30-16: **0 なら消さない**
+   *   （拾う状態のように「終わるまで出しておきたい」案内。hintHide で消す）
+   */
   function hint(text, ms) {
     var el = $('mapHint');
     el.textContent = text;
     el.classList.add('show');
-    if (hintTimer) clearTimeout(hintTimer);
+    if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+    if (ms === 0) return;
     hintTimer = setTimeout(function () { el.classList.remove('show'); },
                            ms || 3000);
+  }
+  /** 出しっぱなしの一言を消す（🔒 §30-16: 拾う状態を終えた時） */
+  function hintHide() {
+    if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+    $('mapHint').classList.remove('show');
   }
 
   /* §26-4-1 バグ修正: showSaveState('error') は上部バーの小さな文字だけだったので

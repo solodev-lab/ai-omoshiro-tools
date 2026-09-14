@@ -419,8 +419,19 @@
    *    「近い順3件」に必ず含まれる（同じ並びの前置きを取るだけ）。
    * 🔴 分類の独立性（§22-ak-6）も不変（他分類の判定に触れない）。
    * 🔴 判定は **nameCat（＝分類表の id）** で行う。表示文字では判定しない（§26-2 注意②）。 */
+  /* 🔒 §25-1 / §30-22-1 6: 主役（2地点）のラベルの文言は**ここ1か所**。
+   * app.js（画面のピン・状態の一言）もここを読む（Shozaizu.PIN_LABEL）。
+   * 🔒 §30-24-2（2026-09-13 オーナー指示）: 同一住所の「使用の本拠・駐車場」という
+   *    1つの文字は**廃止**（`same` を消した）。同一住所でも文字は2つ置き、
+   *    それぞれ別々に動かせる（印だけが1つ）。 */
+  var PIN_LABEL = { home: '使用の本拠', lot: '駐車場' };
+
   var CROSSING_CAT = 'crossing';     // 半径を外す分類（osm.js CATS の id）
   var CROSSING_FRAME_FROM = 3;       // この段から半径を掛けない（3=標準）
+
+  /* 🔒 §30-21-4 4: 同じ分類の中の近接重複（§22-aq-3 ③）を掛けない分類（棟名が並ぶため）。
+   * 🔴 分類の id（osm.js CATS）で持つ＝表示文字では判定しない（§26-2 注意②）。 */
+  var BUILDING_CAT = 'building';
 
   /* 🔒 §22-aq-2（2026-09-05 オーナー指示・上の §22-aq を改める）:
    * **主役の周囲の交差点名は絶対**。
@@ -587,6 +598,33 @@
     forcedOver: 200, // 文字どうしの重なり比（0〜1）× この重み
     forcedOut: 200   // 枠外比（0〜1）× この重み
   };
+  /* 🔒 §30-22-10（2026-09-13 オーナー実機「近くが全然近くない。標準より離れる」）:
+   * **名前と印の距離は3段**（1=近く／2=標準／3=離す。既定＝離す・Store.SZ_STD.nameGap）。
+   *   近く（1）… 印の**すぐ隣**（§30-15-3 の規則＝印の右端＋文字高×0.4・上下は印の中心）。
+   *              外側へ（§22-am-6）・主役から離す（§22-y）・空き地探し（§22-aq）は
+   *              一切掛けない。引き出し線も出さない（重なりは利用者がドラッグで直す）
+   *   離す（3）… 従来どおり（§22-am-6〜8・§22-y・§22-aq）
+   *   標準（2）… 🔒 §30-22-11 2 で訂正（下記）: 誤＝「離す」と「近く」の**中点**
+   *              （緯度経度の中点。中点だと離すと近くが印の反対側の時に文字が印に乗る）
+   * 🔴 §30-22-2 2 の係数方式（0.6／1.0／1.5）は**廃止**した。
+   * 🔴 段は数字で持つ。表示文字（「近く」等）では判定しない（§26-2 注意②）。 */
+  var NAME_GAP_NEAR = 1, NAME_GAP_MID = 2, NAME_GAP_FAR = 3;
+  function nameGapStep(v) {
+    var n = Math.round(Number(v));
+    return (n === NAME_GAP_NEAR || n === NAME_GAP_MID) ? n : NAME_GAP_FAR;
+  }
+  /* 🔒 §30-22-11（2026-09-13 Fable 裁定）: 上の「標準（2）」を訂正。
+   *   正＝「離す」で決めた位置への**向きはそのまま**、印からの距離を**半分**にする
+   *   （半分が「近く」の距離より短ければ「近く」の距離を使う＝文字が印に乗らない）。
+   *   引き出し線は従来の距離規則で判定し直す（変更なし）。実装は midStandardBox。
+   * 🔒 §30-22-11 1: 離す（3）の隙間は変えない＝ ×1.5 のまま（awayCands 参照）。 */
+  var AWAY_GAP_K = 1.5;
+  /* 🔒 §30-22-12（2026-09-13 Fable・§30-22-11 2 の補正）: 「印からの距離を半分」を
+   *   「印の縁と文字の箱の縁の**隙間**を半分」に直す。中心どうしの距離を半分にすると
+   *   文字の半幅（長い名前ほど大きい）を含んでしまい、実測でほぼ全件が「近く」の
+   *   下限に張り付いた（標準＝近く）。隙間の下限は「近く」の隙間＝字高×0.4。
+   *   実装は midStandardBox（markHalfW／ellipseR で向きに応じた半幅を出す）。 */
+
   /* 候補の8方向（単位ベクトル・§22-am-6-1 ⑥）。●の周りを均等に見る */
   var DIR8 = (function () {
     var a = [], k, t;
@@ -642,6 +680,46 @@
   };
   var SHOP_PRIO_DEFAULT = 2;
 
+  /* 🔒 §30-21-2 の格の表（施設・公園）。POI_PRIO と**同じ作法**
+   * （小さいほど先に出る・表に無い物は既定）。
+   * 🔴 判定は osm.js pointCat が焼いた `sub`（'キー:値'）。表示文字では判定しない（注意②）。
+   * 正典: 公園・駅・団地・変電所／発電所・浄水場＝0／運動場・工場・川・橋＝1／他＝2 */
+  var FACILITY_PRIO = {
+    /* 0 = 公園・駅・団地・変電所／発電所・浄水場 */
+    'leisure:park': 0, 'leisure:garden': 0, 'leisure:nature_reserve': 0,
+    'railway:station': 0, 'railway:halt': 0, 'public_transport:station': 0,
+    'landuse:residential': 0,
+    'power:substation': 0, 'power:plant': 0, 'power:generator': 0,
+    'man_made:water_works': 0, 'man_made:wastewater_plant': 0,
+    /* 1 = 運動場・工場・川・橋 */
+    'leisure:sports_centre': 1, 'leisure:stadium': 1, 'leisure:pitch': 1,
+    'leisure:track': 1, 'leisure:swimming_pool': 1, 'leisure:golf_course': 1,
+    'leisure:sports_hall': 1, 'leisure:fitness_centre': 1, 'leisure:water_park': 1,
+    'man_made:works': 1, 'landuse:industrial': 1, 'landuse:quarry': 1,
+    'man_made:bridge': 1,
+    'waterway:river': 1, 'waterway:stream': 1, 'waterway:canal': 1,
+    'waterway:riverbank': 1, 'natural:water': 1
+  };
+  var FACILITY_PRIO_DEFAULT = 2;
+
+  /* 🔒 §30-21-2 の格の表（建物名）。
+   * 正典: 公共の建物・ホテル・商業ビル＝0／事務所・倉庫＝1／マンション・棟名＝2 */
+  var BUILDING_PRIO = {
+    /* 0 = 公共の建物・ホテル・商業ビル */
+    'building:public': 0, 'building:civic': 0, 'building:government': 0,
+    'building:school': 0, 'building:university': 0, 'building:college': 0,
+    'building:kindergarten': 0, 'building:hospital': 0, 'building:train_station': 0,
+    'building:transportation': 0, 'building:fire_station': 0, 'building:museum': 0,
+    'building:hotel': 0, 'tourism:hotel': 0, 'tourism:motel': 0, 'tourism:guest_house': 0,
+    'building:commercial': 0, 'building:retail': 0, 'building:supermarket': 0,
+    'building:mall': 0,
+    /* 1 = 事務所・倉庫 */
+    'building:office': 1, 'building:warehouse': 1, 'building:industrial': 1,
+    'building:manufacture': 1, 'building:service': 1
+    /* 2（既定）= マンション・棟名（building:apartments / residential / yes …） */
+  };
+  var BUILDING_PRIO_DEFAULT = 2;
+
   /** 分類ごとの優先順位（小さいほど先に出る）。0 固定の分類は距離だけで並ぶ */
   function namePrio(cat, it) {
     if (cat === 'public') {
@@ -651,6 +729,14 @@
     if (cat === 'shop') {
       var s = SHOP_PRIO[it.sub];
       return (s === undefined) ? SHOP_PRIO_DEFAULT : s;
+    }
+    if (cat === 'facility') {
+      var f = FACILITY_PRIO[it.sub];
+      return (f === undefined) ? FACILITY_PRIO_DEFAULT : f;
+    }
+    if (cat === 'building') {
+      var g = BUILDING_PRIO[it.sub];
+      return (g === undefined) ? BUILDING_PRIO_DEFAULT : g;
     }
     /* 道路名は「枠の中にその道が何本の way として入っているか」を規模の代わりに使う。
      * 主要道ほど枠内に長く伸びるので way 数が多い（§23-5-a の名寄せの副産物）。 */
@@ -690,6 +776,29 @@
       if (Math.abs(k.p.lat - cand.p.lat) > NAME_DUP_DLAT) continue;
       if (Math.abs(k.p.lng - cand.p.lng) > dLngMax) continue;
       if (sameSpotName(k, cand)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * 🔒 §30-21-4 4（2026-09-13 Fable 裁定）: **同じ名前だけ**1つに寄せる版。
+   * 建物名（棟名）は隣どうしが近い（実測「6棟」は「7棟」から 37m ＝ NAME_DUP_M 以内）
+   * ので、距離で「同じ場所」とみなす §22-aq-3 ③ を掛けると別の棟が落ちてしまう。
+   * 建物名だけこちらを使う＝**同名だけ**従来どおり1つに（同じ建物が node と面の
+   * 両方で入っている時に効く）。
+   * 🔴 含み合い（「1棟」⊂「11棟」）は見ない。棟名は短いので誤爆する。
+   * 🔴 近接の前ふるい（NAME_DUP_DLAT）は残す＝枠の離れた所にある同名の別の建物
+   *    （別の団地の「1棟」）は落とさない。
+   */
+  function hitsKeptSameName(kept, cand) {
+    var cosLat = Math.cos(cand.p.lat * Math.PI / 180);
+    var dLngMax = NAME_DUP_DLAT / Math.max(0.1, Math.abs(cosLat));
+    for (var i = 0; i < kept.length; i++) {
+      var k = kept[i];
+      if (k.name !== cand.name) continue;
+      if (Math.abs(k.p.lat - cand.p.lat) > NAME_DUP_DLAT) continue;
+      if (Math.abs(k.p.lng - cand.p.lng) > dLngMax) continue;
+      return true;
     }
     return false;
   }
@@ -942,7 +1051,8 @@
     return false;
   }
 
-  /** 6分類ぜんぶ（🔒 §30-13-7 7: 取得する分類は段に依らない・下の fetchOsmNames 参照） */
+  /** 分類ぜんぶ（🔒 §30-13-7 7: 取得する分類は段に依らない・下の fetchOsmNames 参照。
+   * 🔒 §30-21-2 で6分類 → 8分類。CATS を読むだけなので足し忘れは起きない） */
   function allNameCats() {
     var cats = Object.create(null);
     global.OSM.CATS.forEach(function (c) { cats[c.id] = true; });
@@ -963,20 +1073,31 @@
    */
   function fetchOsmNames(opts) {
     if (!anyNameCat(opts.nameLevels)) return Promise.resolve(null);
-    /* 🔒 §22-aq-4: 枠の外の交差点名は出さないので、範囲を広げる必要も無い
-     * （§22-aq-2 ② の padForCrossing は廃止した）。osm.js が自前で PAD ぶん
-     * 広げて取るのは従来どおり＝縁ぎわの●を取りこぼさないための余白。 */
-    var b = opts.frameBounds || opts.bounds;
+    /* 🔒 §30-25-3 1（2026-09-13 オーナー指示）: 地理院タイルも Overpass も
+     * **同じ取得範囲（画面∪枠＋8%）を1回で取る**。枠の外に描くかは段で決める（areaFor）。
+     * 🔴 osm.js は広すぎる範囲（MAX_SPAN_M）を断るので、その時だけ枠に戻す
+     *    ＝地図をうんと広げた時に名前が丸ごと消えない保険（取れる分は必ず取る）。
+     * 🔴 osm.js が自前で PAD ぶん広げて取るのは従来どおり＝縁ぎわの●の取りこぼし防止。 */
+    var b = opts.bounds || opts.frameBounds;
+    var lim = Number(global.OSM.MAX_SPAN_M) || Infinity;
+    var lat0b = (b.north + b.south) / 2;
+    var spanW = GSI.distanceMeters({ lat: lat0b, lng: b.west }, { lat: lat0b, lng: b.east });
+    var spanH = GSI.distanceMeters({ lat: b.south, lng: b.west }, { lat: b.north, lng: b.west });
+    if ((spanW > lim || spanH > lim) && opts.frameBounds) b = opts.frameBounds;
     /* 🔒 §22-av: 路線番号（国道・都道府県道）は**道路名と同じ段**に乗せる。
      * 🔴 「乗せる」のは**出す／出さない**の話（routeShields 側で切る）。取得は
      *    上のとおり段に依らず必ず一緒に取る（実測 2026-09-06・名駅 700m 枠:
      *    413KB → 464KB ＝ +51KB）。 */
     return global.OSM.fetchNames(b, allNameCats(), { routes: true })
       .then(function (r) {
+      /* 🔒 §30-21-4 1: 応答が上限に当たった（名前を省いた）かをそのまま持ち上げる。
+       * 🔴 作図は止めない（省いただけ＝取れた分は全部使う）。知らせるのは一言で。 */
       return { items: r.items, roads: r.roads, routes: r.routes || [],
+               truncated: !!r.truncated,
                cached: !!r.cached, ms: r.ms, bytes: r.bytes, error: null };
     }, function (e) {
-      return { items: [], roads: [], routes: [], error: (e && e.kind) || 'net',
+      return { items: [], roads: [], routes: [], truncated: false,
+               error: (e && e.kind) || 'net',
                message: (e && e.message) || '' };
     });
   }
@@ -1249,7 +1370,7 @@
     return out;
   }
 
-  function buildAutoNames(osm, opts, objs, exNames, Rframe, stat, gsiBase) {
+  function buildAutoNames(osm, opts, objs, exNames, Rframe, stat, gsiBase, areaFor) {
     var lv = opts.nameLevels || {};
     stat.names = {};
     stat.namesTotal = 0;
@@ -1277,6 +1398,10 @@
     var baseSpots = (gsiBase && gsiBase.spots) ? gsiBase.spots : [];
 
     var fb = opts.frameBounds || opts.bounds;
+    /* 🔒 §30-25-3 2（2026-09-13 オーナー指示）: 名前を描く範囲は**その分類の段**で決める
+     * （1〜3＝枠の中／4 多め・5 全部＝取得範囲＝画面に映っている所）。
+     * 🔴 範囲の出どころは generate の areaFor 1か所（建物・道路と同じ物）。 */
+    function areaOf(catId) { return areaFor ? areaFor(lv[catId]) : fb; }
     // 分類ごとの候補置き場と、分類ごとの同名よけ（🔴 分類をまたがない・是正3）
     var byCat = Object.create(null), seenInCat = Object.create(null);
     global.OSM.CATS.forEach(function (c) {
@@ -1292,7 +1417,8 @@
       /* 🔒 §22-aq-4（2026-09-05 オーナー決定「A」）: 枠の外は**分類を問わず**落とす。
        * 交差点名だけ枠外 CROSS_OUT_M まで候補に残す §22-aq-2 ② は撤回した
        * （紙では枠で切れる＝どこにも行かない線にしかならない・§18-n-4 に戻す）。 */
-      if (!inBoundsLL(p, fb)) return;
+      // 🔒 §30-25-3 2: 枠の外を描くかは**その分類の段**で決める（areaOf 1か所）
+      if (!inBoundsLL(p, areaOf(it.cat))) return;
       var dHome = opts.home ? GSI.distanceMeters(p, opts.home) : Infinity;
       var dLot = opts.lot ? GSI.distanceMeters(p, opts.lot) : Infinity;
       var dMain = Math.min(dHome, dLot);
@@ -1324,7 +1450,8 @@
       }
     });
     if (Number(lv.road) >= 2 && osm.roads && osm.roads.length) {
-      var merged = global.OSM.mergeRoads(osm.roads, fb);
+      // 🔒 §30-25-3 2: 道路名の名寄せも道路名の段の範囲で（枠の外まで描く時は広く）
+      var merged = global.OSM.mergeRoads(osm.roads, areaOf('road'));
       for (i = 0; i < merged.length; i++) offer(merged[i]);
     }
 
@@ -1427,13 +1554,20 @@
          * 交差点名**どうし**の重複（catKept・同じ分類の中）は従来どおり見る。
          * 🔴 判定は nameCat（＝c.id）で行う。表示文字では判定しない（§26-2 注意②）。 */
         var skipBaseDup = (c.id === CROSSING_CAT);
+        /* 🔒 §30-21-4 4（2026-09-13 Fable 裁定）: **建物名には ③ を掛けない**。
+         * 団地の棟名は隣どうしが 40m 以内に並ぶので（実測「6棟」は「7棟」から 37m）、
+         * 距離で「同じ場所」とみなす ③ が別々の棟を潰してしまう。
+         * 建物名だけ **同名の重複だけ**を1つに寄せる（hitsKeptSameName）。
+         * 🔴 判定は分類の id（c.id）で行う。表示文字では判定しない（§26-2 注意②）。 */
+        var sameNameOnly = (c.id === BUILDING_CAT);
         for (i = 0; i < arr.length; i++) {
           var sp = { p: { lat: arr[i].it.lat, lng: arr[i].it.lng },
                      name: arr[i].it.name };
           if (!skipBaseDup && hitsKeptSpot(baseSpots, sp)) {   // ②地理院に負ける（片方向）
             arr[i].dup = true;
             stat.nameDupBase++;
-          } else if (hitsKeptSpot(catKept, sp)) {   // ③同じ分類の中の別名
+          } else if (sameNameOnly ? hitsKeptSameName(catKept, sp)
+                                  : hitsKeptSpot(catKept, sp)) {  // ③同じ分類の中の別名
             arr[i].dup = true;
             stat.nameDupOsm++;
           } else {
@@ -1472,7 +1606,7 @@
           var nh = arr[i].nearHome, nl = arr[i].nearLot, np;
           if (nh && nl) np = (nh.d <= nl.d) ? nh : nl;
           else np = nh || nl || null;
-          if (np && inBoundsLL(np.pt, fb)) {
+          if (np && inBoundsLL(np.pt, areaOf(c.id))) {
             atP = np.pt;
             stat.roadMainPlaced = (stat.roadMainPlaced || 0) + 1;
           } else {
@@ -1490,7 +1624,10 @@
          * 印の種類（交差点名だけ信号機）は分類表 meta が唯一の出どころ。 */
         if (c.dot) {
           tobj.anchor = { lat: it.lat, lng: it.lng };
-          if (c.mark && c.mark !== 'dot') tobj.dotStyle = c.mark;
+          /* 🔒 §30-21-2: 印は「その物ごとの印（it.mark）→ 分類の印（c.mark）」の順。
+           * 信号の無い交差点・高速の出入口は it.mark='dot'＝●（信号機にしない）。 */
+          var mk = it.mark || c.mark;
+          if (mk && mk !== 'dot') tobj.dotStyle = mk;
         }
         out.push(tobj);
         stat.names[c.id]++;
@@ -1531,6 +1668,19 @@
       : 0;
     var bldgR = bldgRadiusFor(bldgLevel, bldgRframe);  // null=段1(対象外)/段5(無制限)
     var bldgLat0 = (bounds.north + bounds.south) / 2;
+    /* 🔒 §30-25-3 2（2026-09-13 オーナー指示）: **描く範囲は段で決める**。
+     *   段 1〜3（なし・主役の周りだけ・標準） … 枠の中だけ（今まで通り）
+     *   段 4（多め）・5（全部）              … 取得範囲の全部＝画面に映っている所
+     * 🔴 出どころはこの1関数だけ（建物・道路・名前の8分類・目標物が同じ物を読む）。
+     * 🔴 枠が無い生成（frameBounds なし）は取得範囲そのものが枠＝どの段でも同じ。 */
+    var frameArea = opts.frameBounds || bounds;
+    var SHOW_OUT_FROM = 4;                 // この段から枠の外にも描く
+    function areaFor(level) {
+      var n = Math.max(1, Math.min(5, Math.round(Number(level) || 1)));
+      return (n >= SHOW_OUT_FROM) ? bounds : frameArea;
+    }
+    // 目標物（地理院の注記）の段。件数は opts.landmarks（LM_COUNT）が持つ
+    var lmLevel = Math.max(1, Math.min(5, Math.round(Number(opts.lmLevel) || 1)));
     /* 🔒 2026-09-03: 道路の量も5段階。半径は建物と**同じ R_frame** に連動させる
      * （同じ枠なら「主役の周りだけ」の広さが建物と道路でそろう）。 */
     var roadLevel = Math.max(1, Math.min(5, Math.round(Number(opts.roadLevel) || 3)));
@@ -1558,14 +1708,19 @@
                    minRank: 0, kinds: {}, bldgLevel: bldgLevel,
                    roadLevel: roadLevel, roadStyle: roadStyle,
                    osmError: osm ? (osm.error || null) : null,
+                   /* 🔒 §30-21-4 1: 名前が多すぎて Overpass の応答が上限に当たった。
+                    * app.js が生成後の一言に足す（§22-as の警告と同じ仕組み）。 */
+                   namesTruncated: !!(osm && osm.truncated),
                    osmUsed: !!osm };
 
       /* --- 🔒 2026-09-03: 川・山（トグル「川・山を入れる」の中身） ---
        * 🔴 **一番先に積む**＝道路・建物・文字の下に来る（配列順＝描画順）。
        *    水面のグレーの上に道路の白帯が乗る、が正しい重なり。 */
+      /* 🔒 §30-25-3 2: 川・山は**5段階の設定を持たない**（2択のトグル）ので、
+       * 描く範囲は今まで通り枠の中だけ（取得範囲が画面まで広がっても変わらない）。 */
       if (opts.nature !== false) {
-        collectWater(got.tiles, bounds, stat).forEach(function (o) { objs.push(o); });
-        collectContours(got.tiles, bounds, bldgRframe, stat)
+        collectWater(got.tiles, frameArea, stat).forEach(function (o) { objs.push(o); });
+        collectContours(got.tiles, frameArea, bldgRframe, stat)
           .forEach(function (o) { objs.push(o); });
       }
 
@@ -1575,6 +1730,8 @@
        *    面積を分位点にかけてしきい値を決め、そのしきい値（と主役近傍の例外）で確定する。 */
       if (bldgLevel >= 2) {
         var bldgCand = [];
+        // 🔒 §30-25-3 2: 建物を描く範囲は建物の段で決める（4/5 は枠の外＝画面まで）
+        var bldgArea = areaFor(bldgLevel);
         got.tiles.forEach(function (t) {
           if (!t.layers.BldA) return;
           var B = t.layers.BldA;
@@ -1583,7 +1740,7 @@
             for (var g = 0; g < f.geom.length; g++) {
               if (f.geom[g].length < 3) continue;
               var pts = toLatLngs(f.geom[g], t, B.extent);
-              if (!bboxHits(pts, bounds)) continue;
+              if (!bboxHits(pts, bldgArea)) continue;
               var bc = ringCenter(pts);
               var dHome = opts.home ? GSI.distanceMeters(bc, opts.home) : Infinity;
               var dLot = opts.lot ? GSI.distanceMeters(bc, opts.lot) : Infinity;
@@ -1614,6 +1771,10 @@
         });
       }
 
+      /* 🔒 §30-25-3 2: 道路は道路の段・鉄道と注記は枠（段を持たない物は今まで通り）。
+       * 🔴 目標物（landmark）だけは段を持つので注記の中で別に見る。 */
+      var roadArea = areaFor(roadLevel);
+      var lmArea = areaFor(lmLevel);
       got.tiles.forEach(function (t) {
         var i, f, g, pts;
 
@@ -1628,7 +1789,7 @@
             for (g = 0; g < f.geom.length; g++) {
               if (f.geom[g].length < 2) continue;
               pts = toLatLngs(f.geom[g], t, R.extent);
-              if (!bboxHits(pts, bounds)) continue;
+              if (!bboxHits(pts, roadArea)) continue;
               roadBuf.push({ rank: rank, points: pts, widthM: widthM, floorU: floorU });
             }
           }
@@ -1644,7 +1805,8 @@
             for (g = 0; g < f.geom.length; g++) {
               if (f.geom[g].length < 2) continue;
               pts = toLatLngs(f.geom[g], t, L.extent);
-              if (!bboxHits(pts, bounds)) continue;
+              // 🔒 §30-25-3 2: 鉄道は段を持たない＝枠の中だけ（今まで通り）
+              if (!bboxHits(pts, frameArea)) continue;
               objs.push({ id: uid('r'), type: 'path', points: pts,
                           style: { w: 2.6, color: '#111', rail: true },
                           source: 'shozaizu' });
@@ -1680,12 +1842,19 @@
             if (!bboxHits([at], bounds)) continue;
             /* 🔴 基準集合へは**厳選より前・段の判定より前**に入れる
              *    ＝ここが「地図に既にある名前」の唯一の出どころ（§22-ak-6 手順①）。
-             *    ●が付く種別（＝点に付く名前）だけ近接判定にも使う。 */
-            gsiBaseNames[txt] = true;
-            if (GSI.annoHasDot(baseKind, f.props.vt_code)) {
-              gsiBaseSpots.push({ p: { lat: at.lat, lng: at.lng }, name: txt });
+             *    ●が付く種別（＝点に付く名前）だけ近接判定にも使う。
+             * 🔒 §30-25-3 2: 基準集合は**枠の中だけ**で作る（どの段にも依らない
+             *    ＝是正3 の独立性を保つ。取得範囲が画面まで広がっても変わらない）。 */
+            if (bboxHits([at], frameArea)) {
+              gsiBaseNames[txt] = true;
+              if (GSI.annoHasDot(baseKind, f.props.vt_code)) {
+                gsiBaseSpots.push({ p: { lat: at.lat, lng: at.lng }, name: txt });
+              }
             }
             if (!kind) continue;                 // 川・山トグルOFF時はここで描かない
+            /* 🔒 §30-25-3 2: 描く範囲は分類の段で決める。段を持つのは目標物
+             * （landmark）だけ＝それ以外（地名・道路名・鉄道名・川山）は枠の中だけ。 */
+            if (!bboxHits([at], kind === 'landmark' ? lmArea : frameArea)) continue;
             // タイル跨ぎ・近接の重複を落とす
             var key = txt + '@' + at.lat.toFixed(4) + ',' + at.lng.toFixed(4);
             if (seenText[key]) continue;
@@ -1810,8 +1979,10 @@
         stat.roads++;
       });
 
-      /* --- 自宅⇄駐車場の破線・距離・2km判定（正典 §5） --- */
-      if (opts.home && opts.lot) {
+      /* --- 自宅⇄駐車場の破線・距離・2km判定（正典 §5） ---
+       * 🔒 §30-22-1 6 / §30-22-6 2（2026-09-13 オーナー指示）: **同一住所（opts.same）の
+       * 時は結線も直線距離も描かない**（同じ点を結ぶ長さ0の線と「約0m」は嘘の情報）。 */
+      if (opts.home && opts.lot && !opts.same) {
         var m = GSI.distanceMeters(opts.home, opts.lot);
         var over = m > 2000;
         /* 🔴 a/b は **必ず座標を写す**。opts.home / opts.lot をそのまま入れると
@@ -1850,20 +2021,37 @@
        *    （opts.marks = {home:{shape,color}, lot:{...}}・ガイダンス①が渡す）。
        *    opts.marks が無い呼び出しは従来どおり opts.markStyle で両方まとめて決まる
        *    ＝後方互換（色は Editor.MARK.kinds の既定＝本拠 赤／駐車場 オレンジ）。 */
+      /* 🔒 §30-25-37 1: 印の大きさ（scale）も持ち回す（◎の輪・■の実寸に掛かる）。
+       * 🔴 値の出どころは案件の points[key].mark.scale（app.js markOf → opts.marks）。 */
       var markOf = function (key) {
         var m = opts.marks && opts.marks[key];
+        var sc = (global.Editor && global.Editor.clampMarkScale)
+                 ? global.Editor.clampMarkScale(m && m.scale) : 1;
         return { shape: (m && m.shape) ? m.shape
                         : ((opts.markStyle === 'circle') ? 'circle' : 'rect'),
-                 color: (m && m.color) || null };
+                 color: (m && m.color) || null,
+                 scale: sc };
       };
-      [['home', '使用の本拠'], ['lot', '駐車場']].forEach(function (kv) {
+      /* 🔒 §30-24-2（2026-09-13 オーナー指示・§30-22-1 6 の補正）: 同一住所でも
+       * **文字は2つ**（「使用の本拠」と「駐車場」）。上下に並べ、別々に動かせる。
+       * 印だけが1つ（本拠側の設定で描き、駐車場側は印を作らない）。 */
+      var pinList = [['home', PIN_LABEL.home], ['lot', PIN_LABEL.lot]];
+      pinList.forEach(function (kv) {
         var p = opts[kv[0]];
         if (!p) return;
         var want = markOf(kv[0]);
-        var circleMark = (want.shape === 'circle');
+        /* 🔒 §30-22-1 6 / §30-24-2: 同一住所の時、駐車場側は印を描かない
+         * （同じ場所に2つ重ねても掴めないだけ。印は本拠側の1つ＝設定も本拠側）。 */
+        var shared = !!(opts.same && kv[0] === 'lot');
+        var circleMark = (want.shape === 'circle') && !shared;
+        /* 🔒 §30-22-1 4 (c): 「印なし（文字だけ）」＝四角も◎も描かない
+         * 🔒 §30-24-1: 「多角形」＝利用者が描いた多角形が印なので◎■は描かない
+         *    （多角形そのものは紙に残っている図形で、ここでは作らない）。 */
+        var noMark = (want.shape === 'none') || (want.shape === 'polygon') || shared;
         var mk = null;
-        if (!circleMark && global.Editor && global.Editor.makeMark) {
-          mk = global.Editor.makeMark(kv[0], p, uid('mk'), want.color);
+        if (!circleMark && !noMark && global.Editor && global.Editor.makeMark) {
+          // 🔒 §30-25-37 1: ■の実寸は「基準 × 大きさ」（Editor.markRectDims が出どころ）
+          mk = global.Editor.makeMark(kv[0], p, uid('mk'), want.color, want.scale);
           objs.push(mk);
         }
         objs.push({ id: uid('lb'), type: 'text',
@@ -1882,8 +2070,15 @@
                     /* 🔒 §28-14 ①-4: ◎の色（形が四角の時は使われない）。
                      * 色の key は四角の印と同じ表（Editor.MARK.colors）。 */
                     markColor: want.color || null,
+                    /* 🔒 §30-25-37 1: ◎の大きさ（輪の半径・線の太さ）。
+                     * ■の時は使われない（四角が実寸で持つ）。 */
+                    markScale: want.scale,
                     text: kv[1], size: 'large',
                     style: { color: '#111' },
+                    /* 🔒 §30-24-5（2026-09-14 オーナー指示）: 同一住所の間は主役の
+                     * 文字に引き出し線を出さない。生成直後の ensureMainLabels でも
+                     * 揃うが、生成物はここだけで自己完結させる。 */
+                    noLead: opts.same ? true : undefined,
                     source: 'shozaizu', role: 'pinlabel' });
       });
 
@@ -1892,9 +2087,10 @@
        * 自宅の近く n/2 件＋駐車場の近く n/2 件だけ残す。**近くに無ければゼロのまま**。 */
       if (opts.landmarks !== undefined && opts.landmarks !== null) {
         var lmPts = [opts.home, opts.lot].filter(Boolean);
+        // 🔒 §30-25-3 2: 目標物を描く範囲は目標物の段で決める（4/5 は画面まで）
         var lmAll = objs.filter(function (o) {
           return o.type === 'text' && o.annoKind === 'landmark'
-              && inBoundsLL(o.anchor || o.at, opts.frameBounds);
+              && inBoundsLL(o.anchor || o.at, lmArea);
         });
         var keepLm = Object.create(null);
         /* 🔒 2026-09-03: 3択 → 5段階になり、一番上の段「全部」が入った。
@@ -1920,6 +2116,8 @@
       /* --- 🔒 §18-x-2: 地名も枠を決めて厳選する ---
        * 自宅の近く1・駐車場の近く1・2点の中間1・図の空いた隅1（既定4枠）。
        * 統合の結果それより少なければ少ないまま（無理に埋めない）。 */
+      /* 🔒 §30-25-3 2: 地名は**5段階の設定を持たない**（枠の4枠に固定）ので、
+       * 段で範囲を広げる対象にしない＝今まで通り枠の中だけ。 */
       var plLimit = (opts.places === undefined || opts.places === null) ? 4 : opts.places;
       if (plLimit >= 0) {
         var plAll = objs.filter(function (o) {
@@ -1947,7 +2145,9 @@
        *     他の文字と同じ規則で位置が決まる（後から足すと重なる） */
       var auto = buildAutoNames(osm, opts, objs, opts.existingNames,
                                 bldgRframe, stat,
-                                { names: gsiBaseNames, spots: gsiBaseSpots });
+                                { names: gsiBaseNames, spots: gsiBaseSpots },
+                                /* 🔒 §30-25-3 2: 分類の段 → 描く範囲（1か所） */
+                                areaFor);
       /* 🔒 2026-09-04 是正2: 近接重複で負けた**地理院由来**の名称を紙から落とす。
        * 🔴 `objs` は generate のローカル配列なので splice してよい（§23-7-1 の
        *    「this.objects への代入禁止」は編集中の実配列の話で、ここは別物）。 */
@@ -1967,6 +2167,9 @@
        * 🔒 §22-av / §30-13-7 7: 路線番号は**道路名と同じ段**。道路名が「なし」なら
        *    印も出さない。以前は「取らない」ことで出していなかったが、取得は段に
        *    依らなくなった（fetchOsmNames）ので、ここで段を見て切る。 */
+      /* 🔒 §30-25-3 2: 路線番号の印は**枠のまま**（範囲を広げない）。この関数は
+       * 「紙の付き物の席」を枠の割合で作るので、枠でない矩形を渡すと席がずれる。
+       * 印は紙に出す物なので、枠の外まで出す意味も無い。 */
       var shields = (Number((opts.nameLevels || {}).road) >= 2)
                   ? routeShields(osm, opts, bldgFrameB, objs) : [];
       shields.forEach(function (o) { objs.push(o); });
@@ -2004,6 +2207,13 @@
                                * （枠外ドロップ・はみ出し罰点は従来どおり効かせない）
                                * 🔒 §28-3: 部品の方位記号は名前が避ける障害物 */
                               { fallbackBounds: bounds,
+                                /* 🔒 §30-22-2 2: 名前の位置（1=近く/2=標準/3=離す） */
+                                nameGap: opts.nameGap,
+                                /* 🔒 §30-24-2: 同一住所（印は1つ・文字は2つ） */
+                                same: !!opts.same,
+                                /* 🔒 §30-24-1: 利用者が描いた主役の多角形（印の実寸）。
+                                 * 生成物ではないので app.js が渡す（描いた順） */
+                                mainPolys: opts.mainPolys || [],
                                 compasses: opts.compasses || [] });
       tEnd('shozaizu:配置');
       stat.labelMoved = placed.moved;
@@ -2033,6 +2243,27 @@
         stat.annoDropped = placed.drop.length;
         stat.annoKept -= placed.drop.length;
       }
+
+      /* --- 🔒 §30-23: 枠に入った「目印」の件数 ---
+       * 枠が狭すぎると周りの施設が全部枠の外に出て、紙に目印が1つも載らない
+       * （オーナー実機・ZL19 の枠は横 150m ほど＝250〜500m 先の変電所・公園・団地が外）。
+       * app.js が生成後の一言に足す（§22-as・§30-21-4 1 と同じ仕組み）。
+       * 🔴 数えるのは**場所を指す名前**だけ＝地理院の目標物（annoKind:'landmark'）と
+       *    OSM の点に付く名前（nameSrc:'osm'・公共的建物／交差点名／お店／会社／バス停／
+       *    施設・公園／建物名）。道路名（road）と路線番号の印（route）は「線に付く名前」で
+       *    どんなに狭い枠でも必ず出る＝目印の有無の判定にならないので**除く**。
+       * 🔴 判定は annoKind / nameCat / nameSrc（データ）で行う。表示文字では分岐しない
+       *    （§26-2 注意②）。位置は**●の場所**（anchor）で見る＝重なり回避で文字が
+       *    外へ動いた分は枠の外に出たと数えない。 */
+      var markFrameB = opts.frameBounds || bounds;
+      stat.marksInFrame = objs.filter(function (o) {
+        if (o.type !== 'text' || o.role) return false;
+        var isLandmark = (o.annoKind === 'landmark');
+        var isOsmSpot = (o.nameSrc === 'osm' && o.nameCat
+                         && o.nameCat !== 'road' && o.nameCat !== 'route');
+        if (!isLandmark && !isOsmSpot) return false;
+        return inBoundsLL(o.anchor || o.at, markFrameB);
+      }).length;
 
       return { objects: objs, stats: stat, zoom: got.z, minRankJa: RANK_JA[minRank] };
     }).catch(function (e) {
@@ -2363,6 +2594,9 @@
      *    なぞり出し（枠しか知らない・§22-am-3）と物差しがずれてしまう。
      *    枠の幅で測れば生成と実体化の2経路で**同じ置き方**になる。 */
     var hRef = (frameRect ? (frameRect.x1 - frameRect.x0) : spanM) * MM.medium / 138;
+    /* 🔒 §30-22-10: 「名前の位置」の段（1=近く／2=標準／3=離す）。
+     * 🔴 値は案件（c.nameGap）→ generate の opts → ここ。表は nameGapStep 1か所。 */
+    var gapStep = nameGapStep(opts.nameGap);
 
     /* 🔒 §22-am-6-1 ⑦（§22-am-5 の furnitureZones を**そのまま残す**）: 紙の付き物
      * （方位記号＝右上・縮尺バー＝左下・出典＝右下・通し表示＝左上）の席。
@@ -2469,6 +2703,9 @@
      *    editor.js `_drawText` の ◎は 外輪の半径 ＝ 文字の高さ × 0.48（r0 = size*0.24 の2倍）。 */
     var MARK_RING_R = 0.48;            // ◎の外輪の半径 ÷ 文字の高さ（editor.js `_drawText`）
     var markBoxes = [];
+    /* 🔒 §30-22-10: 主役の四角の印の半幅(m)を pinKey ごとに控える
+     * （「名前の位置＝近く」で文字を印のすぐ隣へ置くために読む）。 */
+    var mainMarkHw = Object.create(null);
     (function collectMarks() {
       var minM = spanM * markMinMm() / 138, i, o, c, p, hw, hh, dg;
       var hasRect = Object.create(null);       // 主役ラベルの anchor に四角が居るか
@@ -2483,7 +2720,29 @@
         /* 回した四角は外接する軸並行の箱で見る（角が飛び出すのを取りこぼさない） */
         if (o.angle) { dg = Math.sqrt(hw * hw + hh * hh); hw = dg; hh = dg; }
         markBoxes.push({ x: p.x, y: p.y, hw: hw, hh: hh });
-        if (o.markRole) hasRect[o.markRole] = true;
+        if (o.markRole) { hasRect[o.markRole] = true; mainMarkHw[o.markRole] = hw; }
+      }
+      /* 🔒 §30-24-1: 主役の印が**多角形**の時（利用者が描いた図形なので生成物には
+       * 入っていない）は、app.js が opts.mainPolys で渡す。文字は多角形の**縁**から
+       * 離して置きたいので、外接する箱の半幅を印の実寸として扱う（四角の印と同じ扱い）。
+       * 🔴 ピン（anchor）は最初の多角形の重心なので、半幅もその多角形の物を使う。 */
+      var mps = opts.mainPolys || [];
+      for (i = 0; i < mps.length; i++) {
+        var mp = mps[i];
+        if (!mp || !mp.points || !mp.points.length) continue;
+        var xs = mp.points.map(toXY);
+        var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+        xs.forEach(function (q) {
+          if (q.x < x0) x0 = q.x;
+          if (q.x > x1) x1 = q.x;
+          if (q.y < y0) y0 = q.y;
+          if (q.y > y1) y1 = q.y;
+        });
+        var phw = Math.max((x1 - x0) / 2, minM / 2), phh = Math.max((y1 - y0) / 2, minM / 2);
+        markBoxes.push({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, hw: phw, hh: phh });
+        var mrole = (mp.markRole === 'lot') ? 'lot' : 'home';
+        // 同じ地点に多角形が何個あっても、半幅は**最初の1つ**（ピンを持つ物）で決める
+        if (mainMarkHw[mrole] == null) mainMarkHw[mrole] = phw;
       }
       for (i = 0; i < labels.length; i++) {
         o = labels[i];
@@ -2492,13 +2751,20 @@
         if (o.mark && (o.mark.w_m || o.mark.h_m)) {
           /* 四角の印。実体が objs に居ればそちらが正しいので二重に足さない */
           if (o.pinKey && hasRect[o.pinKey]) continue;
-          markBoxes.push({ x: p.x, y: p.y,
-                           hw: Math.max(o.mark.w_m || 0, minM) / 2,
+          hw = Math.max(o.mark.w_m || 0, minM) / 2;
+          if (o.pinKey) mainMarkHw[o.pinKey] = hw;
+          markBoxes.push({ x: p.x, y: p.y, hw: hw,
                            hh: Math.max(o.mark.h_m || 0, minM) / 2 });
         } else {
           var r = hM(o) * MARK_RING_R;         // ◎（二重丸）の外輪
           markBoxes.push({ x: p.x, y: p.y, hw: r, hh: r });
         }
+      }
+      /* 🔒 §30-24-2: 同一住所は印が**1つ**（本拠側）。駐車場の文字も同じ印の
+       * 縁から離して置く（半幅の出どころを揃える）。 */
+      if (opts && opts.same) {
+        if (mainMarkHw.home != null && mainMarkHw.lot == null) mainMarkHw.lot = mainMarkHw.home;
+        else if (mainMarkHw.lot != null && mainMarkHw.home == null) mainMarkHw.home = mainMarkHw.lot;
       }
     })();
 
@@ -2631,7 +2897,10 @@
     }
 
     /* ===== 仕分け（§22-am-1）と、置き直さない文字の登録 ===== */
-    var stayRecs = [], awayRecs = [];
+    /* 🔒 §30-25-3 4: ●（無ければ文字）が**枠の外**にある名前は「枠の中に収める」
+     * 規則を受けない（枠の外にも描く段のために作られた物＝落とさない・外へ出す）。
+     * 置き方は「印のすぐ隣」だけ（枠の中の文字の置き場所には一切影響しない）。 */
+    var stayRecs = [], awayRecs = [], freeRecs = [];
     /* 既に引かれている引き出し線（新しい線と交差させないために覚えておく）。
      * §22-am-3 のなぞり出し1件追加では、既にある文字の線もここに入る。 */
     var leads = [];
@@ -2671,14 +2940,16 @@
                         (lot && GSI.distanceMeters(o.anchor, lot) < NEAR_MAIN_M));
       }
 
-      /* 🔒 §18-n-4: ●（無ければ文字そのもの）が紙の枠の外にある注記は落とす。
-       * 枠外の●は写らないので、文字だけが宙に浮いて縁に溜まる。
-       * 役割つき（自宅・駐車場・距離）は所在図の主役なので絶対に落とさない。
-       * 🔒 §22-aq-4: 交差点名だけ枠外でも通す例外（forceIn）は**廃止**した
-       *    ＝枠の外は分類を問わず落とす（§18-n-4 に戻した）。 */
-      if (!o.role && o.annoKind && !inFrame(base)) { drop.push(o); return; }
-
       var rec = { o: o, base: base, h: h, w: w };
+      /* 🔒 §18-n-4 → §30-25-3 4（2026-09-13 オーナー指示で改定）:
+       * ●（無ければ文字そのもの）が紙の枠の外にある名前は、**落とさずに**
+       * 枠の制約を外して置く（紙には枠の中しか出ないが、画面では枠の外も見える
+       * ＝「枠の中に目印が無い」と分かって枠を決め直せる・§30-25-3 5）。
+       * 🔴 段 1〜3 では枠の外の物はそもそも作られない（areaFor が切る）ので、
+       *    ここへ来るのは「多め・全部」で意図して作った物だけ。
+       * 🔴 役割つき（自宅・駐車場・距離）は所在図の主役なので従来どおり対象外。 */
+      if (!o.role && !inFrame(base)) { freeRecs.push(rec); return; }
+
       if (goesOuter(o)) awayRecs.push(rec); else stayRecs.push(rec);
     });
 
@@ -2688,6 +2959,12 @@
      * （forcedCross）と「重なりの最大値」（forcedOverlap・件ごとの配列）を控えて報告に出す。 */
     var awayStat = { lead: 0, side: 0, forced: 0, forcedCross: 0, forcedOverlap: [] };
 
+    /* 🔒 §30-24-2: 置き終わった主役ラベルの控え（同じ点に付く2つ目を真下へ
+     * 並べるために読む）。表示文字ではなく「点が同じか」で見分ける（§26-2 注意②）。
+     * 🔴 宣言は置く処理（stayRecs.forEach）より**前**に置く（var の巻き上げでは
+     *    代入は走らないので、後ろで宣言すると undefined を push しに行く）。 */
+    var mainLabels = [];
+
     /* ①その場に置く物（従来の候補生成・rank 順のまま）
      *   ＝主役（役割つき）・道路名・鉄道名・地名・川山 */
     stayRecs.forEach(placeByCands);
@@ -2696,10 +2973,34 @@
     /* ②点に付く名前を「主役・結線から離れた空き地」へ（§22-am-6）。
      *   ①の道路名・主役の箱が、除外と密度と横切りの罰点に効く */
     awayRecs.forEach(placeAway);
+    /* ③🔒 §30-25-3 4: 枠の外の名前は**最後に**「印のすぐ隣」へ置く。
+     *   最後に置く＝枠の中の文字の置き場所に一切影響しない（障害物としても後出し）。 */
+    freeRecs.forEach(function (rec) {
+      finishAway(rec.o, rec.base, nearBox(rec.o, rec.base), true);
+    });
 
     /** 従来どおりその場／anchor の脇に置く（主役・線に付く名前＝道路名・地名・川山） */
     function placeByCands(rec) {
       var o = rec.o, h = rec.h, w = rec.w, base = rec.base;
+      /* 🔒 §30-24-2: 同一住所は「使用の本拠」と「駐車場」の2つの文字が**同じ点**に
+       * 付く。2つ目は1つ目の**真下**へ並べる（重ねない・どちらもドラッグで動かせる）。
+       * 🔴 判定は表示文字ではなく「同じ点に既に主役ラベルを置いたか」（§26-2 注意②）。 */
+      if (o.role === 'pinlabel' && o.anchor) {
+        var prev = mainLabelAt(base);
+        if (prev) {
+          var nb2 = boxOf(o, prev.box.cx,
+                          prev.box.cy - (prev.box.h * 0.75 + h * 0.75 + h * 0.25));
+          finishMain(o, base, nb2, !prev.lead);
+          return;
+        }
+      }
+      /* 🔒 §30-22-10: 主役ラベル（使用の本拠・駐車場）も同じ3段に従う。
+       * 「近く」は印のすぐ隣に置いて終わり（§22-y の逃がし＝ candidates の pad は
+       * 「離す」の時だけ効く）。引き出し線は出さない。 */
+      if (gapStep === NAME_GAP_NEAR && o.role === 'pinlabel' && o.anchor) {
+        finishMain(o, base, nearBox(o, base), true);
+        return;
+      }
       var cands = candidates(o, base, w, h);
       var best = null, bestCost = Infinity;
       for (var i = 0; i < cands.length; i++) {
@@ -2719,6 +3020,13 @@
         if (fr.y1 - fr.y0 > hh * 2) by = Math.min(Math.max(by, fr.y0 + hh), fr.y1 - hh);
         best = { x: bx, y: by, dx: best.dx, dy: best.dy };
         nb = boxOf(o, bx, by);
+      }
+      /* 🔒 §30-22-11 2「標準」: 主役ラベルも「離す」の向きのまま距離を半分へ
+       * （中点ではない・midStandardBox 参照）。移動量の記録（moved）は
+       * 従来どおり「候補が動いたか」で数える。 */
+      if (gapStep === NAME_GAP_MID && o.role === 'pinlabel' && o.anchor) {
+        nb = midStandardBox(o, base, nb);
+        best = { x: nb.cx, y: nb.cy, dx: best.dx, dy: best.dy };
       }
       /* 🔒 2026-09-04 是正4: 「これは道路名の箱か」を控える。
        * 道路名どうしの重なりは軽く、道路名が**他の文字**を埋めるのは重く見るため。
@@ -2745,6 +3053,38 @@
                              (mtip.y - base.y) * (mtip.y - base.y));
         o.lead = mgap > PLACE.ringMin * hRef * 1.02;
       }
+      // 🔒 §30-24-2: 同じ点に2つ目の主役ラベルが来た時の下敷きにする
+      noteMainLabel(o, base, nb);
+    }
+
+    /** 🔒 §30-22-10: 主役ラベルを「近く」に置いた時の後始末（placeByCands の尻尾と同じ）。
+     * near=true は引き出し線を出さない（`lead:false` を焼く）。 */
+    function finishMain(o, base, nb, near) {
+      nb.road = isRoadName(o);
+      nb.main = !!o.role;
+      placedBoxes.push(nb);
+      if (seg && segPenalty(nb) > 0) onLine++;
+      moved++;
+      o.at = { lat: lat0 + nb.cy / M_LAT, lng: lng0 + nb.cx / M_LNG };
+      if (near) { o.lead = false; noteMainLabel(o, base, nb); return; }
+      var tip = edgeToward(nb, base);
+      var g = Math.sqrt((tip.x - base.x) * (tip.x - base.x) +
+                        (tip.y - base.y) * (tip.y - base.y));
+      o.lead = g > PLACE.ringMin * hRef * 1.02;
+      noteMainLabel(o, base, nb);
+    }
+
+    function noteMainLabel(o, base, nb) {
+      if (o.role !== 'pinlabel' || !o.anchor) return;
+      mainLabels.push({ x: base.x, y: base.y, box: nb, lead: !!o.lead });
+    }
+    /** その点に既に置いた主役ラベル（1m 以内＝同じ点とみなす）。無ければ null */
+    function mainLabelAt(base) {
+      for (var i = 0; i < mainLabels.length; i++) {
+        var m = mainLabels[i];
+        if (Math.abs(m.x - base.x) < 1 && Math.abs(m.y - base.y) < 1) return m;
+      }
+      return null;
     }
 
     /**
@@ -2760,6 +3100,9 @@
      */
     function placeAway(rec) {
       var o = rec.o, h = rec.h, w = rec.w, base = rec.base;
+      /* 🔒 §30-22-10「近く」: 外側へ・主役から離す・空き地探しは**一切掛けない**。
+       * 印のすぐ隣に置いて終わり（重なりは利用者がドラッグで直す）。 */
+      if (gapStep === NAME_GAP_NEAR) { finishAway(o, base, nearBox(o, base), true); return; }
       var cands = awayCands(base, w, h);
       var best = null, bestCost = Infinity, i, b, c;
       for (i = 0; i < cands.length; i++) {
@@ -2801,6 +3144,18 @@
         if (fr.y1 - fr.y0 > hh * 2) by = Math.min(Math.max(by, fr.y0 + hh), fr.y1 - hh);
         nb = boxOf(o, bx, by);
       }
+      /* 🔒 §30-22-11 2「標準」: 「離す」で決めた位置への向きはそのまま、
+       * 印からの距離を半分に（半分が「近く」の距離より短ければ「近く」の距離・
+       * midStandardBox 参照）。引き出し線は下の従来の距離規則で判定し直す。 */
+      if (gapStep === NAME_GAP_MID) {
+        nb = midStandardBox(o, base, nb);
+      }
+      finishAway(o, base, nb, false);
+    }
+
+    /** placeAway の後始末（箱の登録・at の書き戻し・引き出し線の判定）。
+     * 🔒 §30-22-10: 近く（near=true）は引き出し線を**出さない**（`lead:false` を焼く）。 */
+    function finishAway(o, base, nb, near) {
       nb.road = false;
       nb.main = false;
       placedBoxes.push(nb);
@@ -2815,16 +3170,103 @@
       var tip = edgeToward(nb, base);
       var gapM = Math.sqrt((tip.x - base.x) * (tip.x - base.x) +
                            (tip.y - base.y) * (tip.y - base.y));
-      o.lead = gapM > PLACE.ringMin * hRef * 1.02;
+      o.lead = near ? false : (gapM > PLACE.ringMin * hRef * 1.02);
       if (o.lead) awayStat.lead++; else awayStat.side++;
       leads.push({ a: base, t: tip });
     }
 
-    /** ●の周り 8方向 × 距離 1〜ringMax 行。箱の**縁**が●から gap だけ離れるように置く */
+    /** 🔒 §30-22-10: **紙に刷られる**文字1行の高さ(m)。
+     * 🔴 hM() は取得範囲（枠 +8%）で測る近似（箱の大きさ・環の幅の物差し）なので、
+     *    「印のすぐ隣」だけはこちらを使う。枠の幅 ÷ 138mm が紙 1mm の実距離
+     *    （export.js の PANEL_MM.w=138 × SHEET_SCALE を約すとこの比になる・hRef と同じ物差し）。 */
+    function hPaper(o) {
+      return (frameRect ? (frameRect.x1 - frameRect.x0) : spanM)
+             * (MM[o.size] || MM.medium) / 138;
+    }
+
+    /**
+     * 🔒 §30-22-10「近く」: 名前を**印のすぐ隣**に置いた時の文字の箱。
+     * 規則は手で置いた印つき文字（§30-15-3／§30-15-5 規則2）とまったく同じで
+     *   ずれ ＝ 印の半幅 ＋ 紙の文字高 × 0.4 ＋ 文字の半幅（上下は印の中心）。
+     * 🔴 規則の出どころは `Editor.markTextOffset` の**1か所**（画面・紙・所在図で同じ）。
+     *    単位は「文字の高さ」に比例するので、hPaper（紙の文字高の実距離）を
+     *    渡せば戻り値もメートルになる＝紙基準（閲覧ズームに依らない）。
+     * 🔴 主役の四角の印だけは実距離（w_m）なので外から半幅を渡す。
+     * 🔴 右へ置くと紙の枠からはみ出す時は**左隣**（§30-15-5 規則3 と同じ考え）。
+     * 🔴 登録する箱そのものは従来どおり boxOf（hM の物差し）＝障害物の帳簿は変えない。
+     */
+    /** 🔒 §30-22-10/12: 印の半幅(m)。「近く」（nearBox）と「標準」（midStandardBox）で
+     * 同じ値を使う（唯一の出どころ）。pinlabel の主役印は mainMarkHw／o.mark の実寸を
+     * 優先し、それ以外は Editor.markTextOffset（＝ markGeom）に聞く（gap=0・halfW=0で
+     * 呼べば hw だけが返る）。 */
+    function markHalfW(o, hp) {
+      if (o.role === 'pinlabel') {
+        if (o.pinKey && mainMarkHw[o.pinKey] != null) return mainMarkHw[o.pinKey];
+        if (o.mark && (o.mark.w_m || o.mark.h_m)) {
+          return Math.max(o.mark.w_m || 0, spanM * markMinMm() / 138) / 2;
+        }
+      }
+      var E = global.Editor;
+      /* Editor が無い時（単体テスト）は●／◎だけの素朴な見積り＝ MARK_RING_R の半分が● */
+      return (E && E.markTextOffset) ? E.markTextOffset(o, hp, 0, 0, null).dx
+                                      : hp * MARK_RING_R / 2;
+    }
+
+    function nearBox(o, base) {
+      var hp = hPaper(o), wp = wM(o, hp), mhw = markHalfW(o, hp);
+      var E = global.Editor;
+      var off = (E && E.markTextOffset)
+        ? E.markTextOffset(o, hp, wp / 2, null, mhw)
+        : { dx: mhw + hp * 0.4 + wp / 2, dy: 0 };
+      var cy = base.y - off.dy;            // 画面の y（下＋）→ メートル（上＋）
+      var b = boxOf(o, base.x + off.dx, cy);
+      /* 右がはみ出す & 左なら収まる時だけ左隣（どちらもはみ出すなら右のまま） */
+      if (fr && b.cx + halfW(b) > fr.x1 && base.x - off.dx - halfW(b) >= fr.x0) {
+        b = boxOf(o, base.x - off.dx, cy);
+      }
+      return b;
+    }
+
+    /** 🔒 §30-22-12: 標準＝「離す」で決めた位置 A への**向きはそのまま**、
+     * 印の縁と文字の箱の縁の**隙間**（中心どうしの距離ではない）を「離す」の半分に
+     * する（§30-22-11 2 の補正・実測で中心距離を半分にすると文字の半幅が効いて
+     * ほぼ全件「近く」の下限に張り付いたため）。隙間の下限は「近く」の隙間＝
+     * 紙の文字高 × 0.4（§30-15-3 と同じ値）。文字の半幅そのものは足さない
+     * （オーナー「線の長さの半分」＝隙間の半分の意）。
+     * 印・箱の半幅は向き u = (A-P)/|A-P| に沿って測る（ellipseR。軸に平行なら
+     * wM/2 または hPaper/2 に一致する楕円近似・斜めはその中間）。印は丸い印
+     * として等方に近似（markHalfW＝ nearBox と同じ値・唯一の出どころ）。
+     * 計算は m 単位の局所座標（base.x/y・A の箱の中心 awayNb.cx/cy）で行い、
+     * boxOf で緯度経度へ戻す。引き出し線は呼び出し側（finishAway／finishMain）が
+     * 従来の距離規則でこの位置から判定し直す。 */
+    function ellipseR(ux, uy, hx, hy) {
+      var a = hx > 1e-9 ? ux / hx : 0, b = hy > 1e-9 ? uy / hy : 0;
+      var m = Math.sqrt(a * a + b * b);
+      return m > 1e-9 ? 1 / m : Math.max(hx, hy);
+    }
+    function midStandardBox(o, base, awayNb) {
+      var ax = awayNb.cx - base.x, ay = awayNb.cy - base.y;
+      var distA = Math.sqrt(ax * ax + ay * ay);
+      if (distA <= 0) return nearBox(o, base);   // 離すの位置が印と同一（万一）の保険
+      var ux = ax / distA, uy = ay / distA;
+      var hp = hPaper(o), wp = wM(o, hp);
+      var mr = markHalfW(o, hp);                   // 印の半幅（向き u・丸い印として近似）
+      var boxR = ellipseR(ux, uy, wp / 2, hp / 2);  // 箱の半幅（向き u・楕円近似）
+      var gA = distA - mr - boxR;                  // 離すの隙間（印の縁→箱の縁）
+      var gNear = hp * 0.4;                        // 近くの隙間の下限（§30-15-3 と同じ）
+      var gS = Math.max(gA / 2, gNear);
+      var dist = mr + gS + boxR;
+      return boxOf(o, base.x + ux * dist, base.y + uy * dist);
+    }
+
+    /** ●の周り 8方向 × 距離 1〜ringMax 行。箱の**縁**が●から gap だけ離れるように置く
+     * （gap = r * hRef * AWAY_GAP_K。🔒 §30-22-11 1: 離すの隙間は ×1.5 のまま）。
+     * ここは「離す」の形そのもので、近く／標準は placeAway / placeByCands が
+     * 最後に位置を差し替える。 */
     function awayCands(base, w, h) {
       var out = [], hw = w / 2, hh = h * 0.75, r, d, ux, uy, reach, gap;
       for (r = PLACE.ringMin; r <= PLACE.ringMax; r++) {
-        gap = r * hRef;
+        gap = r * hRef * AWAY_GAP_K;
         for (d = 0; d < DIR8.length; d++) {
           ux = DIR8[d][0]; uy = DIR8[d][1];
           /* 箱の中心から縁までの、その向きの長さ（軸並行の箱）。
@@ -3172,10 +3614,23 @@
     namePrio: namePrio,
     POI_PRIO: POI_PRIO,
     SHOP_PRIO: SHOP_PRIO,
+    FACILITY_PRIO: FACILITY_PRIO,
+    BUILDING_PRIO: BUILDING_PRIO,
     MOUNTAIN_ANNO: MOUNTAIN_ANNO,
     CNTR_STEPS: CNTR_STEPS,
     _collectWater: collectWater,
     _collectContours: collectContours,
-    _buildAutoNames: buildAutoNames
+    _buildAutoNames: buildAutoNames,
+    /* 🔒 §30-22-4 4（［道路を描く］）: 配置図の枠の近くだけ道路を引くために、
+     * タイル座標 → 緯度経度 と 範囲の当たり判定を app.js からも使う。
+     * 🔴 実装はこの1か所のまま（同じ幾何を2つ持たない）。 */
+    _toLatLngs: toLatLngs,
+    _bboxHits: bboxHits,
+    /* 🔒 §23-9: 道路の描き方の表（'line'/'band'）。［道路を描く］が band を読む */
+    roadStyleTable: roadStyleTable,
+    /* 🔒 §30-22-1 6: 主役のラベルの文言（same＝同一住所の1つ分）。app.js も読む */
+    PIN_LABEL: PIN_LABEL,
+    /* 🔒 §30-22-10: 名前の位置の段（1=近く／2=標準／3=離す）。実測・確認用に出す */
+    _nameGapStep: nameGapStep
   };
 })(typeof window !== 'undefined' ? window : this);
