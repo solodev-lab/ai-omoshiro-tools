@@ -11,7 +11,12 @@
 <!-- 🔒 2026-09-13 友人テスト中は検索エンジンに載せない（URL を渡した人だけが使う）。
      正式公開の時にこの1行を外す。 -->
 <meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="style.css">
+<!-- 🔒 §30-33（2026-09-15）: いま動いている版の印。配信（pages.yml）が、下に出てくる
+     印をコミット番号（7桁）へ一斉に置き換える。手元（リポジトリのまま）は印のままで、
+     アプリは「版なし」と見なして版の確認を何もしない。読み込みの ?v= も同じ値に
+     なるので、HTML が新しくなれば JS・CSS も必ず新しい物が読まれる。 -->
+<script>window.SHAKO_VER = '__SHAKO_VER__';</script>
+<link rel="stylesheet" href="style.css?v=__SHAKO_VER__">
 </head>
 <body>
 
@@ -28,6 +33,9 @@
   <!-- ============ 案件一覧 ============ -->
   <section id="caseListView" class="view">
     <div class="cl-wrap">
+      <!-- 🔒 §30-33-1 3（2026-09-15 オーナー指示）: 新しい版に入れ替わって読み直した
+           直後だけ、一覧の一番上に数秒出す帯。文言はここ1か所。 -->
+      <div id="verDone" class="ver-done" hidden>最新版になりました</div>
       <header class="cl-head">
         <div>
           <h1>車庫証明 所在図・配置図メーカー</h1>
@@ -221,15 +229,18 @@
       </div>
 
       <span id="autoStatus" class="auto-status"></span>
+      <!-- 🔒 §30-33-4 1: この行の右端は**元から満杯**だった（案内に要る幅 330px に対し
+           空きは 1280px で 148px・1024px で 52px）ので、更新案内はここには置かない。
+           .spacer はこの行の詰め方（左寄せ）を保つために残す＝右端は空のまま。 -->
       <span class="spacer"></span>
-      <!-- 🔒 §30-29-1 3（2026-09-14 オーナー指示）: ［書き出し］→［プレビュー］に
-           改名し、飛び先も §30-27 の**統一プレビュー画面**1つにした
-           （旧 #exPanel の書き出し窓は廃止。PDF／画像はプレビューの帯から）。
-           🔴 id は据え置き＝配線を1本のまま保つ。 -->
-      <button id="btnExport" class="primary"
-              title="いま作っている図を、紙の見た目で確かめます（PDF・画像はその画面から出します）"
-              >プレビュー</button>
     </div>
+
+    <!-- 🔒 §30-33-4 1（2026-09-15 Fable・実測に基づく裁定）: 更新案内は**2段目のすぐ下に
+         全幅の帯**として出す。理由＝2段目の右端は元から満杯で、そこに置くと文字が切れて
+         案内の役を果たさなかった。新しい版がある時だけ現れる1行なので、ふだんは無い＝
+         他の行（.ed-tabs／#toolBar／.ed-sheetbar）の高さ・幅は一切変えない。
+         🔴 文言はここ1か所だけ（JS は hidden の出し入れしかしない・verSyncNote）。 -->
+    <div id="verNote" class="ver-note" hidden>新しい版があります。案件一覧に戻ると最新版に更新されます</div>
 
     <!-- 🔒 §30-29-1（2026-09-14 オーナー指示「アイコン類は上部ツールバーを1行追加して、
          すべてそこに配置」）: 上部バーの**2行目**。案件を開いている間は常に見える
@@ -367,6 +378,16 @@
       <button id="sbGoFrame" class="sb-btn" hidden
               title="決めた枠が画面いっぱいに入るところへ地図を戻します">枠へ移動</button>
       <span class="sb-note" id="sbNote"></span>
+      <!-- 🔒 §30-29-1 3（2026-09-14 オーナー指示）: ［書き出し］→［プレビュー］に
+           改名し、飛び先も §30-27 の**統一プレビュー画面**1つにした
+           （旧 #exPanel の書き出し窓は廃止。PDF／画像はプレビューの帯から）。
+           🔒 §30-33-2 1（2026-09-15 オーナー指示）: 置き場所を上の行の一番右から
+           **この紙の帯の「枠は画面につきます。」の右**へ移した。
+           🔴 id・文言は据え置き＝配線を1本のまま保つ。class に .sb-btn を足して
+              この帯の高さ（他のボタンと同じ大きさ）を変えない。 -->
+      <button id="btnExport" class="primary sb-btn"
+              title="いま作っている図を、紙の見た目で確かめます（PDF・画像はその画面から出します）"
+              >プレビュー</button>
     </div>
 
     <div class="ed-stage">
@@ -2270,13 +2291,15 @@
       <!-- 🔒 §30-26-3（2026-09-14 オーナー指示「トグルでよい、ボタンじゃない」）:
            上部バーの表示／非表示（.mapsw）と同じ見た目のトグル。既定＝出さない。
            🔴 値は画面の状態（app.js の state.exOtherFrames）＝案件には保存しない。
-           🔴 重なるのは**プレビューだけ**（PDF・画像には出ない）。 -->
+           🔒 §30-34-1（2026-09-15 オーナー指示）: 出すにした時は **PDF・画像・まとめ
+              にも刷る**（プレビューで見えている絵と紙が同じになる）。自分の紙にも
+              番号の札が出る（自分の枠＝紙全体・線は引かない）。 -->
       <span class="ex-sw">
         <span class="ex-sw-k">他の枠の範囲を表示</span>
         <span class="mapsw">
           <input type="checkbox" id="exOtherFrames" class="mapsw-in">
           <label for="exOtherFrames" class="mapsw-track"
-                 title="この図の他の紙の枠を、赤い破線と番号の札で重ねて見せます（紙には出ません）">
+                 title="この図の紙の枠を、赤い破線と番号の札で見せます（この紙は左上の番号だけ）。出すにすると PDF・画像にも刷られます">
             <span class="mapsw-knob" aria-hidden="true"></span>
             <span class="mapsw-txt sw-a">出さない</span>
             <span class="mapsw-txt sw-b">出す</span>
@@ -2369,29 +2392,32 @@
   </div>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/mvt.js"></script>
-<script src="js/gsi.js"></script>
-<script src="js/osm.js"></script>
-<script src="js/parse.js"></script>
-<script src="js/store.js"></script>
+<!-- 🔒 §30-33（2026-09-15）: 読み込みに付けた ?v= の印は、配信のたびにコミット番号へ
+     置き換わる（pages.yml）。HTML が新しくなれば JS・CSS も必ず新しい物が読まれる
+     ＝古い JS と新しい HTML が混ざらない。 -->
+<script src="js/config.js?v=__SHAKO_VER__"></script>
+<script src="js/mvt.js?v=__SHAKO_VER__"></script>
+<script src="js/gsi.js?v=__SHAKO_VER__"></script>
+<script src="js/osm.js?v=__SHAKO_VER__"></script>
+<script src="js/parse.js?v=__SHAKO_VER__"></script>
+<script src="js/store.js?v=__SHAKO_VER__"></script>
 <!-- 🔒 §21: 保存先フォルダ（段階A）。store.js より後・app.js より前に読む -->
-<script src="js/fsave.js"></script>
-<script src="js/mapview.js"></script>
-<script src="js/pmtiles.js"></script>
-<script src="js/autodraft.js"></script>
-<script src="js/layout.js"></script>
-<script src="js/shozaizu.js"></script>
-<script src="vendor/jspdf.umd.min.js"></script>
-<script src="js/export.js"></script>
-<script src="js/editor.js"></script>
-<script src="js/reveal.js"></script>
+<script src="js/fsave.js?v=__SHAKO_VER__"></script>
+<script src="js/mapview.js?v=__SHAKO_VER__"></script>
+<script src="js/pmtiles.js?v=__SHAKO_VER__"></script>
+<script src="js/autodraft.js?v=__SHAKO_VER__"></script>
+<script src="js/layout.js?v=__SHAKO_VER__"></script>
+<script src="js/shozaizu.js?v=__SHAKO_VER__"></script>
+<script src="vendor/jspdf.umd.min.js?v=__SHAKO_VER__"></script>
+<script src="js/export.js?v=__SHAKO_VER__"></script>
+<script src="js/editor.js?v=__SHAKO_VER__"></script>
+<script src="js/reveal.js?v=__SHAKO_VER__"></script>
 <!-- 🔒 §28-13（Step 4）: ④の［交差点名・バス停名を地図に重ねる］。
      reveal.js の後（Reveal.drawSignal / drawBusStop を借りる） -->
-<script src="js/namelay.js"></script>
-<script src="js/stamp.js"></script>
-<script src="js/imglay.js"></script>
-<script src="js/recognize.js"></script>
-<script src="js/app.js"></script>
+<script src="js/namelay.js?v=__SHAKO_VER__"></script>
+<script src="js/stamp.js?v=__SHAKO_VER__"></script>
+<script src="js/imglay.js?v=__SHAKO_VER__"></script>
+<script src="js/recognize.js?v=__SHAKO_VER__"></script>
+<script src="js/app.js?v=__SHAKO_VER__"></script>
 </body>
 </html>

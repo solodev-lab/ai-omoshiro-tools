@@ -203,6 +203,33 @@
    * 「保管場所」の文字は画面にも紙にも出さない）。表の形（と editor.js の予備）を
    * 揃えたままにするので消さずに残す。 */
   var LABEL_MM = { dim: 3.4, storage: 3.4, number: 4.4 };
+
+  /* ---- 🔒 §30-34-1（2026-09-15 オーナー指示）: 他の紙の枠の範囲を**紙にも刷る** ----
+   * オーナー:「プレビューでは他の枠番号と枠がでるが、PDF・PNG にすると消えている。
+   * 他の枠の範囲を表示した場合は、印刷にも対応するということ。出すにした場合、
+   * 1 も全体を枠とみなして、左上に 1 ということで出してほしい」。
+   * 🔴 紙の見た目の値は**この表1か所**（mm 基準＝向きにも dpi にも左右されない）。
+   * 🔴 赤だけは style.css の --frame-red を読む（色の出どころは CSS の1か所のまま）。 */
+  var FRAME_MARK = {
+    line: 0.5,          // 赤の破線の太さ(mm)
+    haloExtra: 0.8,     // 白い縁は赤の線より この分だけ太い(mm)
+    dash: [3, 2],       // 破線の刻み(mm)
+    badgeH: 6,          // 番号の札の高さ(mm)
+    badgeFont: 4.2,     // 札の数字の高さ(mm・太字)
+    badgeRadius: 1,     // 札の角丸(mm)
+    inset: 1.5,         // 枠の角から内側へ(mm)
+    color: '#ff3b30'    // --frame-red が読めない時だけ使う（値は CSS と同じ）
+  };
+  /** 枠の赤（style.css の --frame-red が本体・読めなければ FRAME_MARK.color） */
+  function frameMarkColor() {
+    try {
+      var v = getComputedStyle(document.documentElement)
+                .getPropertyValue('--frame-red');
+      if (v && v.trim()) return v.trim();
+    } catch (e) {}
+    return FRAME_MARK.color;
+  }
+
   /**
    * 紙面ミリ → 出力ピクセル。
    * 🔴 §24-4-b 持ち越し2: 以前は `mm / PANEL_MM.w * outW`（縦の紙の幅で割る）だった。
@@ -1079,6 +1106,13 @@
    * 🔒 §30-22-7 5: 枠の中の**車いすの印**を紙に描く（絵文字は使わない）。
    * 形の数値は editor.js の Editor.WHEELCHAIR／Editor.cellIconGeom が唯一の出どころ
    * ＝画面（SVG）と紙（canvas）で必ず同じ形になる。
+   *
+   * 🔒 §30-34-2（2026-09-15 オーナー指摘「PDF にするとつぶれてしまっている」）:
+   * 線の太さに紙の線倍率 `S` を掛けてはいけない。印の大きさ `s`（枠の何割か）は
+   * **既に canvas ピクセル**なので、S を掛けると二重に効く（96dpi のプレビューでは
+   * 0.72 倍で細く、300dpi の PDF では 2.24 倍で太くなり、頭と体の線が繋がって潰れた）。
+   * 太さは画面（editor.js `_drawCellWheel`）と同じ「一辺に対する比 × s」にする。
+   * 🔴 `S` は引数として受けるが太さには使わない（呼び出し側の形は据え置き）。
    */
   function drawCellWheel(g, c, S) {
     var G = global.Editor && global.Editor.cellIconGeom;
@@ -1093,14 +1127,16 @@
     g.strokeStyle = '#111';
     g.fillStyle = '#111';
     g.lineCap = 'round';
-    g.lineWidth = Math.max(0.8, W.wheel.lw * s * S);
+    // 🔒 §30-34-2: 画面と同じ比（S は掛けない）。下限 0.8px は残す
+    g.lineWidth = Math.max(0.8, W.wheel.lw * s);
     g.beginPath();
     g.arc(W.wheel.x * s, W.wheel.y * s, W.wheel.r * s, 0, Math.PI * 2);
     g.stroke();
     g.beginPath();
     g.arc(W.head.x * s, W.head.y * s, W.head.r * s, 0, Math.PI * 2);
     g.fill();
-    g.lineWidth = Math.max(0.8, W.lw * s * S);
+    // 🔒 §30-34-2: ここも同じ（S は掛けない）
+    g.lineWidth = Math.max(0.8, W.lw * s);
     for (var i = 0; i < W.lines.length; i++) {
       g.beginPath();
       g.moveTo(W.lines[i][0][0] * s, W.lines[i][0][1] * s);
@@ -1366,11 +1402,95 @@
              dLng: dxM / (mPerDeg * Math.max(1e-6, c)) };
   }
 
+  /**
+   * 🔒 §30-34-1 3: **他の紙の枠の範囲**（赤の破線＋白い縁＋番号の札）と、
+   * **自分の紙の番号の札**を、この紙の一番上に描く。
+   * 旧・プレビューだけの SVG 層（app.js の exFrameLayer）の置き換え＝
+   * プレビューも PDF も画像も**この1本**を通る（絵が同じになる）。
+   * @param g         この紙の 2d コンテキスト
+   * @param marks     [{frame:{center,w_m,aspect}, label:'1', own:true|false}]
+   *                  （同じ図の紙ぜんぶ・自分は own:true・数字は紙の帯と同じ番号）
+   * @param b         この紙の bounds（frameBounds の返り値）
+   * @param outW,outH canvas の大きさ(px)
+   * @param pxmm      紙1mm あたりのピクセル数
+   * @param pageMarkH 左上に既に居る通し表示（所在図 1/2）の高さ(px)。無い紙は 0
+   * 🔴 投影は renderSheet の中身と**同じ** makeProjector / frameBounds を使う
+   *    （別に見積もると図と枠がずれる＝出どころは1か所）。
+   * 🔴 自分の枠は**線を引かない**（作図領域の枠線と二重になる・§30-34-1 2）。札だけ。
+   */
+  function drawFrameMarks(g, marks, b, outW, outH, pxmm, pageMarkH) {
+    var list = (marks || []).filter(function (m) {
+      return m && m.frame && m.frame.center && m.frame.w_m > 0;
+    });
+    if (!list.length) return;
+    var F = FRAME_MARK, red = frameMarkColor();
+    var proj = makeProjector(b, outW, outH);
+    var dash = F.dash.map(function (mm) { return mm * pxmm; });
+    var inset = F.inset * pxmm;
+    var bh = F.badgeH * pxmm;
+    var fs = F.badgeFont * pxmm;
+    var badgePadX = 1.6 * pxmm;    // 札の数字の左右の余白(1.6mm)
+    var badgeLine = 0.35 * pxmm;   // 札の縁の太さ(0.35mm)
+
+    list.forEach(function (m) {
+      var x, y;
+      if (m.own) {
+        /* 自分の枠＝紙の作図領域そのもの。左上に札だけ置く。
+         * 通し表示（所在図 1/2）が居る紙は**その下**へ（§30-34-1 5）。 */
+        x = inset;
+        y = (pageMarkH || 0) + inset;
+      } else {
+        var fb = frameBounds(m.frame);
+        var nw = proj(fb.north, fb.west), se = proj(fb.south, fb.east);
+        var rx = Math.min(nw.x, se.x), ry = Math.min(nw.y, se.y);
+        var rw = Math.max(1, Math.abs(se.x - nw.x));
+        var rh = Math.max(1, Math.abs(se.y - nw.y));
+        // 画像の外に丸ごと出る枠は描かない（掛かっている分は canvas の外で自然に切れる）
+        if (rx + rw <= 0 || ry + rh <= 0 || rx >= outW || ry >= outH) return;
+        g.save();
+        g.setLineDash(dash);
+        // 白い縁を先に（写真や地図の上でも赤が沈まない）
+        g.strokeStyle = 'rgba(255,255,255,.85)';
+        g.lineWidth = (F.line + F.haloExtra) * pxmm;
+        g.strokeRect(rx, ry, rw, rh);
+        g.strokeStyle = red;
+        g.lineWidth = F.line * pxmm;
+        g.strokeRect(rx, ry, rw, rh);
+        g.restore();
+        x = rx + inset;
+        y = ry + inset;
+      }
+      // 番号の札（白地・赤の縁・赤の数字）。枠の左上の内側に置く
+      var label = String(m.label == null ? '' : m.label);
+      g.save();
+      g.setLineDash([]);
+      g.font = '700 ' + fs.toFixed(1) + 'px "Yu Gothic UI","Meiryo",sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      var bw = g.measureText(label).width + badgePadX * 2;
+      // 紙の外へ出る時は紙の中へ寄せる（旧 SVG 層の place() と同じ規則）
+      x = Math.min(Math.max(x, inset), Math.max(inset, outW - bw - inset));
+      y = Math.min(Math.max(y, inset), Math.max(inset, outH - bh - inset));
+      roundRectPath(g, x, y, bw, bh, F.badgeRadius * pxmm);
+      g.fillStyle = '#fff';
+      g.fill();
+      g.strokeStyle = red;
+      g.lineWidth = badgeLine;
+      g.stroke();
+      g.fillStyle = red;
+      g.fillText(label, x + bw / 2, y + bh / 2);
+      g.restore();
+    });
+  }
+
   /* ================= 1枚を描く ================= */
 
   /**
    * 図を1枚描く（＝紙1ページに載る図そのもの。見出し・欄外は buildPDF の仕事）。
-   * opts: {objects, frame, orient, attributions:[], dpi, noScale, pageMark}
+   * opts: {objects, frame, orient, attributions:[], dpi, noScale, pageMark,
+   *        frameMarks, showFrames}
+   *   frameMarks / showFrames（🔒 §30-34-1）: 他の紙の枠の範囲と番号の札。
+   *   showFrames が真の時だけ描く（トグル「他の枠の範囲を表示」の値）。
    *   pageMark（🔒 §26-4-e）: 「所在図 1/2」を**図の中の左上**へ刷る。
    *   PDF は見出し帯に同じ物が入るので渡さない（PNG 提出の事務所のための逃げ道）。
    * 返り値: {canvas, mpp, scaleN, bounds, place(mm), page(mm), orient, sheetWmm}
@@ -1463,6 +1583,15 @@
       g.restore();
     }
 
+    /* 🔒 §30-34-1: 他の紙の枠の範囲＋番号の札。トグルが ON の時だけ・**一番上**に乗せる
+     * （図の付き物より後＝プレビューで重ねていた時と同じ見え方）。
+     * 🔴 通し表示（pageMark）が居る紙は、自分の札をその下へ置くので高さを渡す
+     *    （pageMark の font は 12*S・描き出しは (10*S, 8*S) で textBaseline=top）。 */
+    if (opts.showFrames && opts.frameMarks && opts.frameMarks.length) {
+      drawFrameMarks(g, opts.frameMarks, b, outW, outH, pxmm,
+                     opts.pageMark ? (8 * S + 12 * S * 1.4) : 0);
+    }
+
     return { canvas: cv, mpp: mpp, bounds: b, noScale: !!opts.noScale,
              orient: orient,
              // 🔒 §30-25-10 3: 文字の箱（canvas px）。出どころは描画と同じ1か所
@@ -1516,7 +1645,11 @@
       var r = renderSheet({
         objects: p.objects, frame: p.frame, orient: p.orient,
         attributions: p.attributions,       // 🔒 §24-3 出典はシートごと
-        noScale: !!p.noScale
+        noScale: !!p.noScale,
+        /* 🔒 §30-34-1 1: 「他の枠の範囲を表示」が ON なら**紙にも刷る**。
+         * 札の出どころは pagesForExport（p.frameMarks）1か所。 */
+        frameMarks: p.frameMarks,
+        showFrames: !!(meta && meta.showFrames)
       });
       if (!doc) {
         doc = new ctor({ orientation: r.orient, unit: 'mm',
@@ -1641,7 +1774,10 @@
           // 🔴 縮めた紙の大きさで描く＝縮尺の文字とバーがこの大きさで出る
           paperMm: { w: p.rect.w, h: p.rect.h },
           // 図の中の左上に「所在図」「配置図」（帯が狭いので図の中に入れる）
-          pageMark: p.src.kindJa || ''
+          pageMark: p.src.kindJa || '',
+          // 🔒 §30-34-1 3: まとめの2面にも同じ口で（面ごとにその図の紙の枠）
+          frameMarks: p.src.frameMarks,
+          showFrames: !!o.showFrames
         })
       };
     });
@@ -1672,28 +1808,12 @@
     return { canvas: cv, page: page, orient: orient, k: k, parts: parts };
   }
 
-  /**
-   * 🔒 §30-26-3（2026-09-14 オーナー指示）: **他の紙の枠**が、この紙の画像の
-   * どこに来るかを canvas ピクセルの矩形で返す。
-   * プレビューの上に重ねる「他の枠の範囲」だけが使う（**紙には出さない**＝
-   * renderSheet / buildPDF は1行も変えていない）。
-   * @param r  renderSheet の返り値（bounds＝この紙が切り取っている緯度経度・canvas）
-   * @param f  他の紙の枠 {center:{lat,lng}, w_m, aspect}
-   * @return {x,y,w,h}（canvas px。画像の外にも出る＝切るのは呼び手の仕事）／無理なら null
-   * 🔴 投影は renderSheet の中身と同じ makeProjector / frameBounds を使う
-   *    （別に見積もると画像と枠がずれる＝出どころは1か所）。
-   */
-  function frameRectOnPage(r, f) {
-    if (!r || !r.canvas || !r.bounds) return null;
-    if (!f || !f.center || !(f.w_m > 0)) return null;
-    var b = frameBounds(f);
-    var proj = makeProjector(r.bounds, r.canvas.width, r.canvas.height);
-    var nw = proj(b.north, b.west), se = proj(b.south, b.east);
-    return { x: Math.min(nw.x, se.x), y: Math.min(nw.y, se.y),
-             w: Math.abs(se.x - nw.x), h: Math.abs(se.y - nw.y) };
-  }
+  /* 🔒 §30-34-1 3: 旧 frameRectOnPage（プレビューに重ねる SVG 層の換算）は**廃止**した。
+   * 他の紙の枠は紙の描画そのもの（renderSheet → drawFrameMarks）に入ったので、
+   * 画像の外で換算する口は要らない（プレビューと紙が同じ1本になった）。 */
 
-  /** 🔒 §30-18-6 2: まとめの PDF（**1ページ**）。中身は renderCombined の1枚そのもの */
+  /** 🔒 §30-18-6 2: まとめの PDF（**1ページ**）。中身は renderCombined の1枚そのもの
+   *  🔒 §30-34-1 3: o.showFrames はそのまま renderCombined → 各面の renderSheet へ通る */
   function buildCombinedPDF(o) {
     var ctor = global.jspdf && global.jspdf.jsPDF;
     if (!ctor) throw new Error('PDF ライブラリを読み込めませんでした');
@@ -1778,8 +1898,6 @@
      * 🔴 1図1ページの経路（buildPDF）とは別口＝従来の書き出しは何も変わらない。 */
     renderCombined: renderCombined,
     buildCombinedPDF: buildCombinedPDF,
-    /* 🔒 §30-26-3: プレビューに重ねる「他の枠の範囲」の換算（画面だけ・紙には出ない） */
-    frameRectOnPage: frameRectOnPage,
     fitFrame: fitFrame,
     frameBounds: boundsOf,
     scaleDenominator: scaleDenominator

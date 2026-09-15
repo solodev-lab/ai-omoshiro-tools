@@ -59,6 +59,28 @@ jobs:
         run: |
           printf 'window.SHAKO_CONFIG = { GOOGLE_MAPS_API_KEY: "%s" };\n' "$SHAKO_KEY" > _site/apps/shako-map/js/config.js
           if [ -z "$SHAKO_KEY" ]; then echo "SHAKO_GOOGLE_MAPS_KEY は未設定（Google の下敷きは出ない）"; else echo "config.js を書いた（キーの長さ ${#SHAKO_KEY}）"; fi
+      - name: shako-map の版番号を書き込む（§30-33）
+        # 🔒 §30-33（2026-09-15）: 配信した新しい版が、ブラウザのキャッシュのせいで
+        #    利用者の画面に届かない（古い版のまま使われる）のを防ぐ。
+        #    配信のたびに**コミット番号(7桁)**を、_site の中の3か所へ同じ値で書き込む。
+        #      (a) version.json           … アプリが数分ごと・案件一覧に戻った時に見に行く印
+        #      (b) index.html の window.SHAKO_VER … いま動いている版
+        #      (c) JS・CSS の ?v=<番号>   … HTML が新しくなれば中身も必ず新しい
+        #    🔴 書き換えるのは _site（配信物）だけ。リポジトリのソースは
+        #       印（__SHAKO_VER__）のまま＝手元では「版なし」でアプリは何もしない。
+        run: |
+          VER="${GITHUB_SHA:0:7}"
+          AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          if [ -z "$VER" ]; then echo "GITHUB_SHA が空（版番号を作れない）" && exit 1; fi
+          printf '{"ver":"%s","at":"%s"}\n' "$VER" "$AT" > _site/apps/shako-map/version.json
+          sed -i "s/__SHAKO_VER__/$VER/g" _site/apps/shako-map/index.html
+          echo "=== version.json ===" && cat _site/apps/shako-map/version.json
+          if grep -q '__SHAKO_VER__' _site/apps/shako-map/index.html; then
+            echo "置換されていない __SHAKO_VER__ が index.html に残っている" && exit 1
+          fi
+          HITS=$(grep -o "$VER" _site/apps/shako-map/index.html | wc -l)
+          if [ "$HITS" -eq 0 ]; then echo "index.html に版番号が1つも入っていない" && exit 1; fi
+          echo "index.html の置換 $HITS 件（版 $VER）"
       - name: legal/solara のルートは ja/ の写し（二重管理を作らない）
         # 🔴 2026-07-29: legal/solara/ の日本語版が「ルート」と「ja/」に同じ内容で2つ在り、
         #    直すたびに両方を手で直す状態だった(6ファイルとも改行以外は完全一致だった)。

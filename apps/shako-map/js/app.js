@@ -139,10 +139,15 @@
        ［自分で撮った写真・図面を使う］だけを自動で開く（位置合わせの案内と濃さの欄を
        見せるため）。開いたら下ろす（画面だけの合図・保存しない）。 */
     sgMoreImgNew: false,
-    /* 🔒 §30-26-3: プレビューに「同じ図の他の紙の枠」を重ねるか（既定＝出さない）。
+    /* 🔒 §30-26-3 → §30-34-1: 「同じ図の紙の枠の範囲と番号の札」を出すか（既定＝出さない）。
+       🔴 出すにすると**プレビューだけでなく PDF・画像・まとめにも刷られる**
+          （紙の描画 Exporter.renderSheet の showFrames に入る）。
        🔴 画面の状態なので**案件には保存しない**。プレビューを閉じても、
           同じ案件を開いている間は覚えている（オーナー指示）。 */
     exOtherFrames: false,
+    /* 🔒 §30-33: 配信側で見つけた**最新の版**（version.json の ver）。空＝まだ分からない。
+       画面の状態なので案件には保存しない（読み直せば取り直す）。 */
+    verLatest: '',
     /* 案件一覧の絞り込み（正典 §19-2/19-3/19-4）。
        🔴 画面の状態なので**保存しない**。開くたびに［進行中］・検索空・更新順に戻る */
     listQuery: '',
@@ -516,6 +521,9 @@
       /* 🔴 状態（①②③・非対応）が分かるまでは何も出さない。renderTop が出し分ける。
        *    権限をここで**要求はしない**（ユーザー操作が要る・§21-2）。 */
       renderTop();
+      /* 🔒 §30-33: 新しい版の見張りを始める（版なし＝手元では何もしない）。
+       * ここで転んでもアプリは動くべきなので try の中に置く。 */
+      verBoot();
     } catch (e) {
       closeAllOverlays();
       try { showView('list'); } catch (e2) { /* 表示だけは必ず TOP にする */ }
@@ -1386,6 +1394,10 @@
     renderCaseList();
     showView('list');
     if (p && p.then) p.then(afterCaseOp, afterCaseOp);
+    /* 🔒 §30-33-1 3: 案件一覧に戻った時に新しい版があれば、自動で読み直す。
+     * 🔴 案件ファイルの書き込み（flush）が終わってから開き直す
+     *    （書き込みは非同期なので、待たずに開き直すと書きかけが失われる）。 */
+    Promise.resolve(p).then(verAfterList, verAfterList);
   }
 
   function bindEditor() {
@@ -1603,11 +1615,15 @@
     $('exPreviewBox').addEventListener('click', function (e) {
       if (e.target === this) closeExportPreview();   // 外側（暗い部分）を押した時
     });
-    /* 🔒 §30-26-3: 「他の枠の範囲を表示」。切り替えたら**層だけ**描き直す
-     * （画像は作り直さない＝紙の描画には一切触らない）。 */
+    /* 🔒 §30-26-3 → §30-34-1 3 改定: 「他の枠の範囲を表示」。枠の範囲は**紙の絵
+     * そのもの**（Exporter.renderSheet）に入るようになったので、切り替えたら
+     * **控えを捨てて画像を作り直す**（重ねる層はもう無い）。
+     * 🔴 まとめの面は毎回描き直している（exRenderCombo）ので、同じ経路で新しくなる。 */
     $('exOtherFrames').addEventListener('change', function () {
       state.exOtherFrames = this.checked;
-      exFrameSync();
+      var pg = state.exPager;
+      if (pg) { pg.url = {}; pg.r = {}; pg.scale = {}; }
+      if (!$('exPreviewBox').hidden) exPagerRender();
     });
     /* ---- 🔒 §30-27-1 2: プレビューの道しるべの行 ---- */
     $('exNavPrev').addEventListener('click', function () {
@@ -3757,6 +3773,28 @@
    *    プレビュー）。🔴 絞るのは**最後**＝通し表示（所在図 2/3）は絞る前の数え方の
    *    まま出す（「1/1」と出ると何枚目の紙なのか分からなくなる）。
    */
+  /**
+   * 🔒 §30-34-1（2026-09-15 オーナー指示「出すにした場合、1 も全体を枠とみなして、
+   * 左上に 1 ということで出してほしい。いまは 2 だけ表示されており、なぜ 2？と
+   * なりかねない」）: その紙に刷る「枠の範囲と番号の札」の一覧を作る。
+   * @param kind    'shozaizu' | 'haichizu'
+   * @param sheetId その紙の id（この紙が own＝自分）
+   * @return [{frame, label, own}]（同じ図の紙**ぜんぶ**・番号は紙の帯と同じ i+1）
+   * 🔴 白紙の紙も入れる（番号は紙の帯と揃える＝書き出しで白紙を除いても札はずれない）。
+   * 🔴 「自分」の判定は**紙の id**（表示している文字や番号では判定しない）。
+   * 🔴 枠が作れない紙は飛ばす（描きようがない）。
+   */
+  function frameMarksFor(kind, sheetId) {
+    var out = [];
+    sheetsOf(kind).forEach(function (sh, i) {
+      if (!sh) return;
+      var f = frameForSheet(kind, sh);
+      if (!f) return;
+      out.push({ frame: f, label: String(i + 1), own: sh.id === sheetId });
+    });
+    return out;
+  }
+
   function pagesForExport(only, sheetId) {
     // 表示中のシートは必ず「いまの画面」を使う。
     // ズームやパンをした後に古い枠で出さないため（オーナー指摘 2026-08-16）。
@@ -3782,7 +3820,10 @@
           objects: sh.objects || [],
           frame: frameForSheet(k, sh),
           attributions: sheetAttrs(sh),
-          noScale: sheetScaleUnknown(k)
+          noScale: sheetScaleUnknown(k),
+          /* 🔒 §30-34-1 3: 他の紙の枠の範囲＋番号の札。**出どころはここ1か所**
+           * （プレビューも PDF も画像もまとめも、この frameMarks を紙の描画へ渡す）。 */
+          frameMarks: frameMarksFor(k, sh.id)
         });
       });
     });
@@ -3906,7 +3947,10 @@
           return;
         }
         // 🔒 §24-3: 所在図・配置図の全シートを1図1ページで出す（縦横混在可）
-        var doc = Exporter.buildPDF(pages, { name: state.current.name });
+        /* 🔒 §30-34-1 1: トグル「他の枠の範囲を表示」が ON なら紙にも刷る
+         * （プレビューで見えている絵と紙が同じになる）。 */
+        var doc = Exporter.buildPDF(pages, { name: state.current.name,
+                                             showFrames: state.exOtherFrames });
         blob = doc.output('blob');
       } catch (e) {
         finish('失敗しました: ' + (e.message || e), false);
@@ -3944,7 +3988,9 @@
             noScale: p.noScale,
             /* 🔒 §26-4-e: PNG は見出し帯を持たない1枚画なので、通し表示を
                図の中（左上）に入れる。PDF は帯に入るので渡さない（二重にしない）。 */
-            pageMark: Exporter.pageMark(p)
+            pageMark: Exporter.pageMark(p),
+            // 🔒 §30-34-1 1: 他の枠の範囲＋番号の札（トグルが ON の時だけ）
+            frameMarks: p.frameMarks, showFrames: state.exOtherFrames
           });
           /* 🔒 §21-1: canvas.toBlob → saveBlob（フォルダ直行／失敗時はダウンロード）。
              フォルダ保存は非同期なので、全枚数の結果が揃うまで待ってから報告する */
@@ -3992,151 +4038,22 @@
       try { exPlacers[i](); } catch (e) {}
     }
   }
-  function exPlacersReset() { exPlacers.length = 0; exFrameLayers.length = 0; }
+  function exPlacersReset() { exPlacers.length = 0; }
 
-  /* ---- 🔒 §30-26-3: プレビューに重ねる「他の枠の範囲」 ----
-   * トグル（#exOtherFrames）が ON の時だけ、同じ図の**他の紙**の枠を
-   * 赤の破線＋番号の札で画像の上に重ねる。
-   * 🔴 **プレビューだけ**。紙（Exporter.renderSheet の canvas）には1本も描かない。
-   * 🔴 トグルを切り替えたら**層だけ**描き直す（画像は作り直さない）。
-   * 🔴 線・札の見た目は画面の §24-6 と同じ class（.frame-halo / .frame-rect.is-sibling /
-   *    .frame-badge）を借りる＝色も太さも style.css の1か所。 */
-  var exFrameLayers = [];        // 層ごとの描き直し関数（プレビューごとに作り直す）
-  var exFrameClipSeq = 0;        // clipPath の id を重ねない（作り直すたびに増える）
+  /* ---- 🔒 §30-26-3 → §30-34-1 3 改定: 「他の枠の範囲を表示」 ----
+   * トグル（#exOtherFrames）が ON の時、同じ図の紙の枠（赤の破線＋白い縁）と
+   * 番号の札を出す。自分の紙にも札を出す（自分の枠＝作図領域そのもの・線は
+   * 引かない）。
+   * 🔴 旧版はプレビューの画像の上に SVG を重ねていた（exFrameLayer /
+   *    exOtherFrameRects / .ex-framelayer）ため、PDF・PNG にすると消えていた。
+   *    今は **紙の描画（Exporter.renderSheet の frameMarks / showFrames）1本**で
+   *    描く＝プレビューで見えている絵と紙が必ず同じになる。
+   * 🔴 札の一覧の出どころは pagesForExport が付ける frameMarks 1か所
+   *    （frameMarksFor）。見た目の値は export.js の FRAME_MARK 1か所。 */
   /** トグルの見た目を state に合わせる（閉じても覚えている＝§30-26-3 1） */
   function exFrameSwitchSync() {
     var sw = $('exOtherFrames');
     if (sw) sw.checked = !!state.exOtherFrames;
-  }
-  function exFrameSync() {
-    for (var i = 0; i < exFrameLayers.length; i++) {
-      try { exFrameLayers[i](); } catch (e) {}
-    }
-  }
-
-  /**
-   * その面に重ねる他の紙の枠を数える（canvas px）。
-   * @param pt {page, r, ox, oy} page＝pagesForExport の1件／r＝renderSheet の返り値／
-   *           ox,oy＝画像全体の中でその面が置かれている canvas px の左上
-   * @return [{x,y,w,h,label}]（画像の外に丸ごと出る枠は返さない＝§30-26-3 3）
-   */
-  function exOtherFrameRects(pt) {
-    var out = [];
-    var p = pt && pt.page, r = pt && pt.r;
-    if (!p || !r || !r.canvas || !window.Exporter || !Exporter.frameRectOnPage) return out;
-    var cw = r.canvas.width, ch = r.canvas.height;
-    sheetsOf(p.kind).forEach(function (sh, i) {
-      // 🔴 「自分」は紙の id で外す（表示文字・番号では判定しない）
-      if (!sh || sh.id === p.sheetId) return;
-      var f = frameForSheet(p.kind, sh);
-      var q = Exporter.frameRectOnPage(r, f);
-      if (!q) return;
-      // 画像の外に丸ごと出る枠は出さない（掛かっている分は clip で切る）
-      if (q.x + q.w <= 0 || q.y + q.h <= 0 || q.x >= cw || q.y >= ch) return;
-      out.push({ x: q.x + pt.ox, y: q.y + pt.oy, w: q.w, h: q.h,
-                 // 🔴 札の数字は**紙の帯と同じ番号**（§24-6 と同じ数え方）
-                 label: String(i + 1) });
-    });
-    return out;
-  }
-
-  /**
-   * 画像1枚に「他の枠の範囲」の層をかぶせる。
-   * @param fig <figure>（position:relative）
-   * @param img その <img>
-   * @param cw,ch その画像の canvas の幅・高さ（px）
-   * @param parts [{page, r, ox, oy}]（まとめ描きは2面・1図1ページは1面）
-   */
-  function exFrameLayer(fig, img, cw, ch, parts) {
-    if (!fig || !img || !(cw > 0) || !(ch > 0) || !(parts && parts.length)) return;
-    var svg = svgEl('svg', { class: 'ex-framelayer' });
-    fig.appendChild(svg);
-    var items = [];      // [{x,y,w,h,label,part} … canvas px]
-
-    /** 表示px ÷ canvas px（画像は縦横同じ倍率で縮む） */
-    function viewK() {
-      return (img.clientWidth > 0) ? img.clientWidth / cw : 0;
-    }
-
-    function place() {
-      var k = viewK();
-      svg.style.left = (img.offsetLeft + img.clientLeft) + 'px';
-      svg.style.top = (img.offsetTop + img.clientTop) + 'px';
-      svg.style.width = img.clientWidth + 'px';
-      svg.style.height = img.clientHeight + 'px';
-      if (!k) return;
-      items.forEach(function (it) {
-        var x = it.x * k, y = it.y * k, w = it.w * k, h = it.h * k;
-        [it.els.halo, it.els.rect].forEach(function (e) {
-          e.setAttribute('x', x.toFixed(1));
-          e.setAttribute('y', y.toFixed(1));
-          e.setAttribute('width', Math.max(1, w).toFixed(1));
-          e.setAttribute('height', Math.max(1, h).toFixed(1));
-        });
-        /* 札は**画面の大きさのまま**（画像が縮んでも読める）。枠の左上の内側に置き、
-         * 面からはみ出す時はその面の中へ寄せる（§24-6 の placeFrameBadge と同じ形）。 */
-        var bw = 12 + 9 * it.label.length, bh = 18;
-        var lo = { x: it.part.ox * k, y: it.part.oy * k,
-                   w: it.part.cw * k, h: it.part.ch * k };
-        var bx = Math.min(Math.max(x + 4, lo.x + 2), lo.x + lo.w - bw - 2);
-        var by = Math.min(Math.max(y + 4, lo.y + 2), lo.y + lo.h - bh - 2);
-        it.els.bg.setAttribute('x', bx.toFixed(1));
-        it.els.bg.setAttribute('y', by.toFixed(1));
-        it.els.bg.setAttribute('width', bw);
-        it.els.bg.setAttribute('height', bh);
-        it.els.tx.setAttribute('x', (bx + bw / 2).toFixed(1));
-        it.els.tx.setAttribute('y', (by + bh / 2 + 4.2).toFixed(1));
-        // 面の外へ出た分は切る（まとめ描きで隣の図に掛からないように）
-        it.els.clip.setAttribute('x', lo.x.toFixed(1));
-        it.els.clip.setAttribute('y', lo.y.toFixed(1));
-        it.els.clip.setAttribute('width', Math.max(1, lo.w).toFixed(1));
-        it.els.clip.setAttribute('height', Math.max(1, lo.h).toFixed(1));
-      });
-    }
-
-    /** 層を作り直す（トグルの切り替え＝ここだけ。画像は触らない） */
-    function build() {
-      while (svg.firstChild) svg.removeChild(svg.firstChild);
-      items.length = 0;
-      svg.style.display = state.exOtherFrames ? '' : 'none';
-      if (!state.exOtherFrames) { place(); return; }
-      var defs = svgEl('defs', {});
-      svg.appendChild(defs);
-      parts.forEach(function (pt, pi) {
-        var part = { ox: pt.ox || 0, oy: pt.oy || 0,
-                     cw: (pt.r && pt.r.canvas) ? pt.r.canvas.width : cw,
-                     ch: (pt.r && pt.r.canvas) ? pt.r.canvas.height : ch };
-        exOtherFrameRects({ page: pt.page, r: pt.r, ox: part.ox, oy: part.oy })
-          .forEach(function (q, qi) {
-            var id = 'exfr' + (exFrameClipSeq++) + '_' + pi + '_' + qi;
-            var cp = svgEl('clipPath', { id: id });
-            var cr = svgEl('rect', {});
-            cp.appendChild(cr);
-            defs.appendChild(cp);
-            var g = svgEl('g', { 'clip-path': 'url(#' + id + ')' });
-            var halo = svgEl('rect', { class: 'frame-halo' });
-            var rc = svgEl('rect', { class: 'frame-rect is-sibling' });
-            var bg2 = svgEl('g', { class: 'frame-badge' });
-            var br = svgEl('rect', { rx: 4, ry: 4 });
-            var bt = svgEl('text', { 'text-anchor': 'middle' });
-            bt.textContent = q.label;
-            bg2.appendChild(br);
-            bg2.appendChild(bt);
-            g.appendChild(halo);
-            g.appendChild(rc);
-            g.appendChild(bg2);
-            svg.appendChild(g);
-            items.push({ x: q.x, y: q.y, w: q.w, h: q.h, label: q.label, part: part,
-                         els: { halo: halo, rect: rc, bg: br, tx: bt, clip: cr } });
-          });
-      });
-      place();
-    }
-
-    exPlacers.push(place);
-    exFrameLayers.push(build);
-    img.addEventListener('load', place);
-    build();
   }
 
   /**
@@ -4227,7 +4144,9 @@
       try {
         cur = Exporter.renderSheet({
           objects: p.objects, frame: p.frame, orient: p.orient,
-          attributions: p.attributions, noScale: p.noScale, dpi: 96
+          attributions: p.attributions, noScale: p.noScale, dpi: 96,
+          // 🔒 §30-34-1 3: 描き直しても他の枠の範囲が消えないように同じ口を通す
+          frameMarks: p.frameMarks, showFrames: state.exOtherFrames
         });
       } catch (e) { return; }
       var url = cur.canvas.toDataURL('image/png');
@@ -7253,7 +7172,9 @@
   function exRenderCombo(body, pg) {
     var inf = pg.comboInfo, r;
     try {
-      r = Exporter.renderCombined({ a: inf.a, b: inf.b, dpi: 96 });
+      // 🔒 §30-34-1 3: まとめの面にも同じトグルが効く（各面の renderSheet へ通る）
+      r = Exporter.renderCombined({ a: inf.a, b: inf.b, dpi: 96,
+                                    showFrames: state.exOtherFrames });
     } catch (e) {
       var msg = document.createElement('p');
       msg.className = 'ex-preview-foot-msg';
@@ -7275,21 +7196,8 @@
     fig.appendChild(cap);
     fig.appendChild(img);
     body.appendChild(fig);
-    /* 🔒 §30-26-3 4: まとめ描きにも同じトグルが効く。**それぞれの図の面**に、
-     * その図の他の紙を重ねる。
-     * 🔴 面の置き場所（mm）→ まとめの canvas px は「紙1mm あたりのピクセル数」で直す。
-     *    値は renderCombined の返り値だけから出す（canvas の幅 ÷ 紙の幅）＝1か所。 */
-    var pxmm = (r.page && r.page.w > 0) ? r.canvas.width / r.page.w : 0;
-    var srcs = [inf.a, inf.b];
-    var parts = [];
-    if (pxmm > 0) {
-      (r.parts || []).forEach(function (pt, i) {
-        if (!pt || !pt.r || !pt.rect || !srcs[i]) return;
-        parts.push({ page: srcs[i], r: pt.r,
-                     ox: pt.rect.x * pxmm, oy: pt.rect.y * pxmm });
-      });
-    }
-    exFrameLayer(fig, img, r.canvas.width, r.canvas.height, parts);
+    /* 🔒 §30-26-3 4 → §30-34-1 3: まとめ描きにも同じトグルが効く。重ねる層は廃止し、
+     * **それぞれの面の renderSheet** が自分の図の枠と札を描く（上の showFrames）。 */
   }
 
   /**
@@ -7312,7 +7220,9 @@
     if (!pg.url[pg.i]) {
       var r = Exporter.renderSheet({
         objects: p.objects, frame: p.frame, orient: p.orient,
-        attributions: p.attributions, noScale: p.noScale, dpi: 96
+        attributions: p.attributions, noScale: p.noScale, dpi: 96,
+        // 🔒 §30-34-1 3: 他の枠の範囲＋番号の札は**紙の絵そのもの**に入る
+        frameMarks: p.frameMarks, showFrames: state.exOtherFrames
       });
       pg.url[pg.i] = r.canvas.toDataURL('image/png');
       pg.scale[pg.i] = r.scaleN;
@@ -7340,10 +7250,8 @@
       pg.r[idx] = r2;
       pg.scale[idx] = r2.scaleN;
     });
-    // 🔒 §30-26-3: 他の紙の枠を重ねる層（どの面でも同じ）
-    var rr = pg.r[idx];
-    exFrameLayer(fig, img, rr.canvas.width, rr.canvas.height,
-                 [{ page: p, r: rr, ox: 0, oy: 0 }]);
+    /* 🔒 §30-26-3 → §30-34-1 3: 他の紙の枠と番号の札は**紙の絵そのもの**に入る
+     * （上の renderSheet の frameMarks / showFrames）。重ねる層はもう無い。 */
   }
 
   /**
@@ -7521,7 +7429,9 @@
       setTimeout(function () {
         var blob;
         try {
-          blob = Exporter.buildCombinedPDF({ a: pk.comboInfo.a, b: pk.comboInfo.b })
+          // 🔒 §30-34-1 1: まとめの PDF にも他の枠の範囲＋番号の札を刷る
+          blob = Exporter.buildCombinedPDF({ a: pk.comboInfo.a, b: pk.comboInfo.b,
+                                             showFrames: state.exOtherFrames })
                    .doc.output('blob');
         } catch (e) {
           exPickDone('失敗しました: ' + (e.message || e), false);
@@ -10338,6 +10248,8 @@
     /* 🔒 §30-20: ［新しい案件］で入った直後だけ「はじめに」を出す。
      * 🔴 画面を組み終えた**最後**に出す（closeAllOverlays が先に走るため）。 */
     if (opt && opt.fresh) welcomeOpen();
+    /* 🔒 §30-33-1 4: 既に新しい版を見つけていれば、開いた瞬間から上部バーに案内を出す */
+    verSyncNote();
   }
 
   function ensureMap() {
@@ -12344,6 +12256,112 @@
     /* 🔒 §28-14 ④: ガイダンス④の「別タブで見る」ボタンは外した（Google も下敷きの
      * 〇として後ろに写す）。別タブのリンクは右パネルのこれ1つだけ（§17-4）。 */
     $('linkGoogle').href = href;
+  }
+
+  /* ================= 🔒 §30-33 新しい版への更新 =================
+   * オーナー指示 2026-09-15:「必ず案件一覧に戻ってもらおう。案件一覧に戻ると
+   *   『最新版になりました』と出ればいい」。
+   *
+   * 仕組み（正典 §30-33-1）:
+   *   1. 配信（pages.yml）がコミット番号を version.json と window.SHAKO_VER に書く
+   *   2. アプリは**数分ごと**と**案件一覧に戻った時**に version.json を
+   *      cache:'no-store' で取りに行き、動いている版と比べる
+   *   3. 案件一覧に戻った時に新しければ index.html?v=<番号> で開き直す
+   *      （キャッシュを飛び越える）。開き直した後は上に「最新版になりました」
+   *   4. 案件を開いている間に見つけたら、上部バーの更新案内（#verNote）だけ出す
+   *      （中身は常に自動保存なので、一覧に戻れば失う物はない）
+   *
+   * 🔴 通信できない・version.json が無い・手元（版なし）では**何もしない**。
+   *    ここが原因でアプリが止まることは無い（例外は外へ出さない）。 */
+
+  var VER_URL = 'version.json';
+  var VER_CHECK_MS = 5 * 60 * 1000;   // 版を見に行く間隔（5分）
+  var VER_DONE_MS = 5000;             // 「最新版になりました」を出しておく長さ
+
+  /** いま動いている版。空文字＝版なし（手元・配信で置き換えられていない）。
+   * 🔴 '__SHAKO_VER__' は**配信で置換されていない印**（表示文字列ではない）。 */
+  function verRunning() {
+    var v = window.SHAKO_VER;
+    if (typeof v !== 'string' || !v || v.indexOf('__') === 0) return '';
+    return v;
+  }
+
+  /** 配信側の最新の版を取りに行く。取れなければ '' に解決する（失敗しても止めない） */
+  function verFetchLatest() {
+    return new Promise(function (resolve) {
+      try {
+        fetch(VER_URL, { cache: 'no-store' }).then(function (r) {
+          if (!r || !r.ok) { resolve(''); return; }
+          r.json().then(function (j) {
+            resolve((j && typeof j.ver === 'string') ? j.ver : '');
+          }, function () { resolve(''); });
+        }, function () { resolve(''); });
+      } catch (e) { resolve(''); }
+    });
+  }
+
+  /** 新しい版がある？（版なし・まだ分からない・同じ版 なら false） */
+  function verIsNewer() {
+    var run = verRunning();
+    return !!(run && state.verLatest && state.verLatest !== run);
+  }
+
+  /** 版を見に行って控える。戻り値＝新しい版があるか */
+  function verCheck() {
+    if (!verRunning()) return Promise.resolve(false);   // 版なし＝何もしない
+    return verFetchLatest().then(function (v) {
+      if (v) state.verLatest = v;
+      verSyncNote();
+      return verIsNewer();
+    });
+  }
+
+  /** 上部バーの更新案内の出し入れ（案件を開いている時だけ出す）。
+   * 🔴 窓ではないので closeAllOverlays / CASE_PANELS には入れない
+   *    （案件を切り替えても、新しい版がある事実は変わらない）。 */
+  function verSyncNote() {
+    $('verNote').hidden = !(state.current && verIsNewer());
+  }
+
+  /** 最新の版で開き直す（?v= でキャッシュを飛び越える） */
+  function verGoLatest() {
+    location.href = 'index.html?v=' + encodeURIComponent(state.verLatest);
+  }
+
+  /** 数分ごとの見回り。一覧を見ている時は失う物がないのでその場で開き直す */
+  function verTick() {
+    verCheck().then(function (newer) {
+      if (!newer) return;
+      if (state.current) verSyncNote();
+      else verGoLatest();
+    });
+  }
+
+  /** 案件一覧へ戻った後（保存が終わってから）。新しければ開き直す（§30-33-1 3） */
+  function verAfterList() {
+    if (verIsNewer()) { verGoLatest(); return; }
+    verCheck().then(function (newer) { if (newer) verGoLatest(); });
+  }
+
+  /** 起動時。開き直した直後の一言・URL の後始末・見回りの開始 */
+  function verBoot() {
+    var q = new URLSearchParams(location.search).get('v') || '';
+    /* 利用者に見せる URL は .../shako-map/ のまま（?v= は仕組みの都合） */
+    if (q) {
+      history.replaceState(null, '', location.pathname.replace(/index\.html$/, ''));
+    }
+    /* ?v= で開き直して、いま動いているのが**その版**になった＝入れ替わった */
+    if (q && q === verRunning()) {
+      $('verDone').hidden = false;
+      setTimeout(function () { $('verDone').hidden = true; }, VER_DONE_MS);
+    }
+    /* 開いた直後に古い HTML を掴んでいたら開き直す。
+     * 🔴 q === state.verLatest の時は開き直さない＝いま開き直したばかりで
+     *    配信側がまだ追いついていない時に、無限に開き直さないための守り。 */
+    verCheck().then(function (newer) {
+      if (newer && q !== state.verLatest) verGoLatest();
+    });
+    setInterval(verTick, VER_CHECK_MS);
   }
 
   /* ---------- 補助 ---------- */
