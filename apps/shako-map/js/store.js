@@ -86,9 +86,12 @@
    * （roadStyle: 'line' → 'band'）。旧案件の保存値は migrate がそのまま通す。 */
   var SZ_STD = {
     nature: true, roadStyle: 'band',
-    /* 🔒 §30-22-10: 名前と印の距離（1=近く／2=標準／3=離す）。既定は**離す**。
-     * 意味（近く＝印のすぐ隣／標準＝中点／離す＝従来）は shozaizu.js が唯一の出どころ。 */
-    nameGap: 3,
+    /* 🔒 §30-22-10: 名前と印の距離（1=近く／2=標準／3=離す）。
+     * 意味（近く＝印のすぐ隣／標準＝中点／離す＝従来）は shozaizu.js が唯一の出どころ。
+     * 🔒 §30-31-2（2026-09-15 オーナー指示「③の名前の位置の初期表示を『近く』に」）:
+     *    既定は**近く（1）**。新しい案件・欠損の補完・［標準に戻す］が全部この値を読む
+     *    （既存の案件に保存された値は migrate がそのまま通す）。 */
+    nameGap: 1,
     lmLevel: 3, bldgLevel: 1, roadLevel: 3,
     nameCrossLevel: 3, nameShopLevel: 2, nameOfficeLevel: 2,
     nameBusLevel: 3, nameRoadLevel: 4, namePoiLevel: 1,
@@ -166,6 +169,11 @@
          true  ＝ 枠は地図に固定され、以後は地図だけを自由に動かせる。
          これで「地図を動かす」と「枠を動かす」の両方が簡単にできる。 */
       frameFixed: !!init.frameFixed,
+      /* 🔒 §30-32-6 3: その紙で画面のマーカー（使用の本拠・駐車場の目印）を消したか。
+         紙ごとの表示の値で、地点そのもの（case.points）は消さない。
+         🔴 複製・抜き出しでは写す（app.js addSheet が渡す）。 */
+      pinHidden: (init.pinHidden && typeof init.pinHidden === 'object')
+                 ? { home: !!init.pinHidden.home, lot: !!init.pinHidden.lot } : {},
       // ③図形（このシート固有）
       objects: Array.isArray(init.objects) ? init.objects : [],
       /* 出典表記（🔒 §24-3「シートごとに、そのシートで使ったデータ源だけ」）。
@@ -197,6 +205,9 @@
       }
     }
     s.frameFixed = !!s.frameFixed && !!s.frame;   // 枠が無いのに固定は有り得ない
+    /* 🔒 §30-32-6 3: その紙で画面のマーカーを消したか（配置図だけで使う紙ごとの値）。
+     * 🔴 持たない案件（今までの全部）は「消していない」＝ {}。 */
+    if (!s.pinHidden || typeof s.pinHidden !== 'object') s.pinHidden = {};
     if (!Array.isArray(s.attributions)) s.attributions = [];   // 出典（§24-3）
     if (!Array.isArray(s.objects)) s.objects = [];
     /* 🔴 null など「オブジェクトでない要素」だけ落とす。描画側（editor.js /
@@ -1022,6 +1033,15 @@
           if (!isFinite(sc) || !(sc > 0)) p.mark.scale = R.def;
           else p.mark.scale = Math.max(R.min, Math.min(R.max, sc));
         }
+        /* 🔒 §30-31-1 2: ■の**縦横**（実距離 m）。**捨てない**（長方形が開き直しで
+           正方形に戻らないように）。数値でない／0以下の壊れた値だけ落とす＝
+           持たない案件は app.js markOf が「基準 × 倍率」で補う。 */
+        ['w_m', 'h_m'].forEach(function (dk) {
+          if (p.mark[dk] === undefined) return;
+          var dv = Number(p.mark[dk]);
+          if (isFinite(dv) && dv > 0) p.mark[dk] = dv;
+          else delete p.mark[dk];
+        });
       } else if (p.mark !== undefined) {
         delete p.mark;
       }

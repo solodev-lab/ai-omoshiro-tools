@@ -503,7 +503,7 @@
   /* ================= 起動 ================= */
 
   /* 起動。🔴 §16-13: 何があっても**きれいな TOP ページ**に落ちる。
-   * かぶせ物（3択・提出前チェック・プレビュー）は起動時に必ず閉じてから始める。
+   * かぶせ物（3択・プレビュー）は起動時に必ず閉じてから始める。
    * 🔒 §27-12: TOP ページは「ゲート1枚」か「本体」のどちらか（renderTop が決める）。
    *    従来の「まず localStorage の一覧を出しておく」は無くなった（案件はフォルダにしか無い）。 */
   function boot() {
@@ -1160,7 +1160,7 @@
    * いまは「名前の位置」（近く／標準／離す＝1〜3）だけ。作法は SZ_GRADES と同じ
    *   ①案件データが真実 ②画面のラジオを合わせる ③変えたらその場で作り直す
    * 🔴 段は数字で持ち、表示文字では識別しない（§26-2 注意②）。
-   * 🔴 既定値は Store.SZ_STD.nameGap（＝3 離す）1か所。 */
+   * 🔴 既定値は Store.SZ_STD.nameGap（🔒 §30-31-2 ＝1 近く）1か所。 */
   var SZ_PICKS = {
     gap: { key: 'nameGap', name: 'szNameGap', max: 3, ja: '名前の位置' }
   };
@@ -1584,16 +1584,8 @@
       ensureFrames();
       openPreview({ kind: state.kind });
     });
-    $('chkGo').addEventListener('click', function () {
-      $('chkBox').hidden = true;
-      var fn = state.pendingExport;
-      state.pendingExport = null;
-      if (fn) fn();
-    });
-    $('chkBack').addEventListener('click', function () {
-      $('chkBox').hidden = true;
-      state.pendingExport = null;
-    });
+    /* 🔒 §30-31-3 1: 提出前チェックの窓（旧 #chkBox ＝［このまま書き出す］
+     * ［戻って直す］）は廃止した。配線もここから消してある。 */
     /* 🔒 §30-20: 「はじめに」の3つのボタン。ガイダンスの2つは**上部バーの同名ボタンと
      * 同じ処理**（navStartFig）を呼ぶ＝同じ操作は同じ結果（§26-2）。
      * ［ガイダンスを使わずに作成］は閉じるだけ（何も始めない）。 */
@@ -1635,15 +1627,12 @@
       exNavRender();        // 紙が無い側は選べない（見た目を戻す）
     });
     /* ---- 🔒 §30-27-1 6 / §30-27-2: ［PDF］［画像］→ 出す紙を選ぶ窓 ----
-     * 🔒 §30-29-1 3: 旧 #exPanel の［PDF］［画像］が持っていた
-     *    「提出前チェック」（#chkBox・正典 §16-5 B）は**ここへ移した**
-     *    ＝出す紙を選ぶ窓より前に1回だけ挟む（入口は1つ）。 */
-    $('exBarPdf').addEventListener('click', function () {
-      withSubmitCheck(function () { exPickOpen('pdf'); });
-    });
-    $('exBarPng').addEventListener('click', function () {
-      withSubmitCheck(function () { exPickOpen('png'); });
-    });
+     * 🔒 §30-31-3 1（2026-09-15 オーナー指示「所在図を作ったのに提出前チェックで
+     *    配置図のエラーが出る。このエラー表示自体を無くして」）: 間に挟んでいた
+     *    「提出前チェック」（旧 #chkBox・withSubmitCheck）は**廃止**。
+     *    押したらすぐ紙を選ぶ窓（§30-27-2）が開く＝入口は1つのまま。 */
+    $('exBarPdf').addEventListener('click', function () { exPickOpen('pdf'); });
+    $('exBarPng').addEventListener('click', function () { exPickOpen('png'); });
     $('exPickClose').addEventListener('click', exPickClose);
     $('exPickCancel').addEventListener('click', exPickClose);
     $('exPickGo').addEventListener('click', exPickRun);
@@ -1717,11 +1706,7 @@
         e.preventDefault();
         e.stopPropagation();
         closeExportPreview();
-      } else if (!$('chkBox').hidden) {
-        e.preventDefault();
-        e.stopPropagation();
-        $('chkBox').hidden = true;
-        state.pendingExport = null;
+      /* 🔒 §30-31-3 1: 提出前チェックの窓（旧 #chkBox）は廃止＝ Esc の枝も消した */
       } else if (state.edgePick) {
         e.preventDefault();
         e.stopPropagation();
@@ -2111,6 +2096,9 @@
       var b = $(id);
       if (b) b.addEventListener('change', function () { setNameLay(this.checked); });
     });
+    /* 🔒 §30-32-6 3: 配置図の下敷きの操作の並びの［マーカーを表示］
+     * （器は #hzUnderBar の中に1つ＝段を移っても配線は1回きり）。 */
+    if ($('hzPinShow')) $('hzPinShow').addEventListener('click', showPinsOnSheet);
     /* 🔒 §30-16: ［クリックした名前を図に入れる］。もう一度押すと終わる。 */
     NAME_LAY_PICKS.forEach(function (id) {
       var b = $(id);
@@ -2606,8 +2594,11 @@
       $('propMark').hidden = false;
       $('propMarkWhat').textContent =
         (o.markRole === 'lot' ? '駐車場' : '使用の本拠') + 'の印（所在図）';
-      $('propMarkW').value = f1(o.w_m);
-      $('propMarkH').value = f1(o.h_m);
+      /* 🔒 §30-31-1 3: 幅／奥行は**案件の points[key].mark.w_m/h_m** が出どころ
+       * （辺つまみ・右パネルの欄・紙の■が全部この値を読む）。 */
+      var mkDim = markOf(mainMarkKeyOf(o) || 'home');
+      $('propMarkW').value = f1(mkDim.w_m);
+      $('propMarkH').value = f1(mkDim.h_m);
       $('propMarkAngle').value = Math.round(o.angle || 0);
       renderMarkColors(o);
     } else if (o.type === 'rect') {
@@ -2726,9 +2717,14 @@
       row.appendChild(btn);
     });
     fmt.appendChild(row);
+    /* 🔒 §30-31-1 1: ■（四角の印）だけは**辺のつまみ**で縦・横を別々に変えられる
+     * ので、その一言を足す（◎・印つき文字には辺つまみが無い）。
+     * 🔴 形の判定は markOf(key).shape 1か所（表示文字では分岐しない）。 */
+    var isRectMark = !!(mainKey && markOf(mainKey).shape === 'rect');
     $('propMarkScaleNow').textContent = 'いまの印の大きさ: '
       + (Math.round(cur * 100) / 100) + ' 倍'
-      + '（印の右下のつまみをドラッグしても変えられます）';
+      + '（印の右下のつまみをドラッグしても変えられます'
+      + (isRectMark ? '。4辺のつまみなら縦・横だけを変えられます' : '') + '）';
   }
 
   /** その図形に付いている保管場所マークの書式（無ければ null・🔒 §30-22-4 9） */
@@ -2993,9 +2989,15 @@
       return isNaN(v) ? undefined : v;
     };
     if (o.type === 'rect' && o.role === 'mainmark') {
-      state.editor.applyMarkProps(o, {
-        w_m: num('propMarkW'), h_m: num('propMarkH'), angle: num('propMarkAngle')
-      });
+      /* 🔒 §30-31-1 3: 幅／奥行の欄は**案件の points[key].mark.w_m/h_m** を
+       * 読み書きする（辺つまみとまったく同じ口＝ setMainMarkDims 1か所）。
+       * 向きだけは図形の値（applyMarkProps）。
+       * 🔴 3つの欄は**先に全部読む**。applyMarkProps の commit() が右パネルを
+       *    引き直すので、後から読むと打ち込んだ値が元に戻ってしまう。 */
+      var mw = num('propMarkW'), mh = num('propMarkH'), ma = num('propMarkAngle');
+      state.editor.applyMarkProps(o, { angle: ma });
+      var mk = mainMarkKeyOf(o);
+      if (mk) setMainMarkDims(mk, mw, mh);
     } else if (o.type === 'rect') {
       state.editor.applyRectProps(o, {
         w_m: num('propW'), h_m: num('propH'), angle: num('propAngle'),
@@ -3339,26 +3341,47 @@
    *    消せる部品**）。配置図も枠を決めた時点では地図と同じ北上なので、置いた上で
    *    利用者が消す／動かす方が実務に合う、というのがオーナーの判断。
    * 🔴 残りの条件は §28-3 のまま（枠を決めた時だけ・既にあれば置かない）。 */
+  /* 🔒 §30-32-4（2026-09-15 オーナー報告「配置図に方位が出ていない！」）:
+   * 原因は「既に方位記号があれば置かない」の**判定が枠を見ていなかった**こと。
+   * ［枠を抜出し追加］／［複製］で作った紙（§30-26-1・addSheet(src)）は、
+   * 元の紙の方位記号を**位置ごと**写す。抜き出した紙は元より狭い枠なので、
+   * 写した方位記号は新しい枠の**外**に居る（実測: 枠 x 323.6〜776.4 に対して
+   * 方位記号 x=840・y=-50）。そこへ［枠を決定］を押しても「もうある」と見なして
+   * 何もしないので、画面にも紙にも方位記号が出ないまま、という筋。
+   * 直し: 枠の**中**にあれば置かない（今までどおり）。枠の外に居る時は
+   * 2つ目を足さずに**その1つを枠の右上へ移す**（§28-3「1枚に1つ」は保つ）。 */
   function placeCompass(kind, sh) {
     if (!sh || !sh.frame) return false;
-    var objs = sh.objects || [];
-    for (var i = 0; i < objs.length; i++) {
-      if (objs[i] && objs[i].type === 'compass') return false;   // 2つ目は置かない
-    }
     if (!window.Editor || !Editor.makeCompass || !Exporter.compassSpot) return false;
+    var objs = sh.objects || [];
     var b = Exporter.frameBounds(sh.frame);
+    var had = null;
+    for (var i = 0; i < objs.length; i++) {
+      if (objs[i] && objs[i].type === 'compass') { had = objs[i]; break; }
+    }
+    // 枠の中にもう居る＝何もしない（§28-3「2つ目は置かない」）
+    if (had && inFrameBounds(had.at, b)) return false;
     var spot = Exporter.compassSpot(Exporter.frameAspect(sh.frame));
     var at = { lat: b.north - spot.y * (b.north - b.south),
                lng: b.west + spot.x * (b.east - b.west) };
     /* 🔴 §23-7-1: 配列は**差し替えない**（bind が state.current と参照を共有している）。
      *    push で足す。編集中のシートなら editor.objects と同じ配列なのでそのまま映る。 */
-    if (state.editor && state.editor.objects === objs) state.editor.snapshot();
-    objs.push(Editor.makeCompass(at));
-    if (state.editor && state.editor.objects === objs) {
+    var live = !!(state.editor && state.editor.objects === objs);
+    if (live) state.editor.snapshot();
+    if (had) had.at = at;                      // 枠の外に居た1つを右上へ移す
+    else objs.push(Editor.makeCompass(at));
+    if (live) {
       state.editor.commit();
       updateHistoryButtons();
     }
     return true;
+  }
+
+  /** 🔒 §30-32-4: その点が枠（frameBounds の返り値）の中か */
+  function inFrameBounds(at, b) {
+    if (!at || !b) return false;
+    return at.lat <= b.north && at.lat >= b.south
+        && at.lng >= b.west && at.lng <= b.east;
   }
 
   /* ========== 🔒 §30-22-4 4 / §30-25-22: ［道路を描く］（配置図）==========
@@ -3777,20 +3800,57 @@
       ? '（図形が無い白紙のシート ' + state.pagesSkipped + ' 枚は除きました）' : '';
   }
 
-  /** 紙1枚のファイル名の尻尾（🔒 §24-3: 種類と番号が分かる形にする） */
-  function pageSuffix(p) {
-    return '_' + p.kindJa + p.index;
+  /* ===== 🔒 §30-32-3（2026-09-15 オーナー指示「保存すると所在図のファイルに
+   * 上書きして所在図が消える。ファイル名に図とページ番号と時間を追加。
+   * 毎回上書きはだめ、絶対違うファイルとして保存」）=====
+   * 書き出しのファイル名は **exportFileName 1関数**（PDF・画像・まとめの全経路が
+   * ここを通る＝出口は1つ）。旧 baseFileName ＋ pageSuffix の置き換え。
+   *   案件番号_図と紙_日時.拡張子
+   *   例 2026-003_所在図1_20260915-1432.pdf
+   *      2026-003_所在図1-2_配置図1_20260915-1432.pdf
+   *      2026-003_まとめ_20260915-1432.pdf
+   *      2026-003_配置図2_20260915-1432.png（画像は紙ごと1枚）
+   * 🔴 同じ名前が案件フォルダにあれば FSave が `-2` `-3` を付ける（上書きしない）。
+   */
+
+  /** 日時（分まで・ローカル時刻）。🔴 形の出どころはこの1か所 */
+  function exportStamp() {
+    var d = new Date(), p2 = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate())
+         + '-' + p2(d.getHours()) + p2(d.getMinutes());
   }
 
-  function baseFileName() {
-    var d = new Date();
-    var ymd = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0')
-            + String(d.getDate()).padStart(2, '0');
-    /* 🔒 §19-1: 番号があればファイル名の**先頭**に付ける（PDF・PNG・JSON の3種とも）。
+  /**
+   * ファイル名の「図と紙」の部分。選んだ紙を**図ごとにまとめる**
+   * （所在図1／所在図1-2／所在図1-2_配置図1）。
+   * @param {Array} pick 出す紙の一覧（pagesForExport の形）
+   */
+  function exportSheetPart(pick) {
+    var list = pick || [], order = [], byKind = {};
+    list.forEach(function (p) {
+      if (!p) return;
+      var ja = p.kindJa;
+      if (!byKind[ja]) { byKind[ja] = []; order.push(ja); }
+      byKind[ja].push(p.index);
+    });
+    if (!order.length) return '図';
+    return order.map(function (ja) { return ja + byKind[ja].join('-'); }).join('_');
+  }
+
+  /**
+   * 書き出しのファイル名（🔒 §30-32-3 2「出どころは1関数」）。
+   * @param {Array} pick 出す紙の一覧（画像は1枚ぶんの配列・まとめは null でよい）
+   * @param {string} kind 'combo' ＝ まとめ（1枚）。それ以外は pick から作る
+   * @param {string} ext  'pdf' / 'png'（点は付けない）
+   */
+  function exportFileName(pick, kind, ext) {
+    var c = state.current;
+    /* 🔒 §19-1: 案件番号があればファイル名の**先頭**に付ける。
        紙ファイル・受付簿・請求と1本の線でつながるのが本件の主目的。
-       番号が空なら従来どおり案件名から始まる */
-    return Store.filePrefix(state.current)
-         + Store.safeName(state.current.name) + '_所在図配置図_' + ymd;
+       🔴 番号が空の案件は別の案件と名前が並ぶので、案件名を頭に置く。 */
+    var head = Store.filePrefix(c) || (Store.safeName(c && c.name) + '_');
+    var what = (kind === 'combo') ? 'まとめ' : exportSheetPart(pick);
+    return head + what + '_' + exportStamp() + '.' + ext;
   }
 
   /* 🔒 §21-1: 書き出し（PDF / PNG）の保存口は**ここ1本**。
@@ -3853,7 +3913,8 @@
         return;
       }
       // 🔒 §21-1: 保存は saveBlob() 1本（フォルダ直行／失敗時はダウンロード）
-      saveBlob(blob, baseFileName() + '.pdf').then(function (r) {
+      // 🔒 §30-32-3: 名前は exportFileName 1か所（選んだ紙が名前に出る・毎回別名）
+      saveBlob(blob, exportFileName(pages, null, 'pdf')).then(function (r) {
         finish('PDF を保存しました（' + pages.length + ' ページ・'
                + (blob.size / 1048576).toFixed(2) + ' MB）。'
                + skippedNote() + saveWhere(r), true);
@@ -3889,7 +3950,8 @@
              フォルダ保存は非同期なので、全枚数の結果が揃うまで待ってから報告する */
           jobs.push(new Promise(function (resolve) {
             r.canvas.toBlob(function (blob) {
-              saveBlob(blob, baseFileName() + pageSuffix(p) + '.png').then(resolve);
+              // 🔒 §30-32-3: 画像は紙ごと1枚（名前も紙1枚ぶん・毎回別名）
+              saveBlob(blob, exportFileName([p], null, 'png')).then(resolve);
             }, 'image/png');
           }));
         });
@@ -4113,10 +4175,12 @@
 
   /**
    * 1枚の紙に「文字だけ動かす」層をかぶせる。
+   * 🔒 §30-32-2: **駐車位置ラベルの塊（labelBlock）も同じ層で動かせる**
+   *   （ドラッグで塊＝`at` だけ／矢印の先 `arrowTo` は動かさない・右下のつまみで `scale`）。
    * @param fig <figure>（中に img が入っている・position:relative）
    * @param img その <img>
    * @param p   その紙（pagesForExport の1件。kind / objects / frame / orient）
-   * @param r0  Exporter.renderSheet の返り値（canvas・textBoxes・place）
+   * @param r0  Exporter.renderSheet の返り値（canvas・textBoxes・labelBoxes・place）
    * @param onRedraw 描き直した後に新しい dataURL を渡す（ページ送りの控えの更新）
    */
   function exTextLayer(fig, img, p, r0, onRedraw) {
@@ -4189,6 +4253,11 @@
       var x0 = e.clientX, y0 = e.clientY;
       var at0 = { lat: o.at.lat, lng: o.at.lng };
       var mm0 = exTextMm(o);
+      /* 🔒 §30-32-2: 駐車位置ラベルの塊は「紙のミリ」ではなく**倍率（scale）**で
+       * 大きさが決まる（画面の右下のつまみと同じ値・同じ範囲）。 */
+      var isLabel = (o.type === 'labelBlock');
+      var sc0 = isLabel ? (Editor.clampLabelScale ? Editor.clampLabelScale(o.scale) : (o.scale || 1)) : 1;
+      var diag0 = Math.max(8, Math.hypot(box.w * k, box.h * k));
       var moved = false;
 
       function toMm(dPx) { return (k > 0) ? dPx / k * mpp : 0; }
@@ -4197,7 +4266,16 @@
         var dx = ev.clientX - x0, dy = ev.clientY - y0;
         if (!moved && Math.abs(dx) + Math.abs(dy) < 2) return;
         moved = true;
-        if (sizing) {
+        if (sizing && isLabel) {
+          /* 掴んだ時の対角を基準に、引いた分だけ倍率を上げ下げする
+           * （画面のつまみ＝editor の lbSize と同じ理屈・丸めと上下限も同じ1か所）。 */
+          var dd = Math.hypot(box.w * k + dx, box.h * k + dy);
+          var sc = Editor.clampLabelScale
+            ? Editor.clampLabelScale(sc0 * (dd / diag0)) : sc0;
+          o.scale = sc;
+          d.style.transformOrigin = 'top left';   // at ＝ 塊の左上（labelBlockGeom）
+          d.style.transform = 'scale(' + (sc / (sc0 || 1)).toFixed(3) + ')';
+        } else if (sizing) {
           /* 紙に刷られる高さ（mm）を縦の動きぶん増やす。o.sizeMm は
            * 「記載欄基準の mm」なので SHEET_SCALE で割って戻す（textPx と同じ単位）。 */
           var mm = exClampMm(mm0 + toMm(dy) / SS);
@@ -4233,7 +4311,10 @@
 
     function build() {
       while (layer.firstChild) layer.removeChild(layer.firstChild);
-      (cur.textBoxes || []).forEach(function (b) {
+      /* 🔒 §30-32-2: 掴める的は2種（文字の箱／駐車位置ラベルの塊の箱）。
+       * 🔴 どちらも箱の出どころは renderSheet（描画と同じ1か所）。作り方も同じ。 */
+      var boxes = (cur.textBoxes || []).concat(cur.labelBoxes || []);
+      boxes.forEach(function (b) {
         var d = document.createElement('div');
         d.className = 'ex-textbox';
         d.dataset.id = b.id;
@@ -5154,12 +5235,13 @@
 
   /** 🔒 §30-25-26: 案件を開く／新しく作る／一覧へ戻る のどれでも閉じる窓の一覧。
    * 上部バー・道具メニューから hidden で出し入れしている窓（index.html で
-   * class="stamp-panel" が付いている物を全部・書き出し窓・提出前チェック・
+   * class="stamp-panel" が付いている物を全部・書き出し窓・
    * はじめに・プレビュー）を集めた1か所。
    * 🔴 新しい窓を足す時はまずここに id を足す（closeAllOverlays 側は直さない）。
    * welcomeBox（はじめに）も一度ここで閉じる。openCaseInner が最後にまた開き直す
    * （opt.fresh の時だけ・§30-20 の作法のまま）。 */
-  var CASE_PANELS = ['chkBox', 'welcomeBox', 'exPreviewBox',
+  /* 🔒 §30-31-3 1: 旧 'chkBox'（提出前チェック）はこの一覧からも消した（窓ごと廃止）。 */
+  var CASE_PANELS = ['welcomeBox', 'exPreviewBox',
     'exPick',                       // 🔒 §30-27-2: PDF・画像の窓
     'stampPanel', 'plPanel', 'draftPanel', 'fillPanel', 'imgPanel', 'szPanel',
     'pastePanel',
@@ -5191,7 +5273,7 @@
     $('exPreviewBox').classList.remove('is-nav');
     sideFront(false);
     state.navPreview = false;
-    state.pendingExport = null;
+    // 🔒 §30-31-3 1: state.pendingExport（提出前チェックの待ち）は廃止した
     state.exPager = null;        // 🔒 §30-27-1: 面の控えは案件をまたいで持ち越さない
     state.exPick = null;         // 🔒 §30-27-2: 窓の選択も同じ
   }
@@ -6307,8 +6389,8 @@
       hint('輪郭を確定しました。よければ［次へ］を押してください', 3500);
     }
     if (state.nav.step >= 5) sgRenderStatus();
-    // 🔒 §16-5 B: ⑫の提出前チェックは、図形が変わったら数え直す
-    if (state.nav.step === 12) sgRenderCheck();
+    /* 🔒 §30-31-3 2: ⑧（step 12）の「提出前チェック」の一覧は廃止したので、
+     * 図形が変わった時に数え直す物は無い。 */
   }
 
   /**
@@ -6679,6 +6761,9 @@
      * 文字の直前へ作る＝置いた直後から「印＋文字」が揃い、どちらも動かせる。 */
     ensureMainLabels();
     applyMarkChoice(key);
+    /* 🔒 §30-32-5: **多角形を先に描いてからマーカーを置いた**時も◎を出さない
+     * （印の種類は「その地点の紙に多角形があるか」で決まる＝順番に依らない）。 */
+    syncMarkShapeFromPolys();
     refreshPoints();
     sgRenderMarks();         // ▼は本拠・駐車場の2つへ戻る（§30-24-2）
     Store.autosave(state.current);
@@ -6729,11 +6814,131 @@
     ensureMainLabels(wiped);
     applyMarkChoice('home');
     applyMarkChoice('lot');
+    // 🔒 §30-32-5: 同一住所の直後も同じ規則（多角形が残っていれば◎を出さない）
+    syncMarkShapeFromPolys();
     refreshPoints();
     sgRenderMarks();         // ▼は［同一住所］の直下の1つだけになる（§30-24-2）
     Store.autosave(c);
     hint('使用の本拠と駐車場を同じ場所に置きました（結線と直線距離は出ません）', 3500);
     navRender();
+  }
+
+  /**
+   * 🔒 §30-32-6（2026-09-15 オーナー指示「配置図で駐車場マーカーを消すと所在図でも
+   * 消える。配置図でのみ消えるように」）: 消しゴムで**画面のピン**をクリックした時の
+   * 振り分け。**判定は「いまどちらの図の紙か」だけ**（表示文字では分岐しない）。
+   *   ・所在図の紙 … 地点そのものを消す（removePoint・§30-32-1）
+   *   ・配置図の紙 … **その紙のピンの表示だけ**を消す（地点は残る＝所在図は変わらない）
+   * 🔴 地点（points[key]）は案件の値で、所在図の生成と［駐車場に寄る］が読む。
+   *    配置図のピンは紙に刷られない画面上の目印なので、紙ごとに消せる方が実務に合う。
+   */
+  function erasePinAt(key) {
+    return (state.kind === 'haichizu') ? hidePinOnSheet(key) : removePoint(key);
+  }
+
+  /**
+   * 🔒 §30-32-6 3: **その紙だけ**画面のピンを消す（`sheet.pinHidden[key]`）。
+   * 🔴 地点は消さない（所在図の主役の印・結線・［駐車場に寄る］はそのまま）。
+   * 🔴 抜き出した紙・複製した紙には写る（addSheet が pinHidden も写す）。
+   */
+  function hidePinOnSheet(key) {
+    var c = state.current, sh = curSheet();
+    if (!c || !sh || !c.points[key]) return false;
+    if (!sh.pinHidden) sh.pinHidden = {};
+    /* 🔒 §30-24-2: 同一住所の時は画面のピンが1つ（本拠側）＝両方を消したことにする */
+    var keys = c.points.same ? ['home', 'lot'] : [key];
+    var n = 0;
+    keys.forEach(function (kk) { if (!sh.pinHidden[kk]) { sh.pinHidden[kk] = true; n++; } });
+    if (!n) return false;
+    renderOverlay();
+    sgSyncPinShow();
+    Store.autosave(c);
+    hint('この紙のマーカーを消しました（［マーカーを表示］で戻せます）', 3500);
+    return true;
+  }
+
+  /** 🔒 §30-32-6 3: ［マーカーを表示］。その紙で消したピンを全部戻す */
+  function showPinsOnSheet() {
+    var sh = curSheet();
+    if (!sh || !sh.pinHidden) return;
+    ['home', 'lot'].forEach(function (kk) { delete sh.pinHidden[kk]; });
+    renderOverlay();
+    sgSyncPinShow();
+    Store.autosave(state.current);
+    hint('この紙のマーカーを表示に戻しました', 2500);
+  }
+
+  /** 🔒 §30-32-6 3: その紙でピンを消しているか（描画とボタンの出し入れが読む1か所） */
+  function pinHiddenOn(sh, key) {
+    return !!(sh && sh.pinHidden && sh.pinHidden[key]);
+  }
+
+  /** 🔒 §30-32-6 3: ［マーカーを表示］は**消した紙にいる時だけ**出す */
+  function sgSyncPinShow() {
+    var b = $('hzPinShow');
+    if (!b) return;
+    var sh = curSheet();
+    b.hidden = !(state.kind === 'haichizu'
+                 && (pinHiddenOn(sh, 'home') || pinHiddenOn(sh, 'lot')));
+  }
+
+  /**
+   * 🔒 §30-32-1（2026-09-15 オーナー指示「配置図ガイダンスで駐車場マーカーを
+   * 消したい。所在図でも配置図でも、マーカーも消しゴムで普通に消せるように」）:
+   * **その地点（`points[key]`）を消す**。
+   * 入口は2つ（①画面のピン本体を消しゴムでクリック ②紙のその地点の主役の印・
+   * 文字を消しゴムでクリック）だが、消し方はこの1関数。
+   *   ・`points[key] = null`（同一住所なら**両方**＝印1つ文字2つで1組なので）
+   *   ・所在図・配置図の**全紙**からその地点の役割オブジェクトを取り除く
+   *     （`role:'mainmark'` で markRole が一致／`role:'pinlabel'` で地点が一致／
+   *      結線と直線距離 `role:'distance'`）
+   *   ・ガイダンスの✓・「いま:」・番号の青も引き直す
+   * 🔴 確認は出さない（置き直せばよい・§30-32-1 2）。
+   * 🔴 ピンは案件の値なので **Ctrl+Z の対象外**（§30-32-1 2）＝履歴には載せない
+   *    （載せると「印だけ戻って地点が無い」半端な取り消しになる）。
+   * 🔴 配列は差し替えず splice だけ（§23-7-1 / §26-2 注意①）。
+   * @param {'home'|'lot'} key
+   * @returns true＝消した
+   */
+  function removePoint(key) {
+    var c = state.current;
+    if (!c || (key !== 'home' && key !== 'lot')) return false;
+    if (!c.points[key]) return false;
+    /* 🔒 §30-24-2: 同一住所は「印1つ＋文字2つ」で1組。片方だけ消すと中途半端な
+     * 組が残るので、両方まとめて消して same を外す。 */
+    var keys = c.points.same ? ['home', 'lot'] : [key];
+    var n = 0;
+    KINDS.forEach(function (k) {
+      sheetsOf(k).forEach(function (sh) {
+        var objs = sh.objects || [];
+        for (var i = objs.length - 1; i >= 0; i--) {
+          var o = objs[i];
+          if (!o) continue;
+          var mine = (o.role === 'mainmark' && keys.indexOf(o.markRole || 'home') >= 0)
+                  || (o.role === 'pinlabel' && o.type === 'text'
+                      && keys.indexOf(pinKeyOf(o)) >= 0)
+                  /* 結線と直線距離は2地点が揃っている時の物（片方が消えたら要らない） */
+                  || (o.role === 'distance');
+          if (mine) { objs.splice(i, 1); n++; }
+        }
+      });
+    });
+    keys.forEach(function (kk) {
+      c.points[kk] = null;
+      state.markPick[kk] = null;
+      state.mainPolyHead[kk] = null;
+    });
+    c.points.same = false;
+    navPinArm(null);                 // 置きかけだった時は解除（カーソルも戻す）
+    if (n && state.editor) state.editor.render();
+    refreshPoints();                 // ← ピンの表示（renderOverlay）もここで引き直す
+    navRenderPins();                 // ✓ が外れる（ガイダンス①・道具メニュー）
+    sgRenderMarks();                 // ▼「印の形と色」の器（同一住所が外れる）
+    if (navOnSide()) { sgRenderNums(); sgRenderStatus(); }
+    Store.autosave(c);
+    hint('マーカーを消しました。置き直せます', 3000);
+    navRender();
+    return true;
   }
 
   /**
@@ -7322,8 +7527,8 @@
           exPickDone('失敗しました: ' + (e.message || e), false);
           return;
         }
-        // 🔒 §30-18-6 2: まとめの PDF はファイル名の末尾に「_まとめ」
-        saveBlob(blob, baseFileName() + '_まとめ.pdf').then(function (r) {
+        // 🔒 §30-18-6 2 / §30-32-3: まとめの PDF は図と紙の代わりに「まとめ」
+        saveBlob(blob, exportFileName(null, 'combo', 'pdf')).then(function (r) {
           exPickDone('PDF を保存しました（1 ページ・'
             + (blob.size / 1048576).toFixed(2) + ' MB）。' + saveWhere(r), true);
         });
@@ -7339,12 +7544,25 @@
     fn(function (m, ok) { exPickDone(m, ok); }, null, pages);
   }
 
-  /** 書き出しの結果を窓とプレビューの帯に出す */
+  /**
+   * 書き出しの結果を出す。
+   * 🔒 §30-31-4（2026-09-15 オーナー指示）: **保存できたら紙を選ぶ窓を閉じる**
+   * （プレビュー画面は開いたまま・結果の一言は帯 #exBarMsg に出す）。
+   * 🔴 失敗した時は窓を閉じない＝理由は窓の中（#exPickMsg）に出して、
+   *    もう一度押せるように［PDFにして保存］を戻す。
+   * 🔴 一言の文言は exportPDF / exportPNG の finish() 1か所（ここでは作らない）。
+   */
   function exPickDone(m, ok) {
-    if ($('exPickMsg')) $('exPickMsg').textContent = m;
-    if ($('exPickGo')) $('exPickGo').disabled = !exPickCount();
-    // 窓を閉じた後も見えるように、プレビューの帯にも同じ一言を置く
-    if ($('exBarMsg')) $('exBarMsg').textContent = m;
+    if (ok) {
+      exPickClose();
+      if ($('exBarMsg')) $('exBarMsg').textContent = m;
+      /* プレビューを開かずに（配置図⑧の［PDFにして保存］から）出した時は帯が
+       * 見えないので、同じ一言をその場の案内としても出す。 */
+      if ($('exPreviewBox').hidden) hint(m, 6000);
+    } else {
+      if ($('exPickMsg')) $('exPickMsg').textContent = m;
+      if ($('exPickGo')) $('exPickGo').disabled = !exPickCount();
+    }
     /* 🔒 §30-27-1 7: 配置図⑯（PDFにして保存）の済みは従来どおり state.nav.saved。
      * 🔴 印を付けるのは**配置図⑫（step 12）にいる時だけ**（所在図から出した
      *    書き出しで⑯が済みになってしまわないように）。 */
@@ -7373,15 +7591,14 @@
 
   /**
    * ⑫へ入った時。枠を確定してプレビューを出す。
-   * 🔒 §16-5 B: 提出前チェックの中身は**⑫の段に常時出す**（sgRenderCheck）。
-   *    書き出し直前の確認ダイアログ（#chkBox・止めない）は従来どおり残る。
+   * 🔒 §30-31-3 2: 「提出前チェック」の一覧（旧 #sgChkBox / sgRenderCheck）は廃止。
+   *    この段は［プレビュー］［PDFにして保存］の2ボタンだけ（§30-27-1 7）。
    */
   function navEnterFinish() {
     var c = state.current;
     if (!c) return;
     syncFrameFromView();
     ensureFrames();
-    sgRenderCheck();
     // 🔒 §30-18-6 1: ⑧のプレビューと保存は**配置図だけ**
     navShowPreview('haichizu');
   }
@@ -7495,21 +7712,47 @@
     /* 🔒 §30-25-37 1: 印の大きさ（既定 1・0.5〜3）。旧案件は持たない＝1。
      * 🔴 上下限の出どころは Editor.clampMarkScale 1か所（ここには書かない）。 */
     var scale = Editor.clampMarkScale ? Editor.clampMarkScale(m && m.scale) : 1;
-    return { shape: shape, color: color, scale: scale };
+    /* 🔒 §30-31-1 2: ■（四角の印）の**縦横**（実距離 m）。
+     * 🔴 無い時の既定は Editor.markRectDims（基準 MARK.kinds × 倍率）1か所。
+     *    持っている案件はその値がそのまま真実＝長方形が開き直しでも保たれる。 */
+    var dim = Editor.markRectDims ? Editor.markRectDims(key, scale)
+            : { w_m: def.w_m || 10, h_m: def.h_m || 10 };
+    return { shape: shape, color: color, scale: scale,
+             w_m: markDim(m && m.w_m, dim.w_m),
+             h_m: markDim(m && m.h_m, dim.h_m) };
+  }
+
+  /** 🔒 §30-31-1 2: 保存された縦横（m）を読む（数値でなければ既定）。丸めは3桁 */
+  function markDim(v, def) {
+    var n = Number(v);
+    return (isFinite(n) && n > 0) ? Math.round(n * 1000) / 1000 : def;
+  }
+
+  /** 🔒 §30-31-1 2: 案件へ入れる印の器（形・色・大きさ・縦横）を写す1か所 */
+  function markCopy(m) {
+    return { shape: m.shape, color: m.color, scale: m.scale,
+             w_m: m.w_m, h_m: m.h_m };
   }
 
   /**
    * 🔒 §30-25-37: 印の値（形・色・大きさ）を書き換える時の**組み立て1か所**。
    * 🔴 どれか1つを変えても他の2つを落とさない（scale を持たない patch でも保つ）。
+   * 🔒 §30-31-1 2: ■の縦横（w_m/h_m）も同じ器に入る。
+   *    ・patch に w_m/h_m があればそれが真実（辺つまみ・右パネルの欄）
+   *    ・大きさ（scale）だけを変えた時は**同じ比率**で縦横に掛ける（角のつまみ）
+   *      ＝長方形の比を保ったまま拡大縮小できる
    */
   function markNext(key, patch) {
     var cur = markOf(key);
     var sc = (patch && patch.scale !== undefined) ? patch.scale : cur.scale;
     // 🔴 上下限（0.5〜3）の出どころは Editor.clampMarkScale 1か所
     if (Editor.clampMarkScale) sc = Editor.clampMarkScale(sc);
+    var r = (cur.scale > 0) ? (sc / cur.scale) : 1;
     return { shape: (patch && patch.shape) || cur.shape,
              color: (patch && patch.color) || cur.color,
-             scale: sc };
+             scale: sc,
+             w_m: markDim(patch && patch.w_m, markDim(cur.w_m * r, cur.w_m)),
+             h_m: markDim(patch && patch.h_m, markDim(cur.h_m * r, cur.h_m)) };
   }
 
   /** 生成に渡す形（両地点ぶん・shozaizu.js の opts.marks） */
@@ -7536,14 +7779,16 @@
     /* 🔒 §30-25-37 2: 形・色に**大きさ（scale）**が加わった。組み立ては markNext 1か所 */
     var next = markNext(key, patch);
     if (next.shape === cur.shape && next.color === cur.color
-        && next.scale === cur.scale) return;
+        && next.scale === cur.scale
+        && next.w_m === cur.w_m && next.h_m === cur.h_m) return;
     if (c.points[key]) c.points[key].mark = next;
     else state.markPick[key] = next;
     /* 🔒 §30-22-1 6: 同一住所の時は印は1つ（本拠側の設定を採る）。
-     * 値が2か所に割れないよう、もう一方の地点にも同じ物を写しておく。 */
+     * 値が2か所に割れないよう、もう一方の地点にも同じ物を写しておく。
+     * 🔒 §30-31-1 2: 写す中身は markCopy 1か所（縦横も一緒に持っていく）。 */
     if (c.points.same && c.points.home && c.points.lot) {
-      c.points.home.mark = { shape: next.shape, color: next.color, scale: next.scale };
-      c.points.lot.mark = { shape: next.shape, color: next.color, scale: next.scale };
+      c.points.home.mark = markCopy(next);
+      c.points.lot.mark = markCopy(next);
     }
     /* 🔒 §30-24-3: 印の種類を変えても文字は必ず1つずつ。
      * 🔴 applyMarkChoice の**前**に呼ぶ（文字が無い紙には印も作られないので、
@@ -7580,14 +7825,47 @@
       /* 🔒 §30-22-1 6 / §30-24-2: 同一住所の時は印は1つ（本拠側の値）＝両方に写す
        * （値が2か所に割れない・sgSetMark と同じ作法）。 */
       if (c.points.same && c.points.home && c.points.lot) {
-        c.points.home.mark = { shape: next.shape, color: next.color, scale: next.scale };
-        c.points.lot.mark = { shape: next.shape, color: next.color, scale: next.scale };
+        c.points.home.mark = markCopy(next);
+        c.points.lot.mark = markCopy(next);
       }
       applyMarkChoice(key);                    // 紙の◎（markScale）・■（w_m/h_m）
       if (c.points.same) applyMarkChoice(key === 'home' ? 'lot' : 'home');
       renderOverlay();                         // 画面のピンも同じ倍率に
     }
     if (!live) Store.autosave(c);
+    return true;
+  }
+
+  /**
+   * 🔒 §30-31-1 2（2026-09-15 オーナー指示「①の□マーカー、4辺を自由に調節したい」）:
+   * 主役の■の**縦横（実距離 m）**を変える1か所。
+   * 値の出どころは案件の `points[key].mark.w_m / h_m`（形・色・大きさと同じ器）で、
+   * 紙の■（applyMarkChoice）がそこから引き直す。
+   * 🔴 呼ぶ所は2つだけ: ■の辺つまみ（editor.onMainMarkDims）と
+   *    右パネルの幅／奥行の欄（applyPropInputs）。どちらも同じ値を書く。
+   * 🔴 中心＝ピンは動かさない（辺つまみは反対の辺も同じ量だけ動く・_resizeEdge）。
+   * @param {'home'|'lot'} key
+   * @param {number} w_m 幅(m)・省略や 0 以下は今の値のまま
+   * @param {number} h_m 奥行(m)・同上
+   */
+  function setMainMarkDims(key, w_m, h_m) {
+    var c = state.current;
+    if (!c || (key !== 'home' && key !== 'lot')) return false;
+    var cur = markOf(key);
+    // 🔴 組み立ては markNext 1か所（形・色・大きさを落とさない）
+    var next = markNext(key, { w_m: w_m, h_m: h_m });
+    if (next.w_m === cur.w_m && next.h_m === cur.h_m) return false;
+    if (c.points[key]) c.points[key].mark = next;
+    else state.markPick[key] = next;
+    // 🔒 §30-22-1 6 / §30-24-2: 同一住所は本拠側の値を両方に（markCopy 1か所）
+    if (c.points.same && c.points.home && c.points.lot) {
+      c.points.home.mark = markCopy(next);
+      c.points.lot.mark = markCopy(next);
+    }
+    applyMarkChoice(key);                      // 紙の■（w_m/h_m）を引き直す
+    if (c.points.same) applyMarkChoice(key === 'home' ? 'lot' : 'home');
+    renderOverlay();
+    Store.autosave(c);
     return true;
   }
 
@@ -7607,7 +7885,9 @@
     /* 🔒 §30-24-2: 同一住所の時、印は**本拠側の1つ**だけ（駐車場側は文字だけ）。
      * 生成（shozaizu.js）と同じ規則をここでも守る＝同じ場所に印が2つ重ならない。 */
     if (c.points.same && key === 'lot') {
-      want = { shape: 'none', color: want.color, scale: want.scale };
+      // 🔒 §30-31-1 2: 縦横も落とさずに写す（器の形を1つに保つ＝ markCopy と同じ中身）
+      want = markCopy({ shape: 'none', color: want.color, scale: want.scale,
+                        w_m: want.w_m, h_m: want.h_m });
     }
     var hex = Editor.markHex ? Editor.markHex({ markColor: want.color }) : '';
     sheetsOf('shozaizu').forEach(function (sh) {
@@ -7635,8 +7915,9 @@
       }
       if (want.shape === 'rect') {
         if (!rect && p && Editor.makeMark) {
-          // 🔒 §30-25-37 1: 実寸は「基準 × 大きさ」（Editor.markRectDims が出どころ）
-          rect = Editor.makeMark(key, p, undefined, want.color, want.scale);
+          /* 🔒 §30-25-37 1: 実寸は「基準 × 大きさ」（Editor.markRectDims が出どころ）
+           * 🔒 §30-31-1 2: 案件が縦横（want.w_m/h_m）を持っていればそれが真実 */
+          rect = Editor.makeMark(key, p, undefined, want.color, want.scale, want);
           var at = lb ? objs.indexOf(lb) : -1;
           if (at >= 0) objs.splice(at, 0, rect); else objs.push(rect);
           changed++;
@@ -7648,13 +7929,13 @@
             changed++;
           }
           /* 🔒 §30-25-37 3: 大きさを変えたら**その場で引き直す**（作り直さない）。
-           * 🔴 実寸の出どころは Editor.markRectDims 1か所（makeMark と同じ表）。 */
-          if (Editor.markRectDims) {
-            var dim = Editor.markRectDims(key, want.scale);
-            if (rect.markScale !== dim.scale) {
-              rect.w_m = dim.w_m; rect.h_m = dim.h_m; rect.markScale = dim.scale;
-              changed++;
-            }
+           * 🔒 §30-31-1 2: 実寸の出どころは案件の points[key].mark.w_m/h_m
+           *    （＝ markOf が返す want.w_m/h_m。持たない案件は「基準 × 大きさ」）。
+           *    倍率（markScale）は◎と紙の下限のために一緒に写す。 */
+          if (rect.w_m !== want.w_m || rect.h_m !== want.h_m
+              || rect.markScale !== want.scale) {
+            rect.w_m = want.w_m; rect.h_m = want.h_m; rect.markScale = want.scale;
+            changed++;
           }
         }
       } else if (rect) {
@@ -7749,8 +8030,9 @@
          * （＝ Editor.MARK 表）1か所なので、後で作られる四角と必ず同じ寸法になる。 */
         var mkSize = rect ? { w_m: rect.w_m, h_m: rect.h_m } : null;
         if (!mkSize && want.shape === 'rect' && !shared && Editor.makeMark) {
-          // 🔒 §30-25-37 1: 実寸は「基準 × 大きさ」（後で作られる四角と同じ寸法に）
-          var prov = Editor.makeMark(key, p, undefined, want.color, want.scale);
+          /* 🔒 §30-25-37 1: 実寸は「基準 × 大きさ」（後で作られる四角と同じ寸法に）
+           * 🔒 §30-31-1 2: 案件が縦横を持っていればそれ（＝ want をそのまま渡す） */
+          var prov = Editor.makeMark(key, p, undefined, want.color, want.scale, want);
           mkSize = { w_m: prov.w_m, h_m: prov.h_m };
         }
         /* 真下へずらす基準は、同じ地点に既にある相方の文字（無ければ地点そのもの）。
@@ -7963,10 +8245,10 @@
      + 'チェックと数値を入れて［保管場所ラベル配置］を押し、'
      + '対象の駐車枠をクリックしてください。'
      + '置いた塊は矢印つきで枠を指し、あとからドラッグで動かせます。',
+    /* 🔒 §30-31-3 2: 「提出前チェック」の案内は消した（一覧ごと廃止）。 */
     12: '提出する紙面です。図1つにつき A4 1ページ（縦・横は紙ごと）で、'
      + '所在図・配置図の全部の紙が出ます。'
-     + '下の［PDFにして保存］［画像ファイルにして保存］で案件のフォルダに保存できます。'
-     + '足りない物があれば上の「提出前チェック」に出るので、足跡で戻って直せます。'
+     + '［プレビュー］で見た目を確かめ、［PDFにして保存］で案件のフォルダに保存できます。'
   };
 
   /**
@@ -8068,10 +8350,9 @@
     if (n === 11) sgRenderStorageFmt();
     // 🔒 §29 Step 7 ⑪: 凡例の4行は1度だけ作る（段へ入る前に開いても空にしない）
     if (n === 11) labelBuildRows('lb');
-    /* 🔒 §16-5 B ⑫: 提出前チェックは段の中に常時出す。
-     * 🔒 §30-27-1 7: 「まとめる／別々」の2択は廃止（まとめの可否は PDF・画像の窓の中
-     * ＝ sgComboInfo().ok を exPickRender が読む）。 */
-    if (n === 12) sgRenderCheck();
+    /* 🔒 §30-27-1 7: 「まとめる／別々」の2択は廃止（まとめの可否は PDF・画像の窓の中
+     * ＝ sgComboInfo().ok を exPickRender が読む）。
+     * 🔒 §30-31-3 2: ⑧（step 12）の「提出前チェック」の一覧も廃止した。 */
     navRenderPins();             // ✓ と押している間の色を2か所で揃える（§18-ap）
     sgRenderFoot(n);
     sgRenderStatus();
@@ -8088,37 +8369,10 @@
     if (state.map && state.current) renderOverlay();
   }
 
-  /**
-   * ⑫ 提出前チェック（🔒 §16-5 B）を段の中へ常時出す。
-   * 🔴 判定は書き出し直前のダイアログ（#chkBox）と**同じ haichizuIssues()**。
-   *    2か所で違うことを言わないよう、数え方は1か所のまま。
-   * 🔒 §26-4-e / §28-10 裁定6: 図形が無い紙（方位記号だけの紙も含む）は書き出さない。
-   */
-  function sgRenderCheck() {
-    var ul = $('sgChkList'), note = $('sgChkNote');
-    if (!ul || !note || !state.current) return;
-    var items = [];
-    // 所在図が空（⑫で紙が1枚も出ない一番多い原因）
-    if (!navHasShozaizu() && !objectsOf('shozaizu').length) {
-      items.push('所在図がまだ空です（足跡②へ戻って［確認する］で作れます）');
-    }
-    haichizuIssues().forEach(function (t) { items.push(t); });
-    ul.innerHTML = '';
-    if (!items.length) items = ['✓ 足りない物は見つかりませんでした'];
-    items.forEach(function (t) {
-      var li = document.createElement('li');
-      li.className = (t.charAt(0) === '✓') ? 'is-ok' : 'is-miss';
-      li.textContent = t;               // 文言はそのまま（HTML を作らない）
-      ul.appendChild(li);
-    });
-    /* 白紙の紙の枚数（🔒 §26-4-e）。「出したはずの紙が出ない」の説明をここで先に済ませる。 */
-    var blank = 0;
-    KINDS.forEach(function (k) {
-      sheetsOf(k).forEach(function (sh) { if (!sheetHasDrawing(sh)) blank++; });
-    });
-    note.textContent = 'この確認は目安です。足りていても内容は必ずご確認ください。'
-      + (blank ? ('　図形が無い白紙の紙 ' + blank + ' 枚は書き出しません。') : '');
-  }
+  /* 🔒 §30-31-3 2（2026-09-15 オーナー指示）: 配置図⑧の「提出前チェック」の一覧
+   * （旧 #sgChkBox / sgRenderCheck）は**出さない**。所在図だけを作った時に
+   * 配置図の「出入口が無い」等が並ぶのは当然で、案内として要らないため
+   * （判定の haichizuIssues も、書き出し前の窓と一緒に廃止した）。 */
 
   /** 🔒 §28-5 A: 選択中の道具の「使い方1行」（道具メニューの #toolHint と同じ出どころ）。
    *  🔒 §29: 出す所が④⑦⑧の3か所になったので、class で全部まとめて入れる（文言は1つ）。 */
@@ -8493,22 +8747,40 @@
   }
 
   /**
-   * 🔒 §30-24-1: 多角形を**全部消したら**印の種類を◎へ戻す
-   * （印が1つも無い状態を作らない）。消しゴム・Delete・戻す のどの経路でも
-   * 「図形が変わった」1か所で面倒を見る（editor の change から呼ぶ）。
+   * 🔒 §30-24-1 / 🔒 §30-32-5（2026-09-15 オーナー指示「本拠・駐車場を多角形で
+   * 描いた場合、印は自動で無しに。いま基本◎になっているから、多角形で描いたのに
+   * ◎が出る」）: 主役の多角形の有無と印の種類を**双方向**に揃える。
+   *   ・その地点の紙に主役の多角形が**ある**間は印の種類＝'polygon'（◎■を描かない）
+   *   ・多角形が**全部消えたら**◎へ戻す（印が1つも無い状態を作らない）
+   * 🔴 順番に関わらず同じ結果にするため、呼ぶ契機は4つ（§30-32-5 2）:
+   *    ①図形が変わった時（editor の change＝消しゴム・Delete・戻す・描いた）
+   *    ②マーカーを置いた直後（onNavPinPlace）
+   *    ③同一住所を置いた直後（placeSamePoint）
+   *    ④案件を開いた直後（openCase）
+   * 🔴 書き先は案件の points[key].mark（まだ置いていない地点は画面の控え markPick）
+   *    の1か所＝組み立ては markNext。
+   * 🔴 ■・印なしは触らない（多角形が無い時に◎へ戻すのは「多角形だった時」だけ）。
    */
   function syncMarkShapeFromPolys() {
     var c = state.current;
     if (!c) return 0;
     var n = 0;
     ['home', 'lot'].forEach(function (key) {
-      if (markOf(key).shape !== 'polygon' || sgHasMainPoly(key)) return;
+      var want = sgHasMainPoly(key) ? 'polygon' : 'circle';
+      var now = markOf(key).shape;
+      if (now === want) return;
+      if (want === 'circle' && now !== 'polygon') return;   // ■・印なしはそのまま
       var p = c.points[key];
-      var m = (p && p.mark) || state.markPick[key];
-      // 🔒 §30-25-37 3: 形が◎へ戻っても大きさ（scale）は保つ（markNext が組み立てる）
-      if (m) m.shape = 'circle';
-      else if (p) p.mark = markNext(key, { shape: 'circle' });
+      // 🔒 §30-25-37 3: 形が変わっても大きさ（scale）・縦横は保つ（markNext が組み立てる）
+      var next = markNext(key, { shape: want });
+      if (p) p.mark = next; else state.markPick[key] = next;
+      /* 🔒 §30-24-2: 同一住所の時は印が1つ（本拠側）＝値を両方へ写す */
+      if (c.points.same && c.points.home && c.points.lot) {
+        c.points.home.mark = markCopy(next);
+        c.points.lot.mark = markCopy(next);
+      }
       applyMarkChoice(key);
+      if (c.points.same) applyMarkChoice(key === 'home' ? 'lot' : 'home');
       n++;
     });
     if (n) { sgRenderMarks(); renderOverlay(); Store.autosave(c); }
@@ -9825,73 +10097,12 @@
   }
 
   /* ---------- 提出前チェック（正典 §16-5 B） ----------
-   * 書き出し・プレビューの直前に、配置図の付け忘れだけを並べる。
-   * 🔴 止めない。「このまま書き出す」を必ず選べるようにする。 */
-
-  function haichizuIssues() {
-    /* 🔒 §24-3（Step 6）: 書き出しは配置図の**全シート**なので、チェックも全シートを
-     * 合わせて見る。🔴 1枚目に保管場所・2枚目に寸法、のような分け方は普通にあるので、
-     * 開いている紙だけを見ると「入っているのに未記入」と言ってしまう。 */
-    var objs = [];
-    sheetsOf('haichizu').forEach(function (sh) {
-      objs = objs.concat(sh.objects || []);
-    });
-    var miss = [];
-    var hasMark = objs.some(function (o) {
-      return (o.type === 'rect' && o.storage)
-          || (o.type === 'stampGroup' && o.storage
-              && Object.keys(o.storage).length)
-          || (o.type === 'text' && /保管場所/.test(o.text || ''))
-          // 🔒 §18-f ⑧: 駐車位置ラベル（塊）も「保管場所」の印として数える
-          || (o.type === 'labelBlock'
-              && (o.lines || []).some(function (t) { return /保管場所/.test(t); }));
-    });
-    if (!hasMark) miss.push('「保管場所」のマーク（対象の枠がどれか分かる印）');
-
-    // 🔒 v4: 寸法は自動で付かなくなったので、塊も「個別に出した物」だけを数える
-    var hasDim = objs.some(function (o) {
-      if (o.type === 'stampGroup') return o.showDims !== false;
-      if (o.type === 'labelBlock') {
-        return (o.lines || []).some(function (t) { return /長さ|幅/.test(t); });
-      }
-      // 🔒 §25-4: 主役マークは寸法を出さない図形なので「寸法の入った枠」には数えない
-      return o.type === 'rect' && o.role !== 'mainmark'
-          && (o.labelOverride || o.showDims !== false);
-    });
-    if (!hasDim) {
-      miss.push('寸法の入った枠（保管場所の幅・奥行）'
-        + '…枠を選んで［寸法(m)を図に出す］か、「表示」欄に実測値を入れてください');
-    }
-
-    /* 🔒 §25-5: 矢印は手入力が無くても地図から計算した数値つきで紙に出るので、
-     * 「数値が確定した物だけ数える」判定はやめて矢印の有無だけを見る。 */
-    var hasWidth = objs.some(function (o) { return o.type === 'arrow'; });
-    if (!hasWidth) miss.push('幅員の矢印（前面道路や出入口の幅）');
-
-    var hasEnt = objs.some(function (o) {
-      return (o.type === 'text' && /出入口|出入り口/.test(o.text || ''))
-          || (o.type === 'arrow' && /出入/.test(o.label || ''));
-    });
-    if (!hasEnt) miss.push('「出入口」の表示');
-    return miss;
-  }
-
-  /** 不足があれば確認を挟んで fn を実行する（無ければそのまま実行） */
-  function withSubmitCheck(fn) {
-    if (!state.current) return;
-    var miss = haichizuIssues();
-    if (!miss.length) { fn(); return; }
-    var ul = $('chkList');
-    ul.innerHTML = '';
-    miss.forEach(function (t) {
-      var li = document.createElement('li');
-      li.textContent = t;
-      ul.appendChild(li);
-    });
-    state.pendingExport = fn;
-    $('chkBox').hidden = false;
-    $('chkGo').focus();
-  }
+   * 🔒 §30-31-3（2026-09-15 オーナー指示「プレビューまで進んで PDF を押すと、
+   *    所在図を作ったのに提出前チェックで配置図のエラーが出る。このエラー表示自体を
+   *    無くして。配置図でもこの案内は必要ない」）: **表示しない**。
+   * 🔴 判定（旧 haichizuIssues）・書き出し前の窓（旧 withSubmitCheck / #chkBox）・
+   *    配置図⑧の一覧（旧 sgRenderCheck / #sgChkBox）を丸ごと廃止した
+   *    ＝残しておくと「使っていない判定」が2か所目の真実になるため。 */
 
   /** 筆界が取れなかった時の理由を切り分けて伝える */
   function parcelNote(list) {
@@ -10110,6 +10321,9 @@
     /* 🔒 §30-24-3: 前に文字が消えたまま保存された案件を、開いた時に直す
      * （文字は印の種類・置き直し・作り直しに関わらず必ず1つずつある）。 */
     ensureMainLabels();
+    /* 🔒 §30-32-5: 開いた案件でも「多角形があれば印は多角形」を揃える
+     * （前の版で◎のまま保存された案件を開いた時に◎が出てしまうため）。 */
+    syncMarkShapeFromPolys();
     refreshPoints();
     /* 🔒 §30-28-1 1: 道具メニューにもガイダンスと同じ部品が出るので、
      * 案件を開いた時点で**ガイダンスの外でも**引き直す（✓印・印の形と色・
@@ -10214,6 +10428,31 @@
       var o = opts && opts.obj;
       var k = (o && mainMarkKeyOf(o)) || key;
       return setMainMarkScale(k, scale, { live: !(opts && opts.done) });
+    };
+
+    /* 🔒 §30-31-1 2: 主役の■の**辺つまみ**（縦横を別々に）。つまみと同じ作法で、
+     * editor は図形へ書いた縦横を**この口**へ渡す＝書き先は案件の
+     * points[key].mark.w_m / h_m 1か所（紙の■も同じ値から引き直す）。
+     * 🔴 呼ばれるのは指を離した時だけ（ドラッグ中は図形の値で見た目を追う）。 */
+    state.editor.onMainMarkDims = function (key, w_m, h_m) {
+      return setMainMarkDims(key, w_m, h_m);
+    };
+
+    /* 🔒 §30-32-1: 消しゴムが**その地点の部品**（主役の印・主役の文字）に当たった時。
+     * editor は「地点の部品に当たった」と言うだけで、どちらの地点かの判定
+     * （pinKeyOf ＝旧案件の保険つき）と消し方（removePoint）はこちら1か所。
+     * 🔒 §30-32-7 3（補正）: 主役の**多角形**はここへ渡って来ない（editor.js の
+     * isPointPart が type!=='polygon' で弾く＝除外判定はあちら1か所だけに置く。
+     * ここで o.type を見て多角形を弾く判定は重複させない）。 */
+    state.editor.onErasePoint = function (o) {
+      if (!o) return false;
+      /* 🔒 §30-32-6 2〜3: 地点ごと消すのは**所在図の紙**だけ。配置図の紙では
+       * ふつうの図形として1個だけ消す（false を返す＝editor が従来どおり消す）。 */
+      if (state.kind !== 'shozaizu') return false;
+      var key = null;
+      if (o.role === 'mainmark') key = (o.markRole === 'lot') ? 'lot' : 'home';
+      else if (o.role === 'pinlabel' && o.type === 'text') key = pinKeyOf(o);
+      return key ? removePoint(key) : false;
     };
 
     state.editor.on('change', function () {
@@ -10373,13 +10612,14 @@
     });
 
     /* 🔒 §25-7/§25-8: 矢印キーは「増減／回転」に使うようになった。
-     * 文字のその場入力や、かぶせ物（A4プレビュー・提出前チェック・使い方動画）が
+     * 文字のその場入力や、かぶせ物（A4プレビュー・使い方動画）が
      * 出ている間は**矢印キーに手を出さない**。
      * 🔴 文字入力欄・スライダーは editor.js 側でも弾いているが、
-     *    「見えているが focus が外れている入力欄」はここでしか判らない。 */
+     *    「見えているが focus が外れている入力欄」はここでしか判らない。
+     * 🔒 §30-31-3 1: 旧 #chkBox（提出前チェック）は廃止＝この一覧からも外した。 */
     state.editor.keysBusy = function () {
       return !$('textBox').hidden || !$('vidBox').hidden
-          || !$('exPreviewBox').hidden || !$('chkBox').hidden
+          || !$('exPreviewBox').hidden
           || !$('exPick').hidden           // 🔒 §30-27-2: 紙を選ぶ窓も同じ扱い
           || !$('welcomeBox').hidden;      // 🔒 §30-20: 「はじめに」も同じ扱い
     };
@@ -11042,7 +11282,9 @@
         orient: src.orient, center: src.center, zoom: src.zoom,
         frame: src.frame, objects: src.objects,
         // 写した図形は同じデータ源から来ているので出典も一緒に写す（🔒 §24-3）
-        attributions: src.attributions || []
+        attributions: src.attributions || [],
+        // 🔒 §30-32-6 3: 消したマーカーの表示も写す（抜き出した紙にはコピーされる）
+        pinHidden: src.pinHidden || {}
       }));
       /* 図形の id も振り直す。同じ id が別の紙に居ても今は害が無いが、
          複数枚をまとめて扱う Step 6 以降で取り違えの種になる。
@@ -11588,6 +11830,15 @@
        *    （案件の唯一の真実なので、動くと結線・距離・主役マークまで一斉にずれる）。
        *    ここで止めずに素通しすると、そのまま筆のストロークになる。 */
       if (state.editor && state.editor.tool === 'reveal') return;
+      /* 🔒 §30-32-1: 消しゴムの時は**掴まずに消す**（所在図でも配置図でも、
+       * 画面のピン本体をクリックすればその地点が消える）。
+       * 🔴 消し方は removePoint 1か所（紙の印をクリックした時と同じ結果）。 */
+      if (state.editor && state.editor.tool === 'eraser') {
+        e.stopPropagation();
+        e.preventDefault();
+        erasePinAt(key);
+        return;
+      }
       e.stopPropagation();
       e.preventDefault();
       dragging = true;
@@ -11823,6 +12074,9 @@
     renderExportFrame();
     renderSiblingFrames();
     renderRecogLines();
+    /* 🔒 §30-32-6 3: ［マーカーを表示］は「消した紙にいる時だけ」＝紙・図が変わる
+     * たびに引き直す。ここ（画面を引き直す1か所）に置けば取りこぼしが無い。 */
+    sgSyncPinShow();
     /* 🔒 §28-3（Fable 追加提案）: ②の「2つとも枠の中か」は**常時判定**。
      * 地図を動かすたびに枠も判定も動くので、枠を引くのと同じ場所で引き直す。 */
     if (navOnSide()) sgRenderStatus();
@@ -11859,10 +12113,15 @@
     /* 🔒 §30-22-1 6: 同一住所の時は**画面のピンも1つ**（駐車場の分は出さない）。
      * 2つ重ねると掴めない・文字が二重になるだけで良いことが何も無い。 */
     var oneSpot = !!c.points.same;
+    /* 🔒 §30-32-6 3: その紙で消したピンは出さない（地点は残っている＝所在図は無事）。
+     * 🔴 判定の出どころは pinHiddenOn 1か所（ボタンの出し入れも同じ物を読む）。 */
+    var shPin = curSheet();
     ['home', 'lot'].forEach(function (key) {
       var g = state.pins[key], p = c.points[key];
       if (!g) return;
-      if (!p || (oneSpot && key === 'lot')) { g.style.display = 'none'; return; }
+      if (!p || (oneSpot && key === 'lot') || pinHiddenOn(shPin, key)) {
+        g.style.display = 'none'; return;
+      }
       g.style.display = '';
       /* 🔒 §30-25-28 2: 同一住所の時は画面のピンが1つで文字が2つ（本拠・駐車場）。
        * どちらの文字も紙にある時だけ引っ込める。 */

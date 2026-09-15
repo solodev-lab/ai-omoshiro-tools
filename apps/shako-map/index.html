@@ -1393,6 +1393,11 @@
                   <input type="checkbox" id="hzUnderShow" class="js-uop-show" checked>
                   <span>下敷きの地図を表示する</span>
                 </label>
+                <!-- 🔒 §30-32-6 3: 配置図の紙で消しゴムを使って消した画面のマーカーを
+                     この紙に戻す。**消した紙にいる時だけ**出る（app.js sgSyncPinShow）。 -->
+                <button type="button" id="hzPinShow" class="sg-uop-btn" hidden
+                  title="この紙で消したマーカー（使用の本拠・駐車場の目印）を表示に戻します"
+                  >マーカーを表示</button>
               </div>
               </div><!-- /.sg-uop-row -->
             </div><!-- /#hzUnderBar -->
@@ -1747,18 +1752,10 @@
           </div>
 
           <!-- ⑫ 表示・保存（🔒 §29-1・Step 7 で小ウィンドウ #navS12 からここへ）
-               🔒 §16-5 B: 提出前チェックは**この段に常時出す**（書き出し直前の
-                  ダイアログ #chkBox も従来どおり残す＝止めない確認）。
+               🔒 §30-31-3 2（2026-09-15 オーナー指示）: 「提出前チェック」の一覧
+                  （旧 #sgChkBox / #sgChkList / #sgChkNote）は**出さない**＝廃止した。
                🔒 §24-3/§25-3: プレビューは1図1ページで所在図・配置図の全部の紙。 -->
           <div class="sg-body" id="sgS12" hidden>
-            <!-- 🔒 §30-12-5 配置図⑧: 提出前チェックは**隠さない**（一覧をそのまま見せる）。
-                 やることは⑯［PDFにして保存］／［画像ファイルにして保存］だけ
-                 （🔒 §30-25-31 で⑮→⑯）。 -->
-            <div id="sgChkBox">
-              <p class="sg-lb">提出前チェック</p>
-              <ul class="sg-chk" id="sgChkList"></ul>
-              <p class="sg-note" id="sgChkNote"></p>
-            </div>
             <!-- 🔒 §30-27-1 7: この段は［プレビュー］［PDFにして保存］の**2ボタンだけ**。
                  「まとめる／別々」の2択とページ送りはプレビュー画面の中へ移した
                  （旧 #sgCombo／#sgComboMode／#sgComboWhy／#sgComboMsg は廃止）。
@@ -2223,8 +2220,9 @@
 </div>
 
 <!-- はじめに（🔒 §30-20）。［新しい案件］で作図画面に切り替わった直後だけ出す
-     （既存の案件を開いた時は出さない）。提出前チェック #chkBox と同じかぶせの作法＝
-     外側のクリックでは閉じない。Esc は閉じるだけ。
+     （既存の案件を開いた時は出さない）。外側のクリックでは閉じない。Esc は閉じるだけ。
+     🔒 §30-31-3 1: 下地の .chk-box / .chk-inner は旧 #chkBox（廃止）から
+        引き継いだ共通のかぶせ窓の見た目（style.css に残してある）。
      🔴 利用者に見える文言に「ブラウザ／端末」は使わない（「次回から表示しない」だけ）。 -->
 <div id="welcomeBox" class="ex-preview chk-box" hidden>
   <div class="chk-inner wc-inner">
@@ -2240,19 +2238,8 @@
   </div>
 </div>
 
-<!-- 提出前チェック（正典 §16-5 B）。不足を並べるだけで、書き出しは止めない -->
-<div id="chkBox" class="ex-preview chk-box" hidden>
-  <div class="chk-inner">
-    <h3>提出前チェック（配置図）</h3>
-    <p class="chk-lead">次の項目が見つかりませんでした。よくある付け忘れです。</p>
-    <ul id="chkList" class="chk-list"></ul>
-    <p class="sp-note">この確認は目安です。足りていても内容は必ずご確認ください。</p>
-    <div class="sp-btns chk-btns">
-      <button id="chkGo" class="primary">このまま書き出す</button>
-      <button id="chkBack">戻って直す</button>
-    </div>
-  </div>
-</div>
+<!-- 🔒 §30-31-3 1（2026-09-15 オーナー指示）: 提出前チェックの窓（旧 #chkBox）は
+     **廃止**した。［PDF］［画像］は押したらすぐ「出す紙を選ぶ窓」（#exPick）が開く。 -->
 
 <!-- 多角形ツールの使い方動画（🔒 §22-ah → 🔒 §30-14-3 で出し方を変更）。
      字幕の中の［多角形ツールの使い方動画を見る］を押した時だけ出す（自動再生はしない）。
@@ -2326,7 +2313,8 @@
          中に幅100%で入れていたため、ガイダンスから出したプレビュー（.is-nav）で
          案内が行の幅を取り、紙が押しつぶされていた。
          🔴 app.js は hidden の付け外しだけ（器には何も足さない）。 -->
-    <p id="exPreviewTip" class="ex-preview-tip" hidden>この画面では文字だけ動かせます。文字をドラッグで移動、右下のつまみで大きさを変えられます。線や印を直すには［閉じる］で地図に戻ってください</p>
+    <!-- 🔒 §30-32-2: 駐車位置ラベル（塊）もこの画面で動かせる・大きさを変えられる -->
+    <p id="exPreviewTip" class="ex-preview-tip" hidden>この画面では文字と駐車位置ラベルが動かせます。ドラッグで移動、右下のつまみで大きさを変えられます。線や印を直すには［閉じる］で地図に戻ってください</p>
     <!-- 🔒 §30-27-1 3: 図が切り替わった時だけ約3秒出る薄い帯（文は app.js が
          KIND_JA から作る＝表示文字で分岐しない）。消えるのは CSS の transition。 -->
     <p id="exKindNote" class="ex-kindnote" hidden></p>

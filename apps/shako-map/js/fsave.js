@@ -140,15 +140,51 @@
   }
 
   /* getFileHandle(create:true) → createWritable → write → close（§21-2）。
-     🔴 同名は**上書き**（§21-1）。ダウンロードの (1)(2) 汚れを作らないのが利点。
+     🔴 案件本体（.shako）は同名を**上書き**する（それが保存の意味）。
         createWritable は既定で中身を空にしてから開くので、短い内容で上書きしても
-        前の内容が残らない。 */
+        前の内容が残らない。
+     🔒 §30-32-3: **書き出し（PDF/画像）は上書きしない**。呼ぶ側が uniq:true を
+        渡すと、同名が既にある時は `-2` `-3` … を付けた名前で書く。 */
   function writeInto(h, name, blob) {
     return h.getFileHandle(name, { create: true }).then(function (fh) {
       return fh.createWritable();
     }).then(function (w) {
       return w.write(blob).then(function () { return w.close(); });
     });
+  }
+
+  /* 🔒 §30-32-3: 名前を「点の前」と「拡張子」に割る（最後の点で切る・点が無ければ全部） */
+  function splitExt(name) {
+    var i = String(name).lastIndexOf('.');
+    return (i > 0) ? { stem: name.slice(0, i), ext: name.slice(i) }
+                   : { stem: String(name), ext: '' };
+  }
+
+  /**
+   * 🔒 §30-32-3（オーナー指示「毎回上書きはだめ、絶対違うファイルとして保存」）:
+   * そのフォルダで**まだ使われていない名前**を返す。
+   * 同名があれば `-2` `-3` … を付ける。99 まで埋まっていたら最後の保険として
+   * 時刻（時分秒）を足す（必ず別名になる＝上書きだけは絶対にしない）。
+   * 🔴 「あるか」は getFileHandle(create:false) が NotFoundError を投げるかで見る。
+   *    それ以外の理由で失敗した時は**その名前を使わない**（消してよいとは限らない）
+   *    で次の候補へ進む、ではなく元の名前を返す（書き込み側が失敗を拾う）。
+   */
+  function uniqueName(h, name) {
+    var s = splitExt(name);
+    function exists(n) {
+      return h.getFileHandle(n, { create: false })
+              .then(function () { return true; }, function () { return false; });
+    }
+    function step(i) {
+      var n = (i === 1) ? name : (s.stem + '-' + i + s.ext);
+      if (i > 99) {
+        var d = new Date(), p2 = function (v) { return String(v).padStart(2, '0'); };
+        return Promise.resolve(s.stem + '-'
+          + p2(d.getHours()) + p2(d.getMinutes()) + p2(d.getSeconds()) + s.ext);
+      }
+      return exists(n).then(function (yes) { return yes ? step(i + 1) : n; });
+    }
+    return step(1).catch(function () { return name; });
   }
 
   /**
@@ -164,13 +200,19 @@
       if (!h) return download(name, blob, false);        // 未設定・非対応＝従来どおり
       return ensurePermission(h).then(function (ok) {
         if (!ok) return download(name, blob, true);      // 権限拒否 → フォールバック
-        return writeInto(h, name, blob).then(function () {
-          return { mode: 'folder', dir: h.name, name: name, failed: false };
-        }, function () {
+        /* 🔒 §30-32-3: 書き出しは**既存ファイルを絶対に上書きしない**。
+         * 同名があれば -2 -3 … を付けた名前で書き、その名前を結果で返す
+         * （一言「保存しました: フォルダ/ファイル名」も実物の名前になる）。 */
+        return uniqueName(h, name).then(function (n2) {
+          return writeInto(h, n2, blob).then(function () {
+            return { mode: 'folder', dir: h.name, name: n2, failed: false };
+          }, fallback);
+        }, fallback);
+        function fallback() {
           /* フォルダを消された・USB を抜かれた・ディスクが一杯 等。
              作図を止めずダウンロードへ切り替える（§21-1） */
           return download(name, blob, true);
-        });
+        }
       });
     }).catch(function () {
       return download(name, blob, true);

@@ -284,8 +284,10 @@
    * @param boxes 🔒 §30-25-10: 渡すと、描いた文字の箱（canvas px）をここへ積む
    *   （[{id,x,y,w,h}]）。プレビューで「文字だけ動かす」層が読む＝**箱の出どころは
    *   描画と同じこの1か所**（別に見積もると画像と枠がずれる）。
+   * @param lboxes 🔒 §30-32-2: 同じく**駐車位置ラベルの塊**の箱（[{id,x,y,w,h}]）。
+   *   形の出どころは labelBlockGeom（描画と同じ）1か所。
    */
-  function drawObjects(g, objects, proj, S, mpp, pxmm, boxes) {
+  function drawObjects(g, objects, proj, S, mpp, pxmm, boxes, lboxes) {
     // S = 線の太さの倍率、mpp = 1px あたりの実距離(m)
     // 🔒 §22-at: 1U が表す実距離(m) = 出力px何個ぶんか(S) × 1pxの実距離(mpp)
     var mPerU = mpp * S;
@@ -307,6 +309,13 @@
         continue;
       }
       drawOneObject(g, o, proj, S, mpp, pxmm);
+      /* 🔒 §30-32-2: 駐車位置ラベルの塊の箱（プレビューで掴む的）。
+       * 🔴 形の出どころは描画と同じ labelBlockGeom 1か所（矢印の先は含めない
+       *    ＝動かすのは塊だけ・§30-32-2）。 */
+      if (lboxes && o.type === 'labelBlock' && o.at) {
+        var lb = labelBlockGeom(o, proj, pxmm);
+        lboxes.push({ id: o.id, x: lb.x, y: lb.y, w: lb.w, h: lb.h });
+      }
     }
     for (var ti = 0; ti < texts.length; ti++) {
       drawOneObject(g, texts[ti], proj, S, mpp, pxmm);
@@ -527,6 +536,14 @@
     }
     var v = Number(o && o.markScale);
     return (isFinite(v) && v > 0) ? v : 1;
+  }
+  /* 🔒 §30-31-1 3: ■の紙の最小 mm は**縦横それぞれ**（長方形の比を崩さない）。
+   * 🔴 値の出どころは editor.js の Editor.markMinMm 1か所。ここは読むだけ
+   *    （export.js 単体で読み込まれた時だけ従来の「縦横同じ」に落ちる）。 */
+  function markMinMmOf(o) {
+    if (global.Editor && global.Editor.markMinMm) return global.Editor.markMinMm(o);
+    var m = markConf().minMm * rectMarkScale(o);
+    return { w: m, h: m };
   }
 
   /** 角丸矩形のパス（canvas 標準の roundRect は環境差があるので自前で引く） */
@@ -915,9 +932,11 @@
      * （広域の所在図で建物サイズの四角が消えないように。画面 editor.js と同じ規則）。 */
     if (o.role === 'mainmark') {
       // 🔒 §30-25-37 1: 紙の最小 mm にも印の大きさ（markScale）を掛ける（画面と同じ規則）
-      var min = mmPx(markConf().minMm * rectMarkScale(o), pxmm) / 2;
-      if (hw < min) hw = min;
-      if (hh < min) hh = min;
+      // 🔒 §30-31-1 3: 下限は縦横それぞれ（出どころは Editor.markMinMm 1か所）
+      var mn = markMinMmOf(o);
+      var minW = mmPx(mn.w, pxmm) / 2, minH = mmPx(mn.h, pxmm) / 2;
+      if (hw < minW) hw = minW;
+      if (hh < minH) hh = minH;
     }
     var a = (o.angle || 0) * Math.PI / 180;
     var ca = Math.cos(a), sa = Math.sin(a);
@@ -1401,7 +1420,9 @@
     /* 🔒 §30-25-10 3: 文字の箱（canvas px）を集めて返す。プレビューの
      * 「文字だけ動かす」層が読む。 */
     var textBoxes = [];
-    drawObjects(g, opts.objects || [], proj, S, mpp, pxmm, textBoxes);
+    // 🔒 §30-32-2: 駐車位置ラベルの塊の箱も同じ1か所（描画）から集める
+    var labelBoxes = [];
+    drawObjects(g, opts.objects || [], proj, S, mpp, pxmm, textBoxes, labelBoxes);
     g.restore();
 
     /* 🔒 §28-3/§28-7（2026-09-06 オーナー指示）: **方位記号の自動描画は廃止**した。
@@ -1446,6 +1467,8 @@
              orient: orient,
              // 🔒 §30-25-10 3: 文字の箱（canvas px）。出どころは描画と同じ1か所
              textBoxes: textBoxes,
+             // 🔒 §30-32-2: 駐車位置ラベルの塊の箱（canvas px・textBoxes と同じ形）
+             labelBoxes: labelBoxes,
              place: place, page: lay.page, sheetWmm: place.w,
              /* 1:N は**実際に紙へ刷られる幅**で出す（作図領域が広がったので
                 従来の 138mm 固定のままだと 1.4 倍ずれた数字になる） */

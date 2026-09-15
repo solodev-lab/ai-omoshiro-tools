@@ -2027,10 +2027,14 @@
         var m = opts.marks && opts.marks[key];
         var sc = (global.Editor && global.Editor.clampMarkScale)
                  ? global.Editor.clampMarkScale(m && m.scale) : 1;
+        /* 🔒 §30-31-1 2: ■の縦横（m）も持ち回す。無ければ undefined ＝
+         * Editor.makeMark が「基準 × 大きさ」で補う（出どころは1か所のまま）。 */
         return { shape: (m && m.shape) ? m.shape
                         : ((opts.markStyle === 'circle') ? 'circle' : 'rect'),
                  color: (m && m.color) || null,
-                 scale: sc };
+                 scale: sc,
+                 w_m: (m && m.w_m > 0) ? m.w_m : undefined,
+                 h_m: (m && m.h_m > 0) ? m.h_m : undefined };
       };
       /* 🔒 §30-24-2（2026-09-13 オーナー指示・§30-22-1 6 の補正）: 同一住所でも
        * **文字は2つ**（「使用の本拠」と「駐車場」）。上下に並べ、別々に動かせる。
@@ -2050,8 +2054,9 @@
         var noMark = (want.shape === 'none') || (want.shape === 'polygon') || shared;
         var mk = null;
         if (!circleMark && !noMark && global.Editor && global.Editor.makeMark) {
-          // 🔒 §30-25-37 1: ■の実寸は「基準 × 大きさ」（Editor.markRectDims が出どころ）
-          mk = global.Editor.makeMark(kv[0], p, uid('mk'), want.color, want.scale);
+          /* 🔒 §30-25-37 1: ■の実寸は「基準 × 大きさ」（Editor.markRectDims が出どころ）
+           * 🔒 §30-31-1 2: 案件が縦横を持っていればそれが真実（want をそのまま渡す） */
+          mk = global.Editor.makeMark(kv[0], p, uid('mk'), want.color, want.scale, want);
           objs.push(mk);
         }
         objs.push({ id: uid('lb'), type: 'text',

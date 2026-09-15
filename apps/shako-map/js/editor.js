@@ -439,6 +439,19 @@
                     Math.min(MARK_SCALE_RANGE.max, Math.round(n * 100) / 100));
   }
 
+  /* 🔒 §30-32-2（2026-09-15 オーナー指示「配置図ガイダンスのプレビューで
+   *    駐車位置ラベルも動かせる・サイズを変更できるように」）: 駐車位置ラベルの塊
+   *    （labelBlock）の大きさ（倍率）の上下限。
+   * 🔴 値の出どころはこの1か所。画面の右下のつまみ（_drag の lbSize）と
+   *    プレビューのつまみ（app.js exTextLayer）が同じ範囲で丸める。 */
+  var LABEL_SCALE_RANGE = { min: 0.5, max: 4, def: 1 };
+  function clampLabelScale(v) {
+    var n = Number(v);
+    if (!isFinite(n) || !(n > 0)) return LABEL_SCALE_RANGE.def;
+    return Math.max(LABEL_SCALE_RANGE.min,
+                    Math.min(LABEL_SCALE_RANGE.max, Math.round(n * 100) / 100));
+  }
+
   /* 🔒 §30-25-40（2026-09-14 オーナー指示「印やテキストの拡大縮小と同じ動作に。
    *    左メニューの印の大きさの選択肢は無くす」）: 主役の印（◎・■）の大きさは
    *    **つまみ**で変える。印つき文字4種のつまみ（§30-25-18 3）と同じ見た目・
@@ -526,6 +539,30 @@
     var k = MARK.kinds[kind] || MARK.kinds.home;
     var s = clampMarkScale(scale);
     return { w_m: k.w_m * s, h_m: k.h_m * s, scale: s };
+  }
+
+  /* 🔒 §30-31-1（2026-09-15 オーナー指示「①の□マーカー、4辺を自由に調節したい。
+   *    いまは正方形しか作れないが長方形も作りたい」）: ■の実寸は図形の `w_m/h_m`
+   *    （＝案件の points[key].mark.w_m/h_m）が**真実**。倍率（markScale）は
+   *    ◎のための値として残る。
+   * 🔴 基準（MARK.kinds）に対する**軸ごとの比**＝紙の最小 mm に掛ける倍率。
+   *    縦横が同じ比の時は従来（minMm × markScale）と同じ値になる＝後方互換。 */
+  function markAxisScale(o) {
+    var k = MARK.kinds[(o && o.markRole === 'lot') ? 'lot' : 'home'] || MARK.kinds.home;
+    var s = clampMarkScale(o && o.markScale);
+    var w = (k.w_m > 0 && o && o.w_m > 0) ? (o.w_m / k.w_m) : s;
+    var h = (k.h_m > 0 && o && o.h_m > 0) ? (o.h_m / k.h_m) : s;
+    return { w: w, h: h };
+  }
+
+  /**
+   * 🔒 §30-31-1 3: ■の**紙の最小 mm（縦横それぞれ）**。
+   * 🔴 画面（rectHalf）も紙（export.js rectCorners）もここを通る＝長方形の比が
+   *    広域でも崩れない（縦横に同じ下限を当てると正方形に化ける）。
+   */
+  function markMinMm(o) {
+    var a = markAxisScale(o);
+    return { w: MARK.minMm * a.w, h: MARK.minMm * a.h };
   }
 
   /* 🔒 §30-25-37 1: ◎（主役の二重丸）の輪の線の太さ。CSS（.anno-ring）・紙（export.js）
@@ -1544,6 +1581,23 @@
   function isMainMark(o) { return !!o && o.role === 'mainmark'; }
 
   /**
+   * 🔒 §30-32-1（2026-09-15 オーナー指示「所在図でも配置図でも、マーカーも
+   * 消しゴムで普通に消せるように」）: 消しゴムで触れた物が**その地点そのもの**か。
+   * 主役の印（■＝role:'mainmark' の rect）と主役の文字（role:'pinlabel'）が該当する。
+   * 🔴 どちらの地点（home/lot）かの判定は app.js（pinKeyOf の旧案件の保険つき）
+   *    1か所に任せる＝ここは「地点の部品か」だけを見る。
+   * 🔒 §30-32-7 3（補正）: 主役の**多角形**（type:'polygon'）は対象から外す。
+   * 多角形は従来どおり1個ずつ消しゴムで消せる（全部消えたら syncMarkShapeFromPolys
+   * が◎に戻す・§30-24-1）。この type!=='polygon' が唯一の除外判定＝onErasePoint
+   * （app.js）側では多角形を除外する判定を重複させない（多角形はここで弾かれて
+   * onErasePoint 自体が呼ばれないので、渡って来ない）。
+   */
+  function isPointPart(o) {
+    return (isMainMark(o) && o.type !== 'polygon')
+      || !!(o && o.type === 'text' && o.role === 'pinlabel');
+  }
+
+  /**
    * 🔒 §30-24-1: その地点の主役の多角形を**描いた順**に並べて返す。
    * 🔴 ピンの位置は「最初に描いた多角形」の重心なので、順番の出どころは1か所にする。
    *    `mainPolyOrder`（描いた順の通し番号）→ 無い旧データは配列の並び（安定ソート）。
@@ -1643,10 +1697,12 @@
     if (r.role === 'mainmark') {
       /* 🔒 §30-25-7: 紙のミリ → 画面px は mmPx()（ズーム連動）
        * 🔒 §30-25-37 1: 紙の最小 mm にも印の大きさ（markScale）を掛ける
-       *    （［大］にしたのに広域で下限に張り付いて大きくならない、を防ぐ）。 */
-      var min = MARK.minMm * clampMarkScale(r.markScale) * this.mmPx() / 2;
-      if (hw < min) hw = min;
-      if (hh < min) hh = min;
+       *    （［大］にしたのに広域で下限に張り付いて大きくならない、を防ぐ）。
+       * 🔒 §30-31-1 3: 下限は**縦横それぞれ**（出どころは markMinMm 1か所）。 */
+      var mm = markMinMm(r), half = this.mmPx() / 2;
+      var minW = mm.w * half, minH = mm.h * half;
+      if (hw < minW) hw = minW;
+      if (hh < minH) hh = minH;
     }
     return { hw: hw, hh: hh, mpp: mpp };
   };
@@ -2322,14 +2378,15 @@
           Math.hypot(loc.x, loc.y) <= MOVE_HIT) {
         return { obj: o, kind: 'move' };
       }
-      /* 🔒 §30-25-40 3: 主役の■は**右下の角のつまみ**（大きさ＝倍率）だけ。
-       * 辺つまみは出さない（大きさの出どころを points[key].mark.scale 1つに保つ）。 */
+      /* 🔒 §30-25-40 3: 主役の■の**右下の角のつまみ**（縦横を同じ比率で変える）。
+       * 🔒 §30-31-1 1: 角に加えて**4辺の辺つまみ**も出す（下のふつうの四角と同じ
+       *    edgeHandleR）。角＝同じ比率／辺＝その軸だけ（中心＝ピンは動かない）。
+       * 🔴 角を先に見る（小さい■では角と辺つまみが重なるため）。 */
       if (isMainMark(o) && o.type === 'rect') {
         if (Math.abs(loc.x - geo.hw) <= HANDLE_TEXT + 3 &&
             Math.abs(loc.y - geo.hh) <= HANDLE_TEXT + 3) {
           return { obj: o, kind: 'markSize' };
         }
-        return null;
       }
       /* 🔒 §30-14-5 2 / §30-25-17: 辺つまみは小さく（edgeHandleR＝ZL で可変）。
        * 当たりは今までどおり半径 +2 まで。 */
@@ -3076,8 +3133,8 @@
       }
       if (drag.mode === 'lbSize') {
         var dd = Math.hypot(p.x - drag.ox, p.y - drag.oy);
-        drag.obj.scale = Math.max(0.5, Math.min(4,
-          Math.round(drag.base * (dd / drag.d0) * 100) / 100));
+        // 🔒 §30-32-2: 上下限の出どころは clampLabelScale 1か所（プレビューと同じ範囲）
+        drag.obj.scale = clampLabelScale(drag.base * (dd / drag.d0));
         drag.moved = true;
         self.render();
         return;
@@ -3121,6 +3178,13 @@
         if (drag.mode === 'markSize' && drag.mainKey && self.onMainMarkScale) {
           self.onMainMarkScale(drag.mainKey, mainMarkScaleOf(drag.obj),
                                { obj: drag.obj, done: true });
+        }
+        /* 🔒 §30-31-1 2: ■の辺つまみで変えた**縦横**も指を離した時に案件へ保存する
+         * （値の出どころは points[key].mark.w_m/h_m＝ app.js の口へ渡す）。 */
+        if (drag.mode === 'edge' && drag.obj && drag.obj.type === 'rect'
+            && isMainMark(drag.obj) && self.onMainMarkDims) {
+          var dk = mainMarkKeyOf(drag.obj);
+          if (dk) self.onMainMarkDims(dk, drag.obj.w_m, drag.obj.h_m);
         }
         self._emit('change');
       }
@@ -3317,6 +3381,13 @@
   Editor.prototype.keysBusy = null;
 
   /**
+   * 🔒 §30-32-1: 消しゴムが**その地点の部品**（主役の印・主役の文字）に当たった時の口。
+   * app.js が bindEditor で差し込む: function(obj) -> true なら地点ごと消した。
+   * （editor は「地点の部品に当たった」と言うだけ。消し方も地点の判定も app.js 側）
+   */
+  Editor.prototype.onErasePoint = null;
+
+  /**
    * @param markId 🔒 §30-25-18 2: 「印の絵を掴んだ」図形の id（無ければ null）。
    *   その1つだけは印（anchor）と文字（at）を**一緒に**動かす（相対位置を保つ＝
    *   引き出し線の答えも変わらないので `lead` の印も捨てない）。
@@ -3384,7 +3455,10 @@
     /* 🔒 §25-4: 主役マークは**中心＝ピン**が動かせない図形なので、
      * 反対の辺を固定する（＝中心が動く）ふつうの伸縮を使わない。
      * 掴んだ辺がカーソルに付いてきて、反対の辺が鏡で伸びる＝中心はピンの上のまま。
-     * 右パネルの w_m/h_m 入力（applyMarkProps）と同じ「中心固定」で揃う。 */
+     * 右パネルの w_m/h_m 入力（applyMarkProps）と同じ「中心固定」で揃う。
+     * 🔒 §30-31-1 1: 変えるのは**掴んだ辺の軸だけ**（w_m か h_m の片方）＝
+     *    縦横を別々にできる。案件への書き戻しは指を離した時（endDrag →
+     *    onMainMarkDims）1回だけ＝ドラッグ中は図形の値で見た目を追う。 */
     if (o.role === 'mainmark' && !isStamp) {
       var half = (edge === 1 || edge === 3)
         ? Math.max(Math.abs(loc.x), MIN_PX) : Math.max(Math.abs(loc.y), MIN_PX);
@@ -4209,6 +4283,11 @@
     }
     var o = this.hitObject(px, py);
     if (!o) return;
+    /* 🔒 §30-32-1: 主役の印・主役の文字は「その地点そのもの」なので、図形を1個
+     * 消すのではなく**地点ごと**消す（app.js の removePoint＝紙の印も文字も
+     * 結線も一度に消える）。口は onErasePoint 1つ（bindEditor が差し込む）。
+     * 🔴 true が返れば消えた＝ここでは何もしない。 */
+    if (this.onErasePoint && isPointPart(o) && this.onErasePoint(o)) return;
     this.snapshot();
     var i = this.objects.indexOf(o);
     if (i >= 0) this.objects.splice(i, 1);
@@ -5429,26 +5508,27 @@
       function toScreen(lx, ly) {
         return { x: ctr2.x + lx * ca - ly * sa, y: ctr2.y + lx * sa + ly * ca };
       }
-      /* 🔒 §30-25-40 3: 主役の■は**右下の角に1つだけ**つまみを出す（印つき文字の
-       * つまみと同じ見た目＝ handle-text）。辺つまみは出さない＝大きさの出どころを
-       * 案件の points[key].mark.scale 1つに保つ。
-       * 🔴 位置は当たり判定（hitHandle の geo.hw / geo.hh）と同じ角。 */
+      // 🔒 §30-14-5 2 / §30-25-17: 辺つまみは小さく・ZL で可変（edgeHandleR）
+      /* 🔒 §30-31-1 1: 主役の■にも**4辺の辺つまみ**を出す（ふつうの四角と同じ形）。
+       * 辺＝その軸の長さだけ（中心＝ピンは動かない・_resizeEdge の主役分岐）。 */
+      var ehR2 = this.edgeHandleR();
+      [[0, -h.hh], [h.hw, 0], [0, h.hh], [-h.hw, 0]].forEach(function (p) {
+        var s = toScreen(p[0], p[1]);
+        layer.appendChild(el('rect', { x: s.x - ehR2, y: s.y - ehR2,
+          width: ehR2 * 2, height: ehR2 * 2, class: 'handle' }));
+      });
+      /* 🔒 §30-25-40 3: 主役の■は**右下の角**にもつまみを出す（印つき文字の
+       * つまみと同じ見た目＝ handle-text）＝縦横を同じ比率で変える。
+       * 🔴 位置は当たり判定（hitHandle の geo.hw / geo.hh）と同じ角。
+       * 🔴 辺つまみの**後**に足す（重なった時に角が上＝当たり判定の順と揃う）。 */
       if (mark) {
         var mhp = toScreen(h.hw, h.hh);
         var mhc = el('circle', { cx: mhp.x.toFixed(1), cy: mhp.y.toFixed(1),
           r: HANDLE_TEXT, class: 'handle handle-text' });
         var mhT = el('title', {});
-        mhT.textContent = 'ドラッグで印の大きさを変える';
+        mhT.textContent = 'ドラッグで印の大きさを変える（辺のつまみは縦・横だけ）';
         mhc.appendChild(mhT);
         layer.appendChild(mhc);
-      } else {
-        // 🔒 §30-14-5 2 / §30-25-17: 辺つまみは小さく・ZL で可変（edgeHandleR）
-        var ehR2 = this.edgeHandleR();
-        [[0, -h.hh], [h.hw, 0], [0, h.hh], [-h.hw, 0]].forEach(function (p) {
-          var s = toScreen(p[0], p[1]);
-          layer.appendChild(el('rect', { x: s.x - ehR2, y: s.y - ehR2,
-            width: ehR2 * 2, height: ehR2 * 2, class: 'handle' }));
-        });
       }
       // 🔒 §30-19-3 1: 四角は張り出しが無いので rotEdgeOf は h.hh のまま（今までどおり）
       var rp = toScreen(0, -rotEdgeOf(o, h) - rotStemOf(o)), tp = toScreen(0, -h.hh);
@@ -5523,16 +5603,20 @@
    */
   /* 🔒 §30-25-37 1: scale（印の大きさ・0.5〜3・既定 1）。四角の実寸と紙の最小 mm に
    *    掛かる。倍率は図形にも `markScale` として控える（引き直しと保存のため）。 */
-  Editor.makeMark = function (kind, p, id, color, scale) {
+  /* 🔒 §30-31-1 2: 第6引数 dims（{w_m,h_m}）＝案件に入っている**縦横**。
+   *    渡されればそれが真実（基準×倍率は dims が無い時の既定だけ）。 */
+  Editor.makeMark = function (kind, p, id, color, scale, dims) {
     var k = MARK.kinds[kind] || MARK.kinds.home;
     var col = k.color;
     for (var ci = 0; ci < MARK.colors.length; ci++) {
       if (MARK.colors[ci].key === color) col = color;
     }
     var dim = markRectDims(kind, scale);
+    var mw = (dims && dims.w_m > 0) ? dims.w_m : dim.w_m;
+    var mh = (dims && dims.h_m > 0) ? dims.h_m : dim.h_m;
     var o = { id: id || uid(), type: 'rect',
               center: { lat: p.lat, lng: p.lng },
-              w_m: dim.w_m, h_m: dim.h_m, markScale: dim.scale, angle: 0,
+              w_m: mw, h_m: mh, markScale: dim.scale, angle: 0,
               /* 🔴 車両枠と混同させないための固有の印。
                *    寸法ラベルを出さず、枠数・敷き詰め・提出前チェックの対象外。 */
               role: 'mainmark', markRole: kind,
@@ -5604,6 +5688,10 @@
   Editor.MARK_SCALE_RANGE = MARK_SCALE_RANGE;
   Editor.markScaleOf = markScaleOf;
   Editor.clampMarkScale = clampMarkScale;
+  /* 🔒 §30-32-2: 駐車位置ラベルの塊の大きさ（倍率）の上下限。画面のつまみと
+   * プレビューのつまみが**同じ1か所**を読む＝範囲が割れない。 */
+  Editor.LABEL_SCALE_RANGE = LABEL_SCALE_RANGE;
+  Editor.clampLabelScale = clampLabelScale;
   Editor.markSizeOf = markSizeOf;
   /* 🔒 §30-30-1: 印の基準の大きさ（紙のミリ）。紙（export.js）・薄出し
    * （reveal.js / namelay.js）がここを読む＝文字の大きさに連動しない値の出どころ1か所。 */
@@ -5617,6 +5705,9 @@
    * ◎の輪の太さは RING_W（CSS .anno-ring・紙 export.js と同じ値）。
    * app.js（applyMarkChoice／▼「印を変える」）・export.js が読む1か所。 */
   Editor.markRectDims = markRectDims;
+  /* 🔒 §30-31-1 3: ■の紙の最小 mm（縦横それぞれ）。画面（rectHalf）と
+   * 紙（export.js rectCorners）が同じ値を読む＝長方形の比が広域でも崩れない。 */
+  Editor.markMinMm = markMinMm;
   Editor.RING_W = RING_W;
   /* 🔒 §30-22-1 4 / §30-22-4 9: 線の色（黒／赤／青）・太さ3段・保管場所の書式。
    * app.js（右パネル）・export.js（紙）がここを読む＝値の出どころは1か所 */
