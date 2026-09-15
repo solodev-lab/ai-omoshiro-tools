@@ -37,6 +37,15 @@
 
   function tEndAll() { Object.keys(_timers).forEach(function (k) { tEnd(k); }); }
 
+  /** 🔒 §30-37 2: 方位記号1個の針の半分の高さ（紙面mm）。大きさの出どころは
+   * Editor.compassRadiusMm（基準 × その記号の倍率 markScale）1か所。
+   * Editor が無い／古い時（単体テスト）は基準（COMPASS.rMm）で見積もる。 */
+  function compassRMm(o) {
+    var E = global.Editor;
+    if (E && E.compassRadiusMm) return E.compassRadiusMm(o);
+    return (E && E.COMPASS) ? E.COMPASS.rMm : 2.346;
+  }
+
   /* 道路の等級別の太さ（正典 §5「国道>県道>生活道路」）。
    * 🔴 §23-9 以降、数値の**唯一の出どころは editor.js の Editor.MAPSTYLE.road**。
    *    ここに残しているのは editor.js を読み込まない環境（単体テスト等）の
@@ -1307,10 +1316,11 @@
       var cl = opts.compasses || [];
       if (cl.length && global.Editor && global.Editor.compassBox) {
         var mPerMmR = fwM / 138;
-        var cbR = global.Editor.compassBox(global.Editor.COMPASS.rMm * mPerMmR);
         var degLat = (fb.north - fb.south) / Math.max(fhM, 1e-6);   // 1m あたりの緯度
         var degLng = (fb.east - fb.west) / Math.max(fwM, 1e-6);     // 1m あたりの経度
         cl.forEach(function (p) {
+          /* 🔒 §30-37 2: 大きさは記号ごと（基準 × markScale）＝ compassRMm 1か所 */
+          var cbR = global.Editor.compassBox(compassRMm(p) * mPerMmR);
           furn.push({ west: p.lng - cbR.hw * degLng, east: p.lng + cbR.hw * degLng,
                       north: p.lat - (cbR.cy - cbR.hh) * degLat,
                       south: p.lat - (cbR.cy + cbR.hh) * degLat });
@@ -2028,13 +2038,17 @@
         var sc = (global.Editor && global.Editor.clampMarkScale)
                  ? global.Editor.clampMarkScale(m && m.scale) : 1;
         /* 🔒 §30-31-1 2: ■の縦横（m）も持ち回す。無ければ undefined ＝
-         * Editor.makeMark が「基準 × 大きさ」で補う（出どころは1か所のまま）。 */
+         * Editor.makeMark が「基準 × 大きさ」で補う（出どころは1か所のまま）。
+         * 🔒 §30-35-3 4: ■の中心とピンの**ずれ**（dx_m/dy_m）も持ち回す
+         *    ＝作り直しても掴んだ辺だけ伸ばした形（中心の位置）が戻らない。 */
         return { shape: (m && m.shape) ? m.shape
                         : ((opts.markStyle === 'circle') ? 'circle' : 'rect'),
                  color: (m && m.color) || null,
                  scale: sc,
                  w_m: (m && m.w_m > 0) ? m.w_m : undefined,
-                 h_m: (m && m.h_m > 0) ? m.h_m : undefined };
+                 h_m: (m && m.h_m > 0) ? m.h_m : undefined,
+                 dx_m: (m && isFinite(m.dx_m)) ? Number(m.dx_m) : 0,
+                 dy_m: (m && isFinite(m.dy_m)) ? Number(m.dy_m) : 0 };
       };
       /* 🔒 §30-24-2（2026-09-13 オーナー指示・§30-22-1 6 の補正）: 同一住所でも
        * **文字は2つ**（「使用の本拠」と「駐車場」）。上下に並べ、別々に動かせる。
@@ -2062,8 +2076,10 @@
         objs.push({ id: uid('lb'), type: 'text',
                     at: { lat: p.lat, lng: p.lng },
                     /* 🔒 §25-4: 文字をマークの**外**へ逃がすための控え（配置計算だけに使う）。
-                     * 表示文字で種別を判定しないための持ち回しでもある（§26-2 注意②）。 */
-                    mark: mk ? { w_m: mk.w_m, h_m: mk.h_m } : null,
+                     * 表示文字で種別を判定しないための持ち回しでもある（§26-2 注意②）。
+                     * 🔒 §30-35-3 5: 中心の**ずれ**も控える（避ける箱はピン＋ずれで測る）。 */
+                    mark: mk ? { w_m: mk.w_m, h_m: mk.h_m,
+                                 dx_m: want.dx_m || 0, dy_m: want.dy_m || 0 } : null,
                     // anchor ＝ 地点そのもの（＝マークの中心）。文字は脇へ逃がす（§18-8）
                     anchor: { lat: p.lat, lng: p.lng },
                     /* 🔒 §26-2 注意②: どちらのピンの名前かを**表示文字ではなく**この印で持つ。
@@ -2626,8 +2642,9 @@
       var list = opts.compasses || [];
       if (!list.length || !global.Editor || !global.Editor.compassBox) return;
       var mPerMm = (frameRect ? (frameRect.x1 - frameRect.x0) : spanM) / 138;
-      var cb = global.Editor.compassBox(global.Editor.COMPASS.rMm * mPerMm);
       list.forEach(function (p) {
+        /* 🔒 §30-37 2: 大きさは記号ごと（基準 × markScale）＝ compassRMm 1か所 */
+        var cb = global.Editor.compassBox(compassRMm(p) * mPerMm);
         var q = toXY(p);
         /* compassBox の cy は画面と同じ「y 下向き」なので、メートル（y 上向き）では符号が逆 */
         furnRects.push({ x0: q.x - cb.hw, x1: q.x + cb.hw,
@@ -2754,11 +2771,15 @@
         if (o.role !== 'pinlabel' || !o.anchor) continue;
         p = toXY(o.anchor);
         if (o.mark && (o.mark.w_m || o.mark.h_m)) {
-          /* 四角の印。実体が objs に居ればそちらが正しいので二重に足さない */
+          /* 四角の印。実体が objs に居ればそちらが正しいので二重に足さない
+           * （実体の枝は o.center ＝ピン＋ずれで測っている・§30-35-3 5）。 */
           if (o.pinKey && hasRect[o.pinKey]) continue;
           hw = Math.max(o.mark.w_m || 0, minM) / 2;
           if (o.pinKey) mainMarkHw[o.pinKey] = hw;
-          markBoxes.push({ x: p.x, y: p.y, hw: hw,
+          /* 🔒 §30-35-3 5: 実体が無い時の箱は**ピン＋ずれ**の位置（控えの dx/dy）。
+           * toXY は x＝東・y＝北のメートルなので、そのまま足せる。 */
+          markBoxes.push({ x: p.x + (o.mark.dx_m || 0), y: p.y + (o.mark.dy_m || 0),
+                           hw: hw,
                            hh: Math.max(o.mark.h_m || 0, minM) / 2 });
         } else {
           var r = hM(o) * MARK_RING_R;         // ◎（二重丸）の外輪
@@ -3217,8 +3238,22 @@
                                       : hp * MARK_RING_R / 2;
     }
 
+    /** 🔒 §30-35-4 3: 文字を置く基準の点（m の局所座標）。主役ラベルの■が
+     * ピンからずれている（控えの dx_m/dy_m）時は■の中心を基準にする。
+     * 🔴 ずれを持たない物（◎・印つき文字）はそのまま＝規則は従来どおり。 */
+    function markBase(o, base) {
+      if (!o || o.role !== 'pinlabel' || !o.mark || !base) return base;
+      var dx = Number(o.mark.dx_m) || 0, dy = Number(o.mark.dy_m) || 0;
+      return (dx || dy) ? { x: base.x + dx, y: base.y + dy } : base;
+    }
+
     function nearBox(o, base) {
       var hp = hPaper(o), wp = wM(o, hp), mhw = markHalfW(o, hp);
+      /* 🔒 §30-35-4 3: ■（主役の四角）がピンからずれている時は、文字の基準は
+       * ピンではなく**■の実際の中心**（右隣＝ピン＋dx＋w/2＋隙間・左隣＝
+       * ピン＋dx−w/2−隙間・上下＝ピン＋dy）。toXY は x＝東・y＝北のメートル
+       * なので控えの dx_m/dy_m をそのまま足せる（§30-35-3 5 の箱と同じ作法）。 */
+      base = markBase(o, base);
       var E = global.Editor;
       var off = (E && E.markTextOffset)
         ? E.markTextOffset(o, hp, wp / 2, null, mhw)

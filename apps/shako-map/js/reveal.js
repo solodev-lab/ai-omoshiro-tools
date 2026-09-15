@@ -1281,7 +1281,9 @@
     var comps = [];
     for (i = 0; i < objs.length; i++) {
       if (objs[i] && objs[i].type === 'compass' && objs[i].at) {
-        comps.push({ lat: objs[i].at.lat, lng: objs[i].at.lng });
+        /* 🔒 §30-37 2: 大きさ（倍率 markScale）も渡す＝箱を記号ごとの大きさで取る */
+        comps.push({ lat: objs[i].at.lat, lng: objs[i].at.lng,
+                     markScale: objs[i].markScale });
       }
     }
     try {

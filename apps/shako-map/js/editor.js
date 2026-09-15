@@ -35,6 +35,16 @@
   var MOVE_R = 8;        // 白丸の半径(px)
   var MOVE_HIT = 10;     // 十字の当たり半径(px)
   var HIT_PAD = 7;       // 線の当たり判定の太さ(px)
+  /* 🔒 §30-38-2（2026-09-15 オーナー指示「Photoshop と同じで何かのキーを押しながら
+   * 線をクリックすると頂点が増える仕組み」）: 頂点を足す・消す時に押しておくキー。
+   * 🔴 出どころはこの1か所（Alt が Windows のメニューと取り合うようなら
+   *    ここを 'shiftKey' 等に替えるだけでよい）。 */
+  var VERTEX_KEY = 'altKey';
+  /* 🔒 §30-38-1 5: 頂点のつまみを出す点の数の上限（これを超える図形には出さない）。
+   * ［道路を描く］が縁を1本に繋ぐようになって長い道は 60 を超えるので 200 へ。
+   * 🔴 描く3か所（_drawRoadRun / _drawPolygon の主役枝・ふつうの枝）と
+   *    当たり1か所（hitHandle）が必ずここを読む（§22-z の教訓）。 */
+  var VERTEX_HANDLE_MAX = 200;
   var MIN_PX = 6;        // 図形の最小サイズ(px)
   var HISTORY_MAX = 60;
   var DIM_LABEL_PX = 12; // 寸法ラベルの字の大きさ(px)。style.css の .dim-label と揃える
@@ -373,17 +383,21 @@
    *    出どころだけが違う（nameSrc/source ＝ 'manual'）ので、
    *    所在図の作り直し（source==='shozaizu' だけ消す）でも消えない。
    * 🔴 表示文字ではなくこの表の id で分岐する（§26-2 注意②）。 */
+  /* 🔒 §30-35-2 1・2: `askName` ＝ 置いた後に**名前の入力欄を出すか**。
+   * 信号機・バス停は交差点名・停留所名を続けて聞く（true）。
+   * P・木は置いた瞬間に印だけ（false）＝ placeMark が 'text' を投げない。
+   * 🔴 この表が唯一の出どころ（呼ぶ側で道具の名前を見て分岐しない）。 */
   var MARK_TOOL = {
-    signal:  { dotStyle: 'signal',  nameCat: 'crossing' },
-    bus:     { dotStyle: 'bus',     nameCat: 'bus' },
+    signal:  { dotStyle: 'signal',  nameCat: 'crossing', askName: true },
+    bus:     { dotStyle: 'bus',     nameCat: 'bus',      askName: true },
     /* 🔒 §30-22-3 2（2026-09-13 オーナー指示）: **P マーク**（□の中に P）。
-     * 中身は信号機・バス停とまったく同じ「印つき文字」で、印の絵だけが違う
-     * （名前は空でもよい＝駐車場の記号としてだけ置ける）。 */
-    parking: { dotStyle: 'parking', nameCat: 'parking' },
+     * 中身は信号機・バス停とまったく同じ「印つき文字」で、印の絵だけが違う。
+     * 🔒 §30-35-2 1（2026-09-15 オーナー指示）: 名前は聞かない（印だけ）。 */
+    parking: { dotStyle: 'parking', nameCat: 'parking',  askName: false },
     /* 🔒 §30-25-9（2026-09-13 オーナー指示）: **木**（樹冠＋幹・🔒 §30-30-2 もこもこ）。
-     * 中身は信号機・P マークとまったく同じ「印つき文字」で、印の絵だけが違う
-     * （名前は空でもよい＝木の記号としてだけ置ける）。 */
-    tree:    { dotStyle: 'tree',    nameCat: 'tree' }
+     * 中身は信号機・P マークとまったく同じ「印つき文字」で、印の絵だけが違う。
+     * 🔒 §30-35-2 1: 木も名前は聞かない（印だけ）。 */
+    tree:    { dotStyle: 'tree',    nameCat: 'tree',     askName: false }
   };
 
   /** その文字が「印だけでも意味を持つ」物か（文字が空でも消さない・§28-5 A） */
@@ -487,6 +501,9 @@
   /** 🔒 §30-25-40: 主役の印の今の倍率（◎＝文字の markScale ／■＝四角の markScale） */
   function mainMarkScaleOf(o) {
     if (o && o.type === 'rect' && o.role === 'mainmark') return clampMarkScale(o.markScale);
+    /* 🔒 §30-37 1: 方位記号も同じつまみで大きさを変える（倍率は図形の markScale）。
+     * ここを通さないと、ドラッグの基準（drag.base）が毎回 1 に戻ってしまう。 */
+    if (o && o.type === 'compass') return clampMarkScale(o.markScale);
     return markScaleOf(o);
   }
 
@@ -671,6 +688,24 @@
              lng: ll.lng + dxM / (M_PER_DEG * Math.max(1e-6, c)) };
   }
 
+  /* 🔒 §30-35-3 4: 実距離(m) ⇄ 緯度経度の換算は**この2つ1か所**。
+   * makeMark（作る時）・app.js の setMainMarkDims（書く時）・syncRoleObjects /
+   * applyMarkChoice（追従する時）が全部同じ物を読む＝ずれの意味が割れない。
+   * 🔴 向きは**東が dx_m ＋・北が dy_m ＋**（地図の読み方）。画面の y（下が＋）と
+   *    上下が逆なので、中の offsetLL（南が＋）へは符号を反転して渡す。 */
+  /** p から東へ dxM・北へ dyM 動いた緯度経度 */
+  function offsetLatLng(p, dxM, dyM) {
+    if (!p) return p;
+    return offsetLL(p, dxM || 0, -(dyM || 0));
+  }
+  /** from → to の東・北の実距離(m)（offsetLatLng の逆・同じ緯度で往復が一致する） */
+  function offsetMeters(from, to) {
+    if (!from || !to) return { dx_m: 0, dy_m: 0 };
+    var c = Math.max(1e-6, Math.cos(from.lat * Math.PI / 180));
+    return { dx_m: (to.lng - from.lng) * M_PER_DEG * c,
+             dy_m: (to.lat - from.lat) * M_PER_DEG };
+  }
+
   /* 🔒 §28-3（2026-09-06 オーナー指示）: **方位記号（北矢印）は「部品」**。
    * 書き出し・プレビューが右上に自動で描いていた物は廃止し、［枠を決定］の時に
    * 1個だけ置く普通のオブジェクト（type:'compass'）にした。ドラッグで動かせて
@@ -691,6 +726,17 @@
     label: 13 / 17, // 'N' の字の大きさ ÷ r（旧 13S）
     lw: 2           // 輪郭の太さ（画面px基準。紙は線幅倍率 S を掛ける＝ MARK.strokeW と同じ作法）
   };
+  /**
+   * 🔒 §30-37 1〜2（2026-09-15 オーナー指示「方位もサイズ変更できるようにして」）:
+   * その方位記号の**針の半分の高さ（紙面mm）**。基準 COMPASS.rMm × 倍率 markScale。
+   * 🔴 大きさの出どころはこの**1か所**。画面（_drawCompass・当たり判定・選択枠・
+   *    つまみの箱）・紙（export.js drawCompass）・名前よけ（shozaizu.js）が全部
+   *    これに物差し（mmPx / mPerMm）を掛けて使う＝ COMPASS.rMm を直接読む所は無い。
+   * 🔴 上下限は印と同じ clampMarkScale（0.2〜上限なし・既定 1）＝旧案件は 1。
+   */
+  function compassRadiusMm(o) {
+    return COMPASS.rMm * clampMarkScale(o && o.markScale);
+  }
   /**
    * 方位記号の形。**at（＝針の中心）を原点**にした相対座標を返す。
    * @param r 針の半分の高さ（画面px または 紙面px）
@@ -2279,7 +2325,8 @@
     if (o.type === 'compass') {
       if (!o.at) return null;
       var cp = this.map.project(o.at.lat, o.at.lng);
-      var cb = compassBox(COMPASS.rMm * this.mmPx());
+      // 🔒 §30-37 2: 大きさの出どころは compassRadiusMm（倍率 markScale 込み）1か所
+      var cb = compassBox(compassRadiusMm(o) * this.mmPx());
       return [{ x: cp.x - cb.hw, y: cp.y + cb.cy - cb.hh },
               { x: cp.x + cb.hw, y: cp.y + cb.cy + cb.hh }];
     }
@@ -2380,7 +2427,8 @@
       }
       /* 🔒 §30-25-40 3: 主役の■の**右下の角のつまみ**（縦横を同じ比率で変える）。
        * 🔒 §30-31-1 1: 角に加えて**4辺の辺つまみ**も出す（下のふつうの四角と同じ
-       *    edgeHandleR）。角＝同じ比率／辺＝その軸だけ（中心＝ピンは動かない）。
+       *    edgeHandleR）。角＝同じ比率／辺＝掴んだ辺だけ（🔒 §30-35-3 1・
+       *    反対の辺は動かないので中心はピンからずれる）。
        * 🔴 角を先に見る（小さい■では角と辺つまみが重なるため）。 */
       if (isMainMark(o) && o.type === 'rect') {
         if (Math.abs(loc.x - geo.hw) <= HANDLE_TEXT + 3 &&
@@ -2434,6 +2482,17 @@
       return null;
     }
 
+    /* 🔒 §30-37 1・3: 方位記号も**印と同じ右下のつまみ**で大きさを変える。
+     * 🔴 位置の出どころは markHandleAt（＝ markRect の方位記号の枝）1か所で、
+     *    描画（_drawCompass）とここが必ず一致する（§22-z の教訓）。 */
+    if (o.type === 'compass' && o.at) {
+      var cp1 = this.markHandleAt(o);
+      if (cp1 && Math.hypot(px - cp1.x, py - cp1.y) <= HANDLE_TEXT + 3) {
+        return { obj: o, kind: 'markSize' };
+      }
+      return null;
+    }
+
     if (o.type === 'line' || o.type === 'arrow') {
       /* 🔒 §18-x-5: 使用の本拠⇄駐車場の結線は**両端がピンそのもの**。
        * 端をつまんで外せると図とピンが食い違うので、つまみを出さない
@@ -2455,8 +2514,10 @@
     }
 
     if (o.type === 'polygon' || o.type === 'path') {
-      // 頂点が多い自動下書きは、つまみを出しすぎても掴めないので上限を設ける
-      if (o.points.length > 60) return null;
+      /* 頂点が多い自動下書きは、つまみを出しすぎても掴めないので上限を設ける。
+       * 🔒 §30-38-1 5: ［道路を描く］が縁を1本に繋ぐようになり、長い道は
+       *    60 を超えることがある（超えると直せなくなる）ので上限を 200 に上げた。 */
+      if (o.points.length > VERTEX_HANDLE_MAX) return null;
       for (i = 0; i < o.points.length; i++) {
         var p = this.map.project(o.points[i].lat, o.points[i].lng);
         if (Math.hypot(px - p.x, py - p.y) <= HANDLE + 2) {
@@ -2499,6 +2560,14 @@
    * @return {x, y, hw, hh} x,y＝箱の中心の画面座標。印つき文字でなければ null
    */
   Editor.prototype.markRect = function (o) {
+    /* 🔒 §30-37 3: 方位記号も同じ箱を返す＝ markHandleAt／markHit／markSize の
+     * ドラッグ（つまみ）がそのまま効く。箱の出どころは compassBox 1か所で、
+     * 中心は針の中心（at）＋ cy（箱の中心までのずれ）。 */
+    if (o && o.type === 'compass' && o.at) {
+      var cb = compassBox(compassRadiusMm(o) * this.mmPx());
+      var at = this.map.project(o.at.lat, o.at.lng);
+      return { x: at.x, y: at.y + cb.cy, hw: cb.hw, hh: cb.hh };
+    }
     // 🔒 §30-30-1: 印の大きさは基準（markBasePx）× markScale＝文字に連動しない
     var g = markBoxGeom(o, Math.max(6, this.textPx(o)), this.markBasePx());
     if (!g) return null;
@@ -2525,12 +2594,18 @@
 
   /**
    * 🔒 §30-25-40: 印の大きさのドラッグの**基準の中心**（画面px）。
-   * 印つき文字・主役の◎＝印の箱の中心／主役の■＝四角の中心（＝ピンの上）。
+   * 印つき文字・主役の◎＝印の箱の中心／主役の■＝四角の中心
+   * （🔒 §30-35-3 1 で中心はピンからずれ得るが、基準は**四角の中心**のまま）。
    * 🔴 掴んでいる間に動かない点を選ぶ（動く点を基準にすると倍率が暴れる）。
    */
   Editor.prototype.markScaleOrigin = function (o) {
     if (o && o.type === 'rect' && o.role === 'mainmark' && o.center) {
       return this.map.project(o.center.lat, o.center.lng);
+    }
+    /* 🔒 §30-37 3: 方位記号の基準は**針の中心（at）**。at は大きさを変えても
+     * 動かない点なので、そこから測る（箱の中心 cy は倍率で動く）。 */
+    if (o && o.type === 'compass' && o.at) {
+      return this.map.project(o.at.lat, o.at.lng);
     }
     var r = this.markRect(o);
     return r ? { x: r.x, y: r.y } : null;
@@ -2612,11 +2687,125 @@
     if (o.type === 'compass') {
       if (!o.at) return false;
       var cp = this.map.project(o.at.lat, o.at.lng);
-      var cb = compassBox(COMPASS.rMm * this.mmPx());
+      // 🔒 §30-37 2: 大きさの出どころは compassRadiusMm（倍率 markScale 込み）1か所
+      var cb = compassBox(compassRadiusMm(o) * this.mmPx());
       return Math.abs(px - cp.x) <= cb.hw + 6
           && Math.abs(py - (cp.y + cb.cy)) <= cb.hh + 4;
     }
     return false;
+  };
+
+  /* ===== 🔒 §30-38-2: 線に頂点を足す・消す（Alt＋クリック）=====
+   * 🔴 対象は多角形（polygon）・線（path）・直線（line）だけ。
+   *    結線（role:'distance'）・矢印・曲線・四角・駐車枠は対象外（§30-38-2 3）。 */
+  function canAddVertex(o) {
+    if (!o) return false;
+    if (o.type === 'line') return o.role !== 'distance';
+    return o.type === 'polygon' || o.type === 'path';
+  }
+
+  /**
+   * その図形の**線分**を掴んだか（画面px）。当たりの太さは `edgeHandleR()`（§30-38-2 4）。
+   * @return {obj, index（線分の始点の添字）, at（足の画面座標）} / null
+   */
+  Editor.prototype._segHitOne = function (o, px, py, r) {
+    var a, b, i, last, pts;
+    if (!canAddVertex(o)) return null;
+    if (o.type === 'line') {
+      a = this.map.project(o.a.lat, o.a.lng);
+      b = this.map.project(o.b.lat, o.b.lng);
+      if (distToSegment(px, py, a, b) > r) return null;
+      return { obj: o, index: 0, at: segFoot(px, py, a, b) };
+    }
+    if (!o.points || o.points.length < 2) return null;
+    pts = o.points.map(function (p) { return this.map.project(p.lat, p.lng); }, this);
+    // 多角形は閉じているので「最後の点 → 最初の点」の線分も対象にする
+    last = (o.type === 'polygon') ? pts.length : pts.length - 1;
+    for (i = 0; i < last; i++) {
+      a = pts[i]; b = pts[(i + 1) % pts.length];
+      if (distToSegment(px, py, a, b) <= r) {
+        return { obj: o, index: i, at: segFoot(px, py, a, b) };
+      }
+    }
+    return null;
+  };
+
+  /** 点から線分へ下ろした足（画面px） */
+  function segFoot(px, py, a, b) {
+    var vx = b.x - a.x, vy = b.y - a.y, len2 = vx * vx + vy * vy;
+    var t = len2 ? ((px - a.x) * vx + (py - a.y) * vy) / len2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    return { x: a.x + t * vx, y: a.y + t * vy };
+  }
+
+  /**
+   * 🔒 §30-38-2 4: 頂点を足す先の線分を探す。
+   *   ① 選んでいる図形の線分が当たればそれ（掴みたい物が先）
+   *   ② 無ければ `hitObject` と同じ順（道路は最後）で最初に当たった図形
+   */
+  Editor.prototype.hitSegment = function (px, py) {
+    var r = this.edgeHandleR(), i, o, h;
+    var sel = this.getSelected();
+    if (sel.length === 1) {
+      h = this._segHitOne(sel[0], px, py, r);
+      if (h) return h;
+    }
+    for (i = this.objects.length - 1; i >= 0; i--) {
+      o = this.objects[i];
+      if (isRoad(o)) continue;                 // 道路は後回し（一番下の層）
+      h = this._segHitOne(o, px, py, r);
+      if (h) return h;
+    }
+    for (i = this.objects.length - 1; i >= 0; i--) {
+      o = this.objects[i];
+      if (!isRoad(o)) continue;
+      h = this._segHitOne(o, px, py, r);
+      if (h) return h;
+    }
+    return null;
+  };
+
+  /**
+   * 🔒 §30-38-2 1・3: 線分の途中に頂点を1つ足す。
+   * 直線（line）は **同じ id・書式・source のまま** `path` へ変える。
+   * 🔴 履歴は snapshot 1回だけ（commit は指を離した時の endDrag に任せる
+   *    ＝そのまま続けてドラッグできる）。
+   * @return {obj, index（足した頂点の添字）} / null
+   */
+  Editor.prototype.addVertexAt = function (o, index, ll) {
+    if (!canAddVertex(o) || !ll) return null;
+    this.snapshot();
+    if (o.type === 'line') {
+      var a = o.a, b = o.b;
+      o.type = 'path';
+      o.closed = false;
+      o.points = [a, ll, b];
+      delete o.a;
+      delete o.b;
+      return { obj: o, index: 1 };
+    }
+    o.points.splice(index + 1, 0, ll);
+    return { obj: o, index: index + 1 };
+  };
+
+  /**
+   * 🔒 §30-38-2 2: 頂点を1つ消す。下限＝線は2点・多角形は3点（下限なら一言だけ）。
+   * 主役の多角形はピン（重心）を追従させる（ドラッグと同じ）。
+   */
+  Editor.prototype.removeVertexAt = function (o, index) {
+    if (!o || !o.points) return false;
+    var min = (o.type === 'polygon') ? 3 : 2;
+    if (o.points.length <= min) {
+      this._emit('hint', (o.type === 'polygon')
+        ? 'これ以上は頂点を減らせません（囲むには頂点が3つ必要です）'
+        : 'これ以上は頂点を減らせません（線には点が2つ必要です）');
+      return false;
+    }
+    this.snapshot();
+    o.points.splice(index, 1);
+    if (isMainMark(o)) this.syncMarkPin(o);
+    this.commit();
+    return true;
   };
 
   /**
@@ -2682,6 +2871,10 @@
     /* 🔒 §25-5: 幅矢印の値ラベルの上では地図を動かさない（ラベルを掴んで矢印を運べる）。
      * 🔴 §22-z の記録どおり、ここと描画・pointerdown はセットで直すこと。 */
     if (this.hitArrowLabel(p.x, p.y)) return false;
+    /* 🔒 §30-38-2: Alt＋クリックで頂点を足す所では地図を動かさない。
+     * 🔴 当たりの太さが hitObject（HIT_PAD）と違う（edgeHandleR）ので、
+     *    pointerdown とここをセットで見る（§22-z の教訓）。 */
+    if (e && e[VERTEX_KEY] && !e.ctrlKey && this.hitSegment(p.x, p.y)) return false;
     if (this.hitHandle(p.x, p.y)) return false;
     if (this.hitObject(p.x, p.y)) return false;
     return true;
@@ -2785,10 +2978,11 @@
         return;
       }
 
-      /* --- 信号機・バス停（🔒 §28-5 A / §28-7）: クリックした場所に印を置く ---
+      /* --- 「印を置く」の4種（🔒 §28-5 A / §28-7）: クリックした場所に印を置く ---
        * 中身は既存の「印つき文字」（text ＋ anchor ＋ dotStyle）を**手で置くだけ**。
        * 🔴 先に印を作ってから名前を聞く（req.obj あり）ので、名前を入れなくても
-       *    ―― 空のまま Enter でも Esc でも ―― 印は残る（§28-5 A）。 */
+       *    ―― 空のまま Enter でも Esc でも ―― 印は残る（§28-5 A）。
+       * 🔒 §30-35-2 1: 名前を聞くかは MARK_TOOL の askName（信号機・バス停だけ）。 */
       if (MARK_TOOL[t]) {
         e.preventDefault();
         self.placeMark(t, ll);
@@ -2868,6 +3062,37 @@
           self._emit('stagger', self.staggerMode);
           self.render();
           return;
+        }
+      }
+
+      /* --- 🔒 §30-38-2: Alt＋クリックで線に頂点を足す・頂点を消す ---
+       * ① 頂点の上（つまみの当たり）なら消す
+       * ② 線の上なら足して**そのまま掴んだ状態**にする（Photoshop と同じ）
+       * ③ どちらにも当たらなければ何もしない＝ふつうのクリックとして下へ落とす */
+      if (e[VERTEX_KEY] && !e.ctrlKey) {
+        var vh = self.hitHandle(p.x, p.y);
+        if (vh && vh.kind === 'vertex') {
+          e.preventDefault();
+          self.removeVertexAt(vh.obj, vh.index);
+          return;
+        }
+        var sg = self.hitSegment(p.x, p.y);
+        if (sg) {
+          var add = self.addVertexAt(sg.obj, sg.index,
+                                     self.map.unproject(sg.at.x, sg.at.y));
+          if (add) {
+            e.preventDefault();
+            if (self.selection.indexOf(add.obj.id) < 0) {
+              self.selection = [add.obj.id];
+              self.clearStaggerMode();
+            }
+            self._emit('select', self.getSelected());
+            // 足した頂点をそのまま掴む（指を離した時の処理は既存の vertex の経路）
+            drag = { mode: 'vertex', obj: add.obj, index: add.index, moved: false };
+            try { self.map.el.setPointerCapture(e.pointerId); } catch (err) {}
+            self.render();
+            return;
+          }
         }
       }
 
@@ -3180,11 +3405,14 @@
                                { obj: drag.obj, done: true });
         }
         /* 🔒 §30-31-1 2: ■の辺つまみで変えた**縦横**も指を離した時に案件へ保存する
-         * （値の出どころは points[key].mark.w_m/h_m＝ app.js の口へ渡す）。 */
+         * （値の出どころは points[key].mark.w_m/h_m＝ app.js の口へ渡す）。
+         * 🔒 §30-35-3 3: 掴んだ辺だけ伸びる＝**中心がピンからずれる**ので、
+         *    中心（緯度経度）も一緒に渡す。ずれを m に直して
+         *    points[key].mark.dx_m/dy_m へ書くのは app.js（setMainMarkDims）。 */
         if (drag.mode === 'edge' && drag.obj && drag.obj.type === 'rect'
             && isMainMark(drag.obj) && self.onMainMarkDims) {
           var dk = mainMarkKeyOf(drag.obj);
-          if (dk) self.onMainMarkDims(dk, drag.obj.w_m, drag.obj.h_m);
+          if (dk) self.onMainMarkDims(dk, drag.obj.w_m, drag.obj.h_m, drag.obj.center);
         }
         self._emit('change');
       }
@@ -3402,10 +3630,15 @@
     this.getSelected().forEach(function (o) {
       /* ① 主役マーク＝ピンの分身。ピンを動かして一式（線・ラベル・距離）を連れて行く。
        *    ピンが無い案件（消した後など）だけは、ふつうの四角として動かす。 */
+      /* 🔒 §30-35-3 6: ■がピンからずれている（辺つまみで掴んだ辺だけ伸ばした）時も
+       * 動きは従来のまま＝**■がカーソルに付いてきて、ピンも同じだけ動く**。
+       * 渡すのは■の新しい中心で、ずれを引いてピンの位置に直すのは app.js 側
+       * （ずれの真実は案件にあるので editor は m を持たない）。 */
       if (isMainMark(o) && o.center && self.movePin) {
         var s0 = self.map.project(o.center.lat, o.center.lng);
         var n0 = self.map.unproject(s0.x + dx, s0.y + dy);
-        if (self.movePin(o.markRole === 'lot' ? 'lot' : 'home', n0.lat, n0.lng)) return;
+        if (self.movePin(o.markRole === 'lot' ? 'lot' : 'home', n0.lat, n0.lng,
+                         { fromMark: true })) return;
       }
       /* 🔒 §30-22-1 4: 主役の**多角形**は形を持つので、点は自分で動かしてから
        * 重心をピンへ書き戻す（ピンが動けば結線・距離・名前が追従する）。 */
@@ -3452,21 +3685,13 @@
     var geo = isStamp ? this.stampGeom(o) : this.rectHalf(o);
     var loc = this.toLocal(o, p.x, p.y);
 
-    /* 🔒 §25-4: 主役マークは**中心＝ピン**が動かせない図形なので、
-     * 反対の辺を固定する（＝中心が動く）ふつうの伸縮を使わない。
-     * 掴んだ辺がカーソルに付いてきて、反対の辺が鏡で伸びる＝中心はピンの上のまま。
-     * 右パネルの w_m/h_m 入力（applyMarkProps）と同じ「中心固定」で揃う。
-     * 🔒 §30-31-1 1: 変えるのは**掴んだ辺の軸だけ**（w_m か h_m の片方）＝
-     *    縦横を別々にできる。案件への書き戻しは指を離した時（endDrag →
-     *    onMainMarkDims）1回だけ＝ドラッグ中は図形の値で見た目を追う。 */
-    if (o.role === 'mainmark' && !isStamp) {
-      var half = (edge === 1 || edge === 3)
-        ? Math.max(Math.abs(loc.x), MIN_PX) : Math.max(Math.abs(loc.y), MIN_PX);
-      var m = half * 2 * geo.mpp;
-      if (edge === 1 || edge === 3) o.w_m = m; else o.h_m = m;
-      this.render();
-      return;
-    }
+    /* 🔒 §30-35-3 1（2026-09-15 オーナー指示「右を伸ばすと左も伸びてしまう。
+     * 対はやめて、1つずつ、掴んだ辺だけ伸びるように」）: 主役マークも**ふつうの
+     * 四角と同じ**経路で伸縮する（掴んだ辺だけ動き、反対の辺は固定＝中心はピンから
+     * ずれる）。§25-4 / §30-31-1 1 の「中心＝ピンに固定（鏡で伸ばす）」は廃止。
+     * 🔴 ずれ（中心 − ピン）は指を離した時に endDrag → onMainMarkDims が
+     *    案件（points[key].mark.dx_m/dy_m）へ書く＝ドラッグ中は図形の値で見た目を追う。
+     * 🔴 右パネルの幅／奥行の欄は従来どおり中心を動かさない（§30-35-3 3）。 */
     var ca = Math.cos(rad(o.angle || 0)), sa = Math.sin(rad(o.angle || 0));
     var anchor = o.center || o.origin;
     var c = this.map.project(anchor.lat, anchor.lng);
@@ -3760,6 +3985,25 @@
     return (mpp > 0) ? (w / mpp) / 2 : undefined;
   };
 
+  /**
+   * 🔒 §30-35-4 3: 主役ラベルの文字を置く**基準の点**（緯度経度）。
+   * ■（主役の四角）は辺つまみでピンからずらせる（§30-35-3・控えは o.mark の
+   * dx_m/dy_m＝東＋・北＋）ので、文字は**■の実際の縁**の外へ置く:
+   *   右隣の左端＝ピン＋dx＋w/2＋隙間／左隣の右端＝ピン＋dx−w/2−隙間／
+   *   上下の中心＝ピン＋dy
+   * ＝ 基準の点をピンから■の中心へ移せば、あとの規則（半幅＋隙間＋文字の半幅）は
+   *    従来のまま同じ式で解ける。
+   * 🔴 m ⇄ 緯度経度の換算は offsetLatLng（§30-35-3 4 の1か所）を使う。
+   * 🔴 ◎・印つき文字（ずれを持たない物）は anchor のまま＝規則は従来どおり。
+   */
+  Editor.prototype.markBaseLL = function (o) {
+    if (!o || !o.anchor) return null;
+    var m = (o.role === 'pinlabel') ? o.mark : null;
+    var dx = (m && isFinite(Number(m.dx_m))) ? Number(m.dx_m) : 0;
+    var dy = (m && isFinite(Number(m.dy_m))) ? Number(m.dy_m) : 0;
+    return (dx || dy) ? offsetLatLng(o.anchor, dx, dy) : o.anchor;
+  };
+
   Editor.prototype.markSlot = function (o) {
     if (!keepsMark(o) || !sameLL(o.at, o.anchor)) return null;
     var b = this.markBox(o);
@@ -3793,6 +4037,8 @@
     /* 🔒 §30-25-28: 主役の■（四角の印）は別図形の**実寸**なので markGeom では
      * 出ない。実寸の控え（o.mark）から半幅を作って渡す（無ければ markGeom に任せる）。 */
     var mhw = this.mainMarkHwPx(o);
+    /* 🔒 §30-35-4 3: ずれた■の横の文字は**■の実際の縁**が基準（markBaseLL） */
+    var base = this.markBaseLL(o);
     var mm = sheetTextMm(o);
     var N = this.paperScaleN();
     if (mm > 0 && N > 0) {
@@ -3804,10 +4050,10 @@
       var mPerMm = N / 1000;                     // 紙 1mm ＝ 実寸 何 m か
       var dxM = op.dx * k * mPerMm;
       var dyM = op.dy * k * mPerMm;
-      return offsetLL(o.anchor, (side === 'left') ? -dxM : dxM, dyM);
+      return offsetLL(base, (side === 'left') ? -dxM : dxM, dyM);
     }
     var os = markTextOffset(o, sizePx, half, this.markGapPx(o), mhw, this.markBasePx());
-    var a0 = this.map.project(o.anchor.lat, o.anchor.lng);
+    var a0 = this.map.project(base.lat, base.lng);
     var ll = this.map.unproject(a0.x + ((side === 'left') ? -os.dx : os.dx), a0.y + os.dy);
     return { lat: ll.lat, lng: ll.lng };
   };
@@ -3946,12 +4192,15 @@
   };
 
   /**
-   * 🔒 §28-5 A / §28-7: 信号機・バス停の印を**その場に置く**（名前は後から聞く）。
+   * 🔒 §28-5 A / §28-7: 「印を置く」の印を**その場に置く**（名前は後から聞く）。
    * 🔴 先に印つき文字（text は空）を作ってから 'text' を投げるので、
    *    名前を入れなくても（空 Enter・Esc）印だけが残る。
+   * 🔒 §30-35-2 1〜2: 名前を聞くのは **MARK_TOOL の askName が true の物だけ**
+   *    （信号機・バス停）。P・木（false）は置いた瞬間に印だけで終わる
+   *    ＝器（印つき文字・文字は空）は同じまま（§30-35-2 4）。
    * 🔴 anchor ＝ クリックした場所そのもの（§18-8「●は場所そのもの」）。
    *    文字（at）はドラッグで動かせるが、印（anchor）は動かない。
-   * @param kind 'signal' | 'bus'
+   * @param kind 'signal' | 'bus' | 'parking' | 'tree'
    */
   Editor.prototype.placeMark = function (kind, at) {
     var m = MARK_TOOL[kind];
@@ -3974,7 +4223,8 @@
      * 🔴 setTool('select') は選択を消さない（選択が消えるのは select 以外の時だけ）
      *    ので、いま置いた印は選ばれたまま＝そのまま掴んで動かせる。 */
     if (this.tool !== 'select') this.setTool('select');
-    this._emit('text', { at: o.at, obj: o });
+    // 🔒 §30-35-2 1: 名前を聞く道具（信号機・バス停）だけ入力欄を出す
+    if (m.askName) this._emit('text', { at: o.at, obj: o });
     return o;
   };
 
@@ -4979,7 +5229,8 @@
     });
     // 選択中のつまみは帯より上に（掴めなくならないように）
     run.forEach(function (o) {
-      if (self.selection.indexOf(o.id) < 0 || o.points.length > 60) return;
+      if (self.selection.indexOf(o.id) < 0
+          || o.points.length > VERTEX_HANDLE_MAX) return;
       o.points.forEach(function (p) {
         var s = self.map.project(p.lat, p.lng);
         layer.appendChild(el('circle', { cx: s.x, cy: s.y, r: HANDLE, class: 'handle' }));
@@ -5004,7 +5255,7 @@
       layer.appendChild(el('polygon', { points: pts, fill: 'none',
         stroke: mhex, 'stroke-width': st.w || 2, 'stroke-linejoin': 'miter',
         class: 'obj-mark' + (sel ? ' is-sel' : '') }));
-      if (sel && o.points.length <= 60) {
+      if (sel && o.points.length <= VERTEX_HANDLE_MAX) {
         o.points.forEach(function (p) {
           var s = this.map.project(p.lat, p.lng);
           layer.appendChild(el('circle', { cx: s.x, cy: s.y, r: HANDLE, class: 'handle' }));
@@ -5044,7 +5295,7 @@
       if (st.dash) a2['stroke-dasharray'] = st.dash;
       layer.appendChild(el(tag, a2));
     }
-    if (sel && o.points.length <= 60) {
+    if (sel && o.points.length <= VERTEX_HANDLE_MAX) {
       o.points.forEach(function (p) {
         var s = this.map.project(p.lat, p.lng);
         layer.appendChild(el('circle', { cx: s.x, cy: s.y, r: HANDLE, class: 'handle' }));
@@ -5288,7 +5539,8 @@
   Editor.prototype._drawCompass = function (layer, o, sel) {
     if (!o.at) return;
     var p = this.map.project(o.at.lat, o.at.lng);
-    var g = compassGeom(COMPASS.rMm * this.mmPx());
+    // 🔒 §30-37 2: 大きさの出どころは compassRadiusMm（倍率 markScale 込み）1か所
+    var g = compassGeom(compassRadiusMm(o) * this.mmPx());
     var d = '';
     for (var i = 0; i < g.pts.length; i++) {
       d += (i ? 'L' : 'M') + (p.x + g.pts[i][0]).toFixed(1)
@@ -5307,6 +5559,17 @@
         y: (p.y + b.cy - b.hh - 3).toFixed(1),
         width: (b.hw * 2 + 8).toFixed(1), height: (b.hh * 2 + 6).toFixed(1),
         fill: 'none', class: 'sel-box' }));
+      /* 🔒 §30-37 1・3: 印と同じ**右下のつまみ**で大きさを変える。
+       * 🔴 位置の出どころは markHandleAt（当たり判定と同じ1か所・§22-z の教訓）。 */
+      var ch = this.markHandleAt(o);
+      if (ch) {
+        var cc = el('circle', { cx: ch.x.toFixed(1), cy: ch.y.toFixed(1),
+          r: HANDLE_TEXT, class: 'handle handle-text' });
+        var ctt = el('title', {});
+        ctt.textContent = 'ドラッグで方位記号の大きさを変える';
+        cc.appendChild(ctt);
+        layer.appendChild(cc);
+      }
     }
   };
 
@@ -5510,7 +5773,8 @@
       }
       // 🔒 §30-14-5 2 / §30-25-17: 辺つまみは小さく・ZL で可変（edgeHandleR）
       /* 🔒 §30-31-1 1: 主役の■にも**4辺の辺つまみ**を出す（ふつうの四角と同じ形）。
-       * 辺＝その軸の長さだけ（中心＝ピンは動かない・_resizeEdge の主役分岐）。 */
+       * 🔒 §30-35-3 1: 動くのは**掴んだ辺だけ**（反対の辺は固定＝ふつうの四角と
+       * まったく同じ _resizeEdge の経路・中心はピンからずれる）。 */
       var ehR2 = this.edgeHandleR();
       [[0, -h.hh], [h.hw, 0], [0, h.hh], [-h.hw, 0]].forEach(function (p) {
         var s = toScreen(p[0], p[1]);
@@ -5604,7 +5868,9 @@
   /* 🔒 §30-25-37 1: scale（印の大きさ・0.5〜3・既定 1）。四角の実寸と紙の最小 mm に
    *    掛かる。倍率は図形にも `markScale` として控える（引き直しと保存のため）。 */
   /* 🔒 §30-31-1 2: 第6引数 dims（{w_m,h_m}）＝案件に入っている**縦横**。
-   *    渡されればそれが真実（基準×倍率は dims が無い時の既定だけ）。 */
+   *    渡されればそれが真実（基準×倍率は dims が無い時の既定だけ）。
+   * 🔒 §30-35-3 4: dims に **dx_m / dy_m**（■の中心 − ピン・東と北の m）があれば、
+   *    中心は「ピン＋ずれ」。無ければ従来どおりピンそのもの（旧案件＝ずれ 0）。 */
   Editor.makeMark = function (kind, p, id, color, scale, dims) {
     var k = MARK.kinds[kind] || MARK.kinds.home;
     var col = k.color;
@@ -5614,8 +5880,10 @@
     var dim = markRectDims(kind, scale);
     var mw = (dims && dims.w_m > 0) ? dims.w_m : dim.w_m;
     var mh = (dims && dims.h_m > 0) ? dims.h_m : dim.h_m;
+    var ctr = (dims && (dims.dx_m || dims.dy_m))
+            ? offsetLatLng(p, dims.dx_m, dims.dy_m) : p;
     var o = { id: id || uid(), type: 'rect',
-              center: { lat: p.lat, lng: p.lng },
+              center: { lat: ctr.lat, lng: ctr.lng },
               w_m: mw, h_m: mh, markScale: dim.scale, angle: 0,
               /* 🔴 車両枠と混同させないための固有の印。
                *    寸法ラベルを出さず、枠数・敷き詰め・提出前チェックの対象外。 */
@@ -5708,6 +5976,11 @@
   /* 🔒 §30-31-1 3: ■の紙の最小 mm（縦横それぞれ）。画面（rectHalf）と
    * 紙（export.js rectCorners）が同じ値を読む＝長方形の比が広域でも崩れない。 */
   Editor.markMinMm = markMinMm;
+  /* 🔒 §30-35-3 4: ■の中心とピンの**ずれ**（東・北の実距離 m）の換算1か所。
+   * app.js（setMainMarkDims／applyMarkChoice／syncRoleObjects）と
+   * Editor.makeMark が同じ関数を読む＝ m ⇄ 緯度経度の式を2か所に持たない。 */
+  Editor.offsetLatLng = offsetLatLng;
+  Editor.offsetMeters = offsetMeters;
   Editor.RING_W = RING_W;
   /* 🔒 §30-22-1 4 / §30-22-4 9: 線の色（黒／赤／青）・太さ3段・保管場所の書式。
    * app.js（右パネル）・export.js（紙）がここを読む＝値の出どころは1か所 */
@@ -5740,6 +6013,10 @@
   Editor.COMPASS = COMPASS;
   Editor.compassGeom = compassGeom;
   Editor.compassBox = compassBox;
+  /* 🔒 §30-37 2: 方位記号の**大きさ（紙面mm）の出どころ1か所**（基準 × markScale）。
+   * 紙（export.js drawCompass）・名前よけ（shozaizu.js）はこれに物差しを掛ける
+   * ＝ COMPASS.rMm を直接読まない。 */
+  Editor.compassRadiusMm = compassRadiusMm;
   Editor.makeCompass = makeCompass;
   /* 画面px と紙面mm の換算（TEXT_PX.large 19px ＝ SHEET_TEXT_MM.large 4.4mm）。
    * app.js が方位記号の画面上の大きさを出すのに読む */
@@ -5762,6 +6039,9 @@
   /* 🔒 §30-25-4: 「道路」の判定（描く順・当たり判定の両方が読む唯一の実装）。
    * export.js（紙の drawObjects）も自前で書かずにここを読む。 */
   Editor.isRoad = isRoad;
+  /* 🔒 §30-38-2 / §30-38-5 1: 「頂点を足せる図形か」の判定はここ1か所。
+   * app.js（配置図で選んだ時の一言）も自前で書かずにここを読む。 */
+  Editor.canAddVertex = canAddVertex;
   Editor.ROAD_STYLE_DEFAULT = 'line';   // 既存案件・新規案件の既定（後方互換）
   Editor.markHex = markHex;
   Editor.fmtM = fmtM;

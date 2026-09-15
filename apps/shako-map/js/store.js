@@ -942,17 +942,21 @@
   /** 図形1個の欠けを寛容に補う（読み込みで落とさない） */
   function normalizeObject(o) {
     if (!o) return;                    // 壊れたファイルで落ちない
-    if (o.type === 'text') {
-      if (!o.size) o.size = 'medium';
-      if (o.h_m !== undefined) delete o.h_m;
-      /* 🔒 §30-25-18 5: 印の大きさ（markScale）は**捨てない**。
-       * 無ければ持たせない（＝1倍として描く・Editor.markScaleOf が既定を持つ）。
-       * 壊れた値（数値でない・0以下）だけ落とす＝読み込みで落ちないようにする。 */
+    /* 🔒 §30-25-18 5 ／ 🔒 §30-37 4: 印の大きさ（markScale）は**捨てない**。
+     * 無ければ持たせない（＝1倍として描く・Editor.markScaleOf が既定を持つ）。
+     * 壊れた値（数値でない・0以下）だけ落とす＝読み込みで落ちないようにする。
+     * 🔴 §30-37 で**方位記号（type:'compass'）にも**同じ倍率が付くので、
+     *    文字と同じようにここを通す（抜出し・複製で写した記号も倍率が残る）。 */
+    if (o.type === 'text' || o.type === 'compass') {
       if (o.markScale !== undefined) {
         var msc = Number(o.markScale);
         if (isFinite(msc) && msc > 0) o.markScale = msc;
         else delete o.markScale;
       }
+    }
+    if (o.type === 'text') {
+      if (!o.size) o.size = 'medium';
+      if (o.h_m !== undefined) delete o.h_m;
       /* 🔒 §30-25-28 4: 「手で動かした主役の文字」の印（userMoved）は**捨てない**
        * （捨てると所在図の作り直しで位置と大きさが元に戻ってしまう）。
        * 壊れた値だけ落とす＝真なら true、偽なら持たせない。 */
@@ -1041,6 +1045,16 @@
           var dv = Number(p.mark[dk]);
           if (isFinite(dv) && dv > 0) p.mark[dk] = dv;
           else delete p.mark[dk];
+        });
+        /* 🔒 §30-35-3 2: ■の中心とピンの**ずれ**（東・北の実距離 m）。**捨てない**
+           （掴んだ辺だけ伸ばした形が開き直しで中心へ戻らないように）。
+           🔴 縦横と違い **0 も負も正しい値**なので符号では捨てず、数値でない物
+              （緯度経度の計算を壊す）だけ落とす＝持たない案件は app.js markOf が 0。 */
+        ['dx_m', 'dy_m'].forEach(function (ok) {
+          if (p.mark[ok] === undefined) return;
+          var ov = Number(p.mark[ok]);
+          if (isFinite(ov)) p.mark[ok] = ov;
+          else delete p.mark[ok];
         });
       } else if (p.mark !== undefined) {
         delete p.mark;

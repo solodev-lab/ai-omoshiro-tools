@@ -135,6 +135,10 @@
     toolMoreOpen: {},
     /* 前回の「注意」の有無（'段:key' → 真偽）。出た**瞬間**だけ自動で開くため */
     sgMoreWarn: {},
+    /* 🔒 §30-38-5 1: 「頂点の足し引き」の一言を**もう出した図形**の id。
+       同じ図形を選び直しても連呼しないためだけに持つ。画面の状態なので
+       案件には保存しない（案件を切り替えたら空に戻す・openCaseInner）。 */
+    vertexHintFor: '',
     /* 🔒 §30-12-4 5 / §30-11-b 5: 写真を取り込んだ直後は
        ［自分で撮った写真・図面を使う］だけを自動で開く（位置合わせの案内と濃さの欄を
        見せるため）。開いたら下ろす（画面だけの合図・保存しない）。 */
@@ -156,7 +160,10 @@
   };
 
   var TOOL_HINT = {
-    select: '図形をクリックで選択・ドラッグで移動。Delete で削除、Ctrl+D で複製、Ctrl+Z で戻す',
+    /* 🔒 §30-38-2 5: 末尾に Alt＋クリックの一言（帯・左メニュー・ガイダンスの
+     * 1行は全部この TOOL_HINT を読む＝出どころ1か所）。 */
+    select: '図形をクリックで選択・ドラッグで移動。Delete で削除、Ctrl+D で複製、Ctrl+Z で戻す。'
+      + 'Alt＋クリックで線に頂点を足す（頂点の上で Alt＋クリックなら消す）',
     line: '2回クリックで1本引きます（Esc で取り消し）',
     curve: '2回クリックで両端 → マウスを動かして膨らみを決め、もう1回クリックで確定',
     /* 🔒 §30-22-3 2（§18-10 を改めた）: 四角は「建物など」の四角（駐車枠の意味は持たない）。
@@ -174,12 +181,12 @@
       + '名前が要らなければ空のまま Enter（印だけ残ります）',
     bus: 'バス停の場所をクリックすると印が置かれ、続けて停留所名を入れられます。'
       + '名前が要らなければ空のまま Enter（印だけ残ります）',
-    /* 🔒 §30-22-3 2: P マークは信号機・バス停と同じ「印つき文字」（名前は空でもよい） */
-    parking: 'クリックした場所に P マーク（□の中に P）が置かれ、続けて名前を入れられます。'
-      + '名前が要らなければ空のまま Enter（印だけ残ります）',
-    /* 🔒 §30-25-9: 木も信号機・P マークと同じ「印つき文字」（名前は空でもよい） */
-    tree: 'クリックした場所に木の印が置かれ、続けて名前を入れられます。'
-      + '名前が要らなければ空のまま Enter（印だけ残ります）',
+    /* 🔒 §30-35-2 1・3（2026-09-15 オーナー指示）: P・木は**印だけ**（名前は聞かない）。
+     * 器は信号機・バス停と同じ「印つき文字」のままなので、後から文字を付けたい時は
+     * 従来の文字の編集でできる（§30-35-2 4）。 */
+    parking: 'クリックした場所に P マーク（□の中に P）を置きます',
+    /* 🔒 §30-25-9 / §30-35-2 1: 木も P マークと同じ（印だけ・名前は聞かない） */
+    tree: 'クリックした場所に木の印を置きます',
     /* 🔒 §30-22-1 4: 主役の多角形は**この道具だけ Enter で閉じる**（§4-5 の例外） */
     /* 🔒 §30-24-1: 書式は▼「印を変える」の中にも同じ物が出る（いくつでも描ける） */
     mainpoly: '建物や土地の形にそってクリックで頂点を足し、最後に Enter（またはダブルクリック）で'
@@ -207,6 +214,12 @@
       + '（［枠をまとめて］なら1枠だけ置いて、まわりの ＋ で増やせます）',
     parcel: '青い枠が土地の区画です。駐車場の区画をクリックすると外枠と地番を取り込みます'
   };
+
+  /* 🔒 §30-38-5 1（2026-09-15 オーナー指示）: **配置図で線を選んだ時**に地図の上へ
+   * 出す一言（🔴 文はここ1か所）。減らす方もこの一言に含めるだけ（別の案内は作らない）。
+   * 🔒 §30-38-5 3: 所在図では出さない（自動生成の道路は帯で直す作法が違う）。 */
+  var VERTEX_HINT = '線の上で Alt＋クリック＝頂点を足す／頂点の上で Alt＋クリック＝消す';
+  var VERTEX_HINT_MS = 5000;
 
   /* ================= 道具のアイコン（🔒 §30-22-3 2・2026-09-13 オーナー指示）=======
    * > オーナー: 「道具は全部アイコン（説明はマウスオーバー）」
@@ -271,14 +284,15 @@
     bus: { ja: 'バス停', note: 'バス停の印を置く。停留所名も入れられる（空でもよい）',
       svg: ico('<rect x="5.4" y="3.2" width="13.2" height="7.6" rx="1.6"/>'
              + '<path d="M12 10.8V20"/><path d="M8.2 20h7.6"/>') },
-    parking: { ja: 'P マーク', note: 'クリックした所に P マークを置く。名前も入れられる（空でもよい）',
+    /* 🔒 §30-35-2 3: P・木は名前を聞かない＝説明からも「名前」を外す */
+    parking: { ja: 'P マーク', note: 'クリックした所に P マークを置く',
       svg: ico('<rect x="4.2" y="4.2" width="15.6" height="15.6" rx="3"/>'
              + '<path d="M9.8 16.4V7.8h3a2.7 2.7 0 0 1 0 5.4h-3"/>') },
     /* 🔒 §30-25-9 3 / §30-30-2: 木の絵は Editor.treeGeom / Editor.treeCanopyPath を
      * そのまま 24 の箱へ収めた物＝図に入る印とまったく同じ形（もこもこの樹冠も同じ数値）。
      * 🔴 大きさは treeGeom(size) の全高（trunk + 樹冠）が 22 に収まる size を解いた値。
      *    Editor が読めない時（単体テスト）だけ従来の円の絵に落ちる。 */
-    tree: { ja: '木', note: 'クリックした所に木の印を置く。名前も入れられる（空でもよい）',
+    tree: { ja: '木', note: 'クリックした所に木の印を置く',
       svg: ico(treeIconBody()) },
     /* --- 駐車枠 --- */
     stamp: { ja: '駐車枠', note: '押してから置きたい場所を地図でクリック。まわりの＋で増やせます',
@@ -3426,6 +3440,13 @@
   var ROADAUTO_MIN_RUN_M = 1;   // これより短い切れ端は捨てる
   var ROADAUTO_DP_M = 0.3;      // Douglas–Peucker の許容
   var ROADAUTO_MAX_PTS = 3;     // 1本の縁に打つ点の上限（両端＋途中1点）
+  /* 🔒 §30-38-1 1: 端と端がこの距離(m)以内なら「接している」＝1本に繋ぐ。 */
+  var ROADAUTO_JOIN_M = 1.5;
+  /* 🔒 §30-38-4 2: タイルの境などで**二重になった縁**を1本にするための物差し。
+   * 両端がそれぞれこの距離(m)以内（順・逆どちらでも）で、長さの差が
+   * ROADAUTO_DUP_RATE 以内なら同じ縁と見なす。 */
+  var ROADAUTO_DUP_M = 0.5;
+  var ROADAUTO_DUP_RATE = 0.1;  // 長さの差（長い方に対する割合）
   /* 同じ道路が複数の地物に分かれている継ぎ目（一直線に続く所）で縁が切れないよう、
    * 帯の面は「ほんの少し内側」を中と見なす。交差点の開き方はこの分だけ狭くなる。 */
   var ROADAUTO_CUT_EPS_M = 0.2;
@@ -3638,6 +3659,226 @@
     return { w: Math.round(w * 100) / 100, color: bd.outerColor };
   }
 
+  /**
+   * 🔒 §30-38-4 2: タイルの境などで**二重になった縁**を1本にする（繋ぐ前の下ごしらえ）。
+   * 同じ縁と見なす条件＝両端がそれぞれ ROADAUTO_DUP_M 以内（順方向・逆方向どちらでも）
+   * かつ長さの差が ROADAUTO_DUP_RATE 以内。
+   * 🔴 元の配列も中の図形も書き換えない（残す物をそのまま並べた**写し**を返す）。
+   */
+  function raDropDup(made, plane) {
+    var n = made.length;
+    if (n < 2) return made;
+    var D2 = ROADAUTO_DUP_M * ROADAUTO_DUP_M, i;
+    /* 端の位置と長さ（メートルの平面）を先に出しておく */
+    var info = [];
+    for (i = 0; i < n; i++) {
+      var pts = made[i].points, mp = pts.map(plane.to);
+      info.push({ a: mp[0], b: mp[mp.length - 1], len: raLen(mp) });
+    }
+    /* 近い物だけ見るための格子（両端とも登録する＝向きが逆でも拾える） */
+    var cell = Math.max(ROADAUTO_DUP_M * 2, 1), grid = {};
+    function gput(p, v) {
+      var gk = Math.floor(p.x / cell) + ',' + Math.floor(p.y / cell);
+      (grid[gk] || (grid[gk] = [])).push(v);
+    }
+    for (i = 0; i < n; i++) { gput(info[i].a, i); gput(info[i].b, i); }
+    function near2(p, q) {
+      var dx = p.x - q.x, dy = p.y - q.y;
+      return dx * dx + dy * dy <= D2;
+    }
+    var drop = [], out = [];
+    for (i = 0; i < n; i++) drop[i] = false;
+    for (i = 0; i < n; i++) {
+      if (drop[i]) continue;
+      var mine = info[i];
+      var cx = Math.floor(mine.a.x / cell), cy = Math.floor(mine.a.y / cell), dx, dy, t;
+      for (dx = -1; dx <= 1; dx++) {
+        for (dy = -1; dy <= 1; dy++) {
+          var list = grid[(cx + dx) + ',' + (cy + dy)];
+          if (!list) continue;
+          for (t = 0; t < list.length; t++) {
+            var j2 = list[t];
+            if (j2 <= i || drop[j2]) continue;
+            var o2 = info[j2];
+            var same = (near2(mine.a, o2.a) && near2(mine.b, o2.b))
+                    || (near2(mine.a, o2.b) && near2(mine.b, o2.a));
+            if (!same) continue;
+            var big = Math.max(mine.len, o2.len);
+            if (big > 0 && Math.abs(mine.len - o2.len) > big * ROADAUTO_DUP_RATE) continue;
+            drop[j2] = true;                   // 後から来た方を捨てる
+          }
+        }
+      }
+    }
+    for (i = 0; i < n; i++) if (!drop[i]) out.push(made[i]);
+    return out;
+  }
+
+  /**
+   * 🔒 §30-38-1 → §30-38-4（2026-09-15 オーナー指示「線が触れている所は全て
+   * 多角形ツールに。交差点付近の線を動かすのに2つの線を動かす必要が出る。
+   * 都市部では□が多く描かれるがそれでよい」）: 作った縁のうち**端と端が接している物**を
+   * 1本の線に繋ぐ。
+   *   ・先に**二重の縁**を消す（raDropDup・§30-38-4 2）
+   *   ・繋ぐ条件は「端どうしの距離が ROADAUTO_JOIN_M 以内」だけ（§30-38-4 1 で
+   *     「同じ roadRank」「相手が1本だけ」の2つを外した）。**距離の近い組から
+   *     順に1対1**で組む（各端は1回だけ・自分の反対の端は相手にしない＝貪欲）
+   *   ・繋ぎ目の頂点は2つの端の中点
+   *   ・**輪になったら多角形**（§30-38-4 3・type:'polygon'・塗りなし）＝街区が□になる
+   * 🔴 §30-25-22 の「1本の縁は最大3点」は**そのまま保つ**（繋ぐのは最後の仕上げで、
+   *    縁そのものの作り方は変えていない）。
+   * @param made  縁の図形の配列（この配列も中の図形も書き換えない）
+   * @param plane raPlane（緯度経度 ⇄ メートル）
+   * @return 繋いだ後の図形の配列（繋がなかった縁は元の図形のまま入る）
+   */
+  function raJoinRuns(made, plane) {
+    var src = raDropDup(made, plane);          // 🔒 §30-38-4 2: 二重の縁を先に消す
+    var n = src.length;
+    if (n < 2) return src;
+    var J2 = ROADAUTO_JOIN_M * ROADAUTO_JOIN_M, i, k;
+    /* --- ① 端の表（端の番号 ＝ 縁の番号×2 ＋ 0:先頭 / 1:末尾）--- */
+    var ends = [];
+    for (i = 0; i < n; i++) {
+      var pts = src[i].points;
+      ends.push({ i: i, p: plane.to(pts[0]) });
+      ends.push({ i: i, p: plane.to(pts[pts.length - 1]) });
+    }
+    /* --- ② 近い端だけを見るための格子（総当たりだと本数の2乗になる）--- */
+    var cell = Math.max(ROADAUTO_JOIN_M, 0.5), grid = {};
+    for (k = 0; k < ends.length; k++) {
+      var gk = Math.floor(ends[k].p.x / cell) + ',' + Math.floor(ends[k].p.y / cell);
+      (grid[gk] || (grid[gk] = [])).push(k);
+    }
+    /* --- ③ 🔒 §30-38-4 1: JOIN_M 以内の組を全部作り、**近い順**に1対1で組む
+     *   （等級は見ない。各端は1回だけ使う・自分の反対の端は相手にしない）--- */
+    var pairs = [];
+    for (k = 0; k < ends.length; k++) {
+      var en = ends[k];
+      var cx = Math.floor(en.p.x / cell), cy = Math.floor(en.p.y / cell), dx, dy, t;
+      for (dx = -1; dx <= 1; dx++) {
+        for (dy = -1; dy <= 1; dy++) {
+          var list = grid[(cx + dx) + ',' + (cy + dy)];
+          if (!list) continue;
+          for (t = 0; t < list.length; t++) {
+            var k2 = list[t];
+            if (k2 <= k) continue;             // 組は1回だけ数える
+            // 自分の縁のもう一方の端は相手にしない（1本だけで輪を作らない）
+            if (ends[k2].i === en.i) continue;
+            var ddx = ends[k2].p.x - en.p.x, ddy = ends[k2].p.y - en.p.y;
+            var d2 = ddx * ddx + ddy * ddy;
+            if (d2 <= J2) pairs.push({ a: k, b: k2, d: d2 });
+          }
+        }
+      }
+    }
+    pairs.sort(function (p, q) { return p.d - q.d; });
+    var link = [];
+    for (k = 0; k < ends.length; k++) link[k] = -1;
+    for (k = 0; k < pairs.length; k++) {
+      var pr = pairs[k];
+      if (link[pr.a] >= 0 || link[pr.b] >= 0) continue;   // 使った端は候補から外す
+      link[pr.a] = pr.b; link[pr.b] = pr.a;
+    }
+    /* --- ④ 鎖をたどって1本にまとめる。
+     *   pass 0 ＝ 端が空いている縁を頭にした鎖（ふつうの道）
+     *   pass 1 ＝ 残り（＝ぐるりと輪になっている所）＝ 🔒 §30-38-4 3 で多角形にする */
+    var used = [], out = [];
+    for (i = 0; i < n; i++) used[i] = false;
+    for (var pass = 0; pass < 2; pass++) {
+      for (i = 0; i < n; i++) {
+        if (used[i]) continue;
+        var start = 0;
+        if (pass === 0) {
+          if (link[i * 2] < 0) start = 0;
+          else if (link[i * 2 + 1] < 0) start = 1;
+          else continue;                       // 両端とも繋がっている＝輪（pass 1 で）
+        }
+        var seq = [], ci = i, ce = start, ring = false;
+        while (true) {
+          seq.push({ i: ci, e: ce });
+          used[ci] = true;
+          var pk = link[ci * 2 + (1 - ce)];    // 入った端の反対側から出る
+          if (pk < 0) break;
+          var ni = Math.floor(pk / 2), ne = pk % 2;
+          if (used[ni]) {
+            // 先頭の縁の「入った端」へ戻ってきた＝輪（🔒 §30-38-4 3）
+            if (ni === i && ne === start) ring = true;
+            break;
+          }
+          ci = ni; ce = ne;
+        }
+        out.push(raMergeSeq(seq, src, plane, out.length, ring));
+      }
+    }
+    return out;
+  }
+
+  /**
+   * 🔒 §30-38-1 2〜3 / §30-38-4 3: 鎖（入った端の並び）を1本の図形にする。
+   * 繋ぎ目の頂点が前後の点とほぼ一直線（ずれが ROADAUTO_DP_M 以下）なら落とす
+   * ＝ 真っすぐな道は何本繋いでも2点・曲がり角は残る（全体の点の上限は設けない）。
+   * @param ring 輪になっている（先頭の端と末尾の端が組んでいる）＝ `type:'polygon'` にする。
+   *   輪の時は先頭と末尾も**同じ規則**で中点にまとめ、一直線の判定は最後→最初の辺も見る。
+   */
+  function raMergeSeq(seq, made, plane, serial, ring) {
+    var head = made[seq[0].i];
+    if (seq.length === 1 && !ring) return head;   // 繋がなかった縁はそのまま
+    var pts = [], joints = {}, s, q, j;
+    for (s = 0; s < seq.length; s++) {
+      var o = made[seq[s].i];
+      q = (seq[s].e === 0) ? o.points.slice() : o.points.slice().reverse();
+      if (!pts.length) { pts = q; continue; }
+      var last = pts[pts.length - 1];
+      // 繋ぎ目の頂点は2つの端の中点（🔒 §30-38-1 1）
+      pts[pts.length - 1] = { lat: (last.lat + q[0].lat) / 2,
+                              lng: (last.lng + q[0].lng) / 2 };
+      joints[pts.length - 1] = true;
+      for (j = 1; j < q.length; j++) pts.push(q[j]);
+    }
+    /* 🔒 §30-38-4 3: 輪の繋ぎ目（末尾 → 先頭）も他の繋ぎ目と同じ中点に。
+     * 多角形は最後の点と最初の点が辺で結ばれるので、重なる1点は落とす。 */
+    if (ring && pts.length >= 3) {
+      var p0 = pts[0], pz = pts[pts.length - 1];
+      pts[0] = { lat: (p0.lat + pz.lat) / 2, lng: (p0.lng + pz.lng) / 2 };
+      pts.pop();
+      joints[0] = true;
+    }
+    var mp = pts.map(plane.to), tol2 = ROADAUTO_DP_M * ROADAUTO_DP_M;
+    var keep = [], keepM = [];
+    var lo = ring ? 0 : 1, hi = ring ? pts.length : pts.length - 1;
+    if (!ring) { keep.push(pts[0]); keepM.push(mp[0]); }
+    for (j = lo; j < hi; j++) {
+      var pv = keepM.length ? keepM[keepM.length - 1]
+                            : mp[(j - 1 + pts.length) % pts.length];
+      var nx = mp[(j + 1) % pts.length];
+      if (joints[j] && raD2Seg(mp[j], pv, nx) <= tol2) continue;
+      keep.push(pts[j]); keepM.push(mp[j]);
+    }
+    if (!ring) keep.push(pts[pts.length - 1]);
+    // 減らしすぎて多角形にならない時は間引かない（保険）
+    if (ring && keep.length < 3) keep = pts;
+    var obj = {
+      id: 'ra' + Date.now().toString(36) + 'j' + serial.toString(36),
+      /* 🔒 §30-38-4 3: 輪は多角形（`closed` は持たせない＝多角形ツールが
+       * Shift+Enter で閉じた物と同じ型）。輪でなければ従来どおり path。 */
+      type: ring ? 'polygon' : 'path',
+      points: keep,
+      // 書式・ランクは先頭の縁の物（🔒 §30-38-1 2 / §30-38-4 1）
+      style: head.style, roadRank: head.roadRank, source: 'roadauto'
+    };
+    if (!ring) obj.closed = false;
+    return obj;
+  }
+
+  /**
+   * 🔒 §30-38-4 5: ［地図の道路を写す］が終わった時の一言（**文はここ1か所**）。
+   * N は輪（多角形）も含めた本数。
+   */
+  function raDoneMsg(n) {
+    return '枠の近くの道路の線を ' + n + ' 本描きました'
+         + '（角は1つの頂点です。線の上で Alt＋クリックすると頂点が増えます）';
+  }
+
   function drawRoadsNearFrame() {
     var c = state.current, sh = curSheet();
     if (!c || !sh || !state.editor) return Promise.resolve(0);
@@ -3658,7 +3899,6 @@
 
     roadAutoBusy = true;
     hint('枠の近くの道路を取りに行っています…', 0);
-    var t0 = Date.now();
     return GSI.fetchTiles(bounds, ROADAUTO_Z).then(function (tiles) {
       var table = Shozaizu.roadStyleTable('band');
       /* --- ① 中心線を集めて枠＋30m で切る（🔒 §30-25-22 2 手順1）--- */
@@ -3714,6 +3954,8 @@
           });
         });
       });
+      /* --- ④ 🔒 §30-38-1: 端と端が接している縁を1本の線に繋ぐ --- */
+      var joined = raJoinRuns(made, plane);
       var objs = sh.objects || (sh.objects = []);
       var ed2 = state.editor, live = (ed2.objects === objs);
       if (live) ed2.snapshot();
@@ -3723,15 +3965,14 @@
       }
       /* 🔒 §30-25-4: 道路は一番下（描く順・当たり判定）。並びの上でも先頭へ入れて
        * おく（Editor.isRoad が source:'roadauto' を道路として数える）。 */
-      for (var m = made.length - 1; m >= 0; m--) objs.unshift(made[m]);
+      for (var m = joined.length - 1; m >= 0; m--) objs.unshift(joined[m]);
       if (live) { ed2.selection = []; ed2.commit(); updateHistoryButtons(); }
       Store.autosave(c);
-      var sec = Math.round((Date.now() - t0) / 100) / 10;
-      hint(made.length
-        ? ('枠の近くの道路の縁を ' + made.length + ' 本描きました（' + sec + '秒）。'
-           + '縁の点をドラッグすると道幅を直せます。要らない線は消しゴムで消せます')
+      // 🔒 §30-38-1 4 / §30-38-4 5: 案内の本数は**繋いだ後**の本数（輪も1本と数える）
+      hint(joined.length
+        ? raDoneMsg(joined.length)
         : 'この枠の近くには道路のデータがありませんでした', 6000);
-      return made.length;
+      return joined.length;
     }).catch(function (err) {
       hint('道路を取りに行けませんでした（' + (err && err.message ? err.message : '通信エラー') + '）', 5000);
       return 0;
@@ -4637,9 +4878,12 @@
       }).map(function (o) { return o.text; }),
       /* 🔒 §28-3: 部品として置かれた方位記号（type:'compass'）は、名前・路線番号の印が
        * 避ける**障害物**として渡す（旧・自動の方位記号は furnitureZones の席だった）。 */
+      /* 🔒 §30-37 2: 大きさ（倍率 markScale）も渡す＝箱を記号ごとの大きさで取る */
       compasses: state.editor.objects.filter(function (o) {
         return o.type === 'compass' && o.at;
-      }).map(function (o) { return { lat: o.at.lat, lng: o.at.lng }; }),
+      }).map(function (o) {
+        return { lat: o.at.lat, lng: o.at.lng, markScale: o.markScale };
+      }),
       metersPerPixel: function (lat) { return mv.metersPerPixel(lat); }
     }).then(function (res) {
       // 追い越された生成は捨てる（§18-z の二重防止）
@@ -5710,19 +5954,54 @@
     setUnderlayPct(off ? 0 : 100);
   }
 
-  /** 作図中の操作ヒント帯（正典 §4-5）。多角形は確定方法が分かりにくいので常時出す */
+  /**
+   * 🔒 §30-35-1 2: 案内帯だけが出す「操作キーの文」。
+   * 多角形（polygon）と主役の多角形（mainpoly）は、使い方1行（TOOL_HINT）より
+   * **確定のしかた**を手元（画面の下）で見せたいので、この表の文に差し替える。
+   * 🔴 表はここ1か所・読むのは updateDrawBadge だけ（左メニューの1行・ガイダンスの
+   *    `.js-toolhint` は従来どおり TOOL_HINT を読む）。
+   * 🔴 polygon は「必ず閉じる」（ウィザードの外周＝ polygonMustClose）かどうかで
+   *    文が変わるので、値ではなく関数で持つ。
+   */
+  var BADGE_KEYS = {
+    // 🔒 §22-ac: Enter は「閉じずに確定」が既定。閉じたい時だけ Shift+Enter
+    polygon: function (ed) {
+      return (ed && ed.polygonMustClose)
+        ? 'クリック＝頂点／Enter＝確定（外周は必ず閉じます）／Backspace＝1点戻す'
+        : 'クリック＝頂点／Enter＝確定（閉じません）／Shift+Enter＝閉じて確定／Backspace＝1点戻す';
+    },
+    // 🔒 §30-22-1 4: 主役の多角形は**この道具だけ Enter で閉じる**（§4-5 の例外）
+    mainpoly: function () {
+      return 'クリック＝頂点／Enter（またはダブルクリック）＝閉じて確定／Backspace＝1点戻す';
+    }
+  };
+
+  /**
+   * 道具の案内帯（🔒 §30-35-1・旧「作図中の操作ヒント帯」）。
+   * 道具を持っている間（`select` 以外）は地図の下中央にその道具の文をずっと出す。
+   * 🔴 文の出どころは TOOL_HINT（左メニューの1行・ガイダンスと同じ）1か所。
+   *    多角形・主役の多角形だけ BADGE_KEYS の操作キーの文に差し替える。
+   * 🔴 Ctrl を押している間は effectiveTool() が 'select' を返す＝帯は消える。
+   */
   function updateDrawBadge() {
     var el = $('drawBadge');
-    // 多角形の道具を持っている間はずっと出す（描き始める前に確定方法を知らせる）
-    var on = !!(state.editor && state.editor.effectiveTool() === 'polygon');
-    el.hidden = !on;
-    if (!on) return;
-    // 🔒 §22-ac: Enter は「閉じずに確定」が既定。閉じたい時だけ Shift+Enter
-    el.textContent = state.editor.polygonMustClose
-      ? 'クリック＝頂点／Enter＝確定（外周は必ず閉じます）／Backspace＝1点戻す'
-      : 'クリック＝頂点／Enter＝確定（閉じません）／Shift+Enter＝閉じて確定／Backspace＝1点戻す';
+    var t = state.editor ? state.editor.effectiveTool() : 'select';
+    var key = (t && t !== 'select') ? BADGE_KEYS[t] : null;
+    // 🔒 §30-35-1 4: TOOL_HINT に無い物（道具にならないボタン）は帯を出さない
+    var msg = (t && t !== 'select') ? (key ? key(state.editor) : (TOOL_HINT[t] || '')) : '';
+    el.hidden = !msg;
+    if (!msg) return;
+    el.textContent = msg;
     // 書き出し枠の案内と重ならないように上へ逃がす
-    el.classList.toggle('is-up', !$('frameHint').hidden);
+    var up = !$('frameHint').hidden;
+    el.classList.toggle('is-up', up);
+    /* 🔒 §30-35-4 1: 帯（幅 900px まで）は右下の出典表記（#mapAttr・地理院1行／
+       OSMFJ 2行）に掛かる。出典の高さを測って**出典の上**に置く（高さ＋8px・
+       下限 12px）。枠の案内（is-up）がある時はさらに +32px。
+       🔴 測れない時（#mapAttr が無い／高さ 0）は CSS の値（12px／44px）に任せる。 */
+    var attr = $('mapAttr');
+    var ah = attr ? attr.offsetHeight : 0;
+    el.style.bottom = ah ? (Math.max(12, ah + 8) + (up ? 32 : 0)) + 'px' : '';
   }
 
   /** ⑦［詳しい設定］の初期値を埋める（枠サイズの一覧と、右パネルからの写し取り）。
@@ -7629,7 +7908,12 @@
             : { w_m: def.w_m || 10, h_m: def.h_m || 10 };
     return { shape: shape, color: color, scale: scale,
              w_m: markDim(m && m.w_m, dim.w_m),
-             h_m: markDim(m && m.h_m, dim.h_m) };
+             h_m: markDim(m && m.h_m, dim.h_m),
+             /* 🔒 §30-35-3 2: ■の中心とピンの**ずれ**（東・北の実距離 m・既定 0）。
+              * 辺つまみで掴んだ辺だけ伸ばすと中心がピンから外れるので、その分を
+              * 案件が持つ（旧案件は持たない＝0）。 */
+             dx_m: markOff(m && m.dx_m),
+             dy_m: markOff(m && m.dy_m) };
   }
 
   /** 🔒 §30-31-1 2: 保存された縦横（m）を読む（数値でなければ既定）。丸めは3桁 */
@@ -7638,10 +7922,18 @@
     return (isFinite(n) && n > 0) ? Math.round(n * 1000) / 1000 : def;
   }
 
-  /** 🔒 §30-31-1 2: 案件へ入れる印の器（形・色・大きさ・縦横）を写す1か所 */
+  /** 🔒 §30-35-3 2: 保存されたずれ（m）を読む（数値でなければ 0）。丸めは3桁。
+   *  🔴 縦横（markDim）と違い **0 も負も正しい値**なので符号で捨てない。 */
+  function markOff(v) {
+    var n = Number(v);
+    return isFinite(n) ? Math.round(n * 1000) / 1000 : 0;
+  }
+
+  /** 🔒 §30-31-1 2 / §30-35-3 2: 案件へ入れる印の器
+   *  （形・色・大きさ・縦横・中心のずれ）を写す1か所 */
   function markCopy(m) {
     return { shape: m.shape, color: m.color, scale: m.scale,
-             w_m: m.w_m, h_m: m.h_m };
+             w_m: m.w_m, h_m: m.h_m, dx_m: m.dx_m, dy_m: m.dy_m };
   }
 
   /**
@@ -7651,6 +7943,8 @@
    *    ・patch に w_m/h_m があればそれが真実（辺つまみ・右パネルの欄）
    *    ・大きさ（scale）だけを変えた時は**同じ比率**で縦横に掛ける（角のつまみ）
    *      ＝長方形の比を保ったまま拡大縮小できる
+   * 🔒 §30-35-3 2: 中心のずれ（dx_m/dy_m）も同じ器。patch にあればそれが真実で、
+   *    無ければ今の値のまま（大きさを変えてもずれは動かさない＝印はその場にある）。
    */
   function markNext(key, patch) {
     var cur = markOf(key);
@@ -7658,11 +7952,14 @@
     // 🔴 上下限（0.5〜3）の出どころは Editor.clampMarkScale 1か所
     if (Editor.clampMarkScale) sc = Editor.clampMarkScale(sc);
     var r = (cur.scale > 0) ? (sc / cur.scale) : 1;
+    var hasOff = function (k) { return patch && patch[k] !== undefined; };
     return { shape: (patch && patch.shape) || cur.shape,
              color: (patch && patch.color) || cur.color,
              scale: sc,
              w_m: markDim(patch && patch.w_m, markDim(cur.w_m * r, cur.w_m)),
-             h_m: markDim(patch && patch.h_m, markDim(cur.h_m * r, cur.h_m)) };
+             h_m: markDim(patch && patch.h_m, markDim(cur.h_m * r, cur.h_m)),
+             dx_m: hasOff('dx_m') ? markOff(patch.dx_m) : cur.dx_m,
+             dy_m: hasOff('dy_m') ? markOff(patch.dy_m) : cur.dy_m };
   }
 
   /** 生成に渡す形（両地点ぶん・shozaizu.js の opts.marks） */
@@ -7753,18 +8050,31 @@
    * 紙の■（applyMarkChoice）がそこから引き直す。
    * 🔴 呼ぶ所は2つだけ: ■の辺つまみ（editor.onMainMarkDims）と
    *    右パネルの幅／奥行の欄（applyPropInputs）。どちらも同じ値を書く。
-   * 🔴 中心＝ピンは動かさない（辺つまみは反対の辺も同じ量だけ動く・_resizeEdge）。
+   * 🔒 §30-35-3 1・3（2026-09-15 オーナー指示）: 辺つまみは**掴んだ辺だけ**伸びる
+   *    ＝中心がピンからずれる。editor が中心（緯度経度）も渡してきた時は、
+   *    ピンとの差を m に直して `dx_m/dy_m` へ書く（換算は Editor.offsetMeters 1か所）。
+   *    右パネルの欄は中心を渡さない＝ずれは今のまま（中心は動かない）。
    * @param {'home'|'lot'} key
    * @param {number} w_m 幅(m)・省略や 0 以下は今の値のまま
    * @param {number} h_m 奥行(m)・同上
+   * @param {{lat:number,lng:number}} [center] ■の中心（省略＝ずれは変えない）
    */
-  function setMainMarkDims(key, w_m, h_m) {
+  function setMainMarkDims(key, w_m, h_m, center) {
     var c = state.current;
     if (!c || (key !== 'home' && key !== 'lot')) return false;
     var cur = markOf(key);
+    var patch = { w_m: w_m, h_m: h_m };
+    /* 🔒 §30-35-3 3: 中心が来たらピンとの差＝ずれ。ピンがまだ無い（地点を置いて
+     * いない）時は基準が無いので、ずれは触らない。 */
+    if (center && c.points[key] && Editor.offsetMeters) {
+      var off = Editor.offsetMeters(c.points[key], center);
+      patch.dx_m = off.dx_m;
+      patch.dy_m = off.dy_m;
+    }
     // 🔴 組み立ては markNext 1か所（形・色・大きさを落とさない）
-    var next = markNext(key, { w_m: w_m, h_m: h_m });
-    if (next.w_m === cur.w_m && next.h_m === cur.h_m) return false;
+    var next = markNext(key, patch);
+    if (next.w_m === cur.w_m && next.h_m === cur.h_m
+        && next.dx_m === cur.dx_m && next.dy_m === cur.dy_m) return false;
     if (c.points[key]) c.points[key].mark = next;
     else state.markPick[key] = next;
     // 🔒 §30-22-1 6 / §30-24-2: 同一住所は本拠側の値を両方に（markCopy 1か所）
@@ -7795,9 +8105,11 @@
     /* 🔒 §30-24-2: 同一住所の時、印は**本拠側の1つ**だけ（駐車場側は文字だけ）。
      * 生成（shozaizu.js）と同じ規則をここでも守る＝同じ場所に印が2つ重ならない。 */
     if (c.points.same && key === 'lot') {
-      // 🔒 §30-31-1 2: 縦横も落とさずに写す（器の形を1つに保つ＝ markCopy と同じ中身）
+      /* 🔒 §30-31-1 2: 縦横も落とさずに写す（器の形を1つに保つ＝ markCopy と同じ中身）
+       * 🔒 §30-35-3 2: 中心のずれ（dx_m/dy_m）も一緒に運ぶ */
       want = markCopy({ shape: 'none', color: want.color, scale: want.scale,
-                        w_m: want.w_m, h_m: want.h_m });
+                        w_m: want.w_m, h_m: want.h_m,
+                        dx_m: want.dx_m, dy_m: want.dy_m });
     }
     var hex = Editor.markHex ? Editor.markHex({ markColor: want.color }) : '';
     sheetsOf('shozaizu').forEach(function (sh) {
@@ -7847,6 +8159,15 @@
             rect.w_m = want.w_m; rect.h_m = want.h_m; rect.markScale = want.scale;
             changed++;
           }
+          /* 🔒 §30-35-3 4: **中心のずれ**も引き直す（縦横と同じ器・同じ規則）。
+           * 中心＝ピン＋ずれ。ピンが無い紙は触らない（syncRoleObjects が面倒を見る）。 */
+          if (p && rect.center && Editor.offsetLatLng) {
+            var wc = Editor.offsetLatLng(p, want.dx_m, want.dy_m);
+            if (rect.center.lat !== wc.lat || rect.center.lng !== wc.lng) {
+              rect.center = { lat: wc.lat, lng: wc.lng };
+              changed++;
+            }
+          }
         }
       } else if (rect) {
         var at2 = objs.indexOf(rect);
@@ -7862,10 +8183,15 @@
          *    形を◎↔■↔多角形に変えても scale は保つ（ここで毎回書き直す）。 */
         if (lb.markScale !== want.scale) { lb.markScale = want.scale; changed++; }
         /* 🔒 §25-4: 文字を印の外へ逃がすための控え（次の作り直しで使う）。
-         * 四角が無くなったら null に戻す（◎の実寸は shozaizu.js が別途出す）。 */
-        var wm = rect ? { w_m: rect.w_m, h_m: rect.h_m } : null;
-        var had = lb.mark ? (lb.mark.w_m + 'x' + lb.mark.h_m) : '';
-        var now = wm ? (wm.w_m + 'x' + wm.h_m) : '';
+         * 四角が無くなったら null に戻す（◎の実寸は shozaizu.js が別途出す）。
+         * 🔒 §30-35-3 5: **中心のずれ**も控える（文字よけの箱はピン＋ずれで測る）。 */
+        var wm = rect ? { w_m: rect.w_m, h_m: rect.h_m,
+                          dx_m: want.dx_m, dy_m: want.dy_m } : null;
+        var mkKey = function (v) {
+          return v ? (v.w_m + 'x' + v.h_m + '@' + (v.dx_m || 0) + ',' + (v.dy_m || 0)) : '';
+        };
+        var had = mkKey(lb.mark);
+        var now = mkKey(wm);
         if (had !== now) { lb.mark = wm; changed++; }
       }
     });
@@ -7938,12 +8264,16 @@
          * 時は、これから applyMarkChoice が作る四角の**実寸**を先に読む
          * ＝文字を最初から■の右隣に置ける。値の出どころは Editor.makeMark
          * （＝ Editor.MARK 表）1か所なので、後で作られる四角と必ず同じ寸法になる。 */
-        var mkSize = rect ? { w_m: rect.w_m, h_m: rect.h_m } : null;
+        /* 🔒 §30-35-3 5: 控えには中心の**ずれ**（dx_m/dy_m）も入れる
+         * ＝ applyMarkChoice が持つ控えと中身が同じ（器を1つに保つ）。 */
+        var mkSize = rect ? { w_m: rect.w_m, h_m: rect.h_m,
+                              dx_m: want.dx_m, dy_m: want.dy_m } : null;
         if (!mkSize && want.shape === 'rect' && !shared && Editor.makeMark) {
           /* 🔒 §30-25-37 1: 実寸は「基準 × 大きさ」（後で作られる四角と同じ寸法に）
            * 🔒 §30-31-1 2: 案件が縦横を持っていればそれ（＝ want をそのまま渡す） */
           var prov = Editor.makeMark(key, p, undefined, want.color, want.scale, want);
-          mkSize = { w_m: prov.w_m, h_m: prov.h_m };
+          mkSize = { w_m: prov.w_m, h_m: prov.h_m,
+                     dx_m: want.dx_m, dy_m: want.dy_m };
         }
         /* 真下へずらす基準は、同じ地点に既にある相方の文字（無ければ地点そのもの）。
          * 枠が無い紙は 400m を仮に置く（store.js の splitSameLabel と同じ）。 */
@@ -8549,8 +8879,10 @@
               '#sgS8 .tool[data-tool="line"]',
               '#sgS8 .tool[data-tool="polygon"]',
               '#sgS8 .tool[data-tool="curve"]'],
+        /* 🔒 §30-38-5 2: 頂点を足せることを1行足す（文の置き場所はこの表1か所） */
         say: '［地図の道路を写す］を押すと、枠のまわりの道路が線で入ります。'
            + '／ずれていれば線の角をドラッグで直してください。'
+           + '／描いた線の上で Alt＋クリックすると頂点が増え、形を直せます'
            + '／／手で描くなら［直線］［多角形］［曲線］のどれかで前面道路の縁を描きます',
         done: function () { return !!navRoadCount(); } },
       { step: 8, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
@@ -8670,12 +9002,18 @@
    * 🔴 書き先は案件の points[key].mark（まだ置いていない地点は画面の控え markPick）
    *    の1か所＝組み立ては markNext。
    * 🔴 ■・印なしは触らない（多角形が無い時に◎へ戻すのは「多角形だった時」だけ）。
+   * 🔒 §30-36（不具合の直し・2026-09-15）: **同一住所の時は home だけ**を評価する。
+   *    同一住所の▼で描く多角形は markRole:'home' なので lot 側には多角形が無く、
+   *    lot を評価すると「◎」と判定される → 同一住所の写し（本拠側の値を両方へ）で
+   *    home の印まで◎に戻る → 直後の applyMarkChoice('home') が「印が多角形でない
+   *    なら多角形を全部取り除く」（§30-24-1）で、いま描いた多角形を消していた。
+   *    写し（両方へ）と applyMarkChoice の呼び方は従来どおり。
    */
   function syncMarkShapeFromPolys() {
     var c = state.current;
     if (!c) return 0;
     var n = 0;
-    ['home', 'lot'].forEach(function (key) {
+    (c.points.same ? ['home'] : ['home', 'lot']).forEach(function (key) {
       var want = sgHasMainPoly(key) ? 'polygon' : 'circle';
       var now = markOf(key).shape;
       if (now === want) return;
@@ -10193,6 +10531,8 @@
     searchMsg('');
     // 🔒 §28-14 ①-4: 置く前のマーカーの種類の控えは案件をまたいで残さない
     state.markPick = { home: null, lot: null };
+    // 🔒 §30-38-5 1: 「頂点の足し引き」の一言も案件をまたいで残さない
+    state.vertexHintFor = '';
 
     showView('editor');
     ensureMap();
@@ -10297,9 +10637,20 @@
      * editor は描く時に読むだけ（値の出どころを2つに割らない）。 */
     state.editor.mainPolyDefault = state.mainPolyDefault;
 
-    state.editor.movePin = function (key, lat, lng) {
+    state.editor.movePin = function (key, lat, lng, opts) {
       var c = state.current;
       if (!c) return false;
+      /* 🔒 §30-35-3 6: ■の本体を掴んで動かした時（fromMark）に editor が渡すのは
+       * **■の新しい中心**。中心はピン＋ずれ（dx_m/dy_m）なので、その分だけ戻した所が
+       * ピン＝ずれを保ったまま一式が付いてくる（掴んだ時の動きは従来のまま）。
+       * 🔴 多角形の重心から呼ぶ経路（syncMarkPin）は fromMark を渡さない＝従来どおり。 */
+      if (opts && opts.fromMark && c.points[key] && Editor.offsetLatLng) {
+        var mo = markOf(c.points.same ? 'home' : key);
+        if (mo.dx_m || mo.dy_m) {
+          var q = Editor.offsetLatLng({ lat: lat, lng: lng }, -mo.dx_m, -mo.dy_m);
+          lat = q.lat; lng = q.lng;
+        }
+      }
       /* 🔒 §30-24-1: 多角形で囲む＝**その地点の印を置いた**ということ
        * （多角形は印の種類の1つ）。マーカーをまだ置いていない時は、
        * 多角形の重心にその地点を作る。作らないと「使用の本拠」の文字が
@@ -10346,8 +10697,10 @@
      * editor は図形へ書いた縦横を**この口**へ渡す＝書き先は案件の
      * points[key].mark.w_m / h_m 1か所（紙の■も同じ値から引き直す）。
      * 🔴 呼ばれるのは指を離した時だけ（ドラッグ中は図形の値で見た目を追う）。 */
-    state.editor.onMainMarkDims = function (key, w_m, h_m) {
-      return setMainMarkDims(key, w_m, h_m);
+    /* 🔒 §30-35-3 3: 掴んだ辺だけ伸びる＝中心がピンからずれるので、
+     * editor は**■の中心（緯度経度）も**渡す（ずれを m に直すのはこちら側）。 */
+    state.editor.onMainMarkDims = function (key, w_m, h_m, center) {
+      return setMainMarkDims(key, w_m, h_m, center);
     };
 
     /* 🔒 §30-32-1: 消しゴムが**その地点の部品**（主役の印・主役の文字）に当たった時。
@@ -10392,6 +10745,7 @@
     });
     state.editor.on('select', function (sel) {
       renderPropPanel(sel);
+      vertexHintOnSelect(sel);     // 🔒 §30-38-5 1: 配置図で線を選んだ時の一言
       /* 🔒 §30-24-1: ①の▼の中の書式は「選んでいる多角形」に効くので、
        * 選択が変わったら引き直す（右パネルと同じ値・同じ部品）。
        * 🔒 §30-28-2 1: 道具メニューの▼にも同じ書式が出るので、ガイダンスの
@@ -10824,6 +11178,9 @@
     updateScale();
     schedulePlateauCheck();
     sgSyncUnderlay();      // 🔒 §28-5 B: ④の〇も追従（1つのデータ・唯一の出入口）
+    /* 🔒 §30-35-4 1: 下敷きが替わると出典の行数（＝高さ）が変わる（地理院1行／
+       OSMFJ 2行）ので、道具の案内帯の置き場所も測り直す。 */
+    updateDrawBadge();
     Store.autosave(state.current);
   }
 
@@ -12143,11 +12500,19 @@
       if (o.source !== 'shozaizu') return;
 
       /* ⓪主役マークの四角（🔒 §25-4）。◎の代わりの印なので◎と同じ扱いで追従させる。
-       * 中心＝地点そのもの。手で動かした分は保たない（印は必ずピンの上にある）。 */
+       * 🔒 §30-35-3 4: 中心＝**ピン＋ずれ**（辺つまみで掴んだ辺だけ伸ばした分）。
+       *    ずれの出どころは案件の points[key].mark.dx_m/dy_m（markOf 1か所）で、
+       *    m ⇄ 緯度経度の換算は Editor.offsetLatLng 1か所。
+       * 🔴 同一住所の時は印が1つ（本拠側の値）＝ずれも本拠側を読む（§30-24-2）。 */
       if (o.role === 'mainmark' && o.center) {
-        var mp = (o.markRole === 'lot') ? lot : home;
-        if (!mp || same(o.center, mp)) return;
-        o.center = { lat: mp.lat, lng: mp.lng };
+        var mkKey = (o.markRole === 'lot') ? 'lot' : 'home';
+        var mp = (mkKey === 'lot') ? lot : home;
+        if (!mp) return;
+        var mOff = markOf(c.points.same ? 'home' : mkKey);
+        var want = Editor.offsetLatLng
+                 ? Editor.offsetLatLng(mp, mOff.dx_m, mOff.dy_m) : mp;
+        if (same(o.center, want)) return;
+        o.center = { lat: want.lat, lng: want.lng };
         moved++;
         return;
       }
@@ -12385,6 +12750,23 @@
   function hintHide() {
     if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
     $('mapHint').classList.remove('show');
+  }
+
+  /**
+   * 🔒 §30-38-5 1: **配置図**で頂点を足せる図形（多角形・線・直線。自動の道路の縁も
+   * 含む）を選んだら、頂点の足し引きの一言を出す。
+   * 🔴 選んだ図形が**変わった時だけ**（同じ図形を選び直しても連呼しない）。
+   * 🔴 対象かどうかの判定は `Editor.canAddVertex` 1か所（editor.js）。
+   * 🔒 §30-38-5 3: 所在図では出さない。
+   */
+  function vertexHintOnSelect(sel) {
+    if (state.kind !== 'haichizu') return;
+    if (!sel || sel.length !== 1) return;
+    var o = sel[0];
+    if (!window.Editor || !Editor.canAddVertex || !Editor.canAddVertex(o)) return;
+    if (state.vertexHintFor === o.id) return;
+    state.vertexHintFor = o.id;
+    hint(VERTEX_HINT, VERTEX_HINT_MS);
   }
 
   /* §26-4-1 バグ修正: showSaveState('error') は上部バーの小さな文字だけだったので

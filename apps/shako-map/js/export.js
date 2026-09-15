@@ -1271,16 +1271,23 @@
    * 🔒 §28-3: 方位記号（北矢印）。**部品として置かれた物だけ**を描く
    * （自動で右上に描く drawNorth は §28-7 で廃止した）。
    * 形の出どころは editor.js の Editor.compassGeom＝画面と紙で同じ点列。
-   * 大きさは紙面ミリで一定（Editor.COMPASS.rMm）＝旧 drawNorth の 17S と同じ。
+   * 🔒 §30-37 2: 大きさ（紙面mm）の出どころは Editor.compassRadiusMm 1か所
+   * （基準 × その記号の倍率 markScale）＝画面のつまみで変えた大きさが紙にも出る。
+   * 🔒 §30-37 5: 線の太さ（cg.lw × S）は**倍率に連動させない**（輪郭は一定）。
    */
   var COMPASS_FALLBACK = { rMm: 2.346, lw: 2 };
   function compassConf() {
     return (global.Editor && global.Editor.COMPASS) || COMPASS_FALLBACK;
   }
+  /** この方位記号の針の半分の高さ（紙面mm）。読めない時は予備の rMm × 1 */
+  function compassRMm(o) {
+    return (global.Editor && global.Editor.compassRadiusMm)
+      ? global.Editor.compassRadiusMm(o) : compassConf().rMm;
+  }
   function drawCompass(g, o, proj, S, pxmm) {
     if (!o.at || !global.Editor || !global.Editor.compassGeom) return;
     var p = proj(o.at.lat, o.at.lng);
-    var cg = global.Editor.compassGeom(mmPx(compassConf().rMm, pxmm));
+    var cg = global.Editor.compassGeom(mmPx(compassRMm(o), pxmm));
     g.save();
     g.strokeStyle = '#111'; g.fillStyle = '#111';
     g.lineWidth = Math.max(0.6, cg.lw * S);

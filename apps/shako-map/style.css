@@ -1616,21 +1616,31 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .sz-run { flex: 1.5 1 0; }
 .sz-prev { flex: 1 1 0; }
 
-/* 作図中の操作ヒント帯（正典 §4-5） */
+/* 道具の案内帯（🔒 §30-35-1・旧「作図中の操作ヒント帯」正典 §4-5）。
+   🔒 §30-35-1 3: 文字 12px → 15px・余白 8px 20px・行間 1.45・幅は地図の 92%
+   （上限 900px）で**2行まで折り返す**（なぞり出しのような長い文が入るため）。
+   置き場所（下 12px・枠の案内がある時は .is-up で上へ）は従来どおり。 */
 .draw-badge {
   position: absolute;
   left: 50%;
   bottom: 12px;
   transform: translateX(-50%);
   z-index: 7;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
+  line-height: 1.45;
   color: #fff;
   background: rgba(26, 29, 35, .88);
-  padding: 5px 14px;
+  padding: 8px 20px;
   border-radius: 14px;
   pointer-events: none;
-  white-space: nowrap;
+  /* 🔴 `left:50%` の絶対配置は「左端から右端まで」しか広がれない（＝地図の半分）
+     ので、幅を max-content にしてから上限で切る。こうしないと 92%／900px に
+     届かないまま3行に折り返す（実測: 1280px で 656px＝3行）。 */
+  width: max-content;
+  max-width: min(92%, 900px);
+  white-space: normal;
+  text-align: center;
 }
 .draw-badge.is-up { bottom: 44px; }
 .draw-badge[hidden] { display: none; }
