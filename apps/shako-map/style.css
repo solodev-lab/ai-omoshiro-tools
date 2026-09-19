@@ -326,7 +326,8 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 
 /* 🔒 2026-08-31: 上部バーは1行。`flex-wrap` は付けない（.ed-tabs の教訓と同じ）ので、
    狭い画面では**折り返さずに縮む**ように、伸び縮みするものへ min-width: 0 を入れておく。
-   縮む順は「検索メッセージ → タイトル → 住所欄 → 案件名」。 */
+   🔒 §30-39-1: 住所欄と検索メッセージを外したので、縮む順は「.spacer → タイトル →
+   案件名」になった。 */
 .ed-title {
   font-size: 14px;
   white-space: nowrap;
@@ -336,7 +337,7 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   text-overflow: ellipsis;
 }
 
-.ed-name, .ed-no, .ed-addr {
+.ed-name, .ed-no {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -356,24 +357,14 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .save-state.dirty { color: var(--mut); }
 .save-state.error { color: var(--warn); font-weight: 700; }
 
-/* 使用の本拠の住所欄（正典 §18-2）。駐車場側は撤去した（🔒 §28-14 ①-1） */
-.ed-addr input { width: 165px; min-width: 90px; }
+/* 🔒 §30-39-1（2026-09-19 オーナー指示）: 上部バーの住所欄（.ed-addr）と
+   検索結果の一言（.search-msg）は**削除**した。住所の欄は左メニューだけ
+   （ガイダンス① .sg-find ／ 道具メニュー .sg-find）・一言は地図の上の hint()。
+   🔴 空いた所は .spacer（flex: 1 1 auto）が食う＝行の高さ・左寄せは従来どおり。 */
 /* 1行に詰めた分、部品どうしの間は少し詰める（他のバーは 10px のまま） */
 .ed-head { gap: 8px; }
-/* 欄ごとの［検索］（正典 §18-2）。欄にくっつけて「この欄を検索する」と分かるように */
+/* 上部バーのボタン（［保存］）。他のバーより少し小さく詰める */
 .ed-head .go { padding: 5px 11px; font-size: 12px; flex: 0 0 auto; }
-/* 🔒 2026-08-31: 空の時は残り幅を食う＝旧 .spacer の代わり。
-   長い説明文は省略記号で畳む（全文は title 属性で読める） */
-.search-msg {
-  font-size: 12px;
-  color: var(--mut);
-  flex: 1 1 0;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.search-msg.err { color: var(--warn); font-weight: 700; }
 
 /* 🔒 §18-al / §30-1: 誘導の入口。所在図／配置図タブのすぐ右に**2つ**並べる
    （［🧭 所在図ガイダンス］［🧭 配置図ガイダンス］）。 */

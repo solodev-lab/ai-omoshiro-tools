@@ -1079,17 +1079,30 @@
   }
 
   /**
-   * 使用の本拠の住所の欄（🔒 §28-2 → 🔒 §30-28-2 1 で**3か所**に）。
-   *   'addrHome'     … 上部バー（doSearch が読む唯一の欄）
-   *   'sgAddrHome'   … ガイダンス①
-   *   'sideAddrHome' … 道具メニュー「所在図の準備」
-   * だが**値は1つ**（どれを打っても3つが揃う＝ NUM_START_FIELDS と同じ作法）。
+   * 住所の欄（🔒 §28-2 → §30-28-2 1 → 🔒 §30-39-2 3 で**地点ごとに2か所ずつ**）。
+   *   home … 'sgAddrHome'（ガイダンス①）／'sideAddrHome'（道具メニュー）
+   *   lot  … 'sgAddrLot' （ガイダンス①）／'sideAddrLot' （道具メニュー）
+   * 🔒 §30-39-1 1: 上部バーの欄（#addrHome）は**削除**した＝住所の欄は左メニューだけ。
+   * 🔴 同じ地点の欄は**値が1つ**（どちらを打っても揃う＝ NUM_START_FIELDS と同じ作法）。
    * 🔴 欄の一覧はこの表1か所（増やす時はここだけ足す）。
    */
-  var ADDR_HOME_FIELDS = ['addrHome', 'sgAddrHome', 'sideAddrHome'];
+  var ADDR_FIELDS = {
+    home: ['sgAddrHome', 'sideAddrHome'],
+    lot:  ['sgAddrLot',  'sideAddrLot']
+  };
 
-  function syncAddrHome(v, from) {
-    ADDR_HOME_FIELDS.forEach(function (id) {
+  /**
+   * その地点の［検索］（🔒 §30-39-2 3: **4つ**＝地点ごとに2つ）。
+   * 🔴 配線（click）も止め方（searchBusy）もこの表1か所から回す。
+   */
+  var SEARCH_BTNS = {
+    home: ['sgSearchHome', 'sideSearchHome'],
+    lot:  ['sgSearchLot',  'sideSearchLot']
+  };
+
+  /** その地点の欄へ同じ値を写す（from ＝打っている本人の欄・null なら全部へ） */
+  function syncAddr(key, v, from) {
+    (ADDR_FIELDS[key] || []).forEach(function (id) {
       if (id === from) return;          // 打っている本人の欄は書き換えない
       var el = $(id);
       if (el) el.value = v;
@@ -1449,9 +1462,8 @@
        **削除**した。案件の本体が案件フォルダの .shako そのものなので、書き出す意味が無い。
        複製・受け渡しは OS のファイル操作でやる（アプリの仕事ではない）。 */
 
-    /* ［検索］（正典 §18-2）。🔒 §28-14 ①-1: 検索は**使用の本拠だけ**になったので
-       ボタンは上部バーの1つ（ガイダンス①の #sgSearchHome も同じ doSearch を呼ぶ）。 */
-    $('btnSearchHome').addEventListener('click', function () { doSearch(); });
+    /* 🔒 §30-39-1 1: 上部バーの［検索］（#btnSearchHome）は**削除**した。
+       ［検索］は左メニューの4つだけ（表 SEARCH_BTNS・配線はこの関数の下の方に1か所）。 */
 
     /* ---- 依頼文から住所を拾う（端末内処理のみ・正典 §1-6） ----
        🔴 2026-08-31 オーナー指示で上部バーの［依頼文から］ボタンを**削除**したため、
@@ -1463,15 +1475,16 @@
     });
     $('pasteRun').addEventListener('click', runPaste);
     $('pasteText').addEventListener('input', previewPaste);
-    /* 🔒 §28-14 ①-1: Enter で検索できるのは使用の本拠の欄だけ（駐車場の欄は撤去）。
-     * 🔒 §30-28-2 1: 欄は3か所（上部バー／ガイダンス①／道具メニュー）だが値は1つ。
-     *    配線もこの1か所（ADDR_HOME_FIELDS の表を回すだけ＝処理を2つ書かない）。 */
-    ADDR_HOME_FIELDS.forEach(function (id) {
-      var el = $(id);
-      if (!el) return;
-      el.addEventListener('input', function () { syncAddrHome(this.value, id); });
-      el.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') doSearch();
+    /* 🔒 §30-39-2 3: 欄は本拠2か所・駐車場2か所（同じ地点の値は1つ）。Enter でも検索。
+     *    配線はこの1か所（ADDR_FIELDS の表を回すだけ＝処理を2つ書かない）。 */
+    Object.keys(ADDR_FIELDS).forEach(function (key) {
+      ADDR_FIELDS[key].forEach(function (id) {
+        var el = $(id);
+        if (!el) return;
+        el.addEventListener('input', function () { syncAddr(key, this.value, id); });
+        el.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') doSearch(key);
+        });
       });
     });
 
@@ -2046,12 +2059,14 @@
     });
     $('sgPinHome').addEventListener('click', function () { navPinArm('home'); });
     $('sgPinLot').addEventListener('click', function () { navPinArm('lot'); });
-    /* 🔒 §28-2 / §30-28-2 1: 使用の本拠の欄は上部バー・ガイダンス①・道具メニューの
-     * 3か所だが**同じ値**（1つのデータ）。欄の配線は ADDR_HOME_FIELDS の所1か所に
-     * まとめてある。ここは［検索］のボタンだけ（中身は従来の doSearch()）。 */
-    ['sgSearchHome', 'sideSearchHome'].forEach(function (id) {
-      var b = $(id);
-      if (b) b.addEventListener('click', function () { doSearch(); });
+    /* 🔒 §30-39-2 3: ［検索］は4つ（本拠・駐車場 × ガイダンス①・道具メニュー）。
+     * 欄の配線は ADDR_FIELDS の所1か所にまとめてある。ここはボタンだけ
+     * （中身は doSearch(key)＝地図を動かして、その場所に◎を置く・§30-39-3）。 */
+    Object.keys(SEARCH_BTNS).forEach(function (key) {
+      SEARCH_BTNS[key].forEach(function (id) {
+        var b = $(id);
+        if (b) b.addEventListener('click', function () { doSearch(key); });
+      });
     });
     /* ①: 地図の選択（🔒 §28-14 ①-3）。④の〇と**同じ出入口**（sgUnderlayPick）。
      * 2つ目の値（Google 航空写真／地理院 写真）は buildUnderlayOptions が入れる。 */
@@ -4736,8 +4751,9 @@
     if (!c) return Promise.resolve(null);
     if (state.kind !== 'shozaizu') switchKind('shozaizu');
     if (!c.points.home && !c.points.lot) {
-      setSzResult('先にマーカーを置いてください（左の［使用の本拠マーカー設置］'
-        + '／［駐車場マーカー設置］を押して、地図をクリック）。');
+      /* 🔒 §30-39-4 4: 促し方を新しい作法（住所を検索すると◎が置かれる）に合わせる */
+      setSzResult('先にマーカーを置いてください（左の住所の欄に住所を入れて'
+        + '［検索］を押すと、その場所に◎が置かれます）。');
       return Promise.resolve(null);
     }
     if (!c.points.home) {
@@ -5042,7 +5058,8 @@
     var c = state.current;
     if (!c) return;
     if (!c.points.lot) {
-      hint('先に駐車場のマーカーを置いてください（左の［駐車場マーカー設置］→ 地図をクリック）', 4000);
+      // 🔒 §30-39-4 4: 促し方を新しい作法（住所を検索すると◎が置かれる）に合わせる
+      hint('先に駐車場のマーカーを置いてください（左の「駐車場住所」の欄に住所を入れて［検索］）', 4000);
       return;
     }
     $('btnAuto').disabled = true;
@@ -6932,28 +6949,45 @@
       placeSamePoint(ll);
       return;
     }
-    /* 🔒 §30-24-2（2026-09-13 オーナー指示）: 同一住所の状態で②③のどちらかを
-     * 押した時は、**共有していた印は押さなかった方の役目として残す**
-     * （押した方はこれから新しく置く）。 */
-    if (state.current.points.same) leaveSamePoint(key);
-    var cur = state.current.points[key] || {};
-    state.current.points[key] = {
+    placePointAt(key, ll);
+    hint(pinLabel(key) + 'マーカーを置きました', 2500);
+  }
+
+  /**
+   * 🔒 §30-39-3 1（2026-09-19 オーナー指示）: **緯度経度を受けて、その地点の
+   * マーカーを作る（既にあれば置き直す）**。呼ぶのは2か所:
+   *   ・［○○マーカー設置］→ 地図クリック（onNavPinPlace）
+   *   ・住所検索（doSearch）＝検索した場所に◎を置く
+   * 規則（同一住所の解除・文字・印・追従・自動保存）を2つ書かないため、
+   * 「地点を作る」処理はここ1本だけにする。
+   * 🔴 置いた後の一言（hint）は**呼ぶ側**が出す（置き方で文が違う）。
+   */
+  function placePointAt(key, ll) {
+    var c = state.current;
+    if (!c) return;
+    /* 🔒 §30-24-2（2026-09-13 オーナー指示）: 同一住所の状態でどちらかを置き直した
+     * 時は、**共有していた印は置かなかった方の役目として残す**
+     * （置いた方はこれから新しく作る）。 */
+    if (c.points.same) leaveSamePoint(key);
+    var cur = c.points[key] || {};
+    c.points[key] = {
       lat: ll.lat, lng: ll.lng,
       label: pinLabel(key),
-      /* 🔒 §28-14 ①-1: 住所の欄は使用の本拠だけになった。駐車場は欄が無いので
-         既に持っている住所（案件を開き直した時・依頼文から拾った時）をそのまま残す。 */
-      address: cur.address || (ADDR_EL[key] ? $(ADDR_EL[key]).value.trim() : ''),
+      /* 🔒 §30-39-3 3: 住所の記録は**欄の値**（本拠・駐車場とも欄がある）。
+         欄が空の時は、既に持っている住所（案件を開き直した時・依頼文から
+         拾った時）をそのまま残す。 */
+      address: addrOf(key) || cur.address || '',
       title: cur.title,
       /* 🔒 §28-14 ①-4: マーカーの形と色。置く前に①で選んでいればそれを移す */
       mark: cur.mark || state.markPick[key] || undefined
     };
-    if (!state.current.points[key].mark) delete state.current.points[key].mark;
+    if (!c.points[key].mark) delete c.points[key].mark;
     state.markPick[key] = null;
-    /* 🔒 §30-22-1 6: ②③のどちらかを置き直したら「同一住所」は外れる */
-    state.current.points.same = false;
+    /* 🔒 §30-22-1 6: どちらかを置き直したら「同一住所」は外れる */
+    c.points.same = false;
     navPinArm(null);
     /* 🔒 §30-24-3: 置き直しでも文字は必ず1つずつある
-     * （leaveSamePoint が押した方の文字を取り除いた直後の出口でもある）。
+     * （leaveSamePoint が置いた方の文字を取り除いた直後の出口でもある）。
      * 🔒 §30-25-28 1（2026-09-14 オーナー指示）: **マーカーを置いた瞬間**が
      * 文字を作る契機（白紙でも作る）。続けて applyMarkChoice が■（四角の印）を
      * 文字の直前へ作る＝置いた直後から「印＋文字」が揃い、どちらも動かせる。 */
@@ -6964,8 +6998,7 @@
     syncMarkShapeFromPolys();
     refreshPoints();
     sgRenderMarks();         // ▼は本拠・駐車場の2つへ戻る（§30-24-2）
-    Store.autosave(state.current);
-    hint(pinLabel(key) + 'マーカーを置きました', 2500);
+    Store.autosave(c);
     navRender();
   }
 
@@ -6994,7 +7027,8 @@
       c.points[key] = {
         lat: ll.lat, lng: ll.lng,
         label: pinLabel(key),
-        address: cur.address || (ADDR_EL[key] ? $(ADDR_EL[key]).value.trim() : ''),
+        // 🔒 §30-39-3 3: 住所の記録は欄の値（空なら今まで持っていた住所を残す）
+        address: addrOf(key) || cur.address || '',
         title: cur.title,
         mark: mk ? { shape: mk.shape, color: mk.color } : undefined
       };
@@ -8769,19 +8803,24 @@
   var SG_NUM = {
     /* ---- 所在図①〜⑧（🔒 §30-11 の表・「やること」だけ／say は §30-12-3 の表） ---- */
     shozaizu: [null,
-      { step: 1, sel: '#sgSearchHome', label: '住所検索',
+      /* 🔒 §30-39-4（2026-09-19 オーナー指示）: ①＝本拠の検索・②＝駐車場の検索。
+       * 検索すると◎が置かれるので、済み判定はその地点があるかで見る。
+       * 🔴 ［○○マーカー設置］は**番号なし**（§30-39-4 4）＝住所で見つからない時・
+       *    置き直したい時の手置き。案内数字は［検索］に付く。 */
+      { step: 1, sel: '#sgSearchHome', label: '使用の本拠住所を検索',
         /* 🔒 §30-25-23 4: 最初の案内に「いつでも選択に戻れる」の一言を足す */
-        say: '使用の本拠の住所を入力し、／［検索］を押してください'
-           + '／／描いた物を動かしたい時は、上の［選択］をいつでも押せます' },
+        say: '使用の本拠の住所を入力し、／［検索］を押してください。'
+           + '／その場所に使用の本拠の◎マーカーが置かれます'
+           + '／／住所で見つからない時は［使用の本拠マーカー設置］を押してから地図をクリック'
+           + '／／描いた物を動かしたい時は、上の［選択］をいつでも押せます',
+        done: function () { return !!(state.current && state.current.points.home); } },
       /* 🔒 §30-13-1: ②④⑤⑦⑧の指示文はこの表で差し替え済み（§30-12-3 の表の上書き）。
        * 🔒 §30-17-1: さらに改行の印「／」・行間つき改行の印「／／」を入れた（表が正）。 */
-      { step: 1, sel: '#sgPinHome', label: '使用の本拠マーカー設置',
-        say: '［使用の本拠マーカー設置］を押してから、／地図の使用の本拠の場所を'
-           + 'クリックしてください。／／地図をドラッグで動かすか、マウスホイールで'
-           + 'ズームレベルを変更すると／設置しやすくなります',
-        done: function () { return !!(state.current && state.current.points.home); } },
-      { step: 1, sel: '#sgPinLot', label: '駐車場マーカー設置',
-        say: '［駐車場マーカー設置］を押してから、／地図の駐車場の場所をクリックしてください',
+      { step: 1, sel: '#sgSearchLot', label: '駐車場住所を検索',
+        say: '駐車場の住所を入力し、／［検索］を押してください。'
+           + '／その場所に駐車場の◎マーカーが置かれます'
+           + '／／住所で見つからない時や置き直したい時は、'
+           + '／［駐車場マーカー設置］を押してから地図をクリック',
         done: function () { return !!(state.current && state.current.points.lot); } },
       { step: 1, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
         say: 'マーカーの設置場所はドラッグで修正できます。／／よければ［次へ］を押してください',
@@ -9882,8 +9921,9 @@
       var miss = [];
       if (!(c && c.points.home)) miss.push('使用の本拠');
       if (!(c && c.points.lot)) miss.push('駐車場');
+      /* 🔒 §30-39-4 4: 促し方を新しい作法（住所を検索すると◎が置かれる）に合わせる */
       return miss.join('と') + 'のマーカーがまだ置かれていません'
-        + '（ボタンを押してから地図をクリックしてください）';
+        + '（住所を入れて［検索］を押すと、その場所に◎が置かれます）';
     }
     if (n === 2 || n === 5) {
       /* 🔒 §28-3 / §29-1 ⑤: どちらも「この枠の中が紙に出る」を決める段 */
@@ -10525,13 +10565,12 @@
     $('caseNo').value = c.caseNo || '';      // 番号なしの旧案件は空欄（手で入れられる・§19-1）
     /* 🔴 2026-08-31: エディタの ☑完了 は削除（done は案件一覧の行トグルで指定する）。
        c.done のデータ自体は今までどおり読み書きされる＝旧案件・JSON 往復は不変 */
-    $('addrHome').value = (c.points.home && c.points.home.address) || '';
-    /* 🔒 §28-2 / §30-28-2 1: ガイダンス①・道具メニューの欄も上部バーと同じ値
-     * （1つのデータ・写す先は ADDR_HOME_FIELDS の表1か所）。 */
-    syncAddrHome($('addrHome').value, 'addrHome');
-    /* 🔒 §28-14 ①-1: 駐車場の住所欄は撤去したので復元先も無い
-       （c.points.lot.address のデータ自体は今までどおり保存・検索に使う）。 */
-    searchMsg('');
+    /* 🔒 §30-39-2 3 / §30-39-3 3: 案件を開いたら、本拠・駐車場の住所を欄へ戻す
+     * （地点ごとに2か所＝ガイダンス①／道具メニュー・写す先は表 ADDR_FIELDS 1か所）。
+     * 🔴 上部バーの欄は §30-39-1 1 で削除したので、戻す先は左メニューだけ。 */
+    Object.keys(ADDR_FIELDS).forEach(function (key) {
+      syncAddr(key, (c.points[key] && c.points[key].address) || '', null);
+    });
     // 🔒 §28-14 ①-4: 置く前のマーカーの種類の控えは案件をまたいで残さない
     state.markPick = { home: null, lot: null };
     // 🔒 §30-38-5 1: 「頂点の足し引き」の一言も案件をまたいで残さない
@@ -11801,10 +11840,17 @@
 
   /* ---------- 住所検索 ---------- */
 
-  /* 🔒 §28-14 ①-1（2026-09-07 オーナー指示）: **住所の欄は使用の本拠だけ**。
-     駐車場の欄（#addrLot）は撤去したので、この表も 'home' だけになった。
-     🔴 points.lot.address は従来どおり（既に持っていれば残る）。 */
-  var ADDR_EL = { home: 'addrHome' };
+  /* 🔒 §30-39-2 3（2026-09-19 オーナー指示）: 住所の欄は**本拠と駐車場の2つ**に戻した
+     （🔴 §28-14 ①-1「住所の欄は使用の本拠だけ」はこの指示で改めた）。
+     🔴 同じ地点の欄は表 ADDR_FIELDS で値が揃っているので、読むのはどれでも同じ
+        ＝ここは「読む時の代表の欄」を1か所に決めておくだけ。 */
+  var ADDR_EL = { home: 'sgAddrHome', lot: 'sgAddrLot' };
+
+  /** その地点の住所の欄の値（🔒 §30-39-3 3: 住所の記録はこの値） */
+  function addrOf(key) {
+    var el = ADDR_EL[key] ? $(ADDR_EL[key]) : null;
+    return el ? el.value.trim() : '';
+  }
   /* 🔒 2026-08-31: 上部バーの項目名を「使用の本拠住所」に変えたので、
      メッセージの呼び名も揃える（§25-1 の「図の上の呼び名は使用の本拠」と同じ語）。
      🔴 ここは**表示用の辞書**で、識別には使っていない（§26-2 注意②） */
@@ -11812,25 +11858,26 @@
   var SEARCH_ZOOM = 17;                       // 検索後に寄る倍率（正典 §18-4）
 
   /**
-   * 住所検索（正典 §18-2〜4）。相手は**使用の本拠だけ**（🔒 §28-14 ①-1）。
+   * 住所検索（正典 §18-2〜4）。相手は 'home'（使用の本拠）／'lot'（駐車場）。
    *
-   * 🔒 2026-09-06 オーナー指示: **検索でマーカーは置かない**。
-   *   検索の仕事は「その住所の場所へ地図を動かす」ことだけで、
-   *   マーカーは必ず利用者が［○○マーカー設置］→ 地図クリックで置く。
-   *   理由＝住所検索の結果は番地までしか当たらず（地理院ジオコーダの精度）、
-   *   勝手に置かれた点を「合っている」と思って進んでしまうのが一番危ない。
-   *   置く場所は本人が地図を見て決める。
-   *   🔴 これに伴い setPointFrom（検索結果を points へ入れる関数）は廃止した。
-   *
-   * 🔒 §28-14 ①-1: 駐車場の欄が無くなったので、**相互補完（使用の本拠 → 駐車場）も
-   *   廃止**した（入れる先が無い）。駐車場は地図を見て置く。
+   * 🔒 §30-39-3（2026-09-19 オーナー指示）: **検索したら、その場所に◎を置く**。
+   *   住所を検索 → 地図をその場所へ（ZL17・§18-4）→ その地点のマーカーを置く。
+   *   既に置いてあれば置き直す（検索結果へ動く）。
+   *   🔴 置き方は［○○マーカー設置］→ 地図クリックと**同じ関数**（placePointAt）
+   *      ＝同一住所の解除・文字・印・追従・自動保存の規則が同じ。
+   *   🔴 §18-ap／§28-14 ①-1／2026-09-06 の「検索でマーカーは置かない」は
+   *      この指示で**改めた**。ジオコーダの結果は番地までなので、置いた◎は
+   *      ドラッグで直せることを一言で促す（§30-39-3 2）。
    */
-  function doSearch() {
+  function doSearch(key) {
     if (!state.current) return;
-    var q = $('addrHome').value.trim();
+    // 🔴 分岐は key で（表示文字では分岐しない）
+    key = (key === 'lot') ? 'lot' : 'home';
+    var el = $(ADDR_EL[key]);
+    var q = addrOf(key);
     if (!q) {
-      searchMsg(ADDR_JA.home + 'の住所を入力してください', true);
-      $('addrHome').focus();
+      searchMsg(ADDR_JA[key] + 'の住所を入力してください', true);
+      if (el) el.focus();
       return;
     }
 
@@ -11839,13 +11886,16 @@
 
     GSI.geocode(q).then(function (res) {
       if (!res || !res.length) {
-        searchMsg(ADDR_JA.home + 'の住所が見つかりません', true);
+        searchMsg(ADDR_JA[key] + 'の住所が見つかりません', true);
         return;
       }
-      // 見つかった場所へ寄るだけ（ZL17・§18-4）。マーカーは置かない
-      state.map.setView({ lat: res[0].lat, lng: res[0].lng }, SEARCH_ZOOM);
-      searchMsg('地図をその場所へ動かしました。［' + ADDR_JA.home
-        + 'マーカー設置］を押して、地図をクリックしてください。');
+      // 見つかった場所へ寄る（ZL17・§18-4）
+      var ll = { lat: res[0].lat, lng: res[0].lng };
+      state.map.setView(ll, SEARCH_ZOOM);
+      // 🔒 §30-39-3 1: その場所にマーカーを置く（手で置く時とまったく同じ関数）
+      placePointAt(key, ll);
+      searchMsg(ADDR_JA[key] + 'マーカーを置きました。位置がずれていれば'
+        + 'マーカーをドラッグで直してください');
       persistSheetState();      // 中で Store.autosave も呼ぶ
       /* 誘導①の表示（状態の一言）を引き直す。
          navRender() は誘導が閉じていれば何もしない（先頭で早期 return） */
@@ -11859,19 +11909,16 @@
     });
   }
 
-  /* 🔒 §28-14 ①-1: 駐車場の［検索］（#btnSearch）は撤去したので、
-     止めるのは使用の本拠の2つ（上部バー／ガイダンス①）だけ。 */
+  /* 🔒 §30-39-2 3: 止めるのは［検索］**4つ全部**（本拠・駐車場 × ガイダンス①・
+     道具メニュー）。どの欄から検索しても、終わるまで全部を止める。 */
   function searchBusy(on) {
-    /* 🔒 §28-2 / §30-28-2 1: ［検索］は3か所（上部バー／ガイダンス①／道具メニュー）
-     * だが止め方は1つ。 */
-    ['btnSearchHome', 'sgSearchHome', 'sideSearchHome'].forEach(function (id) {
-      var b = $(id);
-      if (b) b.disabled = on;
+    Object.keys(SEARCH_BTNS).forEach(function (key) {
+      SEARCH_BTNS[key].forEach(function (id) {
+        var b = $(id);
+        if (b) b.disabled = on;
+      });
     });
   }
-
-  /* 🔴 setPointFrom（検索結果を points へ入れる関数）は 2026-09-06 に**削除**した。
-     マーカーを作るのは onNavPinPlace（［○○マーカー設置］→ 地図クリック）だけ。 */
 
   /* ---------- 依頼文からの住所抽出（正典 §9 Step 6） ---------- */
 
@@ -11902,17 +11949,10 @@
       searchMsg('住所を拾えませんでした。手で入力してください。', true);
       return;
     }
-    /* 🔒 §30-28-2 1: 住所の欄は3か所だが値は1つ（写す先は ADDR_HOME_FIELDS 1か所） */
-    if (r.home) {
-      $('addrHome').value = r.home.address;
-      syncAddrHome(r.home.address, 'addrHome');
-    }
-    /* 🔒 §28-14 ①-1: 駐車場の住所欄は無くなった。拾えた住所は、**既にマーカーが
-       置いてある時だけ**その地点の住所として控える（案件の検索・§19-2 で効く）。
-       置いていない時は何もしない（勝手に地点は作らない・§18-ap）。 */
-    if (r.lot && state.current && state.current.points.lot) {
-      state.current.points.lot.address = r.lot.address;
-    }
+    /* 🔒 §30-39-3 5: 拾えた住所は**本拠・駐車場の両方の欄**へ入れる
+       （写す先は表 ADDR_FIELDS 1か所）。地点は作らない＝置くのは［検索］か手置き。 */
+    if (r.home) syncAddr('home', r.home.address, null);
+    if (r.lot) syncAddr('lot', r.lot.address, null);
     // 区画番号が書いてあれば連番の開始に使う（正典 §4-7）
     if (r.extras.stallNo && state.editor) {
       var n = parseInt(r.extras.stallNo, 10);
@@ -11931,20 +11971,14 @@
   }
 
   /**
-   * 検索結果の一言。出し先は上部バーの #searchMsg（🔒 §28-14 ①-1 で
-   * 駐車場検索が無くなり、#navSearchMsg も撤去したので1か所になった）。
-   * 🔴 上部バーは1行に詰めたので長い文は省略記号で切れる → 全文は title 属性で読める。
-   *    ガイダンス①で検索している人は上部バーを見ていないので、地図の上にも同じ文を出す。
+   * 検索結果の一言。🔒 §30-39-1 2（2026-09-19 オーナー指示）: 上部バーの欄
+   * （#searchMsg）を削除したので、出し先は**地図の上の hint() だけ**
+   * ＝ここは hint へ流すだけの1本（DOM は触らない）。
+   * 🔴 呼び方は従来どおり（s／isErr／quiet）。
+   *    quiet ＝「検索中…」のような、すぐ次の文で上書きされる途中経過＝出さない。
+   * 🔴 判定は**引数**で渡す（文面での判定は増やさない＝§26-2 注意②）
    */
   function searchMsg(s, isErr, quiet) {
-    var el = $('searchMsg');
-    el.textContent = s;
-    el.title = s || '';
-    el.className = 'search-msg' + (isErr ? ' err' : '');
-    /* 🔴 上部バーが1行になった分、この欄は狭い画面（1280px）で 70px ほどしか無い。
-       文が切れても読めるように、地図の上の一言にも同じ文を出す。
-       quiet ＝「検索中…」のような、すぐ次の文で上書きされる途中経過。
-       🔴 判定は**引数**で渡す（文面での判定は増やさない＝§26-2 注意②） */
     if (s && !quiet) hint(s, isErr ? 5000 : 3500);
   }
 
