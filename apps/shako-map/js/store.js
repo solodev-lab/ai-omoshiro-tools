@@ -70,13 +70,20 @@
   var NAME_LEVEL_KEYS = ['nameCrossLevel', 'nameShopLevel', 'nameOfficeLevel',
                          'nameBusLevel', 'nameRoadLevel', 'namePoiLevel',
                          'nameFacilityLevel', 'nameBuildingLevel'];
+  /* 🔒 §30-40-2（2026-09-21 オーナー指示）: 名前の8分類だけが持てる段「自動」。
+   * 🔴 ここは**段の数字（保存してよい値）**の話だけ。自動が何をするか（枠の中の
+   *    候補の数で段を決める・その境目）は shozaizu.js の NAME_AUTO が唯一の出どころ。
+   *    store.js は shozaizu.js より先に読み込まれるので、数字だけをここに持つ。 */
+  var NAME_LEVEL_AUTO = 0;
 
   /* 🔒 §22-ao-②（2026-09-04 オーナー指示）: 所在図の設定盤・標準値の定義を1か所に統合。
    * 🔴 以前は newCase の既定・migrate の欠損補完・app.js の SZ_STD の3か所に
    *    同じ値がバラバラに書かれていた。ここが**唯一の出どころ**で、他の2か所は
    *    これを読むだけにする（app.js は Store.SZ_STD をそのまま指す）。
-   * 値は §22-ao の表のとおり（主役の印＝◎／建物なし／お店・会社名は主役の周りだけ／
-   * 道路名は多め／他の目印はなし／残りは標準）。 */
+   * 🔒 §30-40-1（2026-09-21 オーナー指示）で値を入れ替えた（旧 §22-ao の表は
+   * 「建物なし／お店・会社名は主役の周りだけ／他の目印はなし」だった）。
+   * いまの表は下の各行のとおり（目標物＝全部／建物＝標準／道路＝多め／
+   * 名前の8分類＝自動）。 */
   /* 🔒 §28-14 ①-4（2026-09-07）: **markStyle はこの表から外した**。
    * 主役の印の形（と色）はガイダンス①で地点ごとに選ぶ物になり
    * （points[key].mark = {shape,color}）、所在図の設定盤の項目ではなくなったため。
@@ -92,16 +99,19 @@
      *    既定は**近く（1）**。新しい案件・欠損の補完・［標準に戻す］が全部この値を読む
      *    （既存の案件に保存された値は migrate がそのまま通す）。 */
     nameGap: 1,
-    lmLevel: 3, bldgLevel: 1, roadLevel: 3,
-    nameCrossLevel: 3, nameShopLevel: 2, nameOfficeLevel: 2,
-    nameBusLevel: 3, nameRoadLevel: 4, namePoiLevel: 1,
-    /* 🔒 §30-21-4 3 → §30-21-5 1（2026-09-13 Fable 裁定・実測で改めた）: 施設・公園＝
-     * **多め（4）**／建物名＝**多め（4）**。標準（件数3・半径0.45）では岩上町の
-     * 宮塚公園・団地・格2の棟名（広い枠で0件になる）が切られていた
-     * （段の意味＝§22-aq は変えず、既定の段だけ上げる。棟名は「あると便利」＝オーナー）。
-     * 旧案件にこの2つは無いので migrate がこの値で補う（＝開いただけで
-     * 図が変わるが、新しい分類が既定で出るのは正典の意図）。 */
-    nameFacilityLevel: 4, nameBuildingLevel: 4
+    /* 🔒 §30-40-1（2026-09-21 オーナー指示）: 目標物＝全部（5）／建物＝標準（3）／
+     * 道路＝多め（4）。ZL によっては名前も目標物も出ない枠があり、
+     * 「たくさん出た方が良い」＝既定を上げる（段の意味そのものは変えない）。 */
+    lmLevel: 5, bldgLevel: 3, roadLevel: 4,
+    /* 🔒 §30-40-1: 名前の8分類は全部**「自動」（NAME_LEVEL_AUTO）**で始める。
+     * 自動＝生成の時に「枠の中の候補の数」で段を決める（決め方と件数の
+     * 境目は shozaizu.js の NAME_AUTO が唯一の出どころ）。
+     * 🔴 旧 3/2/2/3/4/1/4/4 は、既に保存された案件にはそのまま残る
+     *    （migrate は欠けている物だけ補う＝開いただけで図が変わらない）。 */
+    nameCrossLevel: NAME_LEVEL_AUTO, nameShopLevel: NAME_LEVEL_AUTO,
+    nameOfficeLevel: NAME_LEVEL_AUTO, nameBusLevel: NAME_LEVEL_AUTO,
+    nameRoadLevel: NAME_LEVEL_AUTO, namePoiLevel: NAME_LEVEL_AUTO,
+    nameFacilityLevel: NAME_LEVEL_AUTO, nameBuildingLevel: NAME_LEVEL_AUTO
   };
   /* 印の形の既定（🔒 §22-ao ＝◎）。points[key].mark を持たない案件は今もこれで描く。 */
   var MARK_STYLE_STD = 'circle';
@@ -1086,8 +1096,11 @@
     /* 🔒 2026-09-03（後半）: 名称の自動描画6分類。
        🔴 §22-ao-②: 値が無い時だけ SZ_STD の該当キー（項目ごとに段が違う）で補う。
           既に値がある既存案件はそのまま（開いただけで図が変わらない原則は不変）。 */
+    /* 🔒 §30-40-2 4: 名前の8分類**だけ**は段 NAME_LEVEL_AUTO（自動）も正しい値＝
+     * 下限を 0 にする（目標物・建物・道路は上のとおり 1〜5 のまま）。
+     * 🔴 既に値がある案件はその段のまま（数字の段を選んであれば自動に変えない）。 */
     NAME_LEVEL_KEYS.forEach(function (k) {
-      if (!(Number(c[k]) >= 1 && Number(c[k]) <= 5)) c[k] = SZ_STD[k];
+      if (!(Number(c[k]) >= NAME_LEVEL_AUTO && Number(c[k]) <= 5)) c[k] = SZ_STD[k];
       else c[k] = Math.round(Number(c[k]));
     });
     /* 🔒 §28-6 ⑤（2026-09-06 オーナー承認）: ガイダンスの段。

@@ -1591,6 +1591,14 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 }
 .gr5-in:focus-visible + .gr5-lb { outline: 2px solid var(--acc); outline-offset: -2px; }
 .gr5:hover { border-color: var(--acc); }
+/* 🔒 §30-40-2 1（2026-09-21）: 名前の8分類だけ区画が**6つ**（左端が「自動」）。
+   区画の幅は flex なので6等分になるが、置き場所によっては2文字が折り返して
+   （行は高さ 24px で切ってある）読めなくなる。折り返しは必ず止める。
+   🔴 実測: ガイダンス③の左面（幅 340px）では1区画 38px で 11px の2文字が余裕で入る。
+      右の浮き窓（#szSetHome・幅 236px）だけ1区画 20px しかないので、
+      そこだけ文字を詰める（広い置き場は今までと同じ大きさのまま）。 */
+.gr6 .gr5-lb { white-space: nowrap; }
+#szSetHome .gr6 .gr5-lb { font-size: 10px; letter-spacing: -0.2px; }
 
 /* 🔒 §22-ak-3（裁定）③: 生成件数は残すが**1行に圧縮**する。
    後半の6項目（+180px）を足すと 1280×800 で溢れるため、

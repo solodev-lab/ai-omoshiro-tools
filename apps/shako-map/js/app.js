@@ -1149,7 +1149,15 @@
    *    特に bldgLevel は旧案件に 1（なし）が保存済みなので、新規既定が3でも1のまま。
    * 🔴 段は 1〜5 の**数字**で扱う。表示文字（「標準」等）で識別しない（§26-2 注意②）。 */
   var GRADE_STD = 3;                        // 「標準」の段（全項目共通）
-  var GRADE_JA = ['', 'なし', '主役の周りだけ', '標準', '多め', '全部'];
+  /* 🔒 §30-40-2 4: 添字 0 ＝「自動」（名前の8分類だけが持てる段）。
+   * 目標物・建物・道路の行は 1〜5 のままなので 0 を引くことはない。 */
+  var GRADE_JA = ['自動', 'なし', '主役の周りだけ', '標準', '多め', '全部'];
+  /* 🔒 §30-40-2: 「自動」の段の数字と決め方（境目の件数・決まる段）は
+   * shozaizu.js の NAME_AUTO が唯一の出どころ。画面の段も説明の文言も
+   * **この実値から**組む（値を文に写さない）。
+   * 🔴 読めない時（shozaizu.js が無い）の保険だけ {} にしておく。 */
+  var NAME_AUTO = (window.Shozaizu && Shozaizu.NAME_AUTO) || {};
+  var NAME_AUTO_LV = Number(NAME_AUTO.level) || 0;
 
   /* 5段階の項目。key＝案件データの項目名／names＝画面のラジオの name。
    * 🔴 names を配列で持つのは「同じ値の部品が2か所に出る」時のため（§18-r-4）。
@@ -1243,14 +1251,31 @@
    *    実値（1/3/8）とズレていた。行ごとに違う文言を書かない（表示の文言で分岐しない・
    *    注意②と同じ考え方）＝どの行も段の数字だけを見てこの1関数で組み立てる。
    */
-  var NAME_LEVEL_WORD = ['', 'なし', '少なめ', '標準', '多め', '全部'];
+  /* 🔒 §30-40-2 4: 添字 0 ＝「自動」（名前の8分類だけの6つ目の段） */
+  var NAME_LEVEL_WORD = ['自動', 'なし', '少なめ', '標準', '多め', '全部'];
   function nameLevelTitle(level) {
     var n = Number(level);
     var word = NAME_LEVEL_WORD[n] || '';
+    /* 🔒 §30-40-2 4: 「自動」の説明も**実値から組む**（NAME_AUTO の値を文に写さない）。
+     * ＝「枠の中の候補が allMax 件以下の分類は allLevel の段・
+     *    それより多い分類は elseLevel の段」。 */
+    if (n === NAME_AUTO_LV) {
+      return word + '（枠に' + NAME_AUTO.allMax + '件以下の分類は'
+           + (NAME_LEVEL_WORD[NAME_AUTO.allLevel] || '')
+           + '・それより多い分類は'
+           + (NAME_LEVEL_WORD[NAME_AUTO.elseLevel] || '') + '）';
+    }
     var cfg = window.Shozaizu && Shozaizu.NAME_LEVELS && Shozaizu.NAME_LEVELS[n];
     if (!cfg || !cfg.count) return word;                 // なし（0件）はそのまま
     if (cfg.count === Infinity) return word + '（上限なし）';
     return word + '（' + cfg.count + '件' + (n === 2 ? '・近く' : '') + '）';
+  }
+
+  /** ガイダンス③の案内文に足す「自動」の一言（🔒 §30-40-2 6・文言も実値から組む） */
+  function nameAutoNote() {
+    return '名前の分類の「自動」は、枠に' + NAME_AUTO.allMax + '件以下の分類を'
+         + (NAME_LEVEL_WORD[NAME_AUTO.allLevel] || '') + '出し、多い分類は'
+         + (NAME_LEVEL_WORD[NAME_AUTO.elseLevel] || '') + 'の量にします。';
   }
 
   /** 設定盤・名称8分類の全行・全段に nameLevelTitle の title を付け直す（🔒 §30-21-5 4）。
@@ -1260,7 +1285,8 @@
       var g = SZ_GRADES[k];
       if (!g.osm) return;
       g.names.forEach(function (name) {
-        for (var lv = 1; lv <= 5; lv++) {
+        // 🔒 §30-40-2 1: 名前の行は「自動」（gradeMin＝0）から
+        for (var lv = gradeMin(k); lv <= 5; lv++) {
           var input = document.querySelector('input[name="' + name + '"][value="' + lv + '"]');
           if (!input) continue;
           var t = nameLevelTitle(lv);
@@ -1283,22 +1309,41 @@
    * 従来の自動間引きの上限 MAX_ROADS 2200 より少し上に置いてある。 */
   var ROAD_CONFIRM_N = 2500;
 
+  /**
+   * その行で選べる段の下限（🔒 §30-40-2 1）。
+   * 名前の8分類（＝ osm を持つ行）だけが6つ目の「自動」（NAME_AUTO_LV）を持つ。
+   * 目標物・建物・道路は従来どおり 1〜5。
+   * 🔴 判定は行の定義（osm の有無）で行う。表示文字では分岐しない（§26-2 注意②）。
+   */
+  function gradeMin(which) {
+    var g = SZ_GRADES[which];
+    return (g && g.osm) ? NAME_AUTO_LV : 1;
+  }
+
+  /** ラジオ等の値を、その行で選べる段にそろえる（🔒 §30-40-2 1: 0 を捨てない） */
+  function gradeClamp(which, v) {
+    var n = Math.round(Number(v));
+    if (!isFinite(n)) return GRADE_STD;
+    return Math.max(gradeMin(which), Math.min(5, n));
+  }
+
   /** いま選ばれている段（案件があれば**案件の値が真実**。案件が無い時だけ画面のラジオ） */
   function gradeValue(which) {
-    var g = SZ_GRADES[which], c = state.current, lv;
+    var g = SZ_GRADES[which], c = state.current, lv, min = gradeMin(which);
     if (c) {
       lv = Number(c[g.key]);
-      if (lv >= 1 && lv <= 5) return Math.round(lv);
+      if (lv >= min && lv <= 5) return Math.round(lv);
     }
     var v = document.querySelector('input[name="' + g.names[0] + '"]:checked');
     lv = v ? Number(v.value) : GRADE_STD;
-    return (lv >= 1 && lv <= 5) ? Math.round(lv) : GRADE_STD;
+    return (lv >= min && lv <= 5) ? Math.round(lv) : GRADE_STD;
   }
 
   /** 画面のラジオを段に合わせる（同じ項目が2か所にあれば両方そろえる） */
   function syncGradePick(which, lv) {
     var g = SZ_GRADES[which], n = Number(lv);
-    if (!(n >= 1 && n <= 5)) n = GRADE_STD;
+    // 🔒 §30-40-2 4: 名前の行は「自動」（0）も合わせる（gradeMin が下限）
+    if (!(n >= gradeMin(which) && n <= 5)) n = GRADE_STD;
     g.names.forEach(function (name) {
       var el = document.querySelector('input[name="' + name + '"][value="' + n + '"]');
       if (el) el.checked = true;
@@ -2216,7 +2261,9 @@
       document.querySelectorAll(sel).forEach(function (r) {
         r.addEventListener('change', function () {
           if (!this.checked) return;
-          var lv = Math.max(1, Math.min(5, Math.round(Number(this.value) || GRADE_STD)));
+          /* 🔒 §30-40-2 1: 段の丸めは gradeClamp 1か所（名前の行だけ「自動」＝0 を
+           * 通す。旧コードの `Number(v) || GRADE_STD` は 0 を標準に化けさせる）。 */
+          var lv = gradeClamp(which, this.value);
           if (state.current) state.current[g.key] = lv;
           syncGradePick(which, lv);            // 2か所あれば揃える（目標物）
           szSettingChanged(g.ja);
@@ -5023,6 +5070,26 @@
                }).map(function (k) {
                  return SZ_GRADES[k].ja + ' ' + s.names[SZ_GRADES[k].osm];
                }).join('・') + '）。';
+      }
+      /* 🔒 §30-40-2 5: 「自動」を選んだ分類が、どの段に決まったかを添える
+       * （例「自動: 交差点名・バス停＝全部／お店・道路名＝標準」）。
+       * 🔴 判定は stat の段の数字（s.nameAuto）。表示文字では分岐しない（注意②）。
+       * 🔴 分類名は SZ_GRADES[].ja・段の名前は GRADE_JA＝どちらも1か所から引く。 */
+      if (s.nameAuto) {
+        var byLv = Object.create(null);           // 段 → その段に決まった分類名
+        Object.keys(SZ_GRADES).forEach(function (k) {
+          var g = SZ_GRADES[k];
+          if (!g.osm || s.nameAuto[g.osm] === undefined) return;
+          var lvA = s.nameAuto[g.osm];
+          (byLv[lvA] = byLv[lvA] || []).push(g.ja);
+        });
+        // 上の段（＝たくさん出た分類）から並べる
+        var lvKeys = Object.keys(byLv).sort(function (a, b) { return Number(b) - Number(a); });
+        if (lvKeys.length) {
+          msg += ' 自動: ' + lvKeys.map(function (lvk) {
+            return byLv[lvk].join('・') + '＝' + GRADE_JA[Number(lvk)];
+          }).join('／') + '。';
+        }
       }
       /* 🔴 fail-soft（§23-6）: OSM が取れなくても作図は止めない。
        * 黙って名称が消えると「効いていない」と誤解されるので必ず言葉にする。
@@ -8479,6 +8546,8 @@
     /* 🔒 §28-4 の案内文（案）をそのまま */
     3: 'ここでは、まとめて描く文字の量を変えられます。'
      + '各項目を変えるとすぐに描き直されるので、ちょうどよい設定にしてください。'
+     /* 🔒 §30-40-2 6: 「自動」の一言。件数も段の名前も実値から組む（nameAutoNote） */
+     + nameAutoNote()
      + 'まずは描画の量を決めてから、1つ1つの手直し（消す・動かす・文字を足す）は'
      + '次の④で行います。',
     /* 🔒 §28-5 B / §28-8 Step 3: 正典の文言そのまま（Step 2 は仮の文で保留していた） */

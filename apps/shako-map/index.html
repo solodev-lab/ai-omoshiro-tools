@@ -647,11 +647,12 @@
                 <label for="szLmLv1" class="gr5-lb" title="なし（目標物を入れない）">なし</label>
                 <input type="radio" name="szLmLv" id="szLmLv2" value="2" class="gr5-in">
                 <label for="szLmLv2" class="gr5-lb" title="主役の周りだけ（2件）">周り</label>
-                <input type="radio" name="szLmLv" id="szLmLv3" value="3" class="gr5-in" checked>
+                <input type="radio" name="szLmLv" id="szLmLv3" value="3" class="gr5-in">
                 <label for="szLmLv3" class="gr5-lb" title="標準（4件）">標準</label>
                 <input type="radio" name="szLmLv" id="szLmLv4" value="4" class="gr5-in">
                 <label for="szLmLv4" class="gr5-lb" title="多め（12件）">多め</label>
-                <input type="radio" name="szLmLv" id="szLmLv5" value="5" class="gr5-in">
+                <!-- 🔒 §30-40-1: 既定は「全部」（Store.SZ_STD.lmLevel と同じ） -->
+                <input type="radio" name="szLmLv" id="szLmLv5" value="5" class="gr5-in" checked>
                 <label for="szLmLv5" class="gr5-lb" title="全部（件数の制限なし）">全部</label>
               </span>
             </div>
@@ -681,9 +682,10 @@
                 <label for="szRoadLv1" class="gr5-lb" title="なし（道路を描かない）">なし</label>
                 <input type="radio" name="szRoadLv" id="szRoadLv2" value="2" class="gr5-in">
                 <label for="szRoadLv2" class="gr5-lb" title="主役の周りだけ（主役の近くを通る道だけ・等級も上げる）">周り</label>
-                <input type="radio" name="szRoadLv" id="szRoadLv3" value="3" class="gr5-in" checked>
+                <input type="radio" name="szRoadLv" id="szRoadLv3" value="3" class="gr5-in">
                 <label for="szRoadLv3" class="gr5-lb" title="標準（従来どおりの自動間引き）">標準</label>
-                <input type="radio" name="szRoadLv" id="szRoadLv4" value="4" class="gr5-in">
+                <!-- 🔒 §30-40-1: 既定は「多め」（Store.SZ_STD.roadLevel と同じ） -->
+                <input type="radio" name="szRoadLv" id="szRoadLv4" value="4" class="gr5-in" checked>
                 <label for="szRoadLv4" class="gr5-lb" title="多め（間引きの等級を1段下げる）">多め</label>
                 <input type="radio" name="szRoadLv" id="szRoadLv5" value="5" class="gr5-in">
                 <label for="szRoadLv5" class="gr5-lb" title="全部（間引きなし）">全部</label>
@@ -714,13 +716,15 @@
             <div class="sz-row">
               <span class="sz-k" title="印から名前の文字までの距離">名前の位置</span>
               <span class="gr5" role="group" aria-label="名前の位置">
-                <input type="radio" name="szNameGap" id="szNameGap1" value="1" class="gr5-in">
+                <!-- 🔒 §30-31-2 / §30-40-1: 既定は「近く」（Store.SZ_STD.nameGap と同じ。
+                     見た目の初期値が案件の既定と食い違わないようにここも合わせる） -->
+                <input type="radio" name="szNameGap" id="szNameGap1" value="1" class="gr5-in" checked>
                 <label for="szNameGap1" class="gr5-lb"
                   title="近く（印のすぐ隣に置く。引き出し線は出ない）">近く</label>
                 <input type="radio" name="szNameGap" id="szNameGap2" value="2" class="gr5-in">
                 <label for="szNameGap2" class="gr5-lb"
                   title="標準（近くと離すのちょうど中間）">標準</label>
-                <input type="radio" name="szNameGap" id="szNameGap3" value="3" class="gr5-in" checked>
+                <input type="radio" name="szNameGap" id="szNameGap3" value="3" class="gr5-in">
                 <label for="szNameGap3" class="gr5-lb"
                   title="離す（空いている所へ遠くに置く。引き出し線でつなぐ）">離す</label>
               </span>
@@ -736,12 +740,19 @@
                     app.js szSetHost が nameLevelTitle(level) で実値から付け直す。 -->
             <div class="sz-row">
               <span class="sz-k" title="交差点名（信号機のある交差点の名前。印は信号機のアイコン）">交差点名</span>
-              <span class="gr5" role="group" aria-label="交差点名">
+              <span class="gr5 gr6" role="group" aria-label="交差点名">
+                <!-- 🔒 §30-40-2（2026-09-21 オーナー指示）: 名前の8分類**だけ**の
+                     6つ目の選択「自動」（value="0"）。左端・既定。
+                     意味（枠の中の候補の数で段を決める）は shozaizu.js の NAME_AUTO が
+                     唯一の出どころ。title は app.js の nameLevelTitle が実値から付ける。
+                     目標物・建物・道路の行は5段のまま（自動は無い）。 -->
+                <input type="radio" name="szNmCross" id="szNmCross0" value="0" class="gr5-in" checked>
+                <label for="szNmCross0" class="gr5-lb">自動</label>
                 <input type="radio" name="szNmCross" id="szNmCross1" value="1" class="gr5-in">
                 <label for="szNmCross1" class="gr5-lb">なし</label>
                 <input type="radio" name="szNmCross" id="szNmCross2" value="2" class="gr5-in">
                 <label for="szNmCross2" class="gr5-lb">周り</label>
-                <input type="radio" name="szNmCross" id="szNmCross3" value="3" class="gr5-in" checked>
+                <input type="radio" name="szNmCross" id="szNmCross3" value="3" class="gr5-in">
                 <label for="szNmCross3" class="gr5-lb">標準</label>
                 <input type="radio" name="szNmCross" id="szNmCross4" value="4" class="gr5-in">
                 <label for="szNmCross4" class="gr5-lb">多め</label>
@@ -752,12 +763,15 @@
 
             <div class="sz-row">
               <span class="sz-k" title="大きなお店（規模の大きい店から先に出します）">お店</span>
-              <span class="gr5" role="group" aria-label="大きなお店">
+              <span class="gr5 gr6" role="group" aria-label="大きなお店">
+                <!-- 🔒 §30-40-2: 「自動」（既定） -->
+                <input type="radio" name="szNmShop" id="szNmShop0" value="0" class="gr5-in" checked>
+                <label for="szNmShop0" class="gr5-lb">自動</label>
                 <input type="radio" name="szNmShop" id="szNmShop1" value="1" class="gr5-in">
                 <label for="szNmShop1" class="gr5-lb">なし</label>
                 <input type="radio" name="szNmShop" id="szNmShop2" value="2" class="gr5-in">
                 <label for="szNmShop2" class="gr5-lb">周り</label>
-                <input type="radio" name="szNmShop" id="szNmShop3" value="3" class="gr5-in" checked>
+                <input type="radio" name="szNmShop" id="szNmShop3" value="3" class="gr5-in">
                 <label for="szNmShop3" class="gr5-lb">標準</label>
                 <input type="radio" name="szNmShop" id="szNmShop4" value="4" class="gr5-in">
                 <label for="szNmShop4" class="gr5-lb">多め</label>
@@ -768,12 +782,15 @@
 
             <div class="sz-row">
               <span class="sz-k" title="会社名（事業所・オフィス）">会社名</span>
-              <span class="gr5" role="group" aria-label="会社名">
+              <span class="gr5 gr6" role="group" aria-label="会社名">
+                <!-- 🔒 §30-40-2: 「自動」（既定） -->
+                <input type="radio" name="szNmOffice" id="szNmOffice0" value="0" class="gr5-in" checked>
+                <label for="szNmOffice0" class="gr5-lb">自動</label>
                 <input type="radio" name="szNmOffice" id="szNmOffice1" value="1" class="gr5-in">
                 <label for="szNmOffice1" class="gr5-lb">なし</label>
                 <input type="radio" name="szNmOffice" id="szNmOffice2" value="2" class="gr5-in">
                 <label for="szNmOffice2" class="gr5-lb">周り</label>
-                <input type="radio" name="szNmOffice" id="szNmOffice3" value="3" class="gr5-in" checked>
+                <input type="radio" name="szNmOffice" id="szNmOffice3" value="3" class="gr5-in">
                 <label for="szNmOffice3" class="gr5-lb">標準</label>
                 <input type="radio" name="szNmOffice" id="szNmOffice4" value="4" class="gr5-in">
                 <label for="szNmOffice4" class="gr5-lb">多め</label>
@@ -784,12 +801,15 @@
 
             <div class="sz-row">
               <span class="sz-k" title="バス停">バス停</span>
-              <span class="gr5" role="group" aria-label="バス停">
+              <span class="gr5 gr6" role="group" aria-label="バス停">
+                <!-- 🔒 §30-40-2: 「自動」（既定） -->
+                <input type="radio" name="szNmBus" id="szNmBus0" value="0" class="gr5-in" checked>
+                <label for="szNmBus0" class="gr5-lb">自動</label>
                 <input type="radio" name="szNmBus" id="szNmBus1" value="1" class="gr5-in">
                 <label for="szNmBus1" class="gr5-lb">なし</label>
                 <input type="radio" name="szNmBus" id="szNmBus2" value="2" class="gr5-in">
                 <label for="szNmBus2" class="gr5-lb">周り</label>
-                <input type="radio" name="szNmBus" id="szNmBus3" value="3" class="gr5-in" checked>
+                <input type="radio" name="szNmBus" id="szNmBus3" value="3" class="gr5-in">
                 <label for="szNmBus3" class="gr5-lb">標準</label>
                 <input type="radio" name="szNmBus" id="szNmBus4" value="4" class="gr5-in">
                 <label for="szNmBus4" class="gr5-lb">多め</label>
@@ -800,12 +820,15 @@
 
             <div class="sz-row">
               <span class="sz-k" title="道路名（細い道の名前まで出ます。線に付く名前なので印は付けません）">道路名</span>
-              <span class="gr5" role="group" aria-label="道路名">
+              <span class="gr5 gr6" role="group" aria-label="道路名">
+                <!-- 🔒 §30-40-2: 「自動」（既定） -->
+                <input type="radio" name="szNmRoad" id="szNmRoad0" value="0" class="gr5-in" checked>
+                <label for="szNmRoad0" class="gr5-lb">自動</label>
                 <input type="radio" name="szNmRoad" id="szNmRoad1" value="1" class="gr5-in">
                 <label for="szNmRoad1" class="gr5-lb">なし</label>
                 <input type="radio" name="szNmRoad" id="szNmRoad2" value="2" class="gr5-in">
                 <label for="szNmRoad2" class="gr5-lb">周り</label>
-                <input type="radio" name="szNmRoad" id="szNmRoad3" value="3" class="gr5-in" checked>
+                <input type="radio" name="szNmRoad" id="szNmRoad3" value="3" class="gr5-in">
                 <label for="szNmRoad3" class="gr5-lb">標準</label>
                 <input type="radio" name="szNmRoad" id="szNmRoad4" value="4" class="gr5-in">
                 <label for="szNmRoad4" class="gr5-lb">多め</label>
@@ -816,12 +839,15 @@
 
             <div class="sz-row">
               <span class="sz-k" title="他の目印（役所・学校・病院・寺社などの公共施設から先に出します）">他の目印</span>
-              <span class="gr5" role="group" aria-label="他の目印（公共施設・その他）">
+              <span class="gr5 gr6" role="group" aria-label="他の目印（公共施設・その他）">
+                <!-- 🔒 §30-40-2: 「自動」（既定） -->
+                <input type="radio" name="szNmPoi" id="szNmPoi0" value="0" class="gr5-in" checked>
+                <label for="szNmPoi0" class="gr5-lb">自動</label>
                 <input type="radio" name="szNmPoi" id="szNmPoi1" value="1" class="gr5-in">
                 <label for="szNmPoi1" class="gr5-lb">なし</label>
                 <input type="radio" name="szNmPoi" id="szNmPoi2" value="2" class="gr5-in">
                 <label for="szNmPoi2" class="gr5-lb">周り</label>
-                <input type="radio" name="szNmPoi" id="szNmPoi3" value="3" class="gr5-in" checked>
+                <input type="radio" name="szNmPoi" id="szNmPoi3" value="3" class="gr5-in">
                 <label for="szNmPoi3" class="gr5-lb">標準</label>
                 <input type="radio" name="szNmPoi" id="szNmPoi4" value="4" class="gr5-in">
                 <label for="szNmPoi4" class="gr5-lb">多め</label>
@@ -834,15 +860,17 @@
                  施設・公園（変電所・公園・団地・駅・川…）／建物名（棟名を含む）。 -->
             <div class="sz-row">
               <span class="sz-k" title="施設・公園（公園・駅・団地・変電所・浄水場・運動場・工場・川・橋など）">施設・公園</span>
-              <span class="gr5" role="group" aria-label="施設・公園">
+              <span class="gr5 gr6" role="group" aria-label="施設・公園">
+                <!-- 🔒 §30-40-2: 「自動」（既定。§30-21-4 3 の「多め」から改めた） -->
+                <input type="radio" name="szNmFacility" id="szNmFacility0" value="0" class="gr5-in" checked>
+                <label for="szNmFacility0" class="gr5-lb">自動</label>
                 <input type="radio" name="szNmFacility" id="szNmFacility1" value="1" class="gr5-in">
                 <label for="szNmFacility1" class="gr5-lb">なし</label>
                 <input type="radio" name="szNmFacility" id="szNmFacility2" value="2" class="gr5-in">
                 <label for="szNmFacility2" class="gr5-lb">周り</label>
                 <input type="radio" name="szNmFacility" id="szNmFacility3" value="3" class="gr5-in">
                 <label for="szNmFacility3" class="gr5-lb">標準</label>
-                <!-- 🔒 §30-21-4 3: 既定は「多め」（標準だと公園・団地が半径の外で落ちる） -->
-                <input type="radio" name="szNmFacility" id="szNmFacility4" value="4" class="gr5-in" checked>
+                <input type="radio" name="szNmFacility" id="szNmFacility4" value="4" class="gr5-in">
                 <label for="szNmFacility4" class="gr5-lb">多め</label>
                 <input type="radio" name="szNmFacility" id="szNmFacility5" value="5" class="gr5-in">
                 <label for="szNmFacility5" class="gr5-lb">全部</label>
@@ -851,16 +879,17 @@
 
             <div class="sz-row">
               <span class="sz-k" title="建物名（事務所ビル・公共の建物・倉庫・ホテル・商業ビル・マンション。団地の「1棟」「2棟」も出ます）">建物名</span>
-              <span class="gr5" role="group" aria-label="建物名">
+              <span class="gr5 gr6" role="group" aria-label="建物名">
+                <!-- 🔒 §30-40-2: 「自動」（既定。§30-21-5 1 の「多め」から改めた） -->
+                <input type="radio" name="szNmBuilding" id="szNmBuilding0" value="0" class="gr5-in" checked>
+                <label for="szNmBuilding0" class="gr5-lb">自動</label>
                 <input type="radio" name="szNmBuilding" id="szNmBuilding1" value="1" class="gr5-in">
                 <label for="szNmBuilding1" class="gr5-lb">なし</label>
                 <input type="radio" name="szNmBuilding" id="szNmBuilding2" value="2" class="gr5-in">
                 <label for="szNmBuilding2" class="gr5-lb">周り</label>
                 <input type="radio" name="szNmBuilding" id="szNmBuilding3" value="3" class="gr5-in">
                 <label for="szNmBuilding3" class="gr5-lb">標準</label>
-                <!-- 🔒 §30-21-5 1: 既定は「多め」（標準だと格2の棟名が広い枠で0件になる。
-                     棟名は「あると便利」＝オーナー） -->
-                <input type="radio" name="szNmBuilding" id="szNmBuilding4" value="4" class="gr5-in" checked>
+                <input type="radio" name="szNmBuilding" id="szNmBuilding4" value="4" class="gr5-in">
                 <label for="szNmBuilding4" class="gr5-lb">多め</label>
                 <input type="radio" name="szNmBuilding" id="szNmBuilding5" value="5" class="gr5-in">
                 <label for="szNmBuilding5" class="gr5-lb">全部</label>

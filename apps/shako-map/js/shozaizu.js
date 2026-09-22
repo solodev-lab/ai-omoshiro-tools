@@ -414,6 +414,36 @@
   var NAME_RADIUS_MIN_FRAC = 0.6;    // 下限そのものが枠を飲まないための頭打ち
   var NAME_PRIO_UNIT = 150;          // 優先順位1つ分の不利(m)。§18-r と同じ物差し
 
+  /* 🔒 §30-40-2（2026-09-21 オーナー指示）: 名前の8分類だけが持てる**6つ目の選択
+   * 「自動」**（段 NAME_AUTO.level）。ZL を上げて枠が小さくなると、段ごとの半径
+   * （NAME_LEVELS の radiusFrac × 枠の半対角）と件数で候補が 0 になり、
+   * 分類によっては名前が1つも出ない ―― これを「枠に入る候補の数」で自動調整する。
+   *
+   * 決め方（この表が唯一の出どころ）:
+   *   その分類の**枠の中の候補**（近接重複を落とした後）が
+   *     ・allMax 件以下 … allLevel の段として件数・半径を決める
+   *     ・それより多い  … elseLevel の段として件数・半径を決める
+   * 🔴 自動で決めた段は**件数と半径だけ**に使う。描く範囲は枠の中のまま
+   *    （段4〜5 が画面まで描く規則＝areaFor は「手で選んだ時」の物。自動は
+   *     「紙に載る物を決める」仕組みなので枠の外へは広げない・§30-40-2 3）。
+   * 🙋 else を「多め」にしたければ elseLevel を1つ変えるだけ
+   *    （画面の文言も title もこの表の実値から組むので、書き換えは1か所）。 */
+  var NAME_AUTO = { level: 0, allMax: 5, allLevel: 5, elseLevel: 3 };
+
+  /** 名前の8分類の段を数字にそろえる（🔒 §30-40-2: 0＝自動はそのまま通す） */
+  function nameLevelOf(v) {
+    var n = Math.round(Number(v));
+    if (!isFinite(n)) return 1;                       // 値が無い＝なし（従来どおり）
+    if (n === NAME_AUTO.level) return NAME_AUTO.level;
+    return Math.max(1, Math.min(5, n));
+  }
+
+  /** その分類を使うか（🔒 §30-40-2 4: 「自動」も**使う**と数える＝OSM も取りに行く） */
+  function nameCatUsed(v) {
+    var n = nameLevelOf(v);
+    return n === NAME_AUTO.level || n >= 2;
+  }
+
   /* 🔒 §22-aq（2026-09-05 オーナー決定「案②」）: **交差点名だけ半径で絞らない**。
    * 交差点名は所在図で警察が一番見る目印なのに、枠 406×545m の名駅案件では
    * 「標準」の半径（半対角×0.45 ≈ 150m）の外に落ちて中央郵便局・中央郵便局北が
@@ -606,6 +636,15 @@
     forcedCross: 200,// 結線を跨ぐ引き出し線（固定・跨いだら加算）
     forcedOver: 200, // 文字どうしの重なり比（0〜1）× この重み
     forcedOut: 200   // 枠外比（0〜1）× この重み
+  };
+  /* 🔒 §30-41 5（2026-09-21 オーナー指示「距離表示が結ぶ線から離れている。
+   * くっつくくらいがいい」）: **直線距離の文字だけ**の置き方の数値。1か所。
+   * 単位は PLACE と同じ「文字の行」（ふつうの大きさの文字1行の高さ）。
+   * 🙋 全部**仮値**（オーナー実機目視で詰める）。 */
+  var DIST = {
+    gap: 0.15,       // 箱の縁と結線の隙間（行・0 に近いほど線にくっつく）
+    along: 0.2,      // 中点から両端へずらす候補の位置（線の長さに対する比）
+    sideBias: 0.5    // 好まない側（画面で線より下／真横の線なら左）の不利
   };
   /* 🔒 §30-22-10（2026-09-13 オーナー実機「近くが全然近くない。標準より離れる」）:
    * **名前と印の距離は3段**（1=近く／2=標準／3=離す。既定＝離す・Store.SZ_STD.nameGap）。
@@ -1051,11 +1090,12 @@
 
   /* ============ 名称の自動描画（🔒 2026-09-03・§23-5 の6分類を5段階で） ============ */
 
-  /** 段が1つでも2以上の分類があるか（全部「なし」なら false ＝ OSM を呼ばない） */
+  /** 使う分類が1つでもあるか（全部「なし」なら false ＝ OSM を呼ばない）。
+   * 🔒 §30-40-2 4: 「自動」（段 NAME_AUTO.level）も**使う**＝取りに行く。 */
   function anyNameCat(nameLevels) {
     if (!nameLevels || !global.OSM) return false;
     for (var i = 0; i < global.OSM.CATS.length; i++) {
-      if (Number(nameLevels[global.OSM.CATS[i].id]) >= 2) return true;
+      if (nameCatUsed(nameLevels[global.OSM.CATS[i].id])) return true;
     }
     return false;
   }
@@ -1383,6 +1423,9 @@
   function buildAutoNames(osm, opts, objs, exNames, Rframe, stat, gsiBase, areaFor) {
     var lv = opts.nameLevels || {};
     stat.names = {};
+    /* 🔒 §30-40-2 5: 「自動」を選んだ分類が、どの段に決まったか（分類の id → 段）。
+     * 画面の1行（app.js）はこの値を読む＝表示文字では分岐しない（§26-2 注意②）。 */
+    stat.nameAuto = {};
     stat.namesTotal = 0;
     stat.nameDupGsi = 0;
     stat.nameDupBase = 0;
@@ -1410,7 +1453,10 @@
     var fb = opts.frameBounds || opts.bounds;
     /* 🔒 §30-25-3 2（2026-09-13 オーナー指示）: 名前を描く範囲は**その分類の段**で決める
      * （1〜3＝枠の中／4 多め・5 全部＝取得範囲＝画面に映っている所）。
-     * 🔴 範囲の出どころは generate の areaFor 1か所（建物・道路と同じ物）。 */
+     * 🔴 範囲の出どころは generate の areaFor 1か所（建物・道路と同じ物）。
+     * 🔒 §30-40-2 3: 「自動」（段 NAME_AUTO.level）は areaFor が枠を返す段＝
+     *    **枠の中だけ**。自動で決めた段（下の ④）は件数と半径にしか使わない
+     *    ので、ここには渡さない（自動で枠の外へ広がらない）。 */
     function areaOf(catId) { return areaFor ? areaFor(lv[catId]) : fb; }
     // 分類ごとの候補置き場と、分類ごとの同名よけ（🔴 分類をまたがない・是正3）
     var byCat = Object.create(null), seenInCat = Object.create(null);
@@ -1420,8 +1466,9 @@
     });
 
     function offer(it) {
-      var n = Math.max(1, Math.min(5, Math.round(Number(lv[it.cat]) || 1)));
-      if (n <= 1) return;                       // その分類は「なし」
+      /* 🔒 §30-40-2 2: 候補集めは段の大小を見ない（「なし」だけ捨てる）。
+       * 「自動」もここでは普通に集め、段は下の ④ の直前で決める。 */
+      if (!nameCatUsed(lv[it.cat])) return;     // その分類は「なし」
       if (!it.name) return;
       var p = { lat: it.lat, lng: it.lng };
       /* 🔒 §22-aq-4（2026-09-05 オーナー決定「A」）: 枠の外は**分類を問わず**落とす。
@@ -1459,7 +1506,8 @@
         if (items[k].cat === c.id) offer(items[k]);
       }
     });
-    if (Number(lv.road) >= 2 && osm.roads && osm.roads.length) {
+    // 🔒 §30-40-2 4: 道路名も「自動」を使う側に数える（nameCatUsed 1か所）
+    if (nameCatUsed(lv.road) && osm.roads && osm.roads.length) {
       // 🔒 §30-25-3 2: 道路名の名寄せも道路名の段の範囲で（枠の外まで描く時は広く）
       var merged = global.OSM.mergeRoads(osm.roads, areaOf('road'));
       for (i = 0; i < merged.length; i++) offer(merged[i]);
@@ -1511,7 +1559,14 @@
 
     var out = [];
     global.OSM.CATS.forEach(function (c) {
-      var n = Math.max(1, Math.min(5, Math.round(Number(lv[c.id]) || 1)));
+      /* 🔒 §30-40-2 2: 「自動」（段 NAME_AUTO.level）はここではまだ段が決まらない。
+       * 決まるのは近接重複（②-b/③）を落とした後（④の直前）なので、それまでは
+       * 「上限いっぱいの段」として進める。この先で段の数字を見るのは
+       *   ・crossingMustSet / roadMustSet … 段1「なし」かどうかだけ
+       *   ・道路名の最近点の焼き込み       … 同上
+       * なので、仮の段で結果は変わらない（④の件数・半径だけが段で決まる）。 */
+      var auto = (nameLevelOf(lv[c.id]) === NAME_AUTO.level);
+      var n = auto ? NAME_AUTO.allLevel : nameLevelOf(lv[c.id]);
       stat.names[c.id] = 0;
       if (n <= 1) return;
       var arr = byCat[c.id];
@@ -1584,6 +1639,18 @@
             catKept.push(sp);
           }
         }
+      }
+      /* 🔒 §30-40-2 2: 「自動」の段はここで決める ―― **枠の中に残った候補の数**
+       * （近接重複を落とした後＝紙に出る見込みのある候補）を数え、
+       * NAME_AUTO.allMax 以下なら allLevel・それより多ければ elseLevel。
+       * 🔴 候補はもともと areaOf（＝自動は枠の中）に限ってあるので、
+       *    この数がそのまま「枠の中の候補の数」になる。
+       * 🔴 決めた段は下の ④（件数 cap・半径 R）にだけ効く。描く範囲は枠のまま。 */
+      if (auto) {
+        var nCand = 0;
+        for (i = 0; i < arr.length; i++) { if (!arr[i].dup) nCand++; }
+        n = (nCand <= NAME_AUTO.allMax) ? NAME_AUTO.allLevel : NAME_AUTO.elseLevel;
+        stat.nameAuto[c.id] = n;
       }
       /* 🔒 §22-aq: 交差点名だけ段3以上は半径を掛けない（＝枠の中の全部が候補）。
        * 判定は分類の id（＝ nameCat）1か所で持つ。定数は NAME_LEVELS の隣。 */
@@ -2191,7 +2258,8 @@
       /* 🔒 §30-25-3 2: 路線番号の印は**枠のまま**（範囲を広げない）。この関数は
        * 「紙の付き物の席」を枠の割合で作るので、枠でない矩形を渡すと席がずれる。
        * 印は紙に出す物なので、枠の外まで出す意味も無い。 */
-      var shields = (Number((opts.nameLevels || {}).road) >= 2)
+      /* 🔒 §30-40-2 4: 「自動」も道路名を使う側（nameCatUsed 1か所） */
+      var shields = nameCatUsed((opts.nameLevels || {}).road)
                   ? routeShields(osm, opts, bldgFrameB, objs) : [];
       shields.forEach(function (o) { objs.push(o); });
       stat.routeShields = shields.length;
@@ -2206,8 +2274,9 @@
        * 🔴 通信に失敗した時（osmError）も判定しない（「無い」と「取れなかった」は別）。
        *    osm.items/osm.roads は失敗時に空配列を返す（fail-soft）ので、
        *    ここで判定すると必ず「無い」になってしまう＝呼ばない。 */
+      // 🔒 §30-40-2 4: 「使う」判定は nameCatUsed 1か所（自動も使う側）
       var nlv = opts.nameLevels || {};
-      if (!stat.osmError && Number(nlv.crossing) >= 2 && Number(nlv.road) >= 2) {
+      if (!stat.osmError && nameCatUsed(nlv.crossing) && nameCatUsed(nlv.road)) {
         stat.mainNoName = computeMainNoName(osm, opts, objs, bldgFrameB);
       } else {
         stat.mainNoName = { home: false, lot: false };
@@ -2926,7 +2995,8 @@
     /* 🔒 §30-25-3 4: ●（無ければ文字）が**枠の外**にある名前は「枠の中に収める」
      * 規則を受けない（枠の外にも描く段のために作られた物＝落とさない・外へ出す）。
      * 置き方は「印のすぐ隣」だけ（枠の中の文字の置き場所には一切影響しない）。 */
-    var stayRecs = [], awayRecs = [], freeRecs = [];
+    /* 🔒 §30-41: distRecs＝直線距離の文字（結線にくっつけて置く・placeDistance）。 */
+    var stayRecs = [], awayRecs = [], freeRecs = [], distRecs = [];
     /* 既に引かれている引き出し線（新しい線と交差させないために覚えておく）。
      * §22-am-3 のなぞり出し1件追加では、既にある文字の線もここに入る。 */
     var leads = [];
@@ -2976,6 +3046,12 @@
        * 🔴 役割つき（自宅・駐車場・距離）は所在図の主役なので従来どおり対象外。 */
       if (!o.role && !inFrame(base)) { freeRecs.push(rec); return; }
 
+      /* 🔒 §30-41 1: 直線距離の文字（●なし・生成時は結線の中点）は、他の名前と
+       * 同じ置き方（placeByCands→costOf）だと「結線に被る＝大ペナルティ」で線から
+       * 1〜2.6 行ぶん逃がされる。結線そのものの説明なので線にくっつけて置く。
+       * 🔴 判定は role と type で行う（表示文字では判定しない・§26-2 注意②）。 */
+      if (o.role === 'distance' && o.type === 'text') { distRecs.push(rec); return; }
+
       if (goesOuter(o)) awayRecs.push(rec); else stayRecs.push(rec);
     });
 
@@ -2992,8 +3068,16 @@
     var mainLabels = [];
 
     /* ①その場に置く物（従来の候補生成・rank 順のまま）
-     *   ＝主役（役割つき）・道路名・鉄道名・地名・川山 */
-    stayRecs.forEach(placeByCands);
+     *   ＝主役（役割つき）・道路名・鉄道名・地名・川山
+     * 🔒 §30-41 3: ①は2回に分ける。**主役ラベル（役割つき）→ 直線距離の文字 →
+     *   他の名前（道路名・地名・川山）** の順に置く。
+     *   ・主役ラベルより後 … 距離の文字が主役ラベルを埋めない（主役が最優先）
+     *   ・他の名前より先 … 後から来る名前が距離の文字を避けられる（placedBoxes）
+     *   🔴 labels は placeRank 順（役割つき＝0 が先頭）に並んでいるので、
+     *      役割の有無で2回舐めても**元の順序は崩れない**（安定した仕分け）。 */
+    stayRecs.forEach(function (rec) { if (rec.o.role) placeByCands(rec); });
+    distRecs.forEach(placeDistance);
+    stayRecs.forEach(function (rec) { if (!rec.o.role) placeByCands(rec); });
     /* 🔒 §22-am-5 欠陥1: 主役の立入禁止域は①の後（主役ラベル・距離ラベルを置いた後）に作る */
     buildMainZones();
     /* ②点に付く名前を「主役・結線から離れた空き地」へ（§22-am-6）。
@@ -3081,6 +3165,86 @@
       }
       // 🔒 §30-24-2: 同じ点に2つ目の主役ラベルが来た時の下敷きにする
       noteMainLabel(o, base, nb);
+    }
+
+    /**
+     * 🔒 §30-41 2（2026-09-21 オーナー指示「距離表示が結ぶ線から離れている。
+     * くっつくくらいがいい」）: **直線距離の文字だけ**の置き方。
+     *
+     * 置き方 … 中点を基準に、結線に**直交する向き**へ箱の縁が線に触れるまでずらす。
+     *   候補＝線の左右2側 × 線上の位置3つ（中点・中点から両端へ DIST.along）＝6つ
+     *   除外＝主役の立入禁止域／枠の外／紙の付き物の席／既に置いた文字との重なり
+     *   順位＝重なり（PLACE.wOver）→ 中点に近い方（行換算）→ 側の優先（DIST.sideBias）
+     *   全滅なら中点の上側（除外を無視する・置かない選択肢は無い）
+     * 🔴 結線の回廊（inCorridor）・結線の罰点（segPenalty／PLACE.wSeg）・結線を跨ぐ
+     *    引き出し線（crossesConnector）は**この文字には掛けない**。どれも「結線から
+     *    離す」ための仕掛けで、線に付くのが正しいこの文字には逆に働く
+     *    （costOf ① の「結線に被る＝大ペナルティ」は他の名前の規則として残す）。
+     * 🔴 置いた箱は finishMain 経由で placedBoxes に main:true で入る＝
+     *    後から置く名前は従来どおりこの文字を避ける（§30-41 3）。
+     * 🔴 文字は水平のまま（回転はしない・§30-41 4）。画面・紙の描画も追従
+     *    （syncRoleObjects の o.mid 基準）も変えない。
+     */
+    function placeDistance(rec) {
+      var o = rec.o, base = rec.base;
+      // 結線が無い／長さ0の図では従来どおりの置き方に落とす
+      if (!seg) { placeByCands(rec); return; }
+      var vx = seg.b.x - seg.a.x, vy = seg.b.y - seg.a.y;
+      var len = Math.sqrt(vx * vx + vy * vy);
+      if (!len) { placeByCands(rec); return; }
+      var ux = vx / len, uy = vy / len;        // 線の向き
+      var nx = -uy, ny = ux;                   // 線に直交する向き
+      var mx = (seg.a.x + seg.b.x) / 2, my = (seg.a.y + seg.b.y) / 2;   // 中点
+      /* 箱の縁が線に触れるまでのずらし量。
+       * 🔴 大きさは **hRef（＝枠の幅で測った「文字1行」）** で出す。hM(o) は spanM
+       *    ＝取得範囲の幅で測るので、§30-25 で取得範囲が画面全体になってからは
+       *    紙に刷られる実際の文字（枠の幅が基準）の **3倍近く**になる。その値で
+       *    ずらすと「くっつく」どころか3行ぶん離れる（実測 53m・狙いは 20m）。
+       *    PLACE の単位「文字の行」も hRef なので、ここも hRef に揃える。
+       * 🔴 正典の「箱の半分の高さ」は**横向きの線**の時の値（法線が縦＝|ny|=1）。
+       *    縦・斜めの線では半分の幅も効く（高さだけだと線が文字の真ん中を通る）ので、
+       *    軸並行の箱を法線の向きに測った半径（支え距離）で出す。横向きの線では
+       *    従来どおり「箱の半分の高さ」に一致する。 */
+      /* 🔴 「紙に刷られる文字1行の高さ」の出どころは hPaper() 1か所（§30-22-10）。
+       *    ここで同じ名前の変数を作ると関数を覆い隠すので、別名で受ける。 */
+      var hp = hPaper(o);
+      var off = Math.abs(nx) * (wM(o, hp) / 2) + Math.abs(ny) * (hp / 2) +
+                DIST.gap * hRef;
+      var alongs = [0, DIST.along, -DIST.along];
+      var best = null, bestCost = Infinity, i, s, t, px, py, b, c, ov, cand;
+      for (i = 0; i < alongs.length; i++) {
+        t = alongs[i] * len;
+        px = mx + ux * t; py = my + uy * t;
+        for (s = -1; s <= 1; s += 2) {
+          cand = { x: px + nx * off * s, y: py + ny * off * s };
+          b = boxOf(o, cand.x, cand.y);
+          /* 🔴 主役の立入禁止域（mainZones）は buildMainZones＝①の後に作るので、
+           *    この文字を置く時点ではまだ空。順番が変わっても正しく効くよう、
+           *    除外の並びは placeAway と同じ形で書いておく。 */
+          if (hitsMainZone(b)) continue;                // 主役の立入禁止域
+          if (outsideFrame(b) > 0) continue;            // 枠の外（§18-n-4）
+          if (hitsFurniture(b)) continue;               // 紙の付き物の席
+          ov = maxOverlap(b);
+          if (ov > PLACE.overMax) continue;             // §22-am-7 裁定2: 文字どうしの重なり
+          c = ov * PLACE.wOver +
+              Math.abs(t) / Math.max(hRef, 1e-6) +      // 中点から離れるほど不利（行換算）
+              distSideBias(nx * s, ny * s);
+          if (c < bestCost) { bestCost = c; best = cand; }
+        }
+      }
+      if (!best) {
+        s = (ny > 1e-9 || (Math.abs(ny) <= 1e-9 && nx > 0)) ? 1 : -1;   // 中点の上側
+        best = { x: mx + nx * off * s, y: my + ny * off * s };
+      }
+      // 後始末は主役ラベルの「近く」と同じ（引き出し線は出さない）
+      finishMain(o, base, boxOf(o, best.x, best.y), true);
+    }
+    /** 🔒 §30-41 2: 側の優先。メートル座標は y が北＝画面の上向きなので、
+     * y が正の側＝**画面で線より上**を先に。線が縦（法線が真横）なら右を先に。 */
+    function distSideBias(sx, sy) {
+      if (sy > 1e-9) return 0;
+      if (sy < -1e-9) return DIST.sideBias;
+      return sx > 0 ? 0 : DIST.sideBias;
     }
 
     /** 🔒 §30-22-10: 主役ラベルを「近く」に置いた時の後始末（placeByCands の尻尾と同じ）。
@@ -3584,7 +3748,10 @@
      * 🔒 §22-am-7: spillCross＝forced のうち結線を跨いだ数／
      * spillOverlap＝forced 各件の重なりの最大値（配列・件数は spill と同じ）。 */
     return { moved: moved, onLine: onLine, drop: drop,
-             outer: awayStat.lead, side: awayStat.side, stay: stayRecs.length,
+             // 🔒 §30-41 3: 距離の文字は stayRecs から distRecs へ移したが、
+             //    実測用の「その場に置いた数」は従来と同じ数のままにする
+             outer: awayStat.lead, side: awayStat.side,
+             stay: stayRecs.length + distRecs.length,
              spill: awayStat.forced,
              spillCross: awayStat.forcedCross, spillOverlap: awayStat.forcedOverlap };
   }
@@ -3624,6 +3791,9 @@
     /* 🔒 2026-09-03（後半）: 名称6分類の5段階・川・山（UI・単体テスト・実測で使う） */
     NAME_LEVEL_JA: NAME_LEVEL_JA,
     NAME_LEVELS: NAME_LEVELS,
+    /* 🔒 §30-40-2: 名前の8分類の「自動」（段の数字と決め方）。app.js は
+     * 画面の段（0）と説明の文言を**この実値から**組む＝値を写さない。 */
+    NAME_AUTO: NAME_AUTO,
     NAME_PRIO_UNIT: NAME_PRIO_UNIT,
     /* 🔒 2026-09-04 是正2: 近接重複の抑制（仮値・実機目視で確定） */
     NAME_DUP_M: NAME_DUP_M,
