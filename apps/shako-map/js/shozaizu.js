@@ -374,7 +374,7 @@
    *    自動で出した名称もただの text オブジェクトなので、reveal.js の重なり判定
    *    （紙にある text を候補から外す・§23-6-a ①）が**無改修でそのまま効く**。
    *
-   * データ源は §23-5 の表どおり **OSM（Overpass）**。
+   * データ源は §23-5 の表どおり **OSM**（🔒 §30-44: 自前の名前タイル・osm.js）。
    * 🔴 地理院 Anno の目標物は既存の「目標物（施設）の数」（lmLevel）が担当なので、
    *    ここでは**地理院を一切見ない**（二重に出さないため）。道路名も同じで、
    *    地理院 411系は従来どおり自動生成が出し、ここは OSM の細街路名だけを足す。
@@ -491,7 +491,7 @@
    *    > オーナー:「枠外の交差点名（大津橋）が枠外から線を引かれている。
    *    >   **なんのことかさっぱり分からない**。」
    *    紙では枠で切れる＝**どこにも行かない線**にしかならないため。
-   *    ・`CROSS_OUT_M`（枠外 150m まで候補）・`padForCrossing`（Overpass の範囲を
+   *    ・`CROSS_OUT_M`（枠外 150m まで候補）・`padForCrossing`（OSM の取得範囲を
    *      広げる）・`forceIn`（枠外でも通す内部印）は**廃止**した
    *    ・「主役の周囲は絶対（最寄り2件）」は **枠の中の交差点名**に対して効く（①②は維持）
    *    ・縁の少し外を出したい時は利用者が ZL を半段引く（§22-an で自動では動かさない）
@@ -966,8 +966,11 @@
             if (A.features[i].geom[g].length < 3) continue;
             pts = toLatLngs(A.features[i].geom[g], t, A.extent);
             if (!bboxHits(pts, bounds)) continue;
+            /* 🔒 §30-42-2 7: 所属の印（part）。面・線は annoKind/nameCat を
+             * 持たないので、どの設定に属するかをここで焼く（判定は partOf 1か所）。 */
             areas.push({ id: uid('wa'), type: 'polygon', points: pts,
-                         style: { fill: W.fill, w: 0 }, source: 'shozaizu' });
+                         style: { fill: W.fill, w: 0 },
+                         source: 'shozaizu', part: 'nature' });
           }
         }
       }
@@ -979,10 +982,11 @@
             if (R.features[i].geom[g].length < 2) continue;
             pts = toLatLngs(R.features[i].geom[g], t, R.extent);
             if (!bboxHits(pts, bounds)) continue;
+            // 🔒 §30-42-2 7: 所属の印（part）＝川・山のトグルの物
             rivers.push({ id: uid('rv'), type: 'path', points: pts,
                           style: { w: W.band, color: W.color,
                                    casing: true, bandColor: W.fill },
-                          source: 'shozaizu' });
+                          source: 'shozaizu', part: 'nature' });
           }
         }
       }
@@ -994,9 +998,10 @@
             if (L.features[i].geom[g].length < 2) continue;
             pts = toLatLngs(L.features[i].geom[g], t, L.extent);
             if (!bboxHits(pts, bounds)) continue;
+            // 🔒 §30-42-2 7: 所属の印（part）＝川・山のトグルの物
             edges.push({ id: uid('wl'), type: 'path', points: pts,
                          style: { w: W.edge.w, color: W.edge.color },
-                         source: 'shozaizu' });
+                         source: 'shozaizu', part: 'nature' });
           }
         }
       }
@@ -1083,8 +1088,10 @@
     stat.contours = kept.length;
     stat.contourStep = step;
     return kept.map(function (c) {
+      // 🔒 §30-42-2 7: 所属の印（part）＝川・山のトグルの物（等高線）
       return { id: uid('cn'), type: 'path', points: c.points,
-               style: { w: C.w, color: C.color }, source: 'shozaizu' };
+               style: { w: C.w, color: C.color },
+               source: 'shozaizu', part: 'nature' };
     });
   }
 
@@ -1112,40 +1119,36 @@
    * OSM から名称を取る。
    * 🔴 **段が全部「なし」の時は取りに行かない**（無駄な通信をしない・§23-6 控えめに叩く）。
    * 🔴 **fail-soft**: 落ちても reject しない。{error} を返して作図は続けさせる（§23-6）。
-   *    広すぎる範囲（4km超）を osm.js が断る `wide` も同じ扱い。
+   *    広すぎる範囲（名前タイル 16 枚＝1辺 12km 超）を osm.js が断る `wide` も同じ扱い。
    * 🔒 §30-13-7 7（2026-09-10 Fable 裁定）: **取る物は段に依らない**。
-   *    1つでも「なし」でない分類があれば **6分類ぜんぶ＋路線** を一度に取る。
+   *    1つでも「なし」でない分類があれば **8分類ぜんぶ＋路線** を一度に取る。
    *    絞るのは描く側（buildAutoNames の offer が段1を捨てる／routeShields は
-   *    道路名の段で切る）。こうしないと段を変えるたびに osm.js の
-   *    catsCovered が外れて Overpass を叩き直していた（⑦の遅さの正体）。
-   *    枠（bounds）が同じ間は osm.js のキャッシュに当たる＝通信しない。
+   *    道路名の段で切る）。こうしないと段を変えるたびに取り直しになる（⑦の遅さの正体）。
+   *    枠（bounds）が同じ間は osm.js のタイルのキャッシュに当たる＝通信しない。
    */
   function fetchOsmNames(opts) {
     if (!anyNameCat(opts.nameLevels)) return Promise.resolve(null);
-    /* 🔒 §30-25-3 1（2026-09-13 オーナー指示）: 地理院タイルも Overpass も
+    /* 🔒 §30-25-3 1（2026-09-13 オーナー指示）: 地理院タイルも名前も
      * **同じ取得範囲（画面∪枠＋8%）を1回で取る**。枠の外に描くかは段で決める（areaFor）。
-     * 🔴 osm.js は広すぎる範囲（MAX_SPAN_M）を断るので、その時だけ枠に戻す
-     *    ＝地図をうんと広げた時に名前が丸ごと消えない保険（取れる分は必ず取る）。
+     * 🔒 §30-44-9 3（2026-09-24）: 取得範囲が名前タイルの上限（16 枚＝1辺 12km）を超える時だけ
+     *    枠に戻す＝地図をうんと広げた時に名前が丸ごと消えない保険（取れる分は必ず取る）。
+     *    判定は osm.js の namesFit（fetchNames の 'wide' と同じ数え方）。旧・4km の判定は廃止。
+     *    🔴 枠でも超える時は 'wide'＝「枠が 12km を超えるため名前は入りません」（文言が正しくなる）。
      * 🔴 osm.js が自前で PAD ぶん広げて取るのは従来どおり＝縁ぎわの●の取りこぼし防止。 */
     var b = opts.bounds || opts.frameBounds;
-    var lim = Number(global.OSM.MAX_SPAN_M) || Infinity;
-    var lat0b = (b.north + b.south) / 2;
-    var spanW = GSI.distanceMeters({ lat: lat0b, lng: b.west }, { lat: lat0b, lng: b.east });
-    var spanH = GSI.distanceMeters({ lat: b.south, lng: b.west }, { lat: b.north, lng: b.west });
-    if ((spanW > lim || spanH > lim) && opts.frameBounds) b = opts.frameBounds;
+    if (opts.frameBounds && global.OSM.namesFit && !global.OSM.namesFit(b)) {
+      b = opts.frameBounds;
+    }
     /* 🔒 §22-av: 路線番号（国道・都道府県道）は**道路名と同じ段**に乗せる。
      * 🔴 「乗せる」のは**出す／出さない**の話（routeShields 側で切る）。取得は
      *    上のとおり段に依らず必ず一緒に取る（実測 2026-09-06・名駅 700m 枠:
      *    413KB → 464KB ＝ +51KB）。 */
     return global.OSM.fetchNames(b, allNameCats(), { routes: true })
       .then(function (r) {
-      /* 🔒 §30-21-4 1: 応答が上限に当たった（名前を省いた）かをそのまま持ち上げる。
-       * 🔴 作図は止めない（省いただけ＝取れた分は全部使う）。知らせるのは一言で。 */
       return { items: r.items, roads: r.roads, routes: r.routes || [],
-               truncated: !!r.truncated,
                cached: !!r.cached, ms: r.ms, bytes: r.bytes, error: null };
     }, function (e) {
-      return { items: [], roads: [], routes: [], truncated: false,
+      return { items: [], roads: [], routes: [],
                error: (e && e.kind) || 'net',
                message: (e && e.message) || '' };
     });
@@ -1714,6 +1717,90 @@
     return { add: out, dropIds: dropIds };
   }
 
+  /* ================= 所属（🔒 §30-42-2 7） ================= */
+
+  /**
+   * 🔒 §30-42（2026-09-22 オーナー指示「触ったトグルの項目だけ変わる。他は一切動かない」）:
+   * その生成物が**設定盤のどの項目に属するか**を返す唯一の判定。
+   * app.js の「消す物を選ぶ」と generate の「新しく作る物を取り出す」が同じ関数を読む。
+   *
+   * 返り値:
+   *   'lm'            … 目標物（地理院の注記・annoKind:'landmark' の文字）
+   *   'bldg'          … 建物の面
+   *   'road'          … 道路の線（「道路」の段と「道路の線」の見た目の両方が属する）
+   *   'nature'        … 川・山のトグルで出る物（水域面・河川・水涯線・等高線・自然地名）
+   *   'name:<分類id>' … OSM の名前の8分類（路線番号の印は道路名の段＝'name:road'）
+   *   null            … どの設定でも差分では触らない物
+   *                     （地名 place・地理院の道路名/鉄道名・鉄道の線・主役・直線距離）
+   *
+   * 🔴 判定は**データの属性だけ**で行う（表示文字では分岐しない・§26-2 注意②）。
+   *    面・線のように属性で決まらない物は、生成時に焼いた `part` を読む。
+   */
+  function partOf(o) {
+    if (!o) return null;
+    // 生成が焼いた印（建物の面・道路の線・水面・等高線）が最優先
+    if (o.part) return o.part;
+    if (o.type !== 'text') return null;
+    // 地理院の注記: 目標物は「目標物」の段／自然地名は川・山のトグル
+    if (o.annoKind === 'landmark') return 'lm';
+    if (o.annoKind === 'nature') return 'nature';
+    /* OSM 由来の名前は分類そのものが段。路線番号の印（nameCat:'route'）は
+     * 道路名と同じ段なので道路名へ寄せる（§22-av / §30-13-7 7）。 */
+    if (o.nameSrc === 'osm' && o.nameCat) {
+      return 'name:' + (o.nameCat === 'route' ? 'road' : o.nameCat);
+    }
+    return null;
+  }
+
+  /**
+   * 🔒 §30-42-4 1（2026-09-22 Fable 裁定）: 差分作り直しの結果の1行を
+   * 「いま紙にある生成物」から数え直す。
+   * 差分の流れでは existingNames に「残す生成物の文字」を先勝ちの相手として渡す
+   * ので、流れ全体の stats（buildAutoNames が数える件数）は先勝ちで落ちた分だけ
+   * 小さく出る（実測: 名称の自動描画 14 → 7・紙の中身は変わらず数字だけ）。
+   * 数字と紙が食い違うのは紛らわしいので、app.js が差分の経路の時だけこの関数で
+   * stat を上書きしてから結果の1行を組む。
+   * @param objs いま紙にある生成物（source:'shozaizu'）の配列。
+   * @param stat 書き換える stats（roads/buildings/landmarks/annoKept/names/
+   *             namesTotal 以外は触らない）。
+   * 🔴 判定は partOf とデータ属性だけで行う（表示文字で分岐しない・§26-2 注意②）。
+   * 🔴 鉄道・川・等高線・山名は数え直さない: nature の差分ではその項目（partOf
+   *    'nature'）ごと丸ごと作り直すので、流れ全体の値がそのまま紙の中身と一致する
+   *    （鉄道は nature の差分対象ではなく常に「残す物」＝差分では触らないのでこれも不変）。
+   */
+  function recount(objs, stat) {
+    var roads = 0, buildings = 0, landmarks = 0, annoKept = 0;
+    var names = {}, namesTotal = 0, i, o, p;
+    if (global.OSM && global.OSM.CATS) {
+      global.OSM.CATS.forEach(function (c) { names[c.id] = 0; });
+    }
+    for (i = 0; i < objs.length; i++) {
+      o = objs[i];
+      if (!o) continue;
+      p = partOf(o);
+      if (p === 'road') roads++;
+      else if (p === 'bldg') buildings++;
+      if (o.type === 'text' && o.annoKind === 'landmark') landmarks++;
+      /* generate の stat.annoKept++（地理院の Anno 由来・nameSrc を持たない）と
+       * 同じ定義。OSM 由来の名称は annoKind を持たない（§26-2 の注記どおり）ので
+       * nameSrc の除外は保険。 */
+      if (o.type === 'text' && o.annoKind && o.nameSrc !== 'osm') annoKept++;
+      /* buildAutoNames の stat.names[c.id]++ と同じ定義。路線番号の印
+       * （nameCat:'route'）は buildAutoNames が処理していない
+       * （routeShields は別枠・stat.routeShields で数える）ので除く。 */
+      if (o.type === 'text' && o.nameSrc === 'osm' && o.nameCat && o.nameCat !== 'route') {
+        names[o.nameCat] = (names[o.nameCat] || 0) + 1;
+        namesTotal++;
+      }
+    }
+    stat.roads = roads;
+    stat.buildings = buildings;
+    stat.landmarks = landmarks;
+    stat.annoKept = annoKept;
+    stat.names = names;
+    stat.namesTotal = namesTotal;
+  }
+
   /* ================= 生成 ================= */
 
   /**
@@ -1726,7 +1813,11 @@
    *   bldgLevel（🔒 §23-10）: 1=なし(既定) / 2=主役の周りだけ / 3=標準 / 4=多め / 5=全部
    *   roadStyle（🔒 §23-9）: 'line'=従来の黒線1本（既定・後方互換）
    *                          'band'=白い帯＋黒の縁取り（ヤフー式の2本描き）
+   *   diff（🔒 §30-42-2 2）: {key, keep} ＝**差分作り直し**。取得→整形は全部走らせ、
+   *        `partOf(o) === key` の物だけを新しい生成物として返す。keep は「残す生成物」
+   *        （文字だけ障害物として使う・返り値には入れない）。
    * 返り値: Promise<{objects:[], stats:{}}>
+   *   🔴 diff 指定時の objects は**その項目の物だけ**（stats は流れ全体の値）。
    */
   function generate(opts) {
     var bounds = opts.bounds;
@@ -1785,9 +1876,8 @@
                    minRank: 0, kinds: {}, bldgLevel: bldgLevel,
                    roadLevel: roadLevel, roadStyle: roadStyle,
                    osmError: osm ? (osm.error || null) : null,
-                   /* 🔒 §30-21-4 1: 名前が多すぎて Overpass の応答が上限に当たった。
-                    * app.js が生成後の一言に足す（§22-as の警告と同じ仕組み）。 */
-                   namesTruncated: !!(osm && osm.truncated),
+                   /* 🔒 §30-44-9 3: 旧「上限に当たって名前を省いた」の印は廃止
+                    * （自前のタイルは件数で切っていない）。 */
                    osmUsed: !!osm };
 
       /* --- 🔒 2026-09-03: 川・山（トグル「川・山を入れる」の中身） ---
@@ -1841,9 +1931,10 @@
           /* 🔒 §23-3/§23-9: 建物は**実線の輪郭のみ**（塗りは入れない）。
            * 太さ・色は Editor.MAPSTYLE.bldg が唯一の出どころ（bldgStyle）。
            * 旧値 {w:0.6,color:'#b9bfc9'} は紙で 0.114mm の薄灰＝白黒印刷で消えていた。 */
+          // 🔒 §30-42-2 7: 所属の印（part）＝建物の段の物
           objs.push({ id: uid('b'), type: 'polygon', points: c.pts,
                       style: { w: bldgFill.w, color: bldgFill.color },
-                      source: 'shozaizu' });
+                      source: 'shozaizu', part: 'bldg' });
           stat.buildings++;
         });
       }
@@ -2046,8 +2137,11 @@
         var st = roadTable[r.rank] || roadTable[1];
         var rs = { w: st.w, color: st.color };
         if (st.casing) rs.casing = true;
+        /* 🔒 §30-42-2 7: 所属の印（part）＝道路の段と「道路の線」（roadStyle）の物。
+         * どちらの設定を変えても作り直すのはこの線だけ（鉄道の線は含まない）。 */
         var rd = { id: uid('rd'), type: 'path', points: r.points,
-                   style: rs, roadRank: r.rank, source: 'shozaizu' };
+                   style: rs, roadRank: r.rank,
+                   source: 'shozaizu', part: 'road' };
         // 🔒 §22-at: 幅員ランクの実距離(内部属性・表示文字ではない)。不明ランクは持たせない
         if (r.widthM) rd.widthM = r.widthM;
         // 🔒 §22-at-2: ランク別の紙の下限(内部属性)。不明ランクは持たせない＝等級の従来値のまま
@@ -2288,10 +2382,28 @@
       var spanM = GSI.distanceMeters(
         { lat: (bounds.north + bounds.south) / 2, lng: bounds.west },
         { lat: (bounds.north + bounds.south) / 2, lng: bounds.east });
+      /* --- 🔒 §30-42-2 2（差分作り直し・2026-09-22 オーナー指示）---
+       * `opts.diff = { key, keep }` が来た時は、取得→整形をここまで**全部**走らせた
+       * 上で、その項目（key）に属する物だけを新しい生成物として取り出す。
+       * 文字は `placeLabels` の `only` に新しい文字だけを渡す＝残す文字（keep）は
+       * 「もう置いてある障害物」になり、位置は1つも動かない（§22-am-3 と同じ仕組み）。
+       * 🔴 判定は partOf（データ属性）1か所。表示文字では分岐しない（注意②）。 */
+      var diffKey = (opts.diff && opts.diff.key) ? opts.diff.key : null;
+      var newPart = null, newTexts = null, placeObjs = objs;
+      if (diffKey) {
+        newPart = objs.filter(function (o) { return partOf(o) === diffKey; });
+        newTexts = newPart.filter(function (o) { return o.type === 'text'; });
+        /* 残す生成物の文字（app.js が渡す）＝障害物としてだけ通す（返り値には入れない）。
+         * 🔴 手描き・なぞり出しの文字は keep に入らない（全部作り直しでも
+         *    placeLabels の外＝障害物にしていない。従来と同じ扱いにそろえる）。 */
+        placeObjs = (opts.diff.keep || []).filter(function (o) {
+          return o && o.type === 'text';
+        }).concat(newTexts);
+      }
       // 🔒 §30-13-5: 整形（タイル→図形）はここまで／ここから配置（重なり回避）
       tEnd('shozaizu:整形');
       tStart('shozaizu:配置');
-      var placed = placeLabels(objs, spanM, opts.home, opts.lot,
+      var placed = placeLabels(placeObjs, spanM, opts.home, opts.lot,
                               opts.frameBounds || null,
                               /* 🔒 §22-am-6: 枠が無い生成では取得範囲を枠の代わりにする
                                * （枠外ドロップ・はみ出し罰点は従来どおり効かせない）
@@ -2304,6 +2416,9 @@
                                 /* 🔒 §30-24-1: 利用者が描いた主役の多角形（印の実寸）。
                                  * 生成物ではないので app.js が渡す（描いた順） */
                                 mainPolys: opts.mainPolys || [],
+                                /* 🔒 §30-42-2 3: 差分作り直しでは新しい文字だけ置く
+                                 * （空の配列＝1つも置き直さない・他は障害物） */
+                                only: diffKey ? newTexts : undefined,
                                 compasses: opts.compasses || [] });
       tEnd('shozaizu:配置');
       stat.labelMoved = placed.moved;
@@ -2324,11 +2439,14 @@
        * ●（＝その場所）が枠の外にある名前は、紙では●が写らず文字だけが
        * 宙に浮く（実機では枠端で見切れて積み重なっていた）。
        * 役割つき（自宅・駐車場・距離）は必ず残す。 */
+      /* 🔒 §30-42-2 2: 差分作り直しでは**新しい生成物にだけ**掛ける
+       * （残す文字は置き直していないので落とす対象にもしない）。 */
       if (placed.drop && placed.drop.length) {
         var kill = Object.create(null);
         placed.drop.forEach(function (o) { kill[o.id] = true; });
-        for (var di = objs.length - 1; di >= 0; di--) {
-          if (kill[objs[di].id]) objs.splice(di, 1);
+        var dlist = diffKey ? newPart : objs;
+        for (var di = dlist.length - 1; di >= 0; di--) {
+          if (kill[dlist[di].id]) dlist.splice(di, 1);
         }
         stat.annoDropped = placed.drop.length;
         stat.annoKept -= placed.drop.length;
@@ -2355,7 +2473,16 @@
         return inBoundsLL(o.anchor || o.at, markFrameB);
       }).length;
 
-      return { objects: objs, stats: stat, zoom: got.z, minRankJa: RANK_JA[minRank] };
+      /* 🔒 §30-42-2 2: 差分作り直しの返り値は**新しい生成物だけ**（文字は置いた後）。
+       * stats は流れ全体の値のまま（同 4）。
+       * 🔒 §30-42-4 1（裁定済み）: 差分では existingNames に「残す生成物の文字」が
+       *    入るため、この stats の名前の件数は先勝ちで落ちた分だけ小さく出る
+       *    （実測: 名称の自動描画 14 → 7・紙の中身は変わらず数字だけ）。数字と紙が
+       *    食い違うのは紛らわしいので、app.js が差分の経路の時だけ
+       *    `Shozaizu.recount(いま紙にある生成物, stats)` で数え直してから
+       *    結果の1行を組む（このまま stats を使わない）。 */
+      return { objects: diffKey ? newPart : objs, stats: stat,
+               zoom: got.z, minRankJa: RANK_JA[minRank] };
     }).catch(function (e) {
       /* 🔒 §30-13-7 7: 途中で失敗しても計測は必ず閉じる（finally 相当）。
        * 開いたままだと次の生成の console.time が「Timer already exists」を出す。
@@ -2516,7 +2643,10 @@
     opts = opts || {};
     /* 置き直す対象を限る（なぞり出しの1件追加）。null＝全部置く（生成） */
     var onlySet = null;
-    if (opts.only && opts.only.length) {
+    /* 🔒 §30-42-2 3: 空の配列も「置き直す物は1つも無い」という指示として受ける
+     * （建物・道路だけの差分作り直し＝文字は1つも作り直さない）。`.length` を
+     * 条件にすると全部置き直しに落ちて、触っていない名前が動いてしまう。 */
+    if (opts.only) {
       onlySet = Object.create(null);
       for (var oi = 0; oi < opts.only.length; oi++) {
         if (opts.only[oi]) onlySet[opts.only[oi].id] = true;
@@ -3774,8 +3904,30 @@
     return Math.sqrt(dx * dx + dy * dy);
   }
 
+  /**
+   * 🔒 §30-44-7 8（2026-09-24）: 先読み。generate と**同じ取り方**（地理院タイル＝fetchTiles・
+   * 名前＝fetchOsmNames）を同じ opts で走らせ、結果は捨てる（キャッシュに乗せるだけ）。
+   * 🔴 取り方を2か所に書かない＝「広すぎる時は枠に戻す」・「名前が全部なしなら取らない」
+   *    まで generate と同じになる（③で押した時に同じタイルがキャッシュに当たる）。
+   * 🔴 失敗しても何も出さない（fetchOsmNames は fail-soft・タイルの失敗もここで握る）。
+   * opts: {bounds, frameBounds, zoom, nameLevels}
+   */
+  function prefetch(opts) {
+    if (!opts || !opts.bounds) return Promise.resolve(null);
+    return Promise.all([fetchTiles(opts.bounds, opts.zoom), fetchOsmNames(opts)])
+      .then(function () { return null; }, function () { return null; });
+  }
+
   global.Shozaizu = {
     generate: generate,
+    // 🔒 §30-44-7 8: ②［枠を決定］などの直後に app.js が呼ぶ先読み
+    prefetch: prefetch,
+    /* 🔒 §30-42-2 7: 生成物が設定盤のどの項目に属するか（差分作り直しの唯一の判定）。
+     * app.js の「消す物を選ぶ」と generate の「取り出す」が同じこの関数を読む。 */
+    partOf: partOf,
+    /* 🔒 §30-42-4 1: 差分作り直しの結果の1行を「いま紙にある生成物」から
+     * 数え直す（app.js が差分の経路の時だけ呼ぶ）。 */
+    recount: recount,
     ROAD_STYLE: ROAD_STYLE,
     // 🔒 §23-9: 道路の描き方 'line'（既定）/'band'。UI・メッセージ表示で使う
     ROAD_STYLE_JA: { line: '線', band: '白帯＋黒縁' },

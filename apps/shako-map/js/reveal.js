@@ -864,7 +864,11 @@
       clearTimeout(late);
       if (seq !== self._osmSeq) return;
       /* 🔴 §23-6 fail-soft: **名称なぞり出しだけ**を無効化し、作図は止めない。
-       * 地理院 Anno 由来の名称（公共的建物・道路名）と線のなぞり出しはそのまま効く。 */
+       * 地理院 Anno 由来の名称（公共的建物・道路名）と線のなぞり出しはそのまま効く。
+       * 🔒 §30-44-9 1（2026-09-24 オーナー決定）: 失敗は利用者に**何も見せない**
+       *    （'error' は内部の状態だけ・app.js renderNameStat は文言を出さない）。
+       *    失敗は覚えない＝次に地図を動かした時（map 'change' → _scheduleOsm）にまた取りに行く。
+       *    旧・取り直しのボタン（retryNames）は廃止。 */
       o.state = (e && e.kind === 'wide') ? 'wide'
               : ((e && e.kind === 'none') ? 'idle' : 'error');
       o.items = []; o.roads = []; o.bbox = null;
@@ -872,13 +876,6 @@
       self._emitNames();
       self.invalidate();
     });
-  };
-
-  /** 取り直し（画面の［再試行］から） */
-  Reveal.prototype.retryNames = function () {
-    if (hasOSM()) OSM.clearCache();
-    this._osm.state = 'idle';
-    this._scheduleOsm(true);
   };
 
   Reveal.prototype._emitNames = function () {

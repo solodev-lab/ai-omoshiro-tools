@@ -61,7 +61,7 @@
     /* 🔒 §28-13 決定1/決定2（2026-09-07）: **所在図の既定の下敷き**。
      * 🔴 説明文は事実に直した。OSM のラスタタイルに描かれるのは
      *    「お店・施設の名前」と「路線番号」で、**交差点名はどのスタイルにも描かれない**
-     *    （交差点名を持つのは所在図生成が使う Overpass の**データ**の方。
+     *    （交差点名を持つのは所在図生成が使う OSM の名前**データ**の方。
      *     ガイダンス④の［交差点名・バス停名を地図に重ねる］がそれを重ねる）。 */
     { id: 'osmfj', label: 'OpenStreetMap', provider: 'gsi', kind: 'osmfj',
       note: 'お店・施設の名前と路線番号が分かります（所在図の既定の下敷き）。'
@@ -538,6 +538,11 @@
       /* 🔒 §30-33: 新しい版の見張りを始める（版なし＝手元では何もしない）。
        * ここで転んでもアプリは動くべきなので try の中に置く。 */
       verBoot();
+      /* 🔒 §30-44-7 13: 名前データの manifest（osm.js が起動時に読む）が届いたら、
+       * 地図の右下の帯に元データの日付を足す（地図がまだ無ければ何もしない＝
+       * 案件を開いた時の applySheetToMap が書く）。失敗は何も出さない。
+       * 🔒 §30-44-9 2: 起動時に読めず、後の名前の取得で読み直せた時も書き直す（onManifest）。 */
+      if (window.OSM && OSM.onManifest) OSM.onManifest(function () { syncMapAttr(); });
     } catch (e) {
       closeAllOverlays();
       try { showView('list'); } catch (e2) { /* 表示だけは必ず TOP にする */ }
@@ -1234,6 +1239,30 @@
    *    分かれていた）。ここは Store.SZ_STD をそのまま指す。 */
   var SZ_STD = Store.SZ_STD;
 
+  /* 🔒 §30-42-2 7（2026-09-22 オーナー指示「触ったトグルの項目だけ変わる」）:
+   * 設定盤の**項目の key** → {ja（表示のためだけ）, part（差分作り直しの所属）}。
+   * 🔴 分岐に使うのは key と part だけ。ja は判定に使わない（§26-2 注意②）。
+   *    （🔒 §30-44-7 9 で忙しい時の一言は「描画中…」だけになった＝ ja は控えとして残す）
+   * 🔴 key に接頭辞を付けるのは、5段階の「道路」と2択の「道路の線」が同じ `which`
+   *    （'road'）を持つため＝画面の項目としては別物・差分の所属（part）は同じ。
+   * 🔴 part:null ＝差分にしない項目（名前の位置＝名前を全部置き直す・§30-42-2 2）。 */
+  var SZ_ITEMS = (function () {
+    var m = Object.create(null);
+    Object.keys(SZ_GRADES).forEach(function (w) {
+      var g = SZ_GRADES[w];
+      // 名前の8分類は 'name:'+分類id・目標物/建物/道路は which がそのまま part
+      m['g:' + w] = { ja: g.ja, part: g.osm ? ('name:' + g.osm) : w };
+    });
+    Object.keys(SZ_TOGGLES).forEach(function (w) {
+      // nature＝川・山／road＝道路の線（roadStyle・道路の線だけ描き直す）
+      m['t:' + w] = { ja: SZ_TOGGLES[w].ja, part: w };
+    });
+    Object.keys(SZ_PICKS).forEach(function (w) {
+      m['p:' + w] = { ja: SZ_PICKS[w].ja, part: null };
+    });
+    return m;
+  })();
+
   /** いま設定盤で選ばれている名称8分類の段（shozaizu.js の nameLevels の形にする） */
   function nameLevelsNow() {
     var out = {};
@@ -1375,10 +1404,25 @@
    * 🔴 情報は捨てない ―― 全文は title に入れて、指を置けば読めるようにしてある。
    */
   function setSzResult(msg) {
+    // 🔒 §30-44-7 9: 最後に出した結果の1行（「描画中…」は数えない＝下の setSzDrawing）
+    szResultLast = msg || '';
     var el = $('szResult');
     if (!el) return;
     el.textContent = msg || '';
     if (msg) el.title = msg; else el.removeAttribute('title');
+  }
+
+  /* 🔒 §30-44-7 9（2026-09-24 オーナー「案内は描画中のみ」・§30-43-5）: 生成の間の案内は
+   * **この1語だけ**（③の状態欄 navSetStatus と #szResult）。失敗の文言は出さない。 */
+  var SZ_DRAWING = '描画中…';
+  var szResultLast = '';
+
+  /** 生成の間の案内（「描画中…」）。直前の結果の1行は覚えたまま（紙を変えずに終わった時に戻す） */
+  function setSzDrawing() {
+    var el = $('szResult');
+    if (!el) return;
+    el.textContent = SZ_DRAWING;
+    el.title = SZ_DRAWING;
   }
 
   /**
@@ -1396,7 +1440,7 @@
   /**
    * 生成結果に添える「名称が出ない理由」の一言。osmError（通信失敗）と
    * mainNoName（データが無い）は**混ぜない**（§22-as・「無い」と「取れなかった」は別）。
-   * 範囲が広すぎる（'wide'）は従来どおり別枠（§22-as の対象外・呼び出し側で扱う）。
+   * 🔒 §30-44-7 4: 範囲が広すぎる（'wide'）の一言もここ1か所（③の状態欄と結果の1行で同じ文）。
    * @return '' か、先頭に空白付きの警告文
    */
   /* 🔒 §30-23: 「枠に入った目印がほとんど無い」と言う件数の境目（これ未満で一言を足す） */
@@ -1404,19 +1448,21 @@
 
   function szNameWarningText(s) {
     var w = '';
-    if (s.osmError && s.osmError !== 'wide') {
-      w = ' ⚠ 名前の取得に失敗しました（通信）。少し待って、もう一度［所在図を作る］を押してください。';
+    /* 🔒 §30-44-7 4（2026-09-24）: 枠が広すぎて名前を取りに行かない（'wide'）は、失敗では
+     * なく**範囲の案内**＝「枠が 12km を超えるため名前は入りません」だけ。
+     * 🔴 数字は osm.js の定数から組んだ値（runShozaizu が stat.namesWideKm に入れる）。
+     * 🔒 §30-44-7 10 / §30-43-5（オーナー差し戻し「失敗を見せないでほしい」）:
+     *    通信の失敗（'net'）は**何も言わない**（紙の控え szNames.ok=false＝次の設定変更で
+     *    全部作り直し＝黙って取り直す）。 */
+    if (s.osmError === 'wide') {
+      w = ' 枠が ' + (s.namesWideKm || OSM.namesSpanKm()) + 'km を超えるため名前は入りません。';
     } else if (!s.osmError && s.mainNoName && (s.mainNoName.home || s.mainNoName.lot)) {
       w = ' ⚠ ' + mainNoNameText(s.mainNoName);
     }
-    /* 🔒 §30-21-4 1: 名前が多すぎて応答の上限に当たった時は**足す**（上の2つとは別の話。
-     * 取れなかったのでも無いのでもなく「取ったが多すぎて一部を省いた」）。
-     * 🔴 判定は shozaizu の stat（namesTruncated）。表示文字では分岐しない（注意②）。 */
-    if (s.namesTruncated) {
-      w += ' ⚠ 名前が多すぎて一部を省きました（枠を小さくすると全部出ます）';
-    }
+    /* 🔒 §30-44-9 3（2026-09-24）: 旧 §30-21-4 1「名前が多すぎて一部を省きました」は廃止
+     * （自前の名前タイルは件数で切っていない＝省くことが起きない）。 */
     /* 🔒 §30-23: 逆に枠が狭すぎて、周りの施設が全部枠の外へ出てしまった時も**足す**
-     * （上の3つとは別の話＝取れているが紙に載らない）。
+     * （上の2つとは別の話＝取れているが紙に載らない）。
      * 🔴 判定は shozaizu の stat（marksInFrame＝枠に入った目印の件数）。
      *    表示文字列では分岐しない（注意②）。
      * 🔴 通信に失敗した時（osmError）は数えない。OSM の名前が丸ごと欠けて件数が
@@ -1427,6 +1473,39 @@
          + '地図を縮小して枠を広げると、周りの施設名が出ます';
     }
     return w;
+  }
+
+  /* ---------- 🔒 §30-43（2026-09-23）: 名前（OSM）が取れなかった時の作法 ---------- */
+
+  /** 差分作り直しの所属（part）が名前の8分類か（'name:<分類id>'）。
+   * 🔴 判定は part（Shozaizu.partOf の返り値＝データの識別子）。表示文字では分岐しない。 */
+  function isNamePart(part) {
+    return typeof part === 'string' && part.indexOf('name:') === 0;
+  }
+
+  /**
+   * 🔒 §30-43-2 2: その紙の前回の生成で、名前（OSM）が紙に届いたか。
+   * 🔴 控え（szNames）が無い紙（この版より前に作った紙）は「分からない」＝ ok ではない
+   *    扱い＝差分にせず全部作り直す（取りこぼしたまま差分で上塗りしない）。
+   */
+  function szNamesOk(sh) {
+    return !!(sh && sh.szNames && sh.szNames.ok === true);
+  }
+
+  /* 🔒 §30-44-7 10（2026-09-24）: §30-43-2 3 の赤い帯とその中の再取得のボタンは
+   * 撤去した（🔒 §30-43-5 オーナー差し戻し）。失敗は見せず、紙の控え
+   * szNames.ok=false で次の設定変更を全部作り直しにする（＝黙って取り直す）。 */
+
+  /** 🔒 §30-43-2 4: 「自動」で決まった段の控え（分類 id → 段）を写す（数字だけ通す） */
+  function copyNameAuto(src) {
+    var out = {};
+    if (src && typeof src === 'object') {
+      Object.keys(src).forEach(function (k) {
+        var n = Number(src[k]);
+        if (isFinite(n)) out[k] = n;
+      });
+    }
+    return out;
   }
 
   /** 設定盤の全項目を、いまの案件の値で引き直す（案件を開いた時・標準へ戻した時） */
@@ -1616,9 +1695,8 @@
       });
       applyNameCats();
     });
-    $('rvNameRetry').addEventListener('click', function () {
-      if (state.reveal) state.reveal.retryNames();
-    });
+    /* 🔒 §30-44-9 1: 名称の［もう一度取りに行く］は廃止（失敗は見せない・次に地図を
+     * 動かした時にまた取りに行く＝reveal.js の map 'change'）。 */
     $('btnDraft').addEventListener('click', function () {
       $('draftPanel').hidden = !$('draftPanel').hidden;
       if (!$('draftPanel').hidden) probeDraftSources();
@@ -2266,7 +2344,8 @@
           var lv = gradeClamp(which, this.value);
           if (state.current) state.current[g.key] = lv;
           syncGradePick(which, lv);            // 2か所あれば揃える（目標物）
-          szSettingChanged(g.ja);
+          // 🔒 §30-42-2 7: 渡すのは**項目の key**（表示名では分岐しない・注意②）
+          szSettingChanged('g:' + which);
         });
       });
     });
@@ -2277,7 +2356,7 @@
       box.addEventListener('change', function () {
         var v = t.bool ? this.checked : (this.checked ? t.on : t.off);
         if (state.current) state.current[t.key] = v;
-        szSettingChanged(t.ja);
+        szSettingChanged('t:' + which);        // 🔒 §30-42-2 7
       });
     });
     /* 🔒 §30-22-2 2: 段数が5でない項目（名前の位置）。作法は5段階と同じ */
@@ -2290,7 +2369,7 @@
             Math.round(Number(this.value) || Number(SZ_STD[g.key]))));
           if (state.current) state.current[g.key] = v;
           syncPickPick(which, v);
-          szSettingChanged(g.ja);
+          szSettingChanged('p:' + which);      // 🔒 §30-42-2 7
         });
       });
     });
@@ -3491,7 +3570,7 @@
    * 🔴 押すたびに前回の自動分（source:'roadauto'）だけを消して描き直す
    *    ＝ 手で描いた物・所在図から持ってきた物には触らない。
    * 🔴 幅は「縁の位置そのもの」なので、縁の図形に `widthM` は持たせない（§30-25-22 6）。
-   * 🔴 使うのは地理院ベクトルタイル（RdCL）だけ。Overpass は使わない。
+   * 🔴 使うのは地理院ベクトルタイル（RdCL）だけ。OSM の名前データは使わない。
    * 🔴 所在図の自動生成の道路（帯）は**今のまま**（shozaizu.js は触らない）。 */
   var ROADAUTO_PAD_M = 30;      // 枠の外へ広げる距離(m)
   var ROADAUTO_Z = 16;          // 地理院ベクトルタイルの最大ズーム（17 以上は 404）
@@ -4757,14 +4836,17 @@
    * 🔴 まだ所在図が空の案件では作り直さない（設定だけ覚える）。空の図に対して
    *    毎回タイルを取りに行くのは待たせるだけで、ユーザーの意図でもない。
    */
-  function szSettingChanged(ja) {
+  /* 🔒 §30-42-2 7: 受け取るのは**項目の key**（SZ_ITEMS の添字）。
+   * part を持つ項目は**その項目の物だけ**を作り直す（差分作り直し）。 */
+  function szSettingChanged(key) {
     if (!state.current) return;
     Store.autosave(state.current);
     if (!navHasShozaizu()) return;
-    var busy = (ja || '設定') + 'を変えて作り直しています…';
-    setSzResult(busy);
-    navSetStatus(busy);
-    runShozaizu(true).then(function (res) {
+    var item = SZ_ITEMS[key] || null;
+    /* 🔒 §30-44-7 9: 生成の間の案内は「描画中…」だけ（項目名を添えていた一言はやめた） */
+    setSzDrawing();
+    navSetStatus(SZ_DRAWING);
+    runShozaizu(true, item ? item.part : null).then(function (res) {
       navSetStatus(navSzResultText(res));
     });
   }
@@ -4788,12 +4870,106 @@
     return runShozaizu();                      // ③
   }
 
+  /* 🔒 §30-42-2 7: 面と線の**重なりの順**（配列の並び＝下から）。
+   * 🔴 画面（editor.js render）も紙（export.js）も「道路は一番下・文字は一番上」へ
+   *    寄せて描くので、並びが効くのは**面と線**だけ＝川・山 → 建物 → 鉄道 の順。
+   *    表に無い物（名前・目標物＝文字）は並びが効かないので 0（先頭）でよい。 */
+  var DIFF_Z = { nature: 0, bldg: 1 };
+
+  /**
+   * 差分作り直しで「消す物が1つも無かった」時の差し込み位置。
+   * 🔒 §30-42-2 7: 例えば建物が「なし」から「標準」になった時、先頭へ足すと
+   *    建物の輪郭が水面の塗りの下に潜る。1つ下の段の物の**後ろ**へ差し込む。
+   */
+  function diffInsertAt(part) {
+    var rank = DIFF_Z[part];
+    if (rank === undefined || !window.Shozaizu || !Shozaizu.partOf) return 0;
+    var list = state.editor.objects, pos = 0;
+    for (var i = 0; i < list.length; i++) {
+      var o = list[i];
+      if (!o || o.source !== 'shozaizu') continue;
+      var r = DIFF_Z[Shozaizu.partOf(o)];
+      if (r !== undefined && r < rank) pos = i + 1;
+    }
+    return pos;
+  }
+
+  /**
+   * 🔒 §30-44-7 8（2026-09-24）: 所在図の**取得範囲とタイルの倍率**（生成と先読みで共有）。
+   * @param frame 書き出す枠（frameShozaizu の返り値・先読みでは副作用の無い同じ物）
+   * @return {bounds, frameBounds, zoom}
+   */
+  function szGenArea(frame) {
+    var mv = state.map;
+    // 書き出す枠の範囲そのもので作る（少しだけ外側も拾って端を欠けさせない）
+    var fb = frame ? Exporter.frameBounds(frame) : mv.getBounds();
+    /* 🔒 §30-25-3 1（2026-09-13 オーナー指示）: **取得範囲＝画面に映っている範囲と
+     * 枠の範囲の和＋8%**。地理院タイルも名前（OSM）も同じ範囲を1回で取る。
+     * 🔴 段（多め・全部）を選ぶと枠の外にも描けるようにするための「材料」。
+     *    どこまで描くかは shozaizu.js の areaFor（段ごと）が決める（§30-25-3 2）。
+     * 🔴 取得範囲は**画面より広げない**（取得の重さ・§30-25-3 5）。 */
+    var vb = mv.getBounds();
+    var ub = { west: Math.min(fb.west, vb.west), east: Math.max(fb.east, vb.east),
+               south: Math.min(fb.south, vb.south), north: Math.max(fb.north, vb.north) };
+    var padLat = (ub.north - ub.south) * 0.08;
+    var padLng = (ub.east - ub.west) * 0.08;
+    var genBounds = { west: ub.west - padLng, east: ub.east + padLng,
+                      south: ub.south - padLat, north: ub.north + padLat };
+    /* 🔒 §26-4-b: 枠が決定済みの紙は地図を動かしていないので、
+     * タイルの倍率は**枠から**出す（地図のズームで取ると粗すぎ／細かすぎになる）。
+     * 🔴 §22-an: 未決定の紙はいまの画面そのものが枠（frameShozaizu が地図を動かさない）
+     *    なので、地図のズームをそのまま使えばよい（従来どおり）。 */
+    var sh = sheetOf('shozaizu');
+    var zoom = (sh && sh.frameFixed && frame) ? zoomForFrame(frame) : mv.getZoom();
+    return { bounds: genBounds, frameBounds: frame ? fb : null, zoom: zoom };
+  }
+
+  /* 🔒 §30-44-7 8: 直前に先読みした範囲（連打で二重に取りに行かない・案件を開くと空に戻す） */
+  var szPrefetchKey = '';
+
+  /**
+   * 🔒 §30-44-7 8（§30-44-2 C3・2026-09-24）: 先読み。②［枠を決定］／［枠を決めなおす］の
+   * 直後と、案件を開いて所在図の紙に枠がある時に、③の生成と**同じ範囲**の名前タイルと
+   * 地理院タイルを裏で取っておく（③を押した時にはキャッシュに乗っている）。
+   * 🔴 結果は捨てる・失敗しても何も出さない（Shozaizu.prefetch が握る）。
+   * 🔴 取り方は generate と同じ関数（Shozaizu.prefetch）＝範囲の組み立ても szGenArea 1か所。
+   * 🔴 紙・案件を一切書き換えない（frameShozaizu は未決定の紙の枠を書くので使わず、
+   *    同じ規則の枠＝決定済みならその枠・未決定なら画面の枠 を読むだけ）。
+   */
+  function szPrefetch() {
+    var c = state.current;
+    if (!c || !state.map || state.kind !== 'shozaizu') return;
+    if (!window.Shozaizu || !Shozaizu.prefetch) return;
+    if (!c.points.home && !c.points.lot) return;       // 生成できない紙（runShozaizu も止まる）
+    var sh = sheetOf('shozaizu');
+    var frame = (sh && sh.frameFixed && sh.frame && sh.frame.center && sh.frame.w_m)
+      ? sh.frame : frameFromView();
+    if (!frame) return;
+    var area = szGenArea(frame);
+    var levels = nameLevelsNow();
+    var b = area.bounds;
+    var key = [b.west, b.south, b.east, b.north].map(function (v) { return v.toFixed(5); })
+      .join(',') + '@' + area.zoom + '|' + JSON.stringify(levels);
+    if (key === szPrefetchKey) return;
+    szPrefetchKey = key;
+    Shozaizu.prefetch({ bounds: area.bounds, frameBounds: area.frameBounds,
+                        zoom: area.zoom, nameLevels: levels });
+  }
+
   /**
    * 所在図を作る。silent=true で通知を出さない。
    * 🔒 §18-ab: 生成は**常に前回の自動生成物を差し替える**（重ねる選択肢は廃止した）。
    *    手で描いた図形は source が違うので、この差し替えでは消えない。
+   *
+   * 🔒 §30-42（2026-09-22 オーナー指示）: `diffPart` を渡すと**その項目の生成物だけ**
+   * を作り直す（他の生成物は消さない・置き直さない・並びも変えない）。
+   * 値は Shozaizu.partOf の返り値（'lm'/'bldg'/'road'/'nature'/'name:<分類id>'）。
+   * 🔴 ［所在図を作る］ボタン・［標準に戻す］・名前の位置は diffPart を渡さない
+   *    ＝従来どおり全部作り直し。取得→整形は差分でも全部走るので結果の1行は同じ。
+   * 🔴 生成の入力（opts）は**差分でも全部作り直しでも同じ**＝この1本の関数で組む
+   *    （2か所に書かない・§30-42-2 7）。
    */
-  function runShozaizu(silent) {
+  function runShozaizu(silent, diffPart) {
     var c = state.current;
     if (!c) return Promise.resolve(null);
     if (state.kind !== 'shozaizu') switchKind('shozaizu');
@@ -4806,6 +4982,41 @@
     if (!c.points.home) {
       setSzResult('使用の本拠の住所も入れると、2地点間の距離と2km判定が出ます。');
     }
+    /* 🔒 §30-42-2 7: 差分作り直しの仕分け（消す物／残す物）。
+     * 🔴 どちらに入るかは Shozaizu.partOf（データ属性）1か所で決める。
+     *    主役の多角形・手で動かした主役の文字・地名・地理院の道路名などは
+     *    partOf が null を返す＝自動で「残す物」になる（消す経路に乗らない）。
+     * 🔴 `at` ＝消す物のいちばん手前の位置。新しい物は**そこへ差し込む**
+     *    （先頭へ足すと作り直した建物が水面の下へ潜る）。 */
+    /* 🔒 §30-43-2 2（2026-09-23 オーナー報告「最初の図に交差点名が無い。変えると入る」）:
+     * 差分作り直しは**前回の生成で名前（OSM）が紙に届いた紙だけ**。
+     * 名前を取りこぼした紙（szNames.ok:false）・控えの無い紙で差分にすると、触った分類
+     * だけが入り、他の分類は空のまま残る（真因・§30-43-1 2）。そういう紙は全部作り直す。 */
+    if (diffPart && !szNamesOk(sheetOf('shozaizu'))) diffPart = null;
+    var diff = null;
+    if (diffPart && window.Shozaizu && Shozaizu.partOf) {
+      var dKill = [], dKeep = [], dAt = -1, dHasPart = false;
+      state.editor.objects.forEach(function (o, i) {
+        if (!o || o.source !== 'shozaizu') return;
+        if (o.part) dHasPart = true;
+        if (Shozaizu.partOf(o) === diffPart) {
+          if (dAt < 0) dAt = i;
+          dKill.push(o);
+        } else {
+          dKeep.push(o);
+        }
+      });
+      /* 🔒 §30-42-2 7: 古い案件（生成物が所属の印 `part` を1つも持たない）で
+       * 差分の対象が1件も当たらない時は、**従来の全部作り直し**へ落とす
+       * （黙って「何も変わらない」にしない）。 */
+      if (!dKill.length && !dHasPart) diffPart = null;
+      else diff = { part: diffPart, kill: dKill, keep: dKeep, at: dAt };
+    } else {
+      diffPart = null;
+    }
+    var diffKillIds = Object.create(null);
+    if (diff) diff.kill.forEach(function (o) { diffKillIds[o.id] = true; });
+
     /* 🔒 §18-r: 目標物の件数を切り替えた時、**役割ラベル（自宅・駐車場・距離）は動かさない**。
      * 枠が変わっていない＝同じ図の作り直しの時だけ、前回の文字の位置を引き継ぐ
      * （枠が変わった時は位置ごと作り直すのが正しい）。 */
@@ -4836,7 +5047,7 @@
 
     $('szRun').disabled = true;
     sgSzBusy(true);          // 🔒 §28-4: ガイダンス③の設定盤を灰色にする
-    setSzResult('国土地理院のデータを取得しています…');
+    setSzDrawing();          // 🔒 §30-44-7 9: 生成の間の案内は「描画中…」だけ
 
     /* 🔒 2026-09-03: 設定盤の6項目は**全部を案件に覚えさせる**（画面だけの状態を作らない）。
      * 作り直し・再読込のどちらでも同じ図が出る。
@@ -4870,32 +5081,13 @@
     var runToken = state.szRunSeq;
 
     var mv = state.map;
-    // 書き出す枠の範囲そのもので作る（少しだけ外側も拾って端を欠けさせない）
-    var fb = frame ? Exporter.frameBounds(frame) : mv.getBounds();
-    /* 🔒 §30-25-3 1（2026-09-13 オーナー指示）: **取得範囲＝画面に映っている範囲と
-     * 枠の範囲の和＋8%**。地理院タイルも Overpass も同じ範囲を1回で取る。
-     * 🔴 段（多め・全部）を選ぶと枠の外にも描けるようにするための「材料」。
-     *    どこまで描くかは shozaizu.js の areaFor（段ごと）が決める（§30-25-3 2）。
-     * 🔴 取得範囲は**画面より広げない**（Overpass の重さ・§30-25-3 5）。 */
-    var vb = mv.getBounds();
-    var ub = { west: Math.min(fb.west, vb.west), east: Math.max(fb.east, vb.east),
-               south: Math.min(fb.south, vb.south), north: Math.max(fb.north, vb.north) };
-    var padLat = (ub.north - ub.south) * 0.08;
-    var padLng = (ub.east - ub.west) * 0.08;
-    var genBounds = { west: ub.west - padLng, east: ub.east + padLng,
-                      south: ub.south - padLat, north: ub.north + padLat };
-    /* 🔒 §26-4-b: 枠が決定済みの紙は地図を動かしていないので、
-     * タイルの倍率は**枠から**出す（地図のズームで取ると粗すぎ／細かすぎになる）。
-     * 🔴 §22-an: 未決定の紙はいまの画面そのものが枠（frameShozaizu が地図を動かさない）
-     *    なので、地図のズームをそのまま使えばよい（従来どおり）。 */
-    var prevFixedSheet = sheetOf('shozaizu');
-    var genZoom = (prevFixedSheet && prevFixedSheet.frameFixed && frame)
-      ? zoomForFrame(frame) : mv.getZoom();
+    /* 🔒 §30-44-7 8: 取得範囲とタイルの倍率は szGenArea 1か所で組む（先読みと同じ物） */
+    var area = szGenArea(frame);
     return Shozaizu.generate({
-      bounds: genBounds,
+      bounds: area.bounds,
       // 🔒 §18-n-4: 文字を紙の枠内に収めるため、記載欄そのものの範囲も渡す
-      frameBounds: frame ? fb : null,
-      zoom: genZoom,
+      frameBounds: area.frameBounds,
+      zoom: area.zoom,
       home: c.points.home, lot: c.points.lot,
       /* 🔒 §30-22-1 6 / §30-22-6 2: 同一住所＝印もラベルも1つ・結線と距離は描かない */
       same: !!c.points.same,
@@ -4935,10 +5127,17 @@
       nameLevels: nameLevels,
       /* 🔴 同名の重複を出さないための「紙に既にある文字」（§23-6-a の先勝ち）。
        * 自動生成物（source:'shozaizu'）はこの後まるごと差し替わるので数えない。
-       * 手描き・なぞり出した名称（source:'reveal'）は残るので必ず渡す。 */
+       * 手描き・なぞり出した名称（source:'reveal'）は残るので必ず渡す。
+       * 🔒 §30-42-2 7: 差分作り直しでは**残す生成物の文字も**数える
+       *    （消さない名前と同じ名前を新しく出さない・先勝ち）。 */
       existingNames: state.editor.objects.filter(function (o) {
-        return o.type === 'text' && o.text && o.source !== 'shozaizu';
+        if (o.type !== 'text' || !o.text) return false;
+        if (o.source !== 'shozaizu') return true;
+        return !!diff && !diffKillIds[o.id];
       }).map(function (o) { return o.text; }),
+      /* 🔒 §30-42-2 2: その項目の物だけ作り直す（残す文字は障害物として渡す）。
+       * 🔴 指定が無ければ従来どおり全部作り直し（undefined＝差分でない）。 */
+      diff: diff ? { key: diff.part, keep: diff.keep } : undefined,
       /* 🔒 §28-3: 部品として置かれた方位記号（type:'compass'）は、名前・路線番号の印が
        * 避ける**障害物**として渡す（旧・自動の方位記号は furnitureZones の席だった）。 */
       /* 🔒 §30-37 2: 大きさ（倍率 markScale）も渡す＝箱を記号ごとの大きさで取る */
@@ -4952,6 +5151,32 @@
       // 追い越された生成は捨てる（§18-z の二重防止）
       if (runToken !== state.szRunSeq) return res;
 
+      /* 🔒 §30-43-2 2: 名前（OSM）が取れなかったか（タイルの取り直しも全部だめ・
+       * 🔒 §30-44-9 2: manifest が読めない時も同じ）。'wide'（範囲が広すぎて取りに行かない）は
+       * 失敗ではない＝もう一度取っても同じ。 */
+      var osmFail = !!(res.stats && res.stats.osmError && res.stats.osmError !== 'wide');
+      /* 🔒 §30-44-7 4: 'wide' の一言の数字（「枠が 12km を超えるため…」）は osm.js の
+       * 定数から組む（その枠の緯度での z13 の1辺×3）。szNameWarningText が読む。 */
+      if (res.stats && res.stats.osmError === 'wide' && window.OSM && OSM.namesSpanKm) {
+        res.stats.namesWideKm = OSM.namesSpanKm(
+          (frame && frame.center) ? frame.center.lat : undefined);
+      }
+      /* 🔒 §30-43-2 2 / §30-44-7 10: 名前の分類の差分で失敗した時は**紙を一切変えない**
+       * （消さない・足さない）。消せば今ある名前が消えるだけになる。
+       * 🔒 §30-44-7 9 / 10（🔒 §30-43-5）: 失敗の文言は**出さない**。結果の1行は前回の物に
+       *    戻し（「描画中…」を残さない）、紙の控えを szNames.ok=false にする＝次の設定変更は
+       *    差分でなく全部作り直し＝**黙って取り直す**（選んだ段が紙に反映されないまま残らない）。
+       * 🔴 名前以外の差分（建物・道路・川山・目標物）は OSM を使わない＝このまま作る。 */
+      if (diff && osmFail && isNamePart(diff.part)) {
+        var shKeep = sheetOf('shozaizu');
+        if (shKeep) {
+          shKeep.szNames = { ok: false, at: new Date().toISOString() };
+          Store.autosave(state.current);
+        }
+        setSzResult(szResultLast);
+        return null;
+      }
+
       /* 🔒 §23-10: 建物が極端な件数（密集地で「全部」段等）になる時は、
        * 図形を作る前に確認する（app.js 自動下書きの「200個確認」と同じ作法・§11-b）。
        * 🙋 仮値 BLDG_CONFIRM_N=1000（実機目視で確定）。
@@ -4959,11 +5184,13 @@
        * 「前回の自動生成物を消す」より**前**に置く。 */
       /* 🔒 2026-09-03: 道路も段5「全部」で間引きが外れるので、同じ作法で確認する。
        * 🙋 仮値 ROAD_CONFIRM_N=2500（従来の自動間引きの上限 2200 の少し上）。 */
+      /* 🔒 §30-42-2 7: 差分作り直しでは**その項目を触った時だけ**確認する
+       * （名前の分類を変えただけで建物の件数を聞かれるのは筋が通らない）。 */
       var heavy = [];
-      if (res.stats.buildings > BLDG_CONFIRM_N) {
+      if ((!diff || diff.part === 'bldg') && res.stats.buildings > BLDG_CONFIRM_N) {
         heavy.push('建物が ' + res.stats.buildings + ' 個');
       }
-      if (res.stats.roads > ROAD_CONFIRM_N) {
+      if ((!diff || diff.part === 'road') && res.stats.roads > ROAD_CONFIRM_N) {
         heavy.push('道路が ' + res.stats.roads + ' 本');
       }
       if (heavy.length) {
@@ -4985,29 +5212,43 @@
        *      自宅・駐車場・距離が二重三重に増える原因だった＝§18-z の実測）
        * 🔒 §23-10: 旧実装は生成の**前**に消していたが、それだと上の確認で
        *    ［キャンセル］した時に図が空になる。生成が確定してから消すよう動かした。 */
-      var n = 0;
+      var n = 0, addAt = 0;
       /* 🔒 §30-25-28 4: 手で動かした／大きさを変えた主役の文字（userMoved）が
        * 残っている地点。生成物の同じ文字は捨てる（重複させない・判定は pinKey）。 */
       var keptMain = {};
-      state.editor.snapshot();
-      for (var i = state.editor.objects.length - 1; i >= 0; i--) {
-        var od = state.editor.objects[i];
-        if (od.source !== 'shozaizu') continue;
-        /* 🔒 §30-24-1: 主役の**多角形**は利用者が手で描いた印（生成物ではない）。
-         * 作り直しで消さない（消すと囲んだ土地の形が毎回消えてしまう）。 */
-        if (od.role === 'mainmark' && od.type === 'polygon') continue;
-        /* 🔒 §30-25-28 4（2026-09-14 オーナー指示）: 手で動かした主役の文字も
-         * 「利用者が触った物」＝多角形と同じ扱いで消さず・置き直さず残す。 */
-        if (od.role === 'pinlabel' && od.type === 'text' && od.userMoved) {
-          keptMain[pinKeyOf(od)] = true;
-          continue;
+      if (diff) {
+        /* 🔒 §30-42-2 2: 差分作り直し＝その項目の物**だけ**を抜く
+         * （残す生成物は位置も並びも触らない）。新しい物は抜いた所へ差し込む。
+         * 🔒 §30-42-2 5: ［戻す］は1回で差分作り直しの前に戻る＝控えは1回だけ
+         *    （この後の addGenerated には控えを取らせない）。 */
+        addAt = (diff.at >= 0) ? diff.at : diffInsertAt(diff.part);
+        if (diff.kill.length || res.objects.length) state.editor.snapshot();
+        for (var ki = state.editor.objects.length - 1; ki >= 0; ki--) {
+          if (!diffKillIds[state.editor.objects[ki].id]) continue;
+          state.editor.objects.splice(ki, 1); n++;
         }
-        state.editor.objects.splice(i, 1); n++;
+      } else {
+        state.editor.snapshot();
+        for (var i = state.editor.objects.length - 1; i >= 0; i--) {
+          var od = state.editor.objects[i];
+          if (od.source !== 'shozaizu') continue;
+          /* 🔒 §30-24-1: 主役の**多角形**は利用者が手で描いた印（生成物ではない）。
+           * 作り直しで消さない（消すと囲んだ土地の形が毎回消えてしまう）。 */
+          if (od.role === 'mainmark' && od.type === 'polygon') continue;
+          /* 🔒 §30-25-28 4（2026-09-14 オーナー指示）: 手で動かした主役の文字も
+           * 「利用者が触った物」＝多角形と同じ扱いで消さず・置き直さず残す。 */
+          if (od.role === 'pinlabel' && od.type === 'text' && od.userMoved) {
+            keptMain[pinKeyOf(od)] = true;
+            continue;
+          }
+          state.editor.objects.splice(i, 1); n++;
+        }
       }
       if (n) state.editor.commit();
 
-      // 役割ラベルは前回の位置のまま（§18-r。件数を変えても主役の文字は動かさない）
-      if (sameFrame) {
+      /* 役割ラベルは前回の位置のまま（§18-r。件数を変えても主役の文字は動かさない）
+       * 🔒 §30-42-2 7: 差分作り直しでは主役を**そもそも作り直さない**（触らない）。 */
+      if (!diff && sameFrame) {
         res.objects.forEach(function (o) {
           if (o.type !== 'text' || !o.role) return;
           var at = roleAt[o.role + ':' + o.text];
@@ -5020,12 +5261,57 @@
         return !(o && o.type === 'text' && o.role === 'pinlabel'
                  && keptMain[pinKeyOf(o)]);
       });
-      state.editor.addGenerated(fresh);
+      /* 🔒 §30-42-2 7: 差分では消した所へ差し込む（全部作り直しは従来どおり先頭）。
+       * 🔒 §30-42-4 2: 全部作り直しも控えは**上の snapshot() 1回だけ**にする
+       * （差分は元から diff.kill.length || res.objects.length の所で1回取っている）。
+       * 従来は `!!diff` を渡していたため全部作り直しの時は false になり、ここで
+       * 2回目の snapshot が入って［戻す］1回で生成物が全部消えた紙に戻る不具合が
+       * あった（差分の経路で noSnap にしたのに全部作り直しは直していなかった）。
+       * ここは常に noSnap＝true でよい。 */
+      state.editor.addGenerated(fresh, addAt, true);
       /* 🔒 §30-24-3: 作り直しの後は「使用の本拠」「駐車場」の文字が必ず1つずつある
-       * （生成側は地点が無いと作らない＝片方が消える経路の出口）。 */
-      ensureMainLabels();
+       * （生成側は地点が無いと作らない＝片方が消える経路の出口）。
+       * 🔒 §30-42-2 7: 差分作り直しでは主役を触らない＝呼ばない。 */
+      if (!diff) ensureMainLabels();
+      /* 🔒 §30-42-4 1: 差分作り直しの結果の1行は、流れ全体の stats ではなく
+       * 「いま紙にある生成物」から数え直す（既存の残す文字が existingNames の
+       * 先勝ちで stats.names を小さく見せるため・実測 14→7）。全部作り直しは
+       * 従来どおり流れの値をそのまま使う（recount を呼ばない）。 */
+      if (diff) {
+        Shozaizu.recount(state.editor.objects.filter(function (o) {
+          return o && o.source === 'shozaizu';
+        }), res.stats);
+      }
       updateHistoryButtons();
       var s = res.stats;
+      /* 🔒 §30-43-2 2 / 4: 名前が紙に届いたかと「自動」の控えを**紙に**覚える
+       * （案件を開き直しても差分の判定が続くように）。
+       * 🔴 ok の定義＝「名前を取りこぼしていない」＝ !osmFail。
+       *    正典の式（osmUsed && !osmError）のままだと、名前の8分類を全部「なし」に
+       *    した紙（OSM を呼ばない）や 'wide' の紙まで「失敗」になり、差分が
+       *    効かなくなるため（どちらももう一度取っても結果は同じ＝失敗ではない）。
+       * 🔴 差分はここへ来た時点で ok の紙だけ（上で全部作り直しへ落としている）かつ
+       *    名前の差分の失敗は上で抜けている＝紙の名前は生きている＝ ok のまま。
+       * 🔒 §30-44-7 9: ok:false の紙は次の設定変更で全部作り直し＝黙って取り直す
+       *    （画面には何も出さない・🔒 §30-43-5）。 */
+      var shGen = sheetOf('shozaizu');
+      if (shGen) {
+        shGen.szNames = { ok: diff ? true : !osmFail, at: new Date().toISOString() };
+        if (!diff) {
+          /* 全部作り直しは丸ごと写す。名前が取れなかった生成（'wide' も）では写さない
+           * ＝前回の控えも捨てる（候補 0 件で全分類「全部」に化けた値を残さない）。 */
+          shGen.szNameAuto = s.osmError ? {} : copyNameAuto(s.nameAuto);
+        } else if (isNamePart(diff.part) && !s.osmError) {
+          /* 差分は**その分類だけ**書き換える（他の分類は再評価していない＝前回のまま）。
+           * その分類が「自動」でなければ控えから消す。 */
+          var autoId = diff.part.slice('name:'.length);
+          var autoNow = s.nameAuto ? Number(s.nameAuto[autoId]) : NaN;
+          if (!shGen.szNameAuto || typeof shGen.szNameAuto !== 'object') shGen.szNameAuto = {};
+          if (isFinite(autoNow)) shGen.szNameAuto[autoId] = autoNow;
+          else delete shGen.szNameAuto[autoId];
+        }
+        Store.autosave(state.current);
+      }
       /* 🔒 §23-9 / 2026-09-03: 道路は「段の名前・描き方」を添える */
       var parts = ['道路 ' + s.roads + '（' + GRADE_JA[roadLevel]
                      + '・' + Shozaizu.ROAD_STYLE_JA[roadStyle] + '）',
@@ -5075,12 +5361,16 @@
        * （例「自動: 交差点名・バス停＝全部／お店・道路名＝標準」）。
        * 🔴 判定は stat の段の数字（s.nameAuto）。表示文字では分岐しない（注意②）。
        * 🔴 分類名は SZ_GRADES[].ja・段の名前は GRADE_JA＝どちらも1か所から引く。 */
-      if (s.nameAuto) {
+      /* 🔒 §30-43-2 4: 読むのは**紙の控え**（shGen.szNameAuto）。流れ全体の s.nameAuto は
+       * 差分では existingNames の先勝ちで他の分類の値が化けるので直接は使わない。
+       * 名前が取れなかった全部作り直しでは控えが空＝この行は出ない。 */
+      var autoMap = (shGen && shGen.szNameAuto) || null;
+      if (autoMap) {
         var byLv = Object.create(null);           // 段 → その段に決まった分類名
         Object.keys(SZ_GRADES).forEach(function (k) {
           var g = SZ_GRADES[k];
-          if (!g.osm || s.nameAuto[g.osm] === undefined) return;
-          var lvA = s.nameAuto[g.osm];
+          if (!g.osm || autoMap[g.osm] === undefined) return;
+          var lvA = autoMap[g.osm];
           (byLv[lvA] = byLv[lvA] || []).push(g.ja);
         });
         // 上の段（＝たくさん出た分類）から並べる
@@ -5092,18 +5382,17 @@
         }
       }
       /* 🔴 fail-soft（§23-6）: OSM が取れなくても作図は止めない。
-       * 黙って名称が消えると「効いていない」と誤解されるので必ず言葉にする。
        * 🔒 §22-as: 通信失敗（osmError・'wide' 以外）と「データが無い」（mainNoName）は
-       *    混ぜない。'wide'（範囲が広すぎる）は従来どおりの文言のまま。 */
-      if (s.osmError === 'wide') {
-        msg += ' ⚠ 範囲が広すぎて名称（交差点名・お店・会社・バス停・道路名）は取りに行けません。';
-      } else {
-        msg += szNameWarningText(s);
-      }
+       *    混ぜない。
+       * 🔒 §30-44-7 4 / 10（🔒 §30-43-5 オーナー差し戻し）: 通信の失敗は**言葉にしない**
+       *    （紙の控え ok:false で次に黙って取り直す）。'wide' は範囲の案内の一言
+       *    （「枠が 12km を超えるため名前は入りません」）＝ szNameWarningText の1か所。 */
+      msg += szNameWarningText(s);
       setSzResult(msg);
       noteDraftAttribution(false);
       /* 🔒 §23-6（ODbL）: OSM 由来の名称を**実際に紙へ出した時だけ**出典を足す */
       if (s.namesTotal) noteOsmAttribution(sheetOf('shozaizu'));
+      /* 🔒 §30-44-7 10: §30-43-2 3 の「silent でも失敗を画面の一言に出す」は撤去した */
       if (!silent) {
         var szHint = parts.join(' / ') + ' で所在図を作りました' + szNameWarningText(s);
         hint(szHint, szNameWarningText(s) ? 7000 : 4500);
@@ -6024,6 +6313,7 @@
     applyOpacity(p / 100);
     persistSheetState();
     sgSyncUnderlay();        // 🔒 §28-5 B / §30-22-3 1: ①④⑤の〇・濃さ・切替も追従
+    syncMapAttr();           // 🔒 §30-44-7 13: 地図なし（濃さ 0）では撮影時期を出さない
   }
 
   /** いまの下敷きの濃さ（%）。値の出どころは上部バーの #opacity 1か所 */
@@ -7322,7 +7612,7 @@
   function navRunShozaizu() {
     if (!state.current) return;
     navBusy(true);
-    navSetStatus('所在図を作っています…');
+    navSetStatus(SZ_DRAWING);        // 🔒 §30-44-7 9: 生成の間の案内は「描画中…」だけ
     /* 🔒 §18-x-4: ③の確認は**白地**でないとできない（線画が写真に埋もれる）。
      * 所在図タブの［地図OFF］を自動で入れる。手で戻すのは自由。
      * 🔴 下敷きの濃さはシートごとに保存されるので、配置図タブ側は影響を受けない。 */
@@ -7366,8 +7656,10 @@
   function navSzResultText(res) {
     if (!res || !res.stats) return $('szResult').textContent || '';
     var s = res.stats;
-    /* 🔒 §22-as: 誘導③でも同じ案内文を出す（'wide' は従来どおり別枠・扱わない） */
-    var warn = (s.osmError === 'wide') ? '' : szNameWarningText(s);
+    /* 🔒 §22-as: 誘導③でも同じ案内文を出す。
+     * 🔒 §30-44-7 4: 'wide' の「枠が 12km を超えるため名前は入りません」も同じ関数から
+     *    （ガイダンス中は #szResult が見えない＝③の結果の1行はここ）。 */
+    var warn = szNameWarningText(s);
     return '道路 ' + s.roads + ' / 鉄道 ' + s.rails + ' / 名称 ' + s.annoKept
       + ' を生成しました' + (s.over2km ? '　⚠ 直線距離が 2km を超えています' : '') + warn;
   }
@@ -10305,6 +10597,7 @@
        * 🔴 表示文字を読み直さず、ここで持った値（eraState.gsiPhoto）を見る。 */
       eraState.gsiPhoto = v ? ('撮影 ' + v) : '時期不明';
       sgMoreSync();
+      syncMapAttr();       // 🔒 §30-44-7 13: 右下の帯の「写真: …」も同じ値で
     });
   }
 
@@ -10339,6 +10632,7 @@
       setEraSpan('sgEraGsiPhoto', '');
       setEraSpan('sgEraGsiPhoto4', '');
       sgMoreSync();
+      syncMapAttr();       // 🔒 §30-44-7 13
       return;
     }
     var t = GSI.lonLatToTile(center.lng, center.lat, 11);
@@ -10357,6 +10651,7 @@
     setEraSpan('sgEraGsiPhoto4', '');
     eraState.gsiPhoto = '';
     sgMoreSync();
+    syncMapAttr();         // 🔒 §30-44-7 13: 右下の帯からも前の値を消す
     if (eraState.timer) clearTimeout(eraState.timer);
     eraState.timer = setTimeout(function () {
       eraState.timer = null;
@@ -10695,6 +10990,13 @@
     /* 🔒 §28-6 ⑤: 前に開いていた段からガイダンスを再開する（無ければ道具メニュー）。
      * 🔴 画面（シート・地図）を組み終えてから呼ぶ＝②の枠の判定が正しく出る。 */
     navResume();
+    /* 🔒 §30-44-7 8: 案件を開いて所在図の紙に枠がある時（決定済み、または作図済みの紙）は、
+     * 設定盤の作り直し・③の生成で使う範囲を裏で取っておく。
+     * 🔴 画面（ガイダンスの左面）を組み終えた後＝生成と同じ画面の広さで範囲を出す。
+     *    直前の範囲の控えは案件ごとに空へ戻す（キャッシュも上で捨てている）。 */
+    szPrefetchKey = '';
+    var shPre = sheetOf('shozaizu');
+    if (shPre && shPre.frame && (shPre.frameFixed || navHasShozaizu())) szPrefetch();
     showSaveState('saved');
     /* 🔒 §30-20: ［新しい案件］で入った直後だけ「はじめに」を出す。
      * 🔴 画面を組み終えた**最後**に出す（closeAllOverlays が先に走るため）。 */
@@ -10719,7 +11021,7 @@
                                         fineFrom: 14, fineFrom2: 18, fineStep2: 0.25 });
     state.map.on('change', function () {
       renderOverlay();
-      $('mapAttr').textContent = state.map.attribution();
+      syncMapAttr();               // 🔒 §30-44-7 13（文字が変わった時だけ書く）
       updateUnderlaySrc();
       updateGoogleLink();
       updateScale();
@@ -11045,14 +11347,14 @@
       hint('なぞった所を ' + parts.join('と')
            + 'にしました（選択・消しゴム・Ctrl+Z が効きます）', 2600);
     };
-    /* 🔴 §23-6 fail-soft: 取得の状態は画面に出す。落ちた時も
-     * 「いまは名称が取れない」と分かるだけで、作図は止めない。 */
+    /* 🔴 §23-6 fail-soft: 取得の状態（件数）は画面に出す。落ちても作図は止めない。
+     * 🔒 §30-44-9 1: 落ちたことは見せない（renderNameStat）。 */
     state.reveal.onNames = function () { renderNameStat(); };
     syncRevealSizes();
 
     /* 🔒 §28-13 決定3（Step 4）: ガイダンス④の［交差点名・バス停名を地図に重ねる］。
      * 🔴 これは**見るだけ**の層。editor.objects には1個も足さない＝紙にも出ないし
-     *    案件にも保存しない（画面の状態）。データは所在図生成と同じ OSM（Overpass）。 */
+     *    案件にも保存しない（画面の状態）。データは所在図生成と同じ OSM（自前の名前タイル）。 */
     state.namelay = new NameLay(state.map, state.editor);
     state.namelay.onStatus = function (st) { renderNameLayStat(st); };
 
@@ -11129,12 +11431,77 @@
      * （案件を開いた直後・所在図⇄配置図タブ切替の直後に「縮んで見える」実機不具合の原因）。
      * ここで明示的に呼び直して、保存済みズームに合わせて引き直す。 */
     if (state.editor) state.editor.render();
-    $('mapAttr').textContent = state.map.attribution();
+    syncMapAttr();                  // 🔒 §30-44-7 13: 出典＋元データの更新日（案件・紙の切替）
     updateUnderlaySrc();
     updateGoogleLink();
     updateScale();
     sgSyncUnderlay();               // 🔒 §28-5 B: シート切替・案件を開いた時も④の〇を合わせる
     schedulePlateauCheck();        // 🔒 §26-4-e
+  }
+
+  /**
+   * 🔒 §30-44-7 13（2026-09-24 オーナー決定「画面上のみ・地図の右下に日付を。
+   * こちらが取得した日は関係ない・必要ない」）: 地図の右下の出典の帯（#mapAttr）。
+   * 並び＝ 出典 → 元データの更新日（「／」で区切る）:
+   *   ① 下敷きの出典（mapview の attribution・従来どおり）
+   *   ② 名前（OSM）の元データの日付＝ manifest の source の日付
+   *      （「地図データ: OpenStreetMap 2026-09-22 時点」・manifest が読めていない間は出さない）
+   *   ③ 下敷きが写真の時だけ撮影時期（「写真: 撮影 2020年」・地図系・地図なしでは出さない）
+   *      🔴 文言は §29-5 の出どころ（sgEraTextOf＝UNDERLAYS.photoEra／eraState.gsiPhoto）を
+   *         そのまま使う（二重に持たない）。地理院 写真の値は、いまの枠の中心の z11 タイルで
+   *         引いた物の時だけ出す（別の場所の古い値を出さない）。
+   * 🔴 取得した日・作図した日は出さない。紙（export.js）には出さない（画面だけ）。
+   * 🔴 文字が変わった時だけ書く（地図の change のたびに呼ばれる）。帯の高さが変わると
+   *    道具の案内帯の置き場所（updateDrawBadge が #mapAttr の高さから決める）も測り直す。
+   * 呼ぶ所＝地図の change・下敷きの切替・案件／紙の切替（applySheetToMap）・
+   *        manifest の読み込み完了（boot の OSM.onManifest・🔒 §30-44-9 2: 後で読み直せた時も）・
+   *        撮影時期の引き直し（applyEraResult／sgSyncEra）。
+   */
+  function syncMapAttr() {
+    var el = $('mapAttr');
+    if (!el || !state.map) return;
+    var parts = [];
+    var a = state.map.attribution();
+    if (a) parts.push(a);
+    var m = (window.OSM && OSM.manifest) ? OSM.manifest() : null;
+    if (m && m.date) parts.push('地図データ: OpenStreetMap ' + m.date + ' 時点');
+    var era = mapAttrEra();
+    if (era) parts.push('写真: ' + era);
+    var t = parts.join('／');
+    if (el.textContent === t) return;
+    el.textContent = t;
+    updateDrawBadge();
+  }
+
+  /**
+   * 🔒 §30-44-7 13: 枠の案内（#frameHint・地図の下の中央・z-index 7）が出ている間は、
+   * 出典の帯（z-index 5）を**案内の右側**に収める（CSS .map-attr.is-beside-hint で幅を
+   * 切って折り返す）。🔴 日付を足して帯が長くなり、案内の下に出典が隠れた（実測
+   * 1440px: 案内 718〜1062px／帯 874〜1434px が重なった）ため。出典は隠してはいけない。
+   * 帯の高さが変わるので道具の案内帯（updateDrawBadge）も測り直す。
+   * 呼ぶ所＝枠の案内を出し入れする renderOverlay（地図の change のたび・変わった時だけ書く）。
+   */
+  function syncMapAttrBeside() {
+    var at = $('mapAttr'), fh = $('frameHint');
+    if (!at || !fh) return;
+    var on = !fh.hidden;
+    if (at.classList.contains('is-beside-hint') === on) return;
+    at.classList.toggle('is-beside-hint', on);
+    updateDrawBadge();
+  }
+
+  /** 🔒 §30-44-7 13: 右下の帯に添える撮影時期（写真の下敷きの時だけ・無ければ ''） */
+  function mapAttrEra() {
+    if (!underlayIsPhoto()) return '';          // 地図系・地図なし（地図OFF）は出さない
+    var id = $('underlaySel') ? $('underlaySel').value : '';
+    if (id === 'gsi-photo') {
+      // 地理院 写真は場所で変わる＝いまの枠の中心のタイルで引いた値の時だけ
+      var ctr = sgEraCenter();
+      if (!ctr || !eraState.tileKey || !window.GSI) return '';
+      var tt = GSI.lonLatToTile(ctr.lng, ctr.lat, 11);
+      if (eraState.tileKey !== Math.floor(tt.x) + ',' + Math.floor(tt.y)) return '';
+    }
+    return sgEraTextOf(id);
   }
 
   function updateUnderlaySrc() {
@@ -11282,7 +11649,7 @@
     state.map.setUnderlay(u.provider, u.kind);
     state.map.setUnderlayKind(u.kind);
     if (u.provider === 'google') activateGoogle();
-    $('mapAttr').textContent = state.map.attribution();
+    syncMapAttr();         // 🔒 §30-44-7 13: 下敷きの切替（写真なら撮影時期も）
     // 🔒 §26-4-e: 下敷きを替えたら前の判定は捨てて数え直す
     state.plateauOut = false;
     updateUnderlaySrc();
@@ -11376,47 +11743,46 @@
   /**
    * 取得の状態と件数を出す。
    * 🔴 §23-6: 取得に失敗しても**名称だけ**が出ないだけで作図は続く。
-   *    「今は名称が取れない」と分かる表示を必ず出す（黙って消えない）。
+   * 🔒 §30-44-9 1（2026-09-24 オーナー決定）: 取得の失敗は**何も見せない**（文言も
+   *    ［もう一度取りに行く］も無し）。取り直しは裏で（osm.js の 1→3→9 秒）、駄目なら
+   *    いつもの一言（地理院の名称など、いま薄く出ている数）のまま。次に地図を動かした時に
+   *    reveal.js がまた取りに行く（失敗は覚えない）。
+   *    🔴 'wide'（範囲が広すぎて取りに行かない）は失敗ではなく範囲の案内なので残す。
    */
   function renderNameStat() {
-    var box = $('rvNameStat'), btn = $('rvNameRetry');
+    var box = $('rvNameStat');
     if (!box || !state.reveal) return;
     var s = state.reveal.nameStats();
-    if (!s.on) { box.hidden = true; btn.hidden = true; return; }
+    if (!s.on) { box.hidden = true; return; }
     box.hidden = false;
     var warn = false, msg;
     if (s.osm.state === 'loading') {
       msg = '名称を取りに行っています…';
-    } else if (s.osm.state === 'error') {
-      warn = true;
-      msg = 'いまは名称の一部（交差点名・お店・会社・バス停・細かい道路名）が'
-          + '取れません。作図はそのまま続けられます。';
     } else if (s.osm.state === 'wide') {
       warn = true;
       msg = '範囲が広すぎて名称を取りに行けません。少し拡大してください。';
     } else {
+      // 🔒 §30-44-9 1: 'error' もここ（失敗は言わない・出ている数だけ）
       msg = '薄く出ている名称 ' + s.shown + ' 個（なぞると1個まるごと図形になります）';
       /* 重なって出せなかった分は黙って消さない。拡大すれば出ると伝える（§23-5） */
       if (s.hidden) msg += '／重なって出せない ' + s.hidden + ' 個は拡大すると出ます';
     }
     box.textContent = msg;
     box.classList.toggle('is-warn', warn);
-    btn.hidden = !warn;
   }
 
   /**
    * 🔒 §28-13 決定3: ④の重ね表示の状態（切替の横の一言）。
    * 🔴 §23-6 fail-soft のとおり、取れない時も作図は止めない。
-   *    ここは黙って何も描かない代わりに「今は出ません」とだけ伝える
-   *    （再試行ボタンは付けない＝なぞり出しと違い、押す理由が無い見るだけの層）。
+   * 🔒 §30-44-9 1（2026-09-24 オーナー決定）: 取得の失敗は**何も出さない**（一言も消す）。
+   *    次に地図を動かした時に namelay.js がまた取りに行く（失敗は覚えない）。
    */
   function renderNameLayStat(st) {
     var msg = '';
     if (st && st.on) {
       if (st.state === 'loading') msg = '取得中…';
-      else if (st.state === 'error') {
-        msg = 'いまは交差点名・バス停名を取れません（作図はそのまま続けられます）';
-      } else if (st.state === 'wide') msg = '範囲が広すぎます。少し拡大してください';
+      else if (st.state === 'error') msg = '';    // 🔒 §30-44-9 1: 失敗は見せない
+      else if (st.state === 'wide') msg = '範囲が広すぎます。少し拡大してください';
       else {
         msg = '重ねて表示中：' + st.shown + ' 個'
           + '（この文字は図に入りません・書き出しにも出ません）';
@@ -11679,6 +12045,16 @@
                frame: null, objects: [] };
     }
     var sh = Store.newSheet(state.kind, init);   // id は必ず新しく振られる
+    /* 🔒 §30-43-2 2 / 4: 写した紙は同じ生成物（名前も）を持つので、名前が届いたかの控えと
+     * 「自動」の控えも写す（写さないと写した紙の最初の設定変更が全部作り直しになる）。 */
+    if (src) {
+      if (src.szNames && typeof src.szNames === 'object') {
+        sh.szNames = JSON.parse(JSON.stringify(src.szNames));
+      }
+      if (src.szNameAuto && typeof src.szNameAuto === 'object') {
+        sh.szNameAuto = JSON.parse(JSON.stringify(src.szNameAuto));
+      }
+    }
     list.splice(at + 1, 0, sh);
     c.active[state.kind] = at + 1;
     bindCurrentSheet();
@@ -11846,6 +12222,9 @@
     Store.autosave(c);
     // 🔒 §30-13-4: 枠の決定／解除で枠の位置が変わる（字幕の置き場所の契機）
     sgCaptionPlace();
+    /* 🔒 §30-44-7 8: ②［枠を決定］／［枠を決めなおす］の直後に、③の生成と同じ範囲の
+     * 名前タイル・地理院タイルを裏で取っておく（所在図の紙の時だけ・szPrefetch が絞る）。 */
+    szPrefetch();
   }
 
   /**
@@ -12309,6 +12688,7 @@
     $('frameHint').hidden = !(show && strong);
     $('frameHint').textContent =
       'この枠の中が書き出されます（枠は固定中。地図だけ動かせます）';
+    syncMapAttrBeside();          // 🔒 §30-44-7 13: 出典の帯を枠の案内の右に収める
     if (!show) { g.lastRectPx = null; return; }   // §24-6: 他枠の札の位置計算に使う値も消しておく
 
     /* 決めていない枠は**いまの画面**から直接引く（保存値を描くと更新し忘れでずれる）。

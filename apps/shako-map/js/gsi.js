@@ -299,16 +299,23 @@
     _tileKeys.length = 0;
   }
 
+  /* 🔒 §30-44-7 8: 取りに行っている最中のタイル（key → Promise）。
+   * ②［枠を決定］の先読みの直後に③で生成が走っても、同じタイルを二重に取らず
+   * 先読みの取得にそのまま相乗りする（先読みの効き目を消さない）。 */
+  var _inflight = Object.create(null);
+
   /** 1タイル取得してデコード。空タイル(404)は null を返す。 */
   function fetchTile(z, x, y) {
     var key = z + '/' + x + '/' + y;
     if (key in _tileCache) return Promise.resolve(_tileCache[key]);
+    if (_inflight[key]) return _inflight[key];
     var url = TILE_URL.replace('{z}', z).replace('{x}', x).replace('{y}', y);
-    return fetch(url).then(function (r) {
+    var p = fetch(url).then(function (r) {
       if (r.status === 404) return null;      // データ無しは正常系
       if (!r.ok) throw new Error('タイル取得に失敗しました (' + r.status + ')');
       return r.arrayBuffer();
     }).then(function (buf) {
+      delete _inflight[key];
       var t = buf ? { z: z, x: x, y: y, layers: MVT.decode(new Uint8Array(buf)) } : null;
       if (!(key in _tileCache)) {
         _tileCache[key] = t;
@@ -316,7 +323,12 @@
         while (_tileKeys.length > TILE_CACHE_MAX) delete _tileCache[_tileKeys.shift()];
       }
       return t;
+    }, function (e) {
+      delete _inflight[key];                  // 失敗はキャッシュしない＝次にまた取りに行ける
+      throw e;
     });
+    _inflight[key] = p;
+    return p;
   }
 
   /**

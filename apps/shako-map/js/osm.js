@@ -1,4 +1,4 @@
-/* osm.js — OpenStreetMap (Overpass API) 取得層／正典 §23-6・§26 Step 8
+/* osm.js — OpenStreetMap の名前の取得層（自前の名前タイル）／正典 §23-6・§26 Step 8・§30-44
  *
  * 車庫証明 所在図・配置図メーカー
  *
@@ -7,18 +7,17 @@
  * を取りに行く層。描画・なぞり出しの判定は一切持たない（reveal.js の仕事）。
  *
  * 設計の要点:
- *  1. 🔴 **サーバーを立てない**（§1-6 ローカル完結）。Overpass は
- *     `Access-Control-Allow-Origin: *` を返すのでブラウザから直接叩ける（実測 §23-6）。
- *     （素の urllib は User-Agent 無しで 406 になるが、ブラウザの fetch は自動付与）
- *  2. 🔴 **公共インスタンスなので控えめに叩く**（§23-6）。
- *     ・分類チェックが ON の時だけ呼ぶ（呼び出し側 reveal.js の責務）
- *     ・取りに行く範囲は表示範囲を PAD だけ広げた矩形。少し動かしても取り直さない
- *     ・案件内キャッシュ（同じ範囲・同じ分類の再取得をしない）
- *     ・広すぎる範囲は**そもそも投げない**（kind:'wide' で断る）
+ *  1. 🔒 §30-44（2026-09-24）: 名前は**自前の抜き出しデータ**（OSM の pbf から
+ *     tools/names_tiles/build.py が作った z13 のタイル・Cloudflare R2・NAMES_BASE）から取る。
+ *     タイルの中身は `{elements:[…]}` の形なので、分類・名寄せは下の parse() がそのまま読む。
+ *     抜き出す集合の定義は正典 §30-44-2 A と build.py にある（分類の表 pointCat はここ1か所）。
+ *  2. 🔒 §30-44-9 3（2026-09-24 オーナー決定 B 案）: 名前の取り方は**自前のタイルだけ**
+ *     （公開の問い合わせ API を叩く経路・予備ミラー・範囲ごとのキャッシュは外した）。
  *  3. 🔴 **落ちても作図は止めない**（§23-6 / §20-6 fail-open と同思想）。
- *     ここは Promise を reject するだけ。呼び出し側は「名称が今は取れない」を
- *     出して、線のなぞり出しと地理院由来の名称はそのまま使い続ける。
- *  4. 予備ミラーを1つ持つ（§23-6）。1つ目が駄目なら2つ目へ。
+ *     ここは Promise を reject するだけ。呼び出し側は名前なしで作図を続ける。
+ *     🔒 §30-44-9 1: 失敗は利用者に**何も見せない**（取り直しは裏で・次に地図を動かせばまた取りに行く）。
+ *  4. 🔒 §30-44-9 2: manifest（今どの版のタイルを読むか）は**取得のたびに確かめる**
+ *     （読めていなければその場で読み直す・読めなければ今回は名前を取らない＝'net'）。
  *
  * ライセンス（§23-6）: ODbL。書き出し画像は Produced Work なので出典表記のみで商用可。
  *   → 実体化したら ATTRIBUTION を**そのシートの出典**へ足す（§24-3 出典はシート単位）。
@@ -26,33 +25,27 @@
 (function (global) {
   'use strict';
 
-  /* ================= 仮値（🙋 オーナー実機目視・実測で確定する） ================= */
-
-  /* 🔴 予備ミラー（§23-6）。先頭から順に試す。
-   * 外から差し替えられるように**配列の中身を入れ替える**形で公開している
-   * （テストで失敗を作る時・別ミラーを足す時に代入せず push/splice で触る）。 */
-  var ENDPOINTS = [
-    'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter'
-  ];
-
   var ATTRIBUTION = '© OpenStreetMap contributors';
 
-  var QL_TIMEOUT = 25;        // Overpass 側のタイムアウト（秒）
-  var FETCH_MS = 22000;       // こちらから諦める時間（ms）
   var PAD = 0.25;             // 表示範囲をこの割合だけ広げて取る（パンの取り直しを減らす）
-  var MAX_SPAN_M = 4000;      // これより広い範囲は投げない（実測 1km四方 = 2.9秒）
-  /* 🔒 §30-21-1（2026-09-13 オーナー指示「無料で取得できる情報は全て取得する」）:
-   * 点は**名前のある物を全部**1回で取る（分類はこちらで付ける）。上限は
-   * 「分類ごと」ではなく**全体**で持つ（従来は分類ごとに 900）。
-   * 🔒 §30-21-4 1（Fable 裁定・実測）: 全体 2,000 の1本だと名駅で上限に当たり、
-   *    `out center` が **node → way → relation の順**に詰めるため、**面**
-   *    （駐車場・建物＝way/relation）だけが丸ごと切られて従来の名前が15件落ちた。
-   *    → 上限は **node と way+relation で別枠**（各 3,000）。下の buildQuery 参照。 */
-  var MAX_POINTS = 3000;      // out center の上限（暴走よけ・node / way+relation それぞれに掛かる）
-  var MAX_WAYS = 900;         // out geom の上限
-  var MAX_ROUTES = 40;        // 🔒 §22-av: 路線関係（国道・都道府県道）の上限
-  var CACHE_MAX = 12;         // 案件内キャッシュの本数
+
+  /* ================= 🔒 §30-44（2026-09-24 オーナー決定「D すぐやる」）: 自前の名前データ =================
+   * OSM の抜き出し（tools/names_tiles/build.py）を Cloudflare R2 に置き、**z13 のタイル**で取る。
+   * 🔒 §30-44-7 2: 定数はここ1か所。 */
+  var NAMES_BASE = 'https://names.solodev-lab.com';
+  var NAMES_Z = 13;
+  /* 🔒 §30-44-7 2 / 4: 1回に取るタイルの上限（4×4 枚＝1辺 12km・🔒 オーナー決定）。
+   * 超えたら名前は取らない（'wide'）。 */
+  var NAMES_MAX_TILES = 16;
+  /* 🔒 §30-44-7 7: タイル単位のキャッシュの上限（案件内・東京中心でも 50MB 程度） */
+  var NAMES_TILE_CACHE_MAX = 64;
+  /* 🔒 §30-44-7 5: 通信の失敗（ネットワーク・5xx）は 1 秒→3 秒→9 秒待って**黙って** 3 回まで
+   * 取り直す（最初の1回＋取り直し 3 回）。利用者向けには何も出さない（🔒 §30-43-5）。 */
+  var NAMES_RETRY_MS = [1000, 3000, 9000];
+  var NAMES_CONC = 6;         // 🔒 §30-44-7 5: 同時接続の上限
+  /* 1回の取得の打ち切り（ms）。止まったままの接続で「描画中…」が終わらないのを防ぐ
+   * （打ち切りも通信の失敗＝上の取り直しに乗る）。🔒 §30-44-9 2: manifest の読み込みにも使う。 */
+  var NAMES_FETCH_MS = 15000;
 
   /* ================= 分類（🔒 §23-5 オーナー指定の7分類） =================
    * dot   … ●（anchor）を付けるか。🔴 道路名は「線に付く名前」なので付けない（§18-8）
@@ -90,12 +83,6 @@
 
   function num(v) { return typeof v === 'number' && isFinite(v); }
 
-  /** Overpass の bbox 表記（south,west,north,east） */
-  function fmtBBox(b) {
-    return b.south.toFixed(6) + ',' + b.west.toFixed(6) + ','
-         + b.north.toFixed(6) + ',' + b.east.toFixed(6);
-  }
-
   function padBounds(b, k) {
     var dy = (b.north - b.south) * k, dx = (b.east - b.west) * k;
     return { south: b.south - dy, north: b.north + dy,
@@ -106,126 +93,21 @@
     return lat >= b.south && lat <= b.north && lng >= b.west && lng <= b.east;
   }
 
-  function coversBounds(outer, inner) {
-    return outer.south <= inner.south + 1e-9 && outer.north >= inner.north - 1e-9
-        && outer.west <= inner.west + 1e-9 && outer.east >= inner.east - 1e-9;
-  }
-
-  /** ざっくりの幅・高さ(m)。広すぎる範囲を弾くためだけなので球面近似で十分 */
-  function spanMeters(b) {
-    var mLat = 110574;
-    var mLng = 111320 * Math.cos((b.north + b.south) / 2 * Math.PI / 180);
-    return { w: Math.abs(b.east - b.west) * mLng,
-             h: Math.abs(b.north - b.south) * mLat };
-  }
-
-  /** 有効な分類だけの素直な集合にする（未知の id は捨てる）
-   * _pts … 点の分類（道路名**以外**）を1つでも要求しているか。
-   *        🔒 §30-21-1: 点は「名前のある物を全部」1回で取るので、どの点の分類を
-   *        要求したかは問い合わせ文にも応答にも影響しない（＝この真偽だけが要る）。 */
+  /** 有効な分類だけの素直な集合にする（未知の id は捨てる）。_n … 要求された分類の数 */
   function normCats(cats) {
-    var out = Object.create(null), n = 0, pts = false;
+    var out = Object.create(null), n = 0;
     CATS.forEach(function (c) {
-      if (cats && cats[c.id]) {
-        out[c.id] = true; n++;
-        if (c.id !== 'road') pts = true;
-      }
+      if (cats && cats[c.id]) { out[c.id] = true; n++; }
     });
     out._n = n;
-    out._pts = pts;
     return out;
   }
 
-  /**
-   * キャッシュの1本が、いま欲しい分類をまかなえるか。
-   * 🔒 §30-21-1: 点の分類は**全部まとめて1回**で取るので、分類の要求に依らず当たる。
-   * 取った／取らなかったの区別が残るのは「点をそもそも取ったか（_pts）」と
-   * 「道路（out geom）を一緒に取ったか（road）」の2つだけ。
+  /* ================= タイルの中身 → 名称 =================
+   * 🔒 §30-44-2 A: タイルには ①名前のある node と way/relation の中心点（`center`）
+   * ②名前のある道路の way（`geometry`＝線の形ごと）③国道・県道の路線 relation
+   * （`members` の線の形・タイルの矩形で切ってある）が入っている。
    */
-  function catsCovered(have, want) {
-    if (want._pts && !have._pts) return false;
-    if (want.road && !have.road) return false;
-    return true;
-  }
-
-  /* ================= 問い合わせ文 =================
-   * 🔴 点の分類は `out center` で1回・道路は `out geom` で1回。
-   *    道路だけ形が要るのは「表示範囲内の同名 way を1ラベルに名寄せ」する時に
-   *    代表点を**枠の中**に置く必要があるため（§23-5-a）。center だけだと
-   *    枠の外に代表点が出て名前が消える。
-   */
-  /* 🔒 §30-21-1: 取らない物は**これだけ**。行政境界／路線の関係（バス・鉄道の線。
-   * 国道・県道の番号は下の別経路で取る）／木の個体。`!=` `!~` は「タグが無い物」も
-   * 含めて残す（Overpass の仕様）ので、名前があって除外条件に当たらない物が全部残る。
-   * 🔴 「1棟」「2棟」のような棟名は**除かない**（団地の中で場所を示すのに効く）。 */
-  var EXCLUDE = '["boundary"!~"."]["admin_level"!~"."]'
-              + '["type"!="route"]["natural"!="tree"]';
-
-  /* 🔒 §30-21-4 2（2026-09-13 Fable 裁定）: **名前の欄は `name` だけではない**。
-   * 取り方（§30-21-1「`name` → `name:ja` → `brand`」＝下の pickName）と
-   * 問い合わせ文を一致させる＝`name:ja` しか無い物・`brand` しか無い物（チェーン店）
-   * も取りに行く。
-   * 🔴 `[!"name"]` を付けて3つが**重ならない**ようにする（同じ物を3回返させない）。 */
-  var NAME_SEL = ['["name"]', '[!"name"]["name:ja"]', '[!"name"]["brand"]'];
-
-  /**
-   * 点（`out center`）の union を1つ組む。
-   * 🔒 §30-21-4 1: 上限（MAX_POINTS）は **この union ごと**に掛かる＝
-   *    node の集合と way+relation の集合で**枠を分ける**ことで、点（node）が多い
-   *    土地でも面（way/relation の建物・駐車場・公園）が切り捨てられない。
-   * @param types ['node'] か ['way','relation']
-   */
-  function ptUnion(types, bb) {
-    var q = '(', t, i;
-    for (t = 0; t < types.length; t++) {
-      for (i = 0; i < NAME_SEL.length; i++) {
-        q += types[t] + NAME_SEL[i] + EXCLUDE + '(' + bb + ');';
-      }
-    }
-    return q + ');out center ' + MAX_POINTS + ';';
-  }
-
-  function buildQuery(b, cats, routes) {
-    var bb = fmtBBox(b), q = '[out:json][timeout:' + QL_TIMEOUT + '];', any = false;
-
-    /* 🔒 §30-21-1（2026-09-13 オーナー指示）: 点は **名前のある物を全部**取る。
-     * 分類は応答を見て pointCat が付ける（＝どの分類を要求されても応答は同じ）。
-     *
-     * 🔴 §22-ak-6（2026-09-04 是正3）で「分類ごとに `out` を分ける」ことにした理由は
-     *    **上限の奪い合い**（900点を分類どうしで取り合い、バス停を切ると交差点名の
-     *    取得結果が変わっていた）。今回は取る物が**分類の要求に依らず一定**になったので
-     *    分類どうしの奪い合いは消える。
-     * 🔒 §30-21-4 1: ただし **node と面（way/relation）の奪い合い**は残る
-     *    （`out center` は node → way → relation の順に詰めて上限で切るので、
-     *    node が多い土地では面だけが丸ごと落ちる＝名駅で実測15件）。
-     *    → `out` を **node の1回と way+relation の1回**に分ける（要求は1回のまま）。
-     *    （§30-13-8 1「初回に全分類を一度に取る」＝呼び出し側も常に全分類を要求する） */
-    if (cats._pts) {
-      q += ptUnion(['node'], bb);
-      q += ptUnion(['way', 'relation'], bb);
-      any = true;
-    }
-    if (cats.road) {
-      q += 'way["highway"]["name"](' + bb + ');out geom ' + MAX_WAYS + ';';
-      any = true;
-    }
-    /* 🔒 §22-av: 路線番号の印（国道 ▽ / 都道府県道 六角形）のもと。
-     * 🔴 **way ではなく route 関係**を引く。way の `ref` は国道も県道も裸の数字で、
-     *    どちらの路線かを機械的に決められない（実測: 名駅で trunk ref=19 と
-     *    primary ref=59 が同居）。関係の `network` は JP:national / JP:prefectural と
-     *    明示されているので、ここだけが確実な出どころ。
-     * 🔴 `out geom(bb)` で**枠の中だけに切って**返させる（切らないと1本の国道が
-     *    県境まで数百kmぶん返ってきて応答が肥大する）。 */
-    if (routes) {
-      q += 'rel["type"="route"]["route"="road"]'
-         + '["network"~"^JP:(national|prefectural)$"](' + bb + ');'
-         + 'out geom(' + bb + ') ' + MAX_ROUTES + ';';
-      any = true;
-    }
-    return any ? q : '';
-  }
-
-  /* ================= 応答 → 名称 ================= */
 
   /**
    * 点の分類（🔒 §30-21-2 の表）。
@@ -323,15 +205,11 @@
   }
 
   /**
-   * 応答 → {items, roads, routes, truncated, counts}。
-   * 🔒 §30-21-1: 点は**分類で絞らずに全部**作る（問い合わせが全部取っているので、
+   * 中身 → {items, roads, routes, counts}。
+   * 🔒 §30-21-1: 点は**分類で絞らずに全部**作る（タイルは全部持っているので、
    * ここで捨てるとキャッシュに穴が空く）。要求された分類だけにするのは fetchNames。
-   *
-   * 🔒 §30-21-4 1: **上限に当たったか（truncated）**もここで数える。
-   * 🔴 数えるのは「`out center` で返ってきた物」だけ＝
-   *    node（＝`out center` の node は lat/lon を持つ）と、
-   *    **`center` を持つ** way/relation。道路（`out geom`）は `geometry` を、
-   *    路線関係（`out geom(bb)`）は `members` を持ち `center` を持たないので混ざらない。
+   * 🔒 §30-44-9 3: タイルは切っていない（件数の上限が無い）ので「省いたか」の印は持たない。
+   * counts … 実測の報告用（node と、`center` を持つ way/relation の数）。
    */
   function parse(json) {
     var els = (json && json.elements) || [];
@@ -353,8 +231,8 @@
         for (var mi = 0; mi < ms.length; mi++) {
           var gm = ms[mi].geometry;
           if (!gm) continue;
-          /* 🔴 `out geom(bb)` は枠の外を切った所に **null** を挟んで返す（実測
-           * 2026-09-06）。素直に読むと null.lat で落ちるので必ず弾く。 */
+          /* 🔴 矩形で切った線は切れ目に **null** を挟んである（build.py clip_geom・
+           * 実測 2026-09-06）。素直に読むと null.lat で落ちるので必ず弾く。 */
           for (var gj = 0; gj < gm.length; gj++) {
             var gp = gm[gj];
             if (gp && num(gp.lat) && num(gp.lon)) {
@@ -368,8 +246,8 @@
         continue;
       }
       if (!name) continue;
-      /* 道路（out geom で返ってきた物）は geometry を持つ。
-       * 点の分類（out center）と取り違えないよう geometry の有無で分ける。 */
+      /* 道路（線の形ごと入っている way）は geometry を持つ。
+       * 点の分類（中心点）と取り違えないよう geometry の有無で分ける。 */
       if (e.type === 'way' && e.geometry && e.geometry.length >= 2 && tg.highway) {
         if (seenWay[e.id]) continue;
         seenWay[e.id] = true;
@@ -398,10 +276,7 @@
       if (pc.mark) item.mark = pc.mark;
       items.push(item);
     }
-    /* 🔒 §30-21-4 1: どちらかの枠が上限に届いていたら「省いた」＝呼び出し側が
-     * 生成後の一言で知らせる（黙って減らさない）。 */
     return { items: items, roads: roads, routes: routes,
-             truncated: (nNode >= MAX_POINTS || nArea >= MAX_POINTS),
              counts: { node: nNode, area: nArea } };
   }
 
@@ -465,57 +340,29 @@
 
   /* ================= 取得 ================= */
 
-  var _cache = [];        // [{cats, bbox, data, ms, bytes}]
   var _last = null;       // 直近の実測（実装メモ・オーナー確認用）
 
-  function clearCache() { _cache.length = 0; }
+  /* 🔒 §30-44-7 7: タイル単位のキャッシュ（案件内）。key 'x/y' → {els, bytes, empty}。
+   * 🔴 空タイル（404）も正常系なのでキャッシュする（取り直さない）。失敗は入れない
+   *    （🔒 §30-44-9 1: 失敗は覚えない＝次に地図を動かした時にまた取りに行く）。
+   * 🔴 入れた順に古い物から捨てる（NAMES_TILE_CACHE_MAX）。 */
+  var _tileCache = Object.create(null);
+  var _tileKeys = [];
+  var _tileInflight = Object.create(null);   // 取りに行っている最中のタイル（二重に取らない）
+  /* 同じタイルの組を続けて読んだ時は、連結と parse を省く（設定盤の作り直しは毎回同じ範囲） */
+  var _merged = null;                        // {sig, data, bytes}
 
-  function findCache(bounds, cats, routes) {
-    for (var i = _cache.length - 1; i >= 0; i--) {
-      var e = _cache[i];
-      if (!catsCovered(e.cats, cats)) continue;
-      // 🔒 §22-av: 路線が要る時は、路線も入れて取った物でないと使えない
-      if (routes && !e.routes) continue;
-      if (!coversBounds(e.bbox, bounds)) continue;
-      return e;
-    }
-    return null;
-  }
-
-  function putCache(e) {
-    _cache.push(e);
-    if (_cache.length > CACHE_MAX) _cache.splice(0, _cache.length - CACHE_MAX);
+  /* 🔒 §30-44-7 7: 案件を開いた時にタイルのキャッシュを空にする */
+  function clearCache() {
+    _tileCache = Object.create(null);
+    _tileKeys.length = 0;
+    _merged = null;
   }
 
   function err(kind, msg) {
     var e = new Error(msg);
     e.kind = kind;
     return e;
-  }
-
-  /** 1つのミラーへ投げる */
-  function post(url, query) {
-    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, FETCH_MS);
-    var opt = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'data=' + encodeURIComponent(query)
-    };
-    if (ctl) opt.signal = ctl.signal;
-    return fetch(url, opt).then(function (r) {
-      if (!r.ok) throw err('net', 'Overpass ' + r.status);
-      return r.text();
-    }).then(function (txt) {
-      clearTimeout(timer);
-      var json;
-      try { json = JSON.parse(txt); }
-      catch (e) { throw err('net', '応答を読めませんでした'); }
-      return { json: json, bytes: txt.length };
-    }, function (e) {
-      clearTimeout(timer);
-      throw (e && e.kind) ? e : err('net', (e && e.message) || '通信に失敗しました');
-    });
   }
 
   /**
@@ -541,91 +388,358 @@
     return m;
   }
 
+  /* ================= 🔒 §30-44-7: 自前の名前データ（タイルの経路） ================= */
+
+  function nowMs() {
+    return (global.performance && performance.now) ? performance.now() : Date.now();
+  }
+
+  function waitMs(ms) {
+    return new Promise(function (res) { setTimeout(res, ms); });
+  }
+
+  var _manifest = null;       // {built, tiles, source, date}｜null（＝まだ読めていない）
+  var _manifestP = null;      // 🔒 §30-44-9 2: 読みに行っている最中の Promise（相乗り用・終われば null）
+  var _manifestFns = [];      // 🔒 §30-44-9 2: 読めた時に呼ぶ（app.js が右下の日付を書き直す）
+
+  /** 🔒 §30-44-9 2: manifest が読めたことを知らせる（受け手の失敗は握る＝取得を止めない） */
+  function notifyManifest() {
+    for (var i = 0; i < _manifestFns.length; i++) {
+      try { _manifestFns[i](); } catch (e) { /* 画面側の失敗で名前の取得を止めない */ }
+    }
+  }
+
+  /**
+   * 🔒 §30-44-7 3 / 🔒 §30-44-9 2（2026-09-24 オーナー決定）: manifest を読む。
+   * ・読めていれば（_manifest）そのまま返す＝通信しない
+   * ・読めていなければ**その場で読み直す**（起動時に失敗していても、次の取得で取り戻す）
+   * ・同時に何本呼ばれても通信は1回（読みに行っている最中の Promise に相乗り）
+   * ・取れない時（通信・404・形が違う・打ち切り）は null ＝今回は名前を取らない（呼び出し側が
+   *   'net' にする）。失敗は覚えない＝次の呼び出しでまた読みに行く。利用者向けには何も出さない。
+   * @return Promise<manifest|null>
+   */
+  function loadManifest() {
+    if (_manifest) return Promise.resolve(_manifest);
+    if (_manifestP) return _manifestP;
+    if (typeof fetch !== 'function') return Promise.resolve(null);
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, NAMES_FETCH_MS);
+    var opt = { cache: 'no-cache' };
+    if (ctl) opt.signal = ctl.signal;
+    _manifestP = fetch(NAMES_BASE + '/manifest.json', opt).then(function (r) {
+      if (!r.ok) throw err('net', 'manifest ' + r.status);
+      return r.json();
+    }).then(function (m) {
+      /* 🔴 形を確かめる: tiles に {x}{y} があり、ズームがこちらの前提（z13）と同じ物だけ使う
+       * （ズームが違うと 16 枚＝12km の上限が崩れる）。 */
+      if (!m || typeof m.tiles !== 'string' || m.tiles.indexOf('{x}') < 0
+          || m.tiles.indexOf('{y}') < 0 || Number(m.z) !== NAMES_Z) {
+        return null;
+      }
+      var src = String(m.source || '');
+      var d = /(\d{4}-\d{2}-\d{2})/.exec(src);
+      _manifest = { built: String(m.built || ''), tiles: m.tiles, source: src,
+                    /* 🔒 §30-44-7 13: 元データ（pbf）の日付＝画面右下の「… 時点」 */
+                    date: d ? d[1] : '' };
+      return _manifest;
+    }).catch(function () {
+      return null;
+    }).then(function (v) {
+      clearTimeout(timer);
+      _manifestP = null;
+      if (v) notifyManifest();
+      return v;
+    });
+    return _manifestP;
+  }
+
+  /**
+   * 🔒 §30-44-9 2: manifest が読めた時に呼ぶ関数を足す（既に読めていればすぐ1回呼ぶ）。
+   * 起動時に読めず、後の取得で読み直せた時にも右下の日付が出るようにするため。
+   */
+  function onManifest(fn) {
+    if (typeof fn !== 'function') return;
+    _manifestFns.push(fn);
+    if (_manifest) Promise.resolve().then(function () { try { fn(); } catch (e) { /* 同上 */ } });
+  }
+
+  /** タイル座標の変換（🔒 §30-44-2 C1: GSI の mercator 変換を再利用する） */
+  function tileMath() {
+    var G = global.GSI;
+    return (G && G.lonLatToTile && G.tileToLonLat) ? G : null;
+  }
+
+  /** 矩形に重なる z13 タイルの範囲 */
+  function tileRange(b) {
+    var G = tileMath(), n = Math.pow(2, NAMES_Z);
+    var a = G.lonLatToTile(b.west, b.north, NAMES_Z);
+    var c = G.lonLatToTile(b.east, b.south, NAMES_Z);
+    function cl(v) { return Math.max(0, Math.min(n - 1, Math.floor(v))); }
+    var r = { x0: cl(a.x), x1: cl(c.x), y0: cl(a.y), y1: cl(c.y) };
+    r.n = (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1);
+    return r;
+  }
+
+  /**
+   * 🔒 §30-44-7 4: 取るタイルの範囲を決める。PAD を足した矩形に重なる z13 タイル →
+   * 16 枚超なら PAD 無しで数え直し → それでも超えたら null（＝'wide'・名前は取らない）。
+   */
+  function pickRange(bounds) {
+    var r = tileRange(padBounds(bounds, PAD));
+    if (r.n > NAMES_MAX_TILES) r = tileRange(bounds);
+    return (r.n > NAMES_MAX_TILES) ? null : r;
+  }
+
+  /**
+   * 🔒 §30-44-9 3: その範囲の名前を1回で取れるか（タイルの上限 16 枚＝1辺 12km に収まるか）。
+   * shozaizu.js fetchOsmNames が「取得範囲（画面∪枠＋8%）が広すぎる時だけ枠に戻す」判定に使う
+   * （旧・4km の判定 §30-25-3 1 の置き換え。判定は fetchNames の 'wide' と同じ pickRange）。
+   */
+  function namesFit(bounds) {
+    if (!bounds || !tileMath()) return true;
+    return !!pickRange(bounds);
+  }
+
+  function putTile(key, t) {
+    if (!(key in _tileCache)) _tileKeys.push(key);
+    _tileCache[key] = t;
+    while (_tileKeys.length > NAMES_TILE_CACHE_MAX) delete _tileCache[_tileKeys.shift()];
+  }
+
+  /** 1枚を1回だけ取る。404＝空タイル（正常）。e.retry＝取り直してよい失敗か */
+  function getTileOnce(url) {
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, NAMES_FETCH_MS);
+    return fetch(url, ctl ? { signal: ctl.signal } : undefined).then(function (r) {
+      if (r.status === 404) return null;                 // 中身が無いタイル＝書いていない
+      if (!r.ok) {
+        var e = err('net', 'names ' + r.status);
+        e.retry = (r.status >= 500 || r.status === 429);  // 5xx・混雑は取り直す
+        throw e;
+      }
+      return r.text();
+    }).then(function (txt) {
+      clearTimeout(timer);
+      if (txt === null) return { els: [], bytes: 0, empty: true };
+      var json;
+      try { json = JSON.parse(txt); }
+      catch (e0) {
+        var ep = err('net', '応答を読めませんでした');
+        ep.retry = true;
+        throw ep;
+      }
+      return { els: (json && Array.isArray(json.elements)) ? json.elements : [],
+               bytes: txt.length, empty: false };
+    }, function (e) {
+      clearTimeout(timer);
+      if (e && e.kind) throw e;
+      var en = err('net', (e && e.message) || '通信に失敗しました');
+      en.retry = true;                                   // ネットワーク・打ち切り
+      throw en;
+    });
+  }
+
+  /**
+   * 🔒 §30-44-7 5 / 7: 1枚を取る（キャッシュ→取りに行っている最中の物→取得）。
+   * 通信の失敗は NAMES_RETRY_MS の間隔で黙って取り直す。駄目なら reject（'net'）。
+   * @param st 実測の控え（cached / fetched / tries を数える）
+   */
+  function getTile(m, x, y, st) {
+    var key = x + '/' + y;
+    if (key in _tileCache) { st.cached++; return Promise.resolve(_tileCache[key]); }
+    if (_tileInflight[key]) { st.fetched++; return _tileInflight[key]; }
+    st.fetched++;
+    var url = NAMES_BASE + '/' + m.tiles.replace('{x}', x).replace('{y}', y);
+    var tries = 0;
+    function go() {
+      tries++;
+      return getTileOnce(url).catch(function (e) {
+        var i = tries - 1;
+        if (!e || !e.retry || i >= NAMES_RETRY_MS.length) throw e;
+        return waitMs(NAMES_RETRY_MS[i]).then(go);
+      });
+    }
+    var p = go().then(function (t) {
+      delete _tileInflight[key];
+      putTile(key, t);
+      if (tries > st.tries) st.tries = tries;
+      return t;
+    }, function (e) {
+      delete _tileInflight[key];
+      if (tries > st.tries) st.tries = tries;
+      throw e;
+    });
+    _tileInflight[key] = p;
+    return p;
+  }
+
+  /** 🔒 §30-44-7 5: 同時接続を n 本までに絞って順に流す（1つでも失敗したら reject） */
+  function runPool(jobs, n) {
+    return new Promise(function (resolve, reject) {
+      var out = new Array(jobs.length), next = 0, done = 0, failed = false;
+      if (!jobs.length) { resolve(out); return; }
+      function run() {
+        if (failed || next >= jobs.length) return;
+        var i = next++;
+        jobs[i]().then(function (v) {
+          out[i] = v;
+          done++;
+          if (done === jobs.length) resolve(out); else run();
+        }, function (e) {
+          if (!failed) { failed = true; reject(e); }
+        });
+      }
+      for (var k = 0; k < Math.min(n, jobs.length); k++) run();
+    });
+  }
+
+  /**
+   * 🔒 §30-44-7 6: 取れたタイルの elements を連結する。
+   * 🔴 relation は **id ごとに1つに寄せる**（路線はタイルの矩形で切った線がタイルごとに
+   *    入っている＝members の geometry を連結。10% 余白の重なりはそのまま・描画に害なし）。
+   * 🔴 キャッシュの中身は書き換えない（relation は写してから members を足す）。
+   * 道路の way の重複（線が掛かるタイル全部に入っている）は parse の seenWay が詰める。
+   */
+  function mergeTiles(tiles) {
+    var out = [], rel = Object.create(null), i, j;
+    for (i = 0; i < tiles.length; i++) {
+      var els = tiles[i].els;
+      for (j = 0; j < els.length; j++) {
+        var e = els[j];
+        if (!e || e.type !== 'relation') { if (e) out.push(e); continue; }
+        var have = rel[e.id];
+        if (!have) {
+          have = {};
+          for (var k in e) { if (Object.prototype.hasOwnProperty.call(e, k)) have[k] = e[k]; }
+          have.members = (e.members || []).slice();
+          rel[e.id] = have;
+          out.push(have);
+        } else {
+          if (e.members && e.members.length) have.members = have.members.concat(e.members);
+          if (!have.center && e.center) have.center = e.center;
+        }
+      }
+    }
+    return out;
+  }
+
+  /**
+   * 🔒 §30-44-7 1〜7: タイルの経路（範囲 r は pickRange で決めた物）。
+   * ①タイルごとに取る（キャッシュ・404＝空・通信の失敗は黙って取り直す）
+   * ②連結（relation は id で寄せる）→ parse → 分類を絞る
+   */
+  function fetchNamesTiles(r, cs, wantRoutes, m) {
+    var G = tileMath();
+    var t0 = nowMs();
+    var st = { cached: 0, fetched: 0, tries: 0 };
+    var keys = [], jobs = [];
+    for (var y = r.y0; y <= r.y1; y++) {
+      for (var x = r.x0; x <= r.x1; x++) {
+        keys.push(x + '/' + y);
+        jobs.push((function (xx, yy) {
+          return function () { return getTile(m, xx, yy, st); };
+        })(x, y));
+      }
+    }
+    var nw = G.tileToLonLat(r.x0, r.y0, NAMES_Z);
+    var se = G.tileToLonLat(r.x1 + 1, r.y1 + 1, NAMES_Z);
+    var bbox = { west: nw.lon, north: nw.lat, east: se.lon, south: se.lat };
+
+    return runPool(jobs, NAMES_CONC).then(function (tiles) {
+      var sig = m.built + '|' + keys.join(',');
+      var data, bytes;
+      if (_merged && _merged.sig === sig) {
+        data = _merged.data; bytes = _merged.bytes;
+      } else {
+        bytes = 0;
+        for (var i = 0; i < tiles.length; i++) bytes += tiles[i].bytes;
+        data = parse({ elements: mergeTiles(tiles) });
+        _merged = { sig: sig, data: data, bytes: bytes };
+      }
+      var ms = Math.round(nowMs() - t0), nEmpty = 0;
+      for (var ei = 0; ei < tiles.length; ei++) { if (tiles[ei].empty) nEmpty++; }
+      _last = { route: 'tiles', ms: ms, bytes: bytes, built: m.built,
+                tiles: keys.length, cachedTiles: st.cached, fetchedTiles: st.fetched,
+                emptyTiles: nEmpty, tries: st.tries,
+                points: data.items.length, ways: data.roads.length,
+                routes: data.routes.length, byCat: countByCat(data.items),
+                nodes: data.counts.node, areas: data.counts.area };
+      return { items: pickCats(data.items, cs),
+               roads: cs.road ? data.roads : [],
+               routes: wantRoutes ? data.routes : [],
+               bbox: bbox, ms: ms, bytes: bytes,
+               cached: st.cached === keys.length };
+    });
+  }
+
+  /**
+   * 🔒 §30-44-7 4: 名前を取れる範囲の1辺（km・丸め）。結果の1行の数字の出どころ。
+   * 4×4 枚（NAMES_MAX_TILES）はずれて掛かっても 3 枚分の辺は必ず入る
+   * ＝ 3 × z13 の1辺（その緯度で ≈4km）≈ 12km。
+   * 🔴 文言の数字はここから組む（画面の文字で分岐しない）。
+   */
+  function namesSpanKm(lat) {
+    var la = num(lat) ? lat : 35;
+    var tileKm = 40075.016686 * Math.cos(la * Math.PI / 180) / Math.pow(2, NAMES_Z);
+    return Math.round((Math.floor(Math.sqrt(NAMES_MAX_TILES)) - 1) * tileKm);
+  }
+
   /**
    * 表示範囲の名称を取る。
    * @param bounds {west,south,east,north}（＝いま画面に写っている範囲）
    * @param cats   {public:true, road:true, ...}
-   * @return Promise<{items, roads, bbox, ms, bytes, cached}>
+   * @return Promise<{items, roads, routes, bbox, ms, bytes, cached}>
    *   🔴 失敗は reject（e.kind = 'wide' | 'none' | 'net'）。
-   *      呼び出し側は**名称なぞり出しだけ**を止め、作図は続けること（§23-6）。
+   *      呼び出し側は**名称だけ**を止め、作図は続けること（§23-6）。
+   * 🔒 §30-44-9: ①範囲がタイルの上限を超えたら 'wide'（通信しない）②manifest を確かめる
+   *    （読めていなければその場で読み直す・読めなければ 'net'）③自前のタイルを取る。
    */
   function fetchNames(bounds, cats, opts) {
     var cs = normCats(cats);
     // 🔒 §22-av: 路線番号（国道・都道府県道）も一緒に取るか。分類とは別の軸
     var wantRoutes = !!(opts && opts.routes);
     if (!cs._n && !wantRoutes) return Promise.reject(err('none', '分類が選ばれていません'));
-
-    var hit = findCache(bounds, cs, wantRoutes);
-    if (hit) {
-      return Promise.resolve({ items: pickCats(hit.data.items, cs),
-                               roads: cs.road ? hit.data.roads : [],
-                               routes: hit.data.routes || [],
-                               /* 🔒 §30-21-4 1: 上限に当たったかはキャッシュにも
-                                * 付いて回る（2回目の生成で一言が消えないように）。 */
-                               truncated: !!hit.data.truncated,
-                               bbox: hit.bbox, ms: hit.ms, bytes: hit.bytes,
-                               cached: true });
-    }
-
-    var sp = spanMeters(bounds);
-    if (sp.w > MAX_SPAN_M || sp.h > MAX_SPAN_M) {
-      return Promise.reject(err('wide', '範囲が広すぎます'));
-    }
-
-    var bbox = padBounds(bounds, PAD);
-    var q = buildQuery(bbox, cs, wantRoutes);
-    if (!q) return Promise.reject(err('none', '分類が選ばれていません'));
-
-    var t0 = (global.performance && performance.now) ? performance.now() : Date.now();
-    var idx = 0;
-    function attempt() {
-      if (idx >= ENDPOINTS.length) throw err('net', '地図データの取得に失敗しました');
-      var url = ENDPOINTS[idx++];
-      return post(url, q).then(function (r) {
-        r.endpoint = url;
-        return r;
-      }, function (e) {
-        if (idx < ENDPOINTS.length) return attempt();   // 予備ミラーへ（§23-6）
-        throw e;
-      });
-    }
-
-    return Promise.resolve().then(attempt).then(function (r) {
-      var now = (global.performance && performance.now) ? performance.now() : Date.now();
-      var ms = Math.round(now - t0);
-      var data = parse(r.json);
-      var e = { cats: cs, routes: wantRoutes, bbox: bbox, data: data,
-                ms: ms, bytes: r.bytes };
-      putCache(e);
-      _last = { ms: ms, bytes: r.bytes, endpoint: r.endpoint,
-                points: data.items.length, ways: data.roads.length,
-                routes: data.routes.length, byCat: countByCat(data.items),
-                /* 🔒 §30-21-4 1: 実測の報告用（node / way+relation それぞれの応答数） */
-                nodes: data.counts.node, areas: data.counts.area,
-                truncated: data.truncated, max: MAX_POINTS };
-      return { items: pickCats(data.items, cs), roads: data.roads,
-               routes: data.routes, truncated: data.truncated,
-               bbox: bbox, ms: ms, bytes: r.bytes, cached: false,
-               endpoint: r.endpoint };
+    if (!tileMath()) return Promise.reject(err('net', 'タイルの計算ができません'));
+    var r = pickRange(bounds);
+    if (!r) return Promise.reject(err('wide', '範囲が広すぎます'));
+    // 🔒 §30-44-9 2: manifest は取得のたびに確かめる（読めていれば通信しない）
+    return loadManifest().then(function (m) {
+      if (!m) throw err('net', '名前データの版を読めませんでした');
+      return fetchNamesTiles(r, cs, wantRoutes, m);
     });
   }
 
   global.OSM = {
-    ENDPOINTS: ENDPOINTS,
     ATTRIBUTION: ATTRIBUTION,
     CATS: CATS,
     CAT_BY_ID: CAT_BY_ID,
-    MAX_SPAN_M: MAX_SPAN_M,
-    MAX_POINTS: MAX_POINTS,
     PAD: PAD,
     fetchNames: fetchNames,
     mergeRoads: mergeRoads,
     clearCache: clearCache,
-    cacheSize: function () { return _cache.length; },
     lastStats: function () { return _last; },
+    /* 🔒 §30-44-7: 自前の名前データ（定数・manifest の読み口） */
+    NAMES_BASE: NAMES_BASE,
+    NAMES_Z: NAMES_Z,
+    NAMES_MAX_TILES: NAMES_MAX_TILES,
+    /** manifest の読み込み（読めていなければ読みに行く・結果を待てる）。null＝読めなかった */
+    ready: loadManifest,
+    /** 🔒 §30-44-9 2: manifest が読めた時に呼ぶ関数を足す（右下の日付の書き直し用） */
+    onManifest: onManifest,
+    /** 読み込んだ manifest の写し（{built, tiles, source, date}）。無ければ null */
+    manifest: function () {
+      return _manifest ? { built: _manifest.built, tiles: _manifest.tiles,
+                           source: _manifest.source, date: _manifest.date } : null;
+    },
+    namesSpanKm: namesSpanKm,
+    namesFit: namesFit,
+    tileCacheSize: function () { return _tileKeys.length; },
     /* 単体で試せるように出しておく（実測・回帰用） */
-    _buildQuery: buildQuery,
     _parse: parse,
-    _spanMeters: spanMeters
+    _mergeTiles: mergeTiles
   };
+
+  /* 🔒 §30-44-7 3: 起動時に1回 manifest を読みに行く（ブラウザの時だけ）。
+   * 🔒 §30-44-9 2: ここで読めなくても、名前を取る時に読み直す（fetchNames）。 */
+  if (typeof window !== 'undefined' && typeof fetch === 'function') loadManifest();
 })(typeof window !== 'undefined' ? window : this);

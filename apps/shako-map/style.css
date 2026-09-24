@@ -804,6 +804,12 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   border-radius: 3px;
   pointer-events: none;
 }
+/* 🔒 §30-44-7 13: 出典の後ろに元データの日付を足して帯が長くなったので、枠の案内
+   （.frame-hint・中央下・幅 約344px）が出ている間は帯を**案内の右側**に収めて折り返す
+   （50% − 案内の半分 172px − 間 8px − 右の余白 6px − 帯の内側の余白 14px ≒ 200px）。
+   🔴 案内（z-index 7）の下に出典（z-index 5）が隠れないように（出典は隠してはいけない）。
+   出し入れは app.js syncMapAttrBeside。 */
+.map-attr.is-beside-hint { max-width: calc(50% - 200px); }
 
 /* ズーム操作 */
 .map-ctrl {
@@ -3234,7 +3240,6 @@ p.sg-tk { margin: 10px 0 4px; }
   color: var(--mut);
 }
 .rv-nstat.is-warn { color: #b45309; }
-#rvNameRetry { margin-top: 5px; }
 .tool-note {
   font-size: 11.5px;
   color: var(--mut);

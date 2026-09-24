@@ -218,6 +218,19 @@
     /* 🔒 §30-32-6 3: その紙で画面のマーカーを消したか（配置図だけで使う紙ごとの値）。
      * 🔴 持たない案件（今までの全部）は「消していない」＝ {}。 */
     if (!s.pinHidden || typeof s.pinHidden !== 'object') s.pinHidden = {};
+    /* 🔒 §30-43-2 2 / 4（2026-09-23）: 所在図の紙の控え2つ（app.js runShozaizu が書く）。
+     *   szNames    … 前回の生成で名前（OSM）が紙に届いたか {ok, at}
+     *   szNameAuto … 「自動」で決まった段 {分類id: 段}
+     * 🔴 壊れた値（オブジェクトでない・配列）だけ消す。それ以外は保存値をそのまま通す
+     *    （無い紙＝この版より前の紙は「分からない」扱い＝ app.js が全部作り直しへ落とす）。 */
+    if (s.szNames !== undefined
+        && (!s.szNames || typeof s.szNames !== 'object' || Array.isArray(s.szNames))) {
+      delete s.szNames;
+    }
+    if (s.szNameAuto !== undefined
+        && (!s.szNameAuto || typeof s.szNameAuto !== 'object' || Array.isArray(s.szNameAuto))) {
+      delete s.szNameAuto;
+    }
     if (!Array.isArray(s.attributions)) s.attributions = [];   // 出典（§24-3）
     if (!Array.isArray(s.objects)) s.objects = [];
     /* 🔴 null など「オブジェクトでない要素」だけ落とす。描画側（editor.js /
@@ -952,6 +965,14 @@
   /** 図形1個の欠けを寛容に補う（読み込みで落とさない） */
   function normalizeObject(o) {
     if (!o) return;                    // 壊れたファイルで落ちない
+    /* 🔒 §30-42-2 7（2026-09-22）: 生成物の**所属の印**（part）は捨てない。
+     * 建物の面・道路の線・水面・等高線は annoKind／nameCat を持たないので、
+     * この印だけが「設定盤のどの項目の物か」を示す（Shozaizu.partOf が読む）。
+     * 捨てると、案件を開き直した後の差分作り直しが全部作り直しに落ちてしまう。
+     * 🔴 壊れた値（文字列でない・空）だけ落とす＝保存値はそのまま通す。 */
+    if (o.part !== undefined && (typeof o.part !== 'string' || !o.part)) {
+      delete o.part;
+    }
     /* 🔒 §30-25-18 5 ／ 🔒 §30-37 4: 印の大きさ（markScale）は**捨てない**。
      * 無ければ持たせない（＝1倍として描く・Editor.markScaleOf が既定を持つ）。
      * 壊れた値（数値でない・0以下）だけ落とす＝読み込みで落ちないようにする。

@@ -1177,7 +1177,8 @@
                     （1つずつの手直しは④の「文字や線を足す・消す・動かす」で行う）。 -->
             <p class="sg-note">まずはここで、まとめて文字や線の量を決めます。
               1つ1つの手直し（消す・動かす・文字を足す）は次の④でできます。</p>
-            <p class="sg-busy" id="sgSzBusy" hidden>描き直しています…</p>
+            <!-- 🔒 §30-44-7 9（オーナー「案内は描画中のみ」）: 生成の間の一言は「描画中…」だけ -->
+            <p class="sg-busy" id="sgSzBusy" hidden>描画中…</p>
             <div class="sg-sz" id="sgSzSet"></div>
             <button id="sgSzStd" class="sg-wide"
               title="14項目すべてを標準の設定に戻して、所在図を作り直します（個別に変えた設定は失われます）"
@@ -2073,7 +2074,7 @@
                   <label class="rv-all"><input type="checkbox" id="rvCatAll">全ての目印</label>
                 </div>
                 <div class="rv-nstat" id="rvNameStat" hidden></div>
-                <button id="rvNameRetry" class="sg-wide" hidden>もう一度取りに行く</button>
+                <!-- 🔒 §30-44-9 1: ［もう一度取りに行く］は廃止（取得の失敗は見せない） -->
               </div>
               <button type="button" class="sg-more-x" data-tmore-x="name">閉じる ▲</button>
             </div>

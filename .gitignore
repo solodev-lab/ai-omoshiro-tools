@@ -42,3 +42,8 @@ apps/solara/docs/store_compliance_assets/phone_raw/
 # 車庫証明メーカー spike の作業用ファイル（ベンチ画像・検証用ライブラリ）。
 # アンダースコア始まり＝使い捨ての作業物。コミットしない（オーナー判断 2026-08-29）
 apps/shako-map/spike/_*
+
+# 車庫証明メーカー 自前の名前データ（🔒 正典 §30-44-2 A）。
+# _data＝Geofabrik の pbf（日本全体 約2GB）・_out＝書き出したタイル（数百MB）。絶対にコミットしない
+apps/shako-map/tools/names_tiles/_data/
+apps/shako-map/tools/names_tiles/_out/

@@ -4305,16 +4305,26 @@
 
   /* ---------- 自動下書き（正典 §11-b レーンA） ---------- */
 
-  /** 生成した図形群をまとめて足す。1回の undo で全部戻せる */
-  Editor.prototype.addGenerated = function (objs) {
+  /**
+   * 生成した図形群をまとめて足す。1回の undo で全部戻せる。
+   * @param at 差し込む位置（省略＝先頭＝一番下に敷く・従来どおり）。
+   *   🔒 §30-42-2 7: 差分作り直しでは**消した物と同じ位置**へ差し込む
+   *   （先頭へ入れると、例えば作り直した建物が水面の下に潜って見えなくなる）。
+   * @param noSnap true で控え（undo）を取らない。
+   *   🔒 §30-42-2 5: 差分作り直しは「消す→足す」で控えを1回だけ取る
+   *   （呼ぶ側が先に snapshot 済み）＝［戻す］1回で作り直しの前に戻る。
+   */
+  Editor.prototype.addGenerated = function (objs, at, noSnap) {
     if (!objs || !objs.length) return 0;
-    this.snapshot();
+    if (!noSnap) this.snapshot();
     /* 🔴 §23-7-1: 単純な `this.objects = objs.concat(this.objects)` は不可。
      * bind() が this.objects を state.current.objects[sheet] と**参照共有**して
      * いるため、代入で配列を丸ごと差し替えると参照が切れ、次のシート切替/自動保存で
      * 生成物が消える（実機確認済）。_restore() と同じ「length=0 → push」で
      * 同じ配列オブジェクトのまま並べ替える（順序保持・下敷き側に敷く挙動は不変）。 */
-    var merged = objs.concat(this.objects);
+    var pos = (at >= 0) ? Math.min(Math.round(at), this.objects.length) : 0;
+    var merged = this.objects.slice(0, pos)
+      .concat(objs, this.objects.slice(pos));
     this.objects.length = 0;
     for (var i = 0; i < merged.length; i++) this.objects.push(merged[i]);
     this.selection = [];
