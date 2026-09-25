@@ -719,12 +719,18 @@
    *    針の半径 17S ＝ 17 × 138mm/1000 ＝ 2.346mm だったので、そのままの見た目にする
    *    （部品化しても紙に出る大きさは変わらない）。比率も旧 drawNorth と同じ。 */
   var COMPASS = {
-    rMm: 2.346,     // 針の半分の高さ(紙面mm)。旧 drawNorth の 17S と同じ
+    rMm: 2.346,     // 針の半分の高さ(紙面mm)。旧 drawNorth の 17S と同じ（🔴 §30-45 でも変えない）
     wide: 0.42,     // 針の半幅 ÷ r
     waist: 0.55,    // 針のくびれ（下側の切れ込み）の深さ ÷ r
     gap: 11 / 17,   // 針の先端から 'N' の中心まで ÷ r（旧 11S）
     label: 13 / 17, // 'N' の字の大きさ ÷ r（旧 13S）
-    lw: 2           // 輪郭の太さ（画面px基準。紙は線幅倍率 S を掛ける＝ MARK.strokeW と同じ作法）
+    lw: 2,          // 輪郭の太さ（画面px基準。紙は線幅倍率 S を掛ける＝ MARK.strokeW と同じ作法）
+    /* 🔒 §30-45 3（2026-09-24 オーナー指示「方位もう少し大きくして置いて」）:
+     * 新しく置く方位記号の既定倍率（markScale）。針の半分の高さ 2.346mm × 1.4 ≈ 3.3mm
+     * （全体 約6.6mm）。🔴 既存の方位記号（markScale 無し＝1.0、または利用者が
+     * つまみで調整した値・§30-37）は一切変えない＝ makeCompass が新規作成する
+     * 物にだけ付く。clampMarkScale の範囲（0.2〜上限なし）に収まる。 */
+    newScale: 1.4
   };
   /**
    * 🔒 §30-37 1〜2（2026-09-15 オーナー指示「方位もサイズ変更できるようにして」）:
@@ -762,10 +768,16 @@
     var hw = Math.max(r * COMPASS.wide, g.labelSize * 0.5);
     return { hw: hw, hh: (bot - top) / 2, cy: (top + bot) / 2 };
   }
-  /** 方位記号のオブジェクトを1個作る（🔒 §28-3・app.js の［枠を決定］から呼ぶ） */
+  /**
+   * 方位記号のオブジェクトを1個作る（🔒 §28-3・app.js の placeCompass から呼ぶ＝
+   * ［枠を決定］／§30-45 の生成のたびの呼び出しの両方）。
+   * 🔒 §30-45 3: 新しく置く物は既定で `COMPASS.newScale`（1.4倍）を持たせる
+   *    （既存の方位記号の markScale はここを通らないので影響しない）。
+   */
   function makeCompass(at, id) {
     return { id: id || uid(), type: 'compass',
              at: { lat: at.lat, lng: at.lng },
+             markScale: COMPASS.newScale,
              style: { color: '#111', w: COMPASS.lw } };
   }
 

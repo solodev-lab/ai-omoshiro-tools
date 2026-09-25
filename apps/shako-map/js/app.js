@@ -3503,7 +3503,12 @@
    * 置いたあとはドラッグで動かせる・消しゴムで消せる（ふつうのオブジェクト）。
    * 🔴 既に方位記号がある紙には**2つ目を置かない**（§28-3）。
    * 🔴 旧案件（方位記号なし）に**自動では足さない**（§25-4-7 と同じ作法）
-   *    ＝ 呼ぶのは［枠を決定］の操作からだけ。
+   *    ＝ 呼ぶのは［枠を決定］の操作、または §30-45 の生成のたびの呼び出しからだけ。
+   * 🔒 §30-45 2（2026-09-24 オーナー指示「②を押さなくても方位記号を置いてほしい」）:
+   *    `runShozaizu` からも呼ぶ（②を押していない紙にも所在図を作るたびに置く）。
+   * @param noSnap true＝呼ぶ側がすでに undo の控え（snapshot）を取っている
+   *    （呼ぶ側の操作と同じ1回の［戻す］にまとめる・snapshot を重ねない）。
+   *    省略時（［枠を決定］からの呼び出し）は従来どおりここで単独の控えを取る。
    * @returns true＝置いた
    */
   /* 🔒 §30-22-4 11（2026-09-13 オーナー指示）: **配置図にも方位記号を自動で置く**。
@@ -3521,7 +3526,7 @@
    * 何もしないので、画面にも紙にも方位記号が出ないまま、という筋。
    * 直し: 枠の**中**にあれば置かない（今までどおり）。枠の外に居る時は
    * 2つ目を足さずに**その1つを枠の右上へ移す**（§28-3「1枚に1つ」は保つ）。 */
-  function placeCompass(kind, sh) {
+  function placeCompass(kind, sh, noSnap) {
     if (!sh || !sh.frame) return false;
     if (!window.Editor || !Editor.makeCompass || !Exporter.compassSpot) return false;
     var objs = sh.objects || [];
@@ -3538,7 +3543,9 @@
     /* 🔴 §23-7-1: 配列は**差し替えない**（bind が state.current と参照を共有している）。
      *    push で足す。編集中のシートなら editor.objects と同じ配列なのでそのまま映る。 */
     var live = !!(state.editor && state.editor.objects === objs);
-    if (live) state.editor.snapshot();
+    /* 🔒 §30-45 2: noSnap＝呼ぶ側（runShozaizu の生成）がすでに控えを取っている時は
+     *    ここで重ねて取らない（［戻す］1回で生成＋方位記号がまとめて戻る）。 */
+    if (live && !noSnap) state.editor.snapshot();
     if (had) had.at = at;                      // 枠の外に居た1つを右上へ移す
     else objs.push(Editor.makeCompass(at));
     if (live) {
@@ -5269,6 +5276,17 @@
        * あった（差分の経路で noSnap にしたのに全部作り直しは直していなかった）。
        * ここは常に noSnap＝true でよい。 */
       state.editor.addGenerated(fresh, addAt, true);
+      /* 🔒 §30-45 2（2026-09-24 オーナー指示「②を押さなくても方位記号を置いてほしい」）:
+       * 所在図は**生成のたびに**方位記号を置く（②［枠を決定］を経由しなくても）。
+       * §28-3／§30-32-4 と同じ規則（無ければ枠の右上へ・枠の外に居れば右上へ戻す・
+       * 枠の中に居れば何もしない＝1枚に1つ）。配置図には掛けない（配置図は②で置く・
+       * §30-22-4 11）ので、ここは所在図の紙 sheetOf('shozaizu') だけに限る。
+       * 🔴 noSnap＝この生成の１回の控え（undo）にまとめる。全部作り直しは必ず控えを
+       *    取っている（上の snapshot()）ので常に noSnap＝true。差分作り直しは
+       *    「消す物も足す物も無かった」時だけ控えが未使用のまま＝その時だけ
+       *    placeCompass 自身に控えを取らせる（何も変わらなければ実際には取られない）。 */
+      var szSnapTaken = diff ? !!(diff.kill.length || res.objects.length) : true;
+      placeCompass('shozaizu', sheetOf('shozaizu'), szSnapTaken);
       /* 🔒 §30-24-3: 作り直しの後は「使用の本拠」「駐車場」の文字が必ず1つずつある
        * （生成側は地点が無いと作らない＝片方が消える経路の出口）。
        * 🔒 §30-42-2 7: 差分作り直しでは主役を触らない＝呼ばない。 */
