@@ -427,8 +427,13 @@
    *    （段4〜5 が画面まで描く規則＝areaFor は「手で選んだ時」の物。自動は
    *     「紙に載る物を決める」仕組みなので枠の外へは広げない・§30-40-2 3）。
    * 🙋 else を「多め」にしたければ elseLevel を1つ変えるだけ
-   *    （画面の文言も title もこの表の実値から組むので、書き換えは1か所）。 */
-  var NAME_AUTO = { level: 0, allMax: 5, allLevel: 5, elseLevel: 3 };
+   *    （画面の文言も title もこの表の実値から組むので、書き換えは1か所）。
+   *
+   * 🔒 §30-40-2 の改定（2026-09-25 オーナー決定「10件以下なら全部にしたい」）:
+   *    allMax を 5→10 に上げた。境目の決め方（allMax 件以下は allLevel の段）
+   *    自体は変えていない。画面の文言・title はこの実値から組むので書き換えは
+   *    ここ1か所（app.js の nameLevelTitle / nameAutoNote は自動で追随する）。 */
+  var NAME_AUTO = { level: 0, allMax: 10, allLevel: 5, elseLevel: 3 };
 
   /** 名前の8分類の段を数字にそろえる（🔒 §30-40-2: 0＝自動はそのまま通す） */
   function nameLevelOf(v) {
