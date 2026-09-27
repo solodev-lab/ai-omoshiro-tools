@@ -45,6 +45,13 @@
         </div>
       </header>
 
+      <!-- 🔒 §30-46 B: 国土地理院の告知（住所検索の停止・メンテ等）。
+           ゲート（フォルダ未選択・未オープン）と一覧の**両方**で見える位置に
+           1本だけ置く（clGate・clMain の外）。取得・組み立ては js/gsinotice.js。
+           初期は hidden＝出す条件（「検索」を含む・日付が過ぎていない）に
+           合った時だけ gsinotice.js が hidden を外す。 -->
+      <div id="gsiNotice" class="gsi-notice" hidden></div>
+
       <!-- 🔒 §27-12-2: TOP ページは「ゲート1枚」か「本体」のどちらか。
            ゲート ＝ ①案件フォルダがまだ無い／②覚えているがまだ開いていない／非対応。
            見出し・本文・ボタンの出し分けは app.js の renderTop()。 -->
@@ -2455,6 +2462,7 @@
 <script src="js/config.js?v=__SHAKO_VER__"></script>
 <script src="js/mvt.js?v=__SHAKO_VER__"></script>
 <script src="js/gsi.js?v=__SHAKO_VER__"></script>
+<script src="js/gsinotice.js?v=__SHAKO_VER__"></script>
 <script src="js/osm.js?v=__SHAKO_VER__"></script>
 <script src="js/parse.js?v=__SHAKO_VER__"></script>
 <script src="js/store.js?v=__SHAKO_VER__"></script>

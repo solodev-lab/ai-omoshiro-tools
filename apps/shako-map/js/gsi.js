@@ -21,6 +21,11 @@
   // 住所検索。キー不要・CORS 可。番地レベルでズレるのでピン微調整前提(正典 §2)。
   var GEOCODE_URL = 'https://msearch.gsi.go.jp/address-search/AddressSearch?q=';
 
+  // 🔒 §30-46 A: msearch が接続はするが応答しない障害（地理院の計画メンテ等）に
+  // 備え、待ち時間の上限を設ける。上限・通信失敗・HTTP エラーはどれも同じ失敗
+  // として呼び出し側（app.js doSearch）に伝わる（Promise の reject）。
+  var GEOCODE_TIMEOUT_MS = 15000;
+
   // 淡色地図ラスタ。正典 §5 のフォールバック「背景に地理院地図を含める」用。
   var RASTER_PALE_URL = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
 
@@ -264,10 +269,17 @@
 
   /** 住所文字列 -> [{lng, lat, title}] （先頭が最有力） */
   function geocode(query) {
-    return fetch(GEOCODE_URL + encodeURIComponent(query))
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, GEOCODE_TIMEOUT_MS) : null;
+    return fetch(GEOCODE_URL + encodeURIComponent(query), ctrl ? { signal: ctrl.signal } : undefined)
       .then(function (r) {
+        if (timer) clearTimeout(timer);
         if (!r.ok) throw new Error('住所検索に失敗しました (' + r.status + ')');
         return r.json();
+      })
+      .catch(function (e) {
+        if (timer) clearTimeout(timer);
+        throw e;
       })
       .then(function (list) {
         return (list || []).map(function (f) {

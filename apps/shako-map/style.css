@@ -169,6 +169,22 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   margin-bottom: 12px;
 }
 
+/* ---- 🔒 §30-46 B: 国土地理院の告知の帯（#gsiNotice）----
+   地理院地図の告知帯と同じ薄い黄色（赤にしない）。閉じるボタンは付けない
+   （うっかり消して当日困らないよう・§30-46 B-5）。 */
+.gsi-notice {
+  background: #fff6da;
+  border: 1px solid #e8d48a;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.gsi-notice-title { font-weight: 700; margin-bottom: 4px; }
+.gsi-notice-body + .gsi-notice-body { margin-top: 6px; }
+
 .cl-head h1 { font-size: 21px; }
 .cl-sub {
   color: var(--mut);
