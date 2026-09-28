@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>車庫証明 所在図・配置図メーカー｜図面作成が最短6分に</title>
+<meta name="description" content="車庫証明の所在図・配置図を、住所を入れるだけで自動作成。所在図は最短1分、配置図は15分が5分に。行政書士事務所向けのパソコン用ツール。月額3,300円（税込）から。">
+<meta property="og:title" content="車庫証明 所在図・配置図メーカー｜図面作成が最短6分に">
+<meta property="og:description" content="所在図は住所を入れて自動作成・最短1分。配置図は写真をなぞって5分。行政書士事務所向け。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://solodev-lab.com/shako/">
+<meta property="og:image" content="https://solodev-lab.com/shako/img/haichizu.jpg">
+<link rel="icon" type="image/png" href="../apps/shako-map/assets/favicon.png">
+<!-- Google Analytics（サイト共通） -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JX7SCK9ECB');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1a4fb8; --blue-d: #0f357f; --blue-l: #e8effc;
+    --accent: #e8590c; --accent-l: #fff1e6;
+    --ink: #1b1f27; --sub: #4a5260; --line: #d5dbe5; --gray: #f2f4f8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+  body { font-family: "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif; color: var(--ink); background: #fff; line-height: 1.8; font-feature-settings: "palt"; }
+  /* 🔴 width/height 属性（読み込み中の場所取り用）を付けた画像は、height:auto が無いと縦が固定されて潰れる */
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: var(--blue); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  section { padding: 64px 0; }
+  section.alt { background: var(--gray); }
+  @media (max-width: 640px) { section { padding: 44px 0; } }
+  .eyebrow { color: var(--blue); font-weight: 700; font-size: 15px; letter-spacing: .05em; }
+  h2 { font-size: clamp(23px, 4vw, 34px); font-weight: 900; line-height: 1.4; margin-top: 6px; }
+  h3.sub { font-size: clamp(19px, 3vw, 23px); font-weight: 900; margin-top: 40px; color: var(--blue-d); }
+  .num { color: var(--accent); font-weight: 900; }
+  .lead { color: var(--sub); font-size: 16px; margin-top: 14px; max-width: 780px; }
+  p.body { font-size: 16px; margin-top: 12px; max-width: 820px; }
+  .btn { display: inline-block; background: var(--accent); color: #fff; font-weight: 900; font-size: 17px; text-decoration: none; padding: 14px 28px; border-radius: 8px; box-shadow: 0 3px 0 #b3440a; text-align: center; }
+  .btn:hover { filter: brightness(1.05); }
+  .btn.ghost { background: #fff; color: var(--blue-d); box-shadow: none; border: 2px solid var(--blue); }
+  .shot { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+  .cap { font-size: 13px; color: var(--sub); margin-top: 6px; }
+
+  /* ヘッダー */
+  header.top { border-bottom: 1px solid var(--line); background: #fff; position: sticky; top: 0; z-index: 10; }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; gap: 12px; }
+  header.top .name { font-weight: 900; font-size: 16px; color: var(--ink); text-decoration: none; line-height: 1.3; }
+  header.top nav { display: flex; gap: 18px; font-size: 14px; }
+  header.top nav a { text-decoration: none; color: var(--ink); }
+  header.top .mini { background: var(--accent); color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 14px; white-space: nowrap; }
+  @media (max-width: 820px) { header.top nav { display: none; } }
+  @media (max-width: 400px) { header.top .name { font-size: 14px; } }
+
+  /* ヒーロー */
+  .hero { padding: 56px 0 64px; background: linear-gradient(180deg, #f5f8ff 0%, #fff 100%); }
+  @media (max-width: 640px) { .hero { padding: 32px 0 44px; } }
+  .hero .badge { display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--accent); color: var(--accent); background: var(--accent-l); border-radius: 18px; padding: 6px 16px; font-weight: 700; font-size: 14px; line-height: 1.5; }
+  .hero h1 { font-size: clamp(30px, 6vw, 54px); font-weight: 900; line-height: 1.25; margin-top: 18px; letter-spacing: -0.01em; }
+  .hero h1 .big { font-size: 1.6em; color: var(--accent); line-height: 1; position: relative; top: .08em; margin: 0 .08em; }
+  .hero .sub { font-size: clamp(16px, 2.2vw, 19px); color: var(--sub); margin-top: 14px; }
+  .hero .cta { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  @media (max-width: 480px) { .hero .cta .btn { flex: 1 1 100%; } }
+  .hero .note { font-size: 12px; color: var(--sub); margin-top: 12px; }
+
+  /* 棒グラフ（同じ物差し＝全幅 25 分。結ぶ線は入れない） */
+  .bars { margin-top: 28px; display: grid; grid-template-columns: 80px 1fr 64px; gap: 0 12px; max-width: 780px; }
+  .bars .lbls, .bars .vals { display: grid; grid-template-rows: 40px 40px; row-gap: 20px; align-items: center; }
+  .bars .lbls div { font-weight: 700; color: var(--sub); font-size: 14px; }
+  .plot { position: relative; display: grid; grid-template-rows: 40px 40px; row-gap: 20px; }
+  .bar { height: 40px; border-radius: 6px; display: flex; overflow: hidden; font-weight: 700; font-size: 14px; color: #fff; }
+  .bar span { display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
+  .bar.old { width: 100%; } .bar.old span:first-child { background: #b9c0cb; width: 40%; } .bar.old span:last-child { background: #9aa3b0; width: 60%; }
+  .bar.new { width: 24%; } .bar.new span:first-child { background: var(--accent); width: 16.67%; } .bar.new span:last-child { background: #c2410c; width: 83.33%; }
+  .bars .t { font-weight: 900; font-size: 20px; white-space: nowrap; }
+  .bars .t.new { color: var(--accent); font-size: 24px; }
+  .plot .tnew { position: absolute; left: calc(24% + 10px); bottom: 0; height: 40px; display: flex; align-items: center; }
+  @media (max-width: 480px) {
+    .bars { grid-template-columns: 64px 1fr 48px; gap: 0 8px; }
+    .bars .lbls div { font-size: 12px; } .bar { font-size: 11px; }
+    .bars .t { font-size: 16px; } .bars .t.new { font-size: 18px; }
+  }
+
+  .stats { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 900px; }
+  .stat { border: 2px solid var(--blue); border-radius: 10px; background: #fff; padding: 12px 16px; display: flex; align-items: baseline; justify-content: center; gap: 14px; line-height: 1; flex-wrap: wrap; }
+  .stat .k { font-weight: 900; font-size: 22px; color: var(--blue); }
+  .stat .v { font-weight: 700; font-size: 18px; color: var(--sub); }
+  .stat .arr { font-size: 16px; }
+  /* 大きい数字は行の高さを詰める（詰めないと上に空きができて文字が下に寄る） */
+  .stat .big { font-size: 56px; font-weight: 900; color: var(--accent); margin: 0 .12em; line-height: .72; position: relative; top: .07em; }
+  .stat { padding: 16px 16px 14px; }
+  @media (max-width: 640px) {
+    .stats { grid-template-columns: 1fr; gap: 10px; }
+    .stat .k { font-size: 18px; } .stat .v { font-size: 16px; } .stat .big { font-size: 44px; }
+  }
+  /* 各節の見出しの「1」「5」も大きく */
+  /* 数字の下端を漢字の下端にそろえる（漢字は基準線より少し下まで出るので、数字を少し下げる） */
+  /* 🔒 画素で下端をそろえただけでは「少し浮いて見える」（オーナー）→ 目の錯覚を補って、漢字の下端より少し下まで下げる */
+  h2 .num.big { font-size: 1.7em; line-height: 1; position: relative; top: .12em; margin: 0 .1em; }
+  .save { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr) 1.3fr; border: 2px solid var(--accent); border-radius: 10px; overflow: hidden; max-width: 900px; }
+  .save .it { padding: 12px 8px; text-align: center; font-weight: 700; color: var(--sub); font-size: 14px; border-right: 1px solid #f5c9a8; background: #fff; line-height: 1.4; }
+  .save .it > span:first-child { display: block; }
+  .save .it b { color: var(--ink); font-size: 16px; } .save .it .num { font-size: 30px; margin: 0 .1em; position: relative; top: .05em; }
+  .save .hr { background: var(--accent); color: #fff; font-weight: 900; display: grid; place-items: center; text-align: center; padding: 10px; font-size: 15px; line-height: 1.5; }
+  @media (max-width: 640px) { .save { grid-template-columns: 1fr 1fr 1fr; } .save .hr { grid-column: 1 / -1; } .save .it { font-size: 11.5px; padding: 10px 4px; } .save .it b { font-size: 13px; white-space: nowrap; } .save .it .num { font-size: 22px; } }
+
+  /* お悩み → 解決策 */
+  .solve { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .pair { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+  /* 札（悩み／解決）は左に絶対配置。本文は b と文字が混ざるので flex にしない */
+  .pain { padding: 14px 16px 18px 60px; font-size: 15px; color: var(--sub); line-height: 1.6; position: relative; }
+  .pain::before { content: "悩み"; position: absolute; left: 16px; top: 15px; font-size: 11px; font-weight: 700; background: #e3e7ee; color: var(--sub); border-radius: 4px; padding: 2px 6px; line-height: 1.5; }
+  .pain::after { content: ""; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); border: 9px solid transparent; border-bottom: 0; border-top-color: #fff; z-index: 1; }
+  .fix { flex: 1; background: var(--accent-l); border-top: 1px solid #f5d3bb; padding: 16px 16px 16px 60px; font-size: 15px; line-height: 1.75; position: relative; }
+  .fix::before { content: "解決"; position: absolute; left: 16px; top: 18px; font-size: 11px; font-weight: 700; background: var(--accent); color: #fff; border-radius: 4px; padding: 2px 6px; line-height: 1.5; }
+  .fix b { color: var(--accent); }
+
+  /* 本文の部品 */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; margin-top: 32px; align-items: start; }
+  @media (max-width: 820px) { .two { grid-template-columns: 1fr; gap: 24px; } }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 28px; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+  .step { border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: #fff; }
+  .step .n { width: 34px; height: 34px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; margin-bottom: 8px; font-weight: 900; }
+  .step.go { border-color: var(--accent); background: var(--accent-l); } .step.go .n { background: var(--accent); }
+  .step b { display: block; font-size: 16px; line-height: 1.5; }
+  .step span { display: block; font-size: 14px; color: var(--sub); margin-top: 4px; line-height: 1.6; }
+  .list { list-style: none; display: grid; gap: 16px; }
+  .list li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; }
+  .list li::before { content: "✓"; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 13px; font-weight: 900; display: grid; place-items: center; margin-top: 3px; }
+  .list b { display: block; font-size: 16px; line-height: 1.5; }
+  .list span { display: block; font-size: 14.5px; color: var(--sub); line-height: 1.7; margin-top: 2px; }
+  .list.grid2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px 32px; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+  @media (max-width: 820px) { .cards { grid-template-columns: 1fr; } }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  .card h3 { font-size: 20px; font-weight: 900; color: var(--blue-d); }
+  .card.em { border: 2px solid var(--accent); } .card.em h3 { color: var(--accent); }
+  .card p { font-size: 15px; margin-top: 8px; line-height: 1.8; }
+  .card small { display: block; font-size: 13px; color: var(--sub); margin-top: 10px; line-height: 1.7; }
+
+  /* 料金 */
+  .price-note { margin-top: 10px; font-size: 14px; color: var(--sub); }
+  .table-wrap { overflow-x: auto; margin-top: 24px; border: 1px solid var(--line); border-radius: 12px; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; min-width: 660px; background: #fff; font-size: 15px; line-height: 1.5; }
+  th, td { padding: 14px 12px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  thead th { background: var(--blue-l); color: var(--blue-d); font-size: 14px; }
+  tbody th { text-align: left; font-weight: 900; }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+  td.p { font-weight: 900; font-size: 18px; }
+  tr.rec { background: #fffaf5; } tr.rec th::after { content: "おすすめ"; margin-left: 8px; font-size: 11px; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; vertical-align: middle; }
+  .scroll-hint { display: none; font-size: 12px; color: var(--sub); margin-top: 6px; }
+  @media (max-width: 700px) { .scroll-hint { display: block; } }
+  .table-note { margin-top: 10px; text-align: right; font-size: 13.5px; color: var(--sub); line-height: 1.7; }
+  .example { margin-top: 18px; border-left: 4px solid var(--accent); padding: 4px 0 4px 16px; max-width: 820px; }
+  .example p { font-size: 15.5px; margin-top: 6px; }
+  .example p:first-child { margin-top: 0; }
+  .example b { color: var(--ink); }
+
+  /* よくある質問（最初から全部見せる） */
+  .faq { margin-top: 28px; display: grid; gap: 28px; max-width: 860px; }
+  .faq .q { display: flex; gap: 12px; font-size: 17px; font-weight: 900; line-height: 1.6; }
+  .faq .q::before { content: "Q"; flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 15px; display: grid; place-items: center; margin-top: -1px; }
+  .faq .a { display: flex; gap: 12px; margin-top: 10px; font-size: 15.5px; line-height: 1.85; }
+  .faq .a::before { content: "A"; flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--accent-l); color: var(--accent); font-weight: 900; font-size: 15px; display: grid; place-items: center; }
+  .faq .a div p + p { margin-top: 8px; }
+
+  /* 申し込み */
+  #apply { background: var(--blue); color: #fff; }
+  #apply .eyebrow { color: #cfe0ff; }
+  #apply .lead { color: #e6eeff; }
+  .form-box { margin-top: 28px; background: #fff; border-radius: 12px; overflow: hidden; }
+  .form-box iframe { width: 100%; height: 1150px; border: 0; display: block; }
+  .form-pending { padding: 40px 20px; text-align: center; color: var(--ink); }
+  .flow3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+  @media (max-width: 640px) { .flow3 { grid-template-columns: 1fr; } }
+  .flow3 div { background: rgba(255,255,255,.12); border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.7; }
+  .flow3 b { display: block; font-size: 16px; }
+
+  footer { padding: 28px 0 40px; font-size: 13px; color: var(--sub); }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body id="top">
+
+<header class="top">
+  <div class="wrap">
+    <a class="name" href="#top">車庫証明 所在図・配置図メーカー</a>
+    <nav><a href="#shozaizu">所在図</a><a href="#haichizu">配置図</a><a href="#easy">使いやすさ</a><a href="#price">料金</a><a href="#faq">よくある質問</a></nav>
+    <a class="mini" href="#apply">お申し込み</a>
+  </div>
+</header>
+
+<!-- ヒーロー -->
+<div class="hero">
+  <div class="wrap">
+    <div class="badge">★ 自動車の総保有台数が最も多い都道府県・愛知県の現役行政書士おすすめツール</div>
+    <h1>車庫証明の図面、<br>25分の作図が<span style="white-space:nowrap">最短<span class="big">6</span>分に。</span></h1>
+    <p class="sub">所在図は、住所を入れてボタンを押すだけで自動で出来上がります。配置図は、空から見た写真の上をなぞるだけ。めんどうな作図はさっと終わらせて、本来の業務の時間を取り戻しましょう。</p>
+    <div class="bars">
+      <div class="lbls"><div>これまで</div><div>このツール</div></div>
+      <div class="plot">
+        <div class="bar old"><span>所在図 10分</span><span>配置図 15分</span></div>
+        <div class="bar new"><span>1</span><span>5分</span></div>
+        <div class="t new tnew">最短6分</div>
+      </div>
+      <div class="vals"><div class="t">25分</div></div>
+    </div>
+    <!-- フライヤー1枚目と同じ時間の枠（数字を大きく） -->
+    <div class="stats">
+      <div class="stat"><span class="k">所在図</span><span class="v">10分 <span class="arr">▶</span> 最短<span class="big">1</span>分</span></div>
+      <div class="stat"><span class="k">配置図</span><span class="v">15分 <span class="arr">▶</span> <span class="big">5</span>分</span></div>
+    </div>
+    <!-- 1件 25分→最短6分＝19分短縮。1日5件＝95分。月20日稼働＝1,900分≒約32時間 -->
+    <div class="save">
+      <div class="it"><span>1件で</span><b><span class="num">19</span>分</b>短縮</div>
+      <div class="it"><span>1日5件なら</span><b><span class="num">95</span>分</b>短縮</div>
+      <div class="it"><span>1か月（20日）なら</span><b>約<span class="num">32</span>時間</b>短縮</div>
+      <div class="hr">人手不足の事務所にも。<br>作図の時間を、そのまま他の業務へ。</div>
+    </div>
+    <p class="note">※所要時間は実務での一例です。案件の内容や操作の慣れによって異なります。</p>
+    <div class="cta">
+      <a class="btn" href="#apply">お申し込み・お問い合わせ</a>
+      <a class="btn ghost" href="#price">料金を見る</a>
+    </div>
+  </div>
+</div>
+
+<!-- お悩み → このツールなら（悩みを並べるだけにせず、1つずつ解決策と組にする） -->
+<section id="solve" class="alt">
+  <div class="wrap">
+    <div class="eyebrow">こんなお悩み、ありませんか？</div>
+    <h2>そのお悩み、このツールが解決します。</h2>
+    <div class="solve">
+      <div class="pair">
+        <div class="pain">会議や面談のあと、疲れた頭で図面を描いている</div>
+        <div class="fix"><b>所在図はボタン1つで自動作成。</b>住所を入れて押すだけなので、疲れている日でも最短1分で終わります。</div>
+      </div>
+      <div class="pair">
+        <div class="pain">大通りの道幅を、どうやって測ろうか毎回迷う</div>
+        <div class="fix"><b>矢印を引くだけで自動で採寸。</b>地図の縮尺から長さを計算して、そのまま図に書き込みます。</div>
+      </div>
+      <div class="pair">
+        <div class="pain">補助者に作図のやり方を教える時間がない</div>
+        <div class="fix"><b>画面のガイダンスが順番に案内。</b>次に押すボタンを画面が教えるので、つきっきりで教えなくても使い始められます。</div>
+      </div>
+      <div class="pair">
+        <div class="pain">差し戻しのたびに、図面を一から描き直している</div>
+        <div class="fix"><b>案件は自動で保存。</b>差し戻されても、案件を開いて直す所だけ直せば済みます。</div>
+      </div>
+      <div class="pair">
+        <div class="pain">交差点名や目印の名前を、地図で探して書き写している</div>
+        <div class="fix"><b>名前は自動で入ります。</b>交差点名・道路名・お店やバス停などの目印を、地図のデータから自動で書き込みます。</div>
+      </div>
+      <div class="pair">
+        <div class="pain">手書き・エクセル・CADソフトなどで、線を1本ずつ引いている</div>
+        <div class="fix"><b>道路や建物は自動で描画。</b>配置図の駐車枠も、1台ずつではなくまとめて並べられます。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 所在図 -->
+<section id="shozaizu">
+  <div class="wrap">
+    <div class="eyebrow">所在図　10分 → 最短1分</div>
+    <h2>所在図は、住所を入れてボタンを押すだけ。最短<span class="num big">1</span>分。</h2>
+    <p class="lead">道路や建物はもちろん、交差点の名前やお店などの目印まで、地図のデータから図面そのものを自動で描きます。下書きをしたり、地図をなぞったりする必要はありません。</p>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><b>使用の本拠の住所を入れる</b><span>検索すると、その場所に印が置かれます。</span></div>
+      <div class="step"><div class="n">2</div><b>駐車場の場所を地図に置く</b><span>住所で検索するか、地図をクリックして置きます。</span></div>
+      <div class="step go"><div class="n">3</div><b>［所在図を作る］を押す</b><span>数秒で所在図が出来上がります。あとは PDF にするだけです。</span></div>
+    </div>
+    <div class="two">
+      <div>
+        <div class="shot"><img src="img/shozaizu.jpg" alt="自動で作った所在図の見本" loading="lazy" width="1043" height="1400"></div>
+        <p class="cap">見本：名古屋市名東区。ボタンを押して自動で作ったものを、手を加えずに書き出しています。</p>
+      </div>
+      <div>
+        <ul class="list">
+          <li><div><b>道路・建物・川・山・駅を自動で描きます</b><span>白地図を用意して線を引く作業は、まるごと不要になります。</span></div></li>
+          <li><div><b>交差点名・道路名も自動で入ります</b><span>別の地図で名前を探して、1つずつ書き写す必要はありません。</span></div></li>
+          <li><div><b>お店・会社・バス停などの目印も自動で</b><span>図の範囲に目印がどれくらいあるかを見て、多すぎず少なすぎない数に自動で調整します。</span></div></li>
+          <li><div><b>2つの場所の直線距離を自動で記入</b><span>使用の本拠から駐車場までの距離を測って書き込みます。定規で測ったり縮尺を計算したりする必要はありません。</span></div></li>
+          <li><div><b>方位記号・国道や県道の番号の印も自動</b><span>描き忘れや、路線番号を調べる手間がなくなります。</span></div></li>
+          <li><div><b>文字は線や印に重ならない場所に置きます</b><span>名前が道路や印にかぶらないように、空いている場所を探して配置します。</span></div></li>
+          <li><div><b>道路の太さは道幅の区分どおり</b><span>大通りは太く、細い道は細く描くので、図を見ただけで道の大きさが分かります。</span></div></li>
+          <li><div><b>自動で描いたものも自由に直せます</b><span>動かす・消す・書き足すが自由です。目印の多さは項目ごとに選び直せて、変えた項目だけを作り直すので、それまでに手で直した所は消えません。</span></div></li>
+          <li><div><b>地図のデータは常に新しく</b><span>国土地理院の地図データを始め、各地図データから最新の情報を取得しています。名前のデータは月2回、自動で更新しています。</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 配置図 -->
+<section id="haichizu" class="alt">
+  <div class="wrap">
+    <div class="eyebrow">配置図　15分 → 5分</div>
+    <h2>配置図は、写真の上でなぞるだけ。15分が<span class="num big">5</span>分に。</h2>
+    <p class="lead">駐車場のまわりの道路は自動で描きます。あとは空から見た写真の上で駐車場をなぞって、駐車枠を並べるだけ。広い月極駐車場でも、台数を数えながら1台ずつ描く必要はありません。</p>
+    <div class="cards">
+      <div class="card"><h3>なぞる</h3><p>空から見た写真を図の下に重ねて表示し、その上から駐車場の形をなぞるだけです。お手持ちの写真や、契約書に付いている区画図を下に敷くこともできます。写真がいつ撮影されたものかも表示するので、古い写真かどうかもすぐに分かります。</p></div>
+      <div class="card"><h3>まとめて置く</h3><p>駐車枠は、1台ずつではなくまとめて並べられます。見本の74台分の駐車場も、4ステップで枠が揃いました。番号は枠をなぞるだけで、1から順に振られます。</p></div>
+      <div class="card em"><h3>自動で採寸</h3><p>採寸が難しい大通りなどの道路も、地図の縮尺から距離を自動で計測して表示します。測りたい所に矢印を引けば、その長さがそのまま書き込まれます。</p><small>※取り込んだ写真や図面の上では、その画像の縮尺で計測されます。実際に測った値を手で入れることもできます。</small></div>
+    </div>
+    <div style="margin-top:28px">
+      <div class="shot"><img src="img/haichizu.jpg" alt="配置図の見本（74台分）" loading="lazy" width="1600" height="970"></div>
+      <p class="cap">見本：74台分の駐車場の配置図（アプリから書き出したもの）。</p>
+    </div>
+    <h3 class="sub">配置図に必要な道具が、ひととおり揃っています</h3>
+    <ul class="list grid2" style="margin-top:18px">
+      <li><div><b>駐車場まわりの道路は自動で描画</b><span>地図から道路の形を写し取るので、道路を自分で描く必要はありません。</span></div></li>
+      <li><div><b>保管場所の印とラベルを1クリックで表示</b><span>「保管場所」の囲みや文字を、自分で作る必要はありません。</span></div></li>
+      <li><div><b>P・来客用・車いすの印</b><span>よく使う記号が用意されているので、置くだけで済みます。</span></div></li>
+      <li><div><b>複製・回転はボタンでもキーボードでも</b><span>細かいマウス操作に慣れていなくても、形を整えられます。</span></div></li>
+      <li><div><b>出入口や道幅の矢印</b><span>矢印を引くと、長さが自動で書き込まれます。</span></div></li>
+      <li><div><b>広い敷地は分けて、大きく表示</b><span>所在図も配置図も、1つの案件で何枚でも作れます。広い駐車場を分けて、それぞれを読みやすい大きさで出せます。</span></div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 使いやすさ -->
+<section id="easy">
+  <div class="wrap">
+    <div class="eyebrow">誰でも・ずっと・安心</div>
+    <h2>補助者でも、パソコンが苦手でも。</h2>
+    <p class="lead">画面の案内どおりに、色の付いたボタンを順番に押していくだけで図面が出来上がります。作図の経験がない方でも、その日から使えます。慣れてきたら案内を閉じて、さらに短い時間で仕上げられます。</p>
+    <div class="two">
+      <div>
+        <div class="shot"><img src="img/ui_guide.jpg" alt="ガイダンス画面" loading="lazy" width="1600" height="1000"></div>
+        <p class="cap">ガイダンス画面。次に押すボタンに番号が付き、何をすればよいかが表示されます。</p>
+      </div>
+      <ul class="list">
+        <li><div><b>ガイダンスがあるので迷いません</b><span>所在図は4段階、配置図は8段階。いま何をすればよいかを画面が順番に案内します。</span></div></li>
+        <li><div><b>ボタンごとに使い方を表示</b><span>それぞれのボタンに「どんな時に使うか」が書いてあるので、説明書を読まなくても使えます。</span></div></li>
+        <li><div><b>紙と同じ見た目で確認してから出せます</b><span>印刷したときと同じ見た目でプレビューできるので、刷り直しがありません。PDF や画像で書き出して、そのまま申請書に添付できます。</span></div></li>
+        <li><div><b>差し戻しも、案件を開いて直すだけ</b><span>作った図面は自動で保存されます。案件番号や名前で検索でき、完了した案件も管理できます。一から描き直す必要はありません。</span></div></li>
+        <li><div><b>インストールは不要です</b><span>パソコンの Chrome または Edge で開くだけで使えます。</span></div></li>
+        <li><div><b>データを外部に送りません</b><span>案件は、あなたが選んだパソコンのフォルダに保存されます。お客様の住所などが外部のサーバーに送られることはありません。</span></div></li>
+        <li><div><b>常に使いやすく改良しています</b><span>改良は自動で反映されるので、更新作業は必要ありません。開けばいつも最新の状態で使えます。</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 料金 -->
+<section id="price" class="alt">
+  <div class="wrap">
+    <div class="eyebrow">料金</div>
+    <h2>月額 <span class="num">3,300</span>円（税込）から。<br>毎月の件数に合わせて選べます。</h2>
+    <p class="price-note">表示はすべて税込価格です（消費税10%を含みます）。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th style="text-align:left">プラン</th><th>月額</th><th>月払いで<br>使える件数</th><th>年払いの金額</th><th>年払いで<br>使える件数</th><th>同時に使える<br>パソコンの台数</th></tr></thead>
+        <tbody>
+          <tr><th>お試し</th><td class="p">0円</td><td>7日間で3件</td><td>—</td><td>—</td><td>1台</td></tr>
+          <tr><th>ライト</th><td class="p">3,300円</td><td>月10件</td><td>33,000円</td><td>年120件</td><td>1台</td></tr>
+          <tr class="rec"><th>スタンダード</th><td class="p">5,800円</td><td>月50件</td><td>58,000円</td><td>年600件</td><td>2台</td></tr>
+          <tr><th>プロ</th><td class="p">11,800円</td><td>月200件</td><td>118,000円</td><td>年2,400件</td><td>3台</td></tr>
+          <tr><th>事務所スタンダード</th><td class="p">22,000円</td><td>月600件</td><td>220,000円</td><td>年7,200件</td><td>5台</td></tr>
+          <tr><th>事務所プロ</th><td class="p">38,000円</td><td>無制限</td><td>380,000円</td><td>無制限</td><td>無制限</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="scroll-hint">← 表は横にずらして見られます →</p>
+    <p class="table-note">※「1件」は1つの案件のことです。その案件の図面を PDF や画像で書き出した時に1件と数えます。<br>差し戻しなどで同じ案件を直して書き出し直す場合は、何度でも追加の件数にはなりません。</p>
+
+    <h3 class="sub">年払いのメリット</h3>
+    <p class="body"><b>1つ目は、料金が2か月分お得になることです。</b>年払いの金額は、月額の10か月分です。1年間使っても、10か月分の料金で済みます。</p>
+    <p class="body"><b>2つ目は、使える件数を「1年間の合計」で数えることです。</b>月払いでは、毎月の上限の件数が決まっています。年払いでは月ごとの上限がなくなり、1年間の合計件数の中であれば、どの月にどれだけ使っても構いません。</p>
+    <div class="example">
+      <p><b>たとえば、スタンダード（月50件）の場合</b></p>
+      <p>ふだんは月25件ほどでも、入札などで忙しい月に80件の案件が集中することがあります。月払いでは、その月は50件で上限に達し、51件目からは図面を書き出せなくなります。</p>
+      <p>年払いなら、使える件数は1年間で600件です。忙しい月に80件使っても、ほかの月が少なければ、1年間の合計の中で収まります。件数に波がある事務所ほど、年払いが向いています。</p>
+    </div>
+    <p class="body"><b>上限の件数について：</b>ご契約の件数を使い切ると、その期間（月払いはその月、年払いはその1年）は新しい案件の図面を書き出せなくなります。件数が足りなくなったときは、その画面から<b>すぐに上のプランや年払いに変更できます</b>。変更すればその場で件数が増え、作業を止めずに続けられます。</p>
+  </div>
+</section>
+
+<!-- よくある質問 -->
+<section id="faq">
+  <div class="wrap">
+    <div class="eyebrow">よくある質問</div>
+    <h2>よくある質問</h2>
+    <div class="faq">
+      <div>
+        <div class="q">どこの地域で使えますか？</div>
+        <div class="a"><div><p>日本全国で使えます。所在図は全国どこでも自動で作れますし、配置図の下に敷く空からの写真も全国で表示できます。</p></div></div>
+      </div>
+      <div>
+        <div class="q">どんなパソコンが必要ですか？</div>
+        <div class="a"><div><p>Chrome（クローム）または Edge（エッジ）が使える Windows パソコンでお使いください。どちらも Windows パソコンで一般的に使われているインターネット閲覧ソフトです。ソフトをインストールする必要はありません。</p><p>マウスで線を引いたり枠を動かしたりする作業があるため、スマートフォンやタブレットには対応していません。</p></div></div>
+      </div>
+      <div>
+        <div class="q">作った案件のデータは、どこに保存されますか？</div>
+        <div class="a"><div><p>最初に、案件を保存するフォルダをパソコンの中から1つ選んでいただきます。案件は、そのフォルダの中に1件ずつ1つのファイルとして保存されます。</p><p>保存されたファイルは、ふつうの Windows のファイルと同じように扱えます。コピーしてバックアップを取ったり、別のフォルダへ移したりすることもできます。保存先には、事務所の NAS（共有ハードディスク）や、クラウドストレージのフォルダを指定することもできます。</p></div></div>
+      </div>
+      <div>
+        <div class="q">お客様の住所などが外部に送られることはありませんか？</div>
+        <div class="a"><div><p>ありません。案件の内容は、あなたが選んだフォルダにだけ保存され、外部のサーバーに送られることはありません。</p></div></div>
+      </div>
+      <div>
+        <div class="q">作った図面は、そのまま警察に提出できますか？</div>
+        <div class="a"><div><p>図面は PDF または画像のファイルとして書き出せます。印刷して申請書に添付してお使いください。用紙は A4 の縦・横を選べます。</p></div></div>
+      </div>
+      <div>
+        <div class="q">道幅などの長さは、どうやって入れるのですか？</div>
+        <div class="a"><div><p>測りたい所に矢印を引くと、地図の縮尺から長さを自動で計算して書き込みます。</p><p>ただし、お手持ちの写真や図面を下に敷いてその上で測った場合は、その画像の縮尺で計算されます。実際に測った値がある場合は、手で入力することもできます。</p></div></div>
+      </div>
+      <div>
+        <div class="q">補助者が何人かいる事務所でも使えますか？</div>
+        <div class="a"><div><p>使えます。プランごとに、同時に使えるパソコンの台数が決まっています。スタンダードは2台、プロは3台、事務所スタンダードは5台、事務所プロは台数の制限がありません。</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 申し込み -->
+<section id="apply">
+  <div class="wrap">
+    <div class="eyebrow">お申し込み・お問い合わせ</div>
+    <h2 style="color:#fff">まずはフォームからお気軽にどうぞ。</h2>
+    <p class="lead">お申し込み、料金のご相談、ご質問は、下のフォームで受け付けています。</p>
+    <div class="flow3">
+      <div><b>1. フォームを送信</b>ご希望のプランや、ご質問の内容をお書きください。</div>
+      <div><b>2. ご案内をお送りします</b>ご記入いただいたメールアドレスに、使い方のご案内をお送りします。</div>
+      <div><b>3. その日から使えます</b>パソコンで開くだけで使えます。インストールは不要です。</div>
+    </div>
+    <div class="form-box" id="formBox">
+      <div class="form-pending">フォームは準備中です。もうしばらくお待ちください。</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>車庫証明 所在図・配置図メーカー　運営: solodev-lab</div>
+    <div><a href="../privacy.html">プライバシーポリシー</a>　見本図の出典: 国土地理院／© OpenStreetMap contributors</div>
+  </div>
+</footer>
+
+<script>
+  /* 申し込みフォーム（Google フォーム）。オーナーがフォームを作ったら、
+     「埋め込み」の URL（…/viewform?embedded=true）をここへ入れるだけで表示される。 */
+  var FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdHWrXhKmp1WBYfizL_FlY60UH2t2DKfNMw0V_SpfncGPqVHw/viewform?embedded=true';
+  if (FORM_URL) {
+    var f = document.createElement('iframe');
+    f.src = FORM_URL; f.title = 'お申し込み・お問い合わせフォーム'; f.loading = 'lazy';
+    var box = document.getElementById('formBox');
+    box.innerHTML = ''; box.appendChild(f);
+  }
+</script>
+</body>
+</html>
