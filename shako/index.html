@@ -32,7 +32,8 @@
   section { padding: 64px 0; }
   section.alt { background: var(--gray); }
   @media (max-width: 640px) { section { padding: 44px 0; } }
-  .eyebrow { color: var(--blue); font-weight: 700; font-size: 15px; letter-spacing: .05em; }
+  .eyebrow { color: var(--blue); font-weight: 900; font-size: 22px; letter-spacing: .05em; line-height: 1.5; }
+  @media (max-width: 640px) { .eyebrow { font-size: 19px; } }
   h2 { font-size: clamp(23px, 4vw, 34px); font-weight: 900; line-height: 1.4; margin-top: 6px; }
   h3.sub { font-size: clamp(19px, 3vw, 23px); font-weight: 900; margin-top: 40px; color: var(--blue-d); }
   .num { color: var(--accent); font-weight: 900; }
@@ -384,7 +385,6 @@
 <section id="faq">
   <div class="wrap">
     <div class="eyebrow">よくある質問</div>
-    <h2>よくある質問</h2>
     <div class="faq">
       <div>
         <div class="q">どこの地域で使えますか？</div>
