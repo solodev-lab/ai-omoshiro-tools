@@ -407,6 +407,19 @@
           <div class="scale-meta"><span id="zoomText"></span><span id="overzoomNote"></span></div>
         </div>
 
+        <!-- 🔒 §30-48 D 3: 説明文を OFF にした時だけ、地図領域の左上に少し大きめで出す切替。
+             出す条件＝OFF かつ ガイダンスを開いている かつ プレビューを出していない
+             （app.js capSwSync の1か所）。🔴 #spaceBadge（同じ左上）と重ならないよう、
+             これが出ている間はスペースの帯をこの下へずらす（style.css の「~」1規則）。
+             ＝ここは #spaceBadge より**前**に置く（後ろだと「~」が効かない）。 -->
+        <div id="capSwFloat" class="cap-sw-float" hidden>
+          <span class="cap-sw-k">ガイダンス説明文</span>
+          <span class="seg cap-sw">
+            <button type="button" data-capsw="on"
+              title="地図の上の説明文をまた出します">ON</button>
+            <button type="button" data-capsw="off">OFF</button>
+          </span>
+        </div>
         <div id="ctrlBadge" class="ctrl-badge" hidden>Ctrl：選択モード</div>
         <!-- 🔒 §23-7-b: スペース＝一時パン。Ctrl バッジと重ならないよう左端に出す -->
         <div id="spaceBadge" class="ctrl-badge space-badge" hidden>スペース：地図を動かす</div>
@@ -436,6 +449,17 @@
                中身は app.js の SG_NUM[].btn。押しても字幕のドラッグは始まらない）。 -->
           <span class="sg-caption-btnrow" id="sgCapBtnRow" hidden>
             <button type="button" id="sgCapBtn" class="sg-caption-btn"></button>
+          </span>
+          <!-- 🔒 §30-48 D 2: 字幕の一番下に1行・右端に「説明文［ON｜OFF］」。
+               押しても字幕のドラッグは始まらない（app.js が pointerdown を止める）。
+               🔴 どちらかは data-capsw（属性）で受ける・左上の #capSwFloat と同じ配線。 -->
+          <span class="sg-caption-sw" id="sgCapSw">
+            <span class="cap-sw-k">説明文</span>
+            <span class="seg cap-sw">
+              <button type="button" data-capsw="on">ON</button>
+              <button type="button" data-capsw="off"
+                title="地図の上の説明文（この箱）を出さないようにします（地図の左上で戻せます）">OFF</button>
+            </span>
           </span>
         </div>
 
@@ -473,27 +497,8 @@
           </div>
         </div>
 
-        <!-- 駐車位置ラベル（🔒 §22-ab）。入力の構成はガイダンス⑪ と同じにそろえる。
-             🔴 ID は pl* にして⑪の lb* と分ける（同じ画面に両方あるので重複させられない）。
-             行の作り方と文字列の組み立ては labelRowsHTML()/labelLinesFrom() で共通化してある。 -->
-        <div id="plPanel" class="stamp-panel" hidden>
-          <h3>駐車位置ラベル作成</h3>
-          <p class="sp-note">図に出したい項目にチェックを入れ、数値を入れてください。</p>
-          <!-- 🔒 §30-22-4 10 / §30-22-6 1: ［標準の値］はガイダンス⑦と同じ物 -->
-          <button id="plStd" class="nav-add"
-            title="長さ 5.5m・幅 2.5m（よくある1台分の大きさ）を欄に入れます"
-            >標準の値（5.5m×2.5m）</button>
-          <div id="plRows"></div>
-          <div id="plCustom"></div>
-          <button id="plAdd" class="nav-add">＋ 項目を追加</button>
-          <!-- 🔒 §30-25-36 2: ガイダンス⑦の #sgLabelPlace と**同じ名前**
-               （文言の出どころは app.js LABEL_PLACE_JA） -->
-          <p class="sp-note" id="plHint">［保管場所ラベル配置］のあと、対象の駐車枠をクリックします。</p>
-          <div class="sp-btns">
-            <button id="plPlace" class="primary">保管場所ラベル配置</button>
-            <button id="plCancel">やめる</button>
-          </div>
-        </div>
+        <!-- 🔒 §30-49 B 1: 駐車位置ラベルの小ウィンドウ #plPanel は地図の上から
+             道具メニューの［保管場所ラベル］（#btnLabelBlock）のすぐ下へ移した。 -->
 
         <!-- 自動下書き（正典 §11-b レーンA：オープンデータのみ） -->
         <div id="draftPanel" class="stamp-panel" hidden>
@@ -1752,7 +1757,8 @@
           <!-- ⑪ 駐車位置ラベル（🔒 §29-1・Step 7 で小ウィンドウ #navS11 からここへ）
                🔒 §18-f: 単位は数値欄の右に出し、ラベルの文字列にも自動で付く。
                🔴 行（4項目）は labelRowsHTML('lb') が組み立てる＝道具メニューの
-                  #plPanel（接頭辞 'pl'）と**同じ定義 LABEL_ROWS** の1か所から。
+                  #plPanel（［保管場所ラベル］の下で開く欄・接頭辞 'pl'）と
+                  **同じ定義 LABEL_ROWS** の1か所から。
                🔒 §22-ab: 置き方は［配置］→ ①対象の枠 ②置き場所 の2クリック。 -->
           <!-- 🔒 §30-12-5 配置図⑦の並び: 文 → 項目の行（**隠さない**＝長さ・幅は
                利用者が入れる値）→ ⑭配置 → ▼見本を見る -->
@@ -1803,7 +1809,7 @@
               <div id="lbCustom"></div>
               <button id="lbAdd" class="nav-add">＋ 項目を追加</button>
             </div>
-            <!-- 🔒 §30-25-36 2: ［配置］→［保管場所ラベル配置］（道具メニュー #plPanel の
+            <!-- 🔒 §30-25-36 2: ［配置］→［保管場所ラベル配置］（道具メニューの欄 #plPanel の
                  同じボタン・SG_NUM の label・字幕・この一言も同じ名前にする） -->
             <p class="sg-use" id="lbHint">［保管場所ラベル配置］のあと、対象の駐車枠をクリックします。</p>
             <button id="sgLabelPlace" class="sg-wide"
@@ -1861,12 +1867,24 @@
                 「1つの値を複数の欄へ写す」作法（NUM_START_FIELDS と同じ表）。
              🔴 小見出しは <p class="sg-tk">・グループの間は <hr class="sg-sep">
                 （§30-28-3: 配置図⑦の区画と同じ見た目）。
-             🔴 折りたたみ（▼）は**3つだけ**（印を変える／地図の名前を確かめる／
-                自動・取り込み）。他は常に見える（§30-28-1 2）。
+             🔴 折りたたみ（▼）は**4つだけ**（マーカー設置／印を変える／地図の名前を確かめる／
+                自動・取り込み）。他は常に見える（§30-28-1 2 → 🔒 §30-48 で 3→4）。
              🔴 上部バー・紙の帯にある物（下敷きの種類・濃さ・表示切替・書き出し・
-                枠を追加／抜出し追加・ルーペ）は重ねて置かない（§30-28-1 3）。 -->
+                枠を追加／抜出し追加・ルーペ）は重ねて置かない（§30-28-1 3）。
+                🔒 §30-48 B 例外: 配置図の道具 8 つ（多角形＋7 つ）だけは左メニューにも
+                置く（オーナー指示・同じ data-tool ／ data-icon ＝同じ共通ハンドラ）。 -->
         <section class="tools">
-          <h2>描く</h2>
+          <!-- 🔒 §30-48 A（2026-10-01 オーナー指示）: 見出し「描く」は無くし、先頭を
+               開閉できる「マーカー設置」にした（部品は他の▼と同じ・鍵は pin）。
+               🔴 中身（住所の欄〜［所在図を作る］）の id・配線は変えていない。
+               🔴 開閉の既定は図の種類で決まる（所在図＝開く／配置図＝閉じる）＝
+                  app.js renderSheetBar の1か所（toolMoreKind）。覚えない。 -->
+          <div class="sg-more-w" id="sideMore_pin">
+            <button type="button" class="sg-more" data-tmore="pin" aria-expanded="false"
+              ><span class="sg-more-h"><b class="sg-more-t">マーカー設置</b
+                ><i class="sg-more-a">開く ▼</i></span
+              ><span class="sg-more-when">使用の本拠・駐車場のマーカーを置く／所在図を作る</span></button>
+            <div class="sg-more-body" hidden>
 
           <!-- ======== 1. 使用の本拠住所／駐車場住所（🔒 §30-28-2 1 → 🔒 §30-39-2）========
                🔒 §30-39-2 2: 小見出し「所在図の準備」は「使用の本拠住所」に改め、
@@ -1960,6 +1978,9 @@
           <button id="btnShozaizu" class="sg-wide"
             title="使用の本拠と駐車場の2点から、所在図の下書きを作ります（設定は開く盤で変えられます）"
             >所在図を作る</button>
+              <button type="button" class="sg-more-x" data-tmore-x="pin">閉じる ▲</button>
+            </div>
+          </div><!-- /#sideMore_pin（🔒 §30-48 A） -->
 
           <!-- 🔒 §30-29-2（2026-09-14 オーナー指示）: ここにあった
                  「紙と枠」／「道路や建物、文字や線を足す・消す」／「印を置く」／
@@ -1972,6 +1993,61 @@
                  ▼「自動・取り込み」の先頭へ戻した（配置図④の #sgRoadAuto と同じ関数）
                ・［枠を図形に合わせる］（#btnFitAll・旧 #exFitAll）＝ 🔒 §30-29-5 3 で
                  ▼「自動・取り込み」の末尾へ戻した -->
+
+          <!-- ======== 🔒 §30-48 B: 配置図の時だけ出す2区画（「幅の矢印」の上）========
+               出す条件は #editorView[data-kind="haichizu"]（style.css の1規則・判定はデータ）。
+               🔴 アイコンは上部バー2行目（#toolBar）と**同じ部品**（class="tool" data-tool
+                  data-icon）＝同じ共通ハンドラ・同じ is-active・絵と title は TOOL_ICONS 1か所。
+               🔴 文字は所在図④の［A］と同じ .sg-textfree（委譲1本＝navTextFree）。
+               🔴 ［番号］・開始番号・曲線・四角は置かない（上部バーに残る・§30-48 B 3）。 -->
+          <div class="side-hz">
+            <hr class="sg-sep">
+            <!-- 区画1（土地の輪郭）。🔒 文面はオーナー指定のまま（§30-48 B 2） -->
+            <p class="sg-tk">多角形ツールで 土地の輪郭を描きます。</p>
+            <div class="ico-row">
+              <button class="tool" data-tool="polygon" data-icon="polygon"></button>
+            </div>
+            <p class="side-note">駐車場の土地の輪郭（外周）を描きます。［多角形］を押して、敷地の角を順にクリックし、最後に Enter で確定します。</p>
+            <!-- 説明文なし・マウスオーバーの説明（title）だけ（§30-48 B 3） -->
+            <div class="ico-row">
+              <button class="tool" data-tool="select" data-icon="select"></button>
+              <button class="tool" data-tool="eraser" data-icon="eraser"></button>
+              <button class="tool" data-tool="line" data-icon="line"></button>
+              <button class="tool" data-tool="stamp" data-icon="stamp"></button>
+              <button class="tool" data-tool="guest" data-icon="guest"></button>
+              <button class="tool" data-tool="wheel" data-icon="wheel"></button>
+              <button class="sg-textfree" data-icon="textFree"></button>
+            </div>
+
+            <hr class="sg-sep">
+            <!-- 区画2（自動描画）。🔒 §30-48 B 4〜8: 初期は両方なし。
+                 🔴 トグルの状態は**紙の中身から**決める（source:'roadauto'／'bldgauto' の有無）
+                    ＝別の控えを持たない（app.js autoDrawSync）。
+                 🔴 どの行かは data-auto（鍵は app.js AUTO_DRAW の表）・どちらかは data-on
+                    （属性）で受ける＝表示文字では分岐しない。 -->
+            <p class="sg-tk">自動描画</p>
+            <div class="hz-auto">
+              <div class="hz-auto-row">
+                <span class="hz-auto-k">道路</span>
+                <span class="seg hz-auto-seg" data-auto="road">
+                  <button type="button" data-on="0"
+                    title="この紙の自動で描いた道路の線を全部消します（［戻す］で戻せます）">なし</button>
+                  <button type="button" data-on="1"
+                    title="枠のまわりの道路の縁を、地図から線で写します">あり</button>
+                </span>
+              </div>
+              <div class="hz-auto-row">
+                <span class="hz-auto-k">建物</span>
+                <span class="seg hz-auto-seg" data-auto="bldg">
+                  <button type="button" data-on="0"
+                    title="この紙の自動で描いた建物の輪郭を全部消します（［戻す］で戻せます）">なし</button>
+                  <button type="button" data-on="1"
+                    title="枠の中の建物の輪郭を、地図から線で写します">あり</button>
+                </span>
+              </div>
+              <p class="hz-auto-busy" id="hzAutoBusy" hidden>描画中…</p>
+            </div>
+          </div><!-- /.side-hz（🔒 §30-48 B） -->
 
           <hr class="sg-sep">
           <!-- ======== 6. 幅の矢印（🔒 §30-28-2 6）========
@@ -2002,19 +2078,43 @@
                🔒 §30-22-4 9: 書式（色／斜線／太線）の中身は app.js の storageFmtRows が
                組む＝右パネル・配置図⑦とまったく同じ部品・同じ値。 -->
           <p class="sg-tk">保管場所</p>
-          <button class="tool sg-wide" data-tool="storage"
-            title="枠をクリックすると太枠が付きます（もう一度で外れます）">保管場所マーク</button>
-          <div class="sg-fmt">
-            <p class="sg-lb">保管場所マークの書式</p>
-            <div id="sideStorageFmt"></div>
-          </div>
           <!-- 🔒 §30-25-36 2 / §30-28-2 7: 旧「駐車位置ラベル作成」を
                ［保管場所ラベル］に改名（配置図⑦の #sgLabelPlace と同じ呼び名）。
-               押すと今までどおり小ウィンドウ #plPanel が開く。
-               🔴 class="tool" は付けない（道具ではなく窓を開くボタン）。 -->
+               🔒 §30-49 B 3: 押すとすぐ下の #plPanel が開く（押している見た目）・
+               もう一度押すと畳む。開閉と見た目は app.js plOpen／plClose の1か所。
+               🔴 class="tool" は付けない（道具ではなく欄を開くボタン）。
+               🔒 §30-48 C 1: 並びは［保管場所ラベル］→［保管場所マーク］→ 書式 → 寸法の注記。 -->
           <button id="btnLabelBlock" class="sg-wide"
             title="保管場所の長さ・幅などを1つの塊にして、対象の枠へ矢印付きで置きます"
             >保管場所ラベル</button>
+          <!-- 駐車位置ラベル（🔒 §22-ab）。🔒 §30-49 B 1〜2: 地図の上の小ウィンドウをやめ、
+               ここ（ボタンのすぐ下）で開く。部品はガイダンス⑦（#sgS11）のラベルの区画と同じ。
+               🔴 ID は pl* にして⑦の lb* と分ける（同じ画面に両方あるので重複させられない）。
+               行の作り方と文字列の組み立ては labelRowsHTML()/labelLinesFrom() で共通化してある。
+               見出しと［やめる］は無い（閉じるのはボタンのもう一押し）。 -->
+          <div class="sg-fmt" id="plPanel" hidden>
+            <p class="sg-note">図に出したい項目にチェックを入れ、数値を入れてください。</p>
+            <!-- 🔒 §30-22-4 10 / §30-22-6 1: ［標準の値］はガイダンス⑦と同じ物 -->
+            <button id="plStd" class="sg-wide"
+              title="長さ 5.5m・幅 2.5m（よくある1台分の大きさ）を欄に入れます"
+              >標準の値（5.5m×2.5m）</button>
+            <div id="plRows"></div>
+            <div id="plCustom"></div>
+            <button id="plAdd" class="nav-add">＋ 項目を追加</button>
+            <!-- 🔒 §30-25-36 2: ガイダンス⑦の #sgLabelPlace と**同じ名前**
+                 （文言の出どころは app.js LABEL_PLACE_JA） -->
+            <p class="sg-use" id="plHint">［保管場所ラベル配置］のあと、対象の駐車枠をクリックします。</p>
+            <button id="plPlace" class="sg-wide">保管場所ラベル配置</button>
+          </div>
+          <button class="tool sg-wide" data-tool="storage"
+            title="枠をクリックすると太枠が付きます（もう一度で外れます）">保管場所マーク</button>
+          <!-- 🔒 §30-48 C 2: 書式は**ふだん畳む**。［保管場所マーク］の道具を選んでいる
+               間だけ出す（なぞり出しの「筆の太さ」#rvSizes と同じ作法＝app.js の
+               editor 'tool' の1か所で hidden を出し入れ）。中身（storageFmtRows）は不変。 -->
+          <div class="sg-fmt" id="sideStorageFmtBox" hidden>
+            <p class="sg-lb">保管場所マークの書式</p>
+            <div id="sideStorageFmt"></div>
+          </div>
           <!-- 🔒 2026-08-19 オーナー指示（正典 §16-10-d-4 / §9-j 注記）:
                「自動で m が付く機能は無し」。寸法は手入力（表示欄）か、
                図形を選んで［寸法(m)を図に出す］を押した時だけ出す。 -->

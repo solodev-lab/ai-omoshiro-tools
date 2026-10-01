@@ -31,6 +31,7 @@
   --kind-s: #1a56c4;
   --kind-h: #1e7a46;
   --kind-line: var(--kind-s);
+  --kind-line-hover: #1749a8;   /* §30-47: 塗ったボタンに乗せた時（所在図。配置図は下の data-kind で #166036） */
   --kind-bg: #eef3fd;
   /* 🔒 §30-17-2: ガイダンスの「進む」色（次に押す物）。所在図＝青／配置図＝緑。
      出どころはこの5つの変数**1か所**だけ。使う所＝次に押すボタン・番号バッジ・
@@ -59,8 +60,8 @@ body.sg-hz {
 }
 
 /* 編集中の図の種類でシート帯・タブの色が切り替わる（app.js が data-kind を書く） */
-#editorView[data-kind="shozaizu"] { --kind-line: var(--kind-s); --kind-bg: #eef3fd; }
-#editorView[data-kind="haichizu"] { --kind-line: var(--kind-h); --kind-bg: #ecf6f0; }
+#editorView[data-kind="shozaizu"] { --kind-line: var(--kind-s); --kind-bg: #eef3fd; --kind-line-hover: #1749a8; }
+#editorView[data-kind="haichizu"] { --kind-line: var(--kind-h); --kind-bg: #ecf6f0; --kind-line-hover: #166036; }
 
 * { box-sizing: border-box; }
 
@@ -771,17 +772,38 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .sheet-chip.is-active > button:hover { background: rgba(255, 255, 255, .18); }
 .sheet-chip.is-active .sheet-loupe { border-left-color: rgba(255, 255, 255, .45); }
 .sb-btn { padding: 4px 10px; font-size: 12px; }
-/* 枠を決定中はボタンを塗って「いま固定されている」と分かるようにする（§24-2-3） */
-.sb-btn.is-on {
+/* 🔒 §30-47（2026-10-01 オーナー指示「薄くて押せないように見える」）:
+   **押せる**ボタンだけ 図の色の枠線＋図の色の文字＋太字（所在図＝青／配置図＝緑＝
+   --kind-line の1か所）。押せない時（button:disabled）・［プレビュー］（.primary）は
+   今のまま＝押せる物との差がここで付く。
+   🔴 A4 縦／A4 横（.sb-orient）は .sb-btn ではない＝この規則は当たらない（触らない）。 */
+.sb-btn:not(:disabled):not(.primary) {
+  border-color: var(--kind-line);
+  color: var(--kind-line);
+  font-weight: 700;
+}
+/* 🔒 §30-47 6（同日オーナー指示）: 塗るのは**枠を決める前**の［枠を決定］（次に押す物）。
+   決めた後の［枠を決め直す］（app.js が #sbFix に is-on を付ける＝固定中の印）は
+   上の規則の見た目＝済んだ物は控えめ。§24-2-3 の「決定中は塗る」を改めた。
+   🔴 乗せた時の色もここで決める（共通の button:hover に任せると地だけ薄くなり
+      白い文字が読めなくなる）。 */
+#sbFix:not(.is-on) {
   background: var(--kind-line);
   border-color: var(--kind-line);
   color: #fff;
+}
+#sbFix:not(.is-on):hover {
+  background: var(--kind-line-hover);
+  border-color: var(--kind-line-hover);
 }
 .sb-move { display: flex; gap: 3px; }
 .sb-move .sb-btn { padding: 4px 8px; }
 .sb-orient { margin-left: 6px; }
 .sb-orient button { padding: 4px 10px; font-size: 12px; }
-.sb-orient button.is-active {
+/* 🔒 §30-47 10（2026-10-01 オーナー指示「配置図で青い。緑にして」）: 共通の
+   .seg button.is-active（--acc＝青）がこの下にあるので、クラスを重ねて勝たせる
+   ＝配置図では緑（--kind-line）。トグルの動きは変えない。 */
+.seg.sb-orient button.is-active {
   background: var(--kind-line);
   border-color: var(--kind-line);
   color: #fff;
@@ -790,7 +812,17 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
    （伸びてボタンを押し出さないように flex: 0 1 auto ＋ min-width: 0）。 */
 .sb-note { color: var(--mut); overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; }
 /* ［プレビュー］だけは縮めない（押せる大きさを保つ） */
-#edSheetBar #btnExport { flex: 0 0 auto; }
+/* 🔒 §30-47 10: 紙の帯の中の塗りは図の色（所在図＝青のまま／配置図＝緑）。
+   乗せた時の色もここで決める（共通の button.primary:hover は青）。 */
+#edSheetBar #btnExport {
+  flex: 0 0 auto;
+  background: var(--kind-line);
+  border-color: var(--kind-line);
+}
+#edSheetBar #btnExport:hover:not(:disabled) {
+  background: var(--kind-line-hover);
+  border-color: var(--kind-line-hover);
+}
 
 /* ---- 地図 ---- */
 .ed-stage {
@@ -1512,7 +1544,7 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
    .nav-tips / .nav-lead / .nav-guide / .nav-foot / .map-wrap.has-nav …）の CSS は、
    どちらの器も全廃したので削除した。ガイダンスの見た目は .side-guide（.sg-*）1系統。
    🔴 残してあるのは .nav-lb / .nav-add（駐車位置ラベルの入力行）だけ＝
-      ガイダンス⑪と道具メニューの小ウィンドウ #plPanel の**両方**が使っている。 */
+      ガイダンス⑪と道具メニューの欄 #plPanel（🔒 §30-49 B）の**両方**が使っている。 */
 
 /* 駐車位置ラベルの凡例（チェック＋数値＋固定単位）。⑪と #plPanel の共通部品 */
 .nav-lb {
@@ -1530,6 +1562,9 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 .nav-lb .lb-val { flex: 0 0 74px; width: 74px; }
 .nav-lb .lb-del { flex: 0 0 auto; padding: 1px 5px; font-size: 11px; color: var(--mut); }
 .nav-add { width: 100%; margin: 2px 0 9px; font-size: 12px; padding: 4px 0; }
+/* 🔒 §30-49 B 2: 道具メニューの欄（内側 190px）では［標準の値（長さ 5.5m・幅 2.5m）］が
+   1行に入らず横にはみ出す（button の既定は nowrap）。ここだけ折り返す。 */
+#plPanel .sg-wide { white-space: normal; }
 /* 🔴 §18-r の3択（.lm-pick）は 2026-09-03 の再構成で全部 .sz-row ＋ .gr5 の
    5段階に置き換わり、使う場所が無くなったので CSS も外した（履歴は正典 §18-r/§18-s）。 */
 
@@ -2664,8 +2699,7 @@ p.sg-tk { margin: 10px 0 4px; }
 .sg-ov-st { font-size: 11px; color: var(--mut); margin: 4px 0 0 4px; }
 
 /* 🔒 §30-16: ［クリックした名前を図に入れる］。押している間（拾う状態）は塗って、
-   「いま地図のクリックがこのボタンのものになっている」と分かるようにする
-   （§24-2-3 の［枠を決定］＝ .sb-btn.is-on と同じ作法）。 */
+   「いま地図のクリックがこのボタンのものになっている」と分かるようにする。 */
 .sg-name-pick.is-on {
   background: var(--acc);
   border-color: var(--acc);
@@ -3007,6 +3041,47 @@ p.sg-tk { margin: 10px 0 4px; }
 }
 .sg-caption-x:hover { background: #eee; color: #222; }
 
+/* ---- 説明文の ON・OFF（🔒 §30-48 D）----
+   字幕の一番下の1行（右端に「説明文［ON｜OFF］」）と、OFF の間だけ地図の左上に出す切替。
+   🔴 切替の見た目は既存の .seg（選んだ方が .is-active）。どちらかは data-capsw（属性）。
+   🔴 字幕の行は横長の箱では行いっぱい（次の行へ落とす）・縦長の箱では幅いっぱいに伸ばす。
+      高さが1行増えた分は app.js sgCaptionPlace が描いた後に測る（削り・下へ落とす）。 */
+.sg-caption-sw {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--mut);
+  cursor: default;
+}
+.sg-caption:not(.is-side) .sg-caption-sw { flex: 0 0 100%; }
+.sg-caption.is-side .sg-caption-sw { align-self: stretch; }
+.cap-sw button { padding: 2px 10px; font-size: 11.5px; font-weight: 700; }
+/* 🔒 §30-48 D 2: 選んだ方はガイダンスの色（--sg-go＝所在図は青／配置図は緑）。
+   🔴 共通の .seg button.is-active はこの下にあるので、クラスを重ねて勝たせる */
+.seg.cap-sw button.is-active { background: var(--sg-go); border-color: var(--sg-go); }
+.cap-sw-float {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, .25);
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+}
+/* 少し大きめ（§30-48 D 3） */
+.cap-sw-float .cap-sw button { padding: 5px 14px; font-size: 13px; }
+/* 🔒 §30-48 D 6: 同じ左上に出るスペースの帯（#spaceBadge）は、切替が出ている間だけ下へ */
+.cap-sw-float:not([hidden]) ~ .space-badge { top: 56px; }
+
 /* 🔒 §30-1: 図をまたぐ移動（配置図①の［所在図ガイダンスへ］）は
    ［戻る］の代わりの**小さな文字リンク**にする（同じ図の中の移動と見分ける）。 */
 .sg-foot .sg-link {
@@ -3186,6 +3261,27 @@ p.sg-tk { margin: 10px 0 4px; }
 .tools > .sg-sep + .sg-more-w { margin-top: 8px; }
 /* 🔒 §30-28-2 9: ▼の中の「なぞり出し」の区切り線は箱の中なので余白を詰める */
 .tools .sg-more-body > .sg-sep { margin-top: 10px; }
+/* 🔒 §30-48 A: 見出し「描く」を無くし、先頭が▼「マーカー設置」になった＝上の余白は無し */
+.tools > .sg-more-w:first-child { margin-top: 0; }
+/* 🔒 §30-48 B 1: 配置図の時だけ出す2区画。判定は #editorView の data-kind（データ）だけ。
+   🔴 hidden 属性は使わない（[hidden] の !important と取り合わない）＝所在図では器ごと出さない。 */
+#editorView:not([data-kind="haichizu"]) .side-hz { display: none; }
+.side-hz > .sg-sep + .sg-tk { margin-top: 8px; }
+/* 🔒 §30-48 B 4: 自動描画の行（「道路［なし｜あり］」）。切替は既存の .seg の見た目 */
+.hz-auto { margin: 4px 0 0; }
+.hz-auto-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0 0;
+}
+.hz-auto-k { flex: 0 0 3em; font-size: 12.5px; font-weight: 700; }
+.hz-auto-seg { flex: 0 0 auto; }
+.hz-auto-seg button { min-width: 52px; padding: 4px 10px; font-size: 12px; }
+/* 🔒 §30-48 B 4: 選んだ方は図の色（--kind-line＝配置図は緑）。共通の .seg は青（--acc）なので上書き */
+.seg.hz-auto-seg button.is-active { background: var(--kind-line); border-color: var(--kind-line); }
+/* 取りに行っている間だけ出る一言（§30-48 B 8） */
+.hz-auto-busy { font-size: 11.5px; color: var(--mut); margin: 6px 0 0; }
 .tool-row {
   display: flex;
   align-items: center;
@@ -3196,8 +3292,13 @@ p.sg-tk { margin: 10px 0 4px; }
 .tool-row:last-child { margin-bottom: 0; }
 .tool-row > button { flex: 1 1 0; min-width: 0; padding: 6px 4px; font-size: 12.5px; }
 .tool-row > select { flex: 1 1 0; min-width: 0; font-size: 12.5px; padding: 4px 5px; }
-.tool.is-active { background: var(--acc); border-color: var(--acc); color: #fff; }
-.tool.is-active:hover { background: #1749a8; }
+/* 🔒 §30-49 B 3: ［保管場所ラベル］（#btnLabelBlock・class="tool" ではない）の
+   欄を開いている間は、選んでいる道具と**同じ宣言**で見せる（値を2か所に書かない）。
+   付け外しは app.js plOpen／plClose の1か所。 */
+.tool.is-active,
+#btnLabelBlock.is-open { background: var(--acc); border-color: var(--acc); color: #fff; }
+.tool.is-active:hover,
+#btnLabelBlock.is-open:hover { background: #1749a8; }
 /* 🔒 §30-19-1: ［枠をまとめて］の「置く状態」（押してから地図をクリックする間）。
    選んだ道具（.is-active）と同じ見た目にする＝「いま地図のクリックはこのボタンの物」。 */
 .tool.is-on { background: var(--acc); border-color: var(--acc); color: #fff; }

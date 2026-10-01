@@ -41,7 +41,7 @@ jobs:
             --exclude='/worker' --exclude='/tools' --exclude='/docs' \
             --exclude='/logs' --exclude='/sns-templates' \
             --exclude='/apps/shako-map/docs' --exclude='/apps/shako-map/tools' \
-            --exclude='/apps/shako-map/spike' \
+            --exclude='/apps/shako-map/spike' --exclude='/apps/shako-map/worker' \
             --exclude='*.md' \
             ./ _site/
           touch _site/.nojekyll

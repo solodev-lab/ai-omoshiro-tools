@@ -133,6 +133,12 @@
        自動・取り込み）の開閉。**同じ案件を開いている間だけ**覚える（案件には保存しない）。
        値が無い＝閉じている（既定は全部閉じ）。 */
     toolMoreOpen: {},
+    /* 🔒 §30-48 A 3: ▼「マーカー設置」の既定（所在図＝開く／配置図＝閉じる）を
+       最後に当てた図の種類。図が変わった時だけ既定を当て直す（その図にいる間は
+       手の開け閉めを尊重・覚えない）。案件を開いたら null に戻す（sgResetMore）。 */
+    toolMoreKind: null,
+    /* 🔒 §30-48 B 8: 自動描画のトグルで取りに行っている間（2つとも押せなくする） */
+    autoDrawBusy: false,
     /* 前回の「注意」の有無（'段:key' → 真偽）。出た**瞬間**だけ自動で開くため */
     sgMoreWarn: {},
     /* 🔒 §30-38-5 1: 「頂点の足し引き」の一言を**もう出した図形**の id。
@@ -361,6 +367,23 @@
   }
 
   var $ = function (id) { return document.getElementById(id); };
+
+  /* ============ 🔒 §30-50 4: ダブルクリック対策（2026-10-01 オーナー決定）============
+   * 描く・置くボタンは「もう一度押すと選択に戻る」。ダブルクリックすると 1 回目で選ばれ
+   * 2 回目で解除される事故になるので、**同じボタン**への 2 回目が TAP_GUARD_MS 以内なら
+   * 無視する（別のボタンをすぐ押すのは普通の操作なので通す）。
+   * 🔴 掛けるのは利用者のクリックの入口だけ（プログラムからの道具の切り替えには掛けない）。
+   * 🔴 無視したクリックも「前回」に数える（3 連打の 3 回目も 1 回目からの続きとして弾く）。 */
+  var TAP_GUARD_MS = 400;
+  var tapLast = { el: null, at: 0 };
+  /** 同じ要素への前回のクリックから TAP_GUARD_MS 以内なら true（＝このクリックは無視） */
+  function tapGuard(el) {
+    var now = Date.now();
+    var hit = (tapLast.el === el && (now - tapLast.at) < TAP_GUARD_MS);
+    tapLast.el = el;
+    tapLast.at = now;
+    return hit;
+  }
 
   /* ============ 定型の言葉（🔒 §30-29-1 2・2026-09-14 オーナー指示）============
    * > オーナー:「文字はボタンクリックで、A から私道、建物とか全ての既定テキストが、
@@ -1662,14 +1685,25 @@
     document.querySelectorAll('.tool').forEach(function (b) {
       b.addEventListener('click', function () {
         if (b.disabled || !state.editor) return;
+        /* 🔒 §30-50 4: 同じボタンへの 400ms 以内の 2 回目は無視（ダブルクリック対策） */
+        if (tapGuard(b)) return;
         var t = b.dataset.tool;
         /* 🔒 §25-7 →§30-19-1: ［枠をまとめて］は道具でもパネルでもなく
          * **「押してから地図をクリックした所に1枠置く」操作**（もう一度押すとやめる）。
          * 台数を数えて入力する従来の窓は［台数を指定して置く…］に残してある。 */
         if (t === 'stamp') { toggleStampArm(); return; }
+        /* 🔒 §30-50 1〜3・7: いまの道具と同じボタンをもう一度押したら「選択」に戻す
+         * （上部バー・左メニュー・ガイダンスのどのボタンでもここ1か所・§26-2）。
+         * §30-49 C 1 の［保管場所マーク］専用の 1 行はこの決まりに置き換えた（同じ結果）。
+         * 主役の多角形は data-mkey まで同じ時だけ（本拠↔駐車場は切り替え）。
+         * 🔴 解除は「選択」を押した時と同じ流れ（setTool('select')・候補を消す）を通る
+         *    ＝描いている途中の線の扱いも［選択］と同じ（§30-50 6）。 */
+        var mkey = (b.dataset.mkey === 'lot') ? 'lot' : 'home';
+        if (t === state.editor.tool
+            && (t !== 'mainpoly' || state.editor.mainPolyKey === mkey)) t = 'select';
         /* 🔒 §30-22-1 4: 主役の多角形は「どちらの地点を囲むか」を持つ道具。
          * 🔴 ボタンの文字ではなく data-mkey で渡す（§26-2 注意②）。 */
-        if (t === 'mainpoly') state.editor.mainPolyKey = (b.dataset.mkey === 'lot') ? 'lot' : 'home';
+        if (t === 'mainpoly') state.editor.mainPolyKey = mkey;
         state.editor.setTool(t);
         if (t === 'parcel') loadParcelCandidates();
         else state.editor.setCandidates(null);
@@ -1898,7 +1932,7 @@
         // 🔒 §22-ab / §30-22-4 10: 駐車位置ラベルの「枠を待っている」状態を Esc で抜ける
         e.preventDefault();
         e.stopPropagation();
-        plDisarm();                     // 案内の一言は plDisarm が戻す（⑪／小窓の両方）
+        plDisarm();                     // 案内の一言は plDisarm が戻す（⑪／道具メニューの欄の両方）
         if (navOnSide()) sgRenderStatus();
         hint('駐車位置ラベルの配置をやめました', 2000);
       }
@@ -2057,8 +2091,9 @@
     });
     /* 🔒 2026-09-06 オーナー指示: マーカー設置は道具メニューの一番上にも置く。
        ガイダンスを閉じていてもマーカーを置き直せる（住所検索では置かなくなったため）。 */
-    $('sidePinHome').addEventListener('click', function () { navPinArm('home'); });
-    $('sidePinLot').addEventListener('click', function () { navPinArm('lot'); });
+    /* 🔒 §30-50: 受け口は navPinBtn（同じ地点をもう一度押したら解除・ダブルクリック対策） */
+    $('sidePinHome').addEventListener('click', function () { navPinBtn('home', this); });
+    $('sidePinLot').addEventListener('click', function () { navPinBtn('lot', this); });
 
     /* ---- 左面のガイダンス（🔒 §28-1 / §28-2 / §28-3） ----
      * 🔴 押した先は data-act の委譲で受ける
@@ -2155,6 +2190,24 @@
     document.querySelectorAll('.tools [data-tmore-x]').forEach(function (b) {
       b.addEventListener('click', function () { toolMoreSet(b.dataset.tmoreX, false); });
     });
+    /* 🔒 §30-48 B 4: 自動描画のトグル。どの行かは data-auto・どちらかは data-on（属性）
+     * ＝表示文字では分岐しない。処理は autoDrawSet の1か所。 */
+    document.querySelectorAll('.hz-auto-seg[data-auto]').forEach(function (seg) {
+      seg.addEventListener('click', function (e) {
+        var b = e.target && e.target.closest && e.target.closest('button[data-on]');
+        if (!b || b.disabled) return;
+        autoDrawSet(seg.dataset.auto, b.dataset.on === '1');
+      });
+    });
+    /* 🔒 §30-48 D: 説明文の ON・OFF（字幕の中の行と地図の左上の切替＝同じ配線）。
+     * どちらかは data-capsw（属性）。処理は capSet の1か所。 */
+    document.querySelectorAll('[data-capsw]').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        capSet(b.dataset.capsw === 'off');
+      });
+    });
+    capSwSync();
     /* 🔒 §30-29-2: 道具メニューの「確かめる・出す」は廃止した
      * （上部バーの［プレビュー］＝openPreview 1つに寄せた）。 */
     /* 🔒 §30-2: 案内数字の「押した」記録。
@@ -2180,8 +2233,8 @@
       if (!k || k >= state.nav.step) return;      // 戻る方向だけ（§28-6 ⑦）
       navGo(k, { back: true });
     });
-    $('sgPinHome').addEventListener('click', function () { navPinArm('home'); });
-    $('sgPinLot').addEventListener('click', function () { navPinArm('lot'); });
+    $('sgPinHome').addEventListener('click', function () { navPinBtn('home', this); });
+    $('sgPinLot').addEventListener('click', function () { navPinBtn('lot', this); });
     /* 🔒 §30-39-2 3: ［検索］は4つ（本拠・駐車場 × ガイダンス①・道具メニュー）。
      * 欄の配線は ADDR_FIELDS の所1か所にまとめてある。ここはボタンだけ
      * （中身は doSearch(key)＝地図を動かして、その場所に◎を置く・§30-39-3）。 */
@@ -2225,7 +2278,7 @@
      * 🔒 §30-28-2 1: 道具メニューの #sideSame も同じ関数を呼ぶ。 */
     ['sgSame', 'sideSame'].forEach(function (id) {
       var b = $(id);
-      if (b) b.addEventListener('click', function () { navPinArm('same'); });
+      if (b) b.addEventListener('click', function () { navPinBtn('same', this); });
     });
     /* ②: 紙の向き・2地点を入れる・枠を決定。**中身は既存の関数そのまま**（§28-1 ④）
      * 🔒 §30-13-2 1: 〇2つ（旧 #sgOrient）はやめて、押すとその場で縦↔横が
@@ -2270,7 +2323,12 @@
     /* 🔒 §30-16: ［クリックした名前を図に入れる］。もう一度押すと終わる。 */
     NAME_LAY_PICKS.forEach(function (id) {
       var b = $(id);
-      if (b) b.addEventListener('click', toggleNamePick);
+      if (b) {
+        b.addEventListener('click', function () {
+          if (tapGuard(b)) return;               // 🔒 §30-50 4
+          toggleNamePick();
+        });
+      }
     });
     /* 🔒 §30-13-2 所在図④-2: 本文の［所在図プレビュー］（旧 #sgPrev）は削除した。
      * ⑧は下部（#sgFoot の data-act="szPrev"）＝ sgAct が navShowPreview('shozaizu') を呼ぶ。
@@ -2425,12 +2483,27 @@
     /* 🔒 §30-29-1 2: 言葉のボタンは **TEXT_PRESETS から JS が組む**ようになったので、
      *    配線は**委譲1本**にした（後から作った物にも同じ処理が効く＝配線を増やさない）。
      * 🔴 判定は data-preset（class）だけ・表示文字では分岐しない。 */
+    /* 🔒 §30-50 2〜5: 左メニュー・ガイダンスの文字のボタンは「いま文字の道具で、置こうと
+     *    している物が同じ（自由入力どうし／同じ data-preset）」の時にもう一度押したら
+     *    「選択」に戻す（別の言葉なら切り替え）。🔴 上部バーの選択窓 #textPick の中の行は
+     *    **解除しない**（選んだら必ずその道具になる・§30-50 5）。判定は場所と data 属性だけ。 */
     document.addEventListener('click', function (e) {
       var t = e.target;
       if (!t || !t.closest) return;
-      var w = t.closest('.sg-preset');
-      if (w) { navTextPreset(w.dataset.preset); return; }
-      if (t.closest('.sg-textfree')) navTextFree();
+      var w = t.closest('.sg-preset') || t.closest('.sg-textfree');
+      if (!w) return;
+      var isPreset = w.classList.contains('sg-preset');
+      if (!w.closest('#textPick')) {
+        if (tapGuard(w)) return;                 // 🔒 §30-50 4
+        var ed = state.editor;
+        var want = isPreset ? (w.dataset.preset || '') : '';
+        /* 解除は［選択］を押した時と同じ＝setTool('select') だけ（§30-50 6） */
+        if (ed && ed.tool === 'text' && (ed.textPreset || '') === want) {
+          ed.setTool('select');
+          return;
+        }
+      }
+      if (isPreset) navTextPreset(w.dataset.preset); else navTextFree();
     });
     /* ⑤⑥ 幅の決め方のトグル（🔒 §30-18-4）。値は arrowWidth 1つのまま（§18-l）。
      * 🔒 §30-28-2 6: 道具メニューの #sideArrowMode も同じ配線（表は ARROW_FIELDS）。 */
@@ -2445,7 +2518,7 @@
       });
     });
     /* ⑪ 駐車位置ラベル（🔒 §29-1・Step 7 で左面へ）。行の中身も置き方も
-     * 道具メニューの #plPanel と**同じ関数**（接頭辞だけ 'lb' / 'pl' で分ける）。 */
+     * 道具メニューの欄 #plPanel と**同じ関数**（接頭辞だけ 'lb' / 'pl' で分ける）。 */
     $('lbAdd').addEventListener('click', function (e) {
       e.preventDefault();
       addCustomRow('lbCustom');
@@ -2456,8 +2529,10 @@
      * ［PDFにして保存］＝出す紙を選ぶ窓（§30-27-2）。 */
     $('sgPrevAll').addEventListener('click', function () { navShowPreview('haichizu'); });
     $('sgSavePdf').addEventListener('click', function () { exPickOpen('pdf'); });
-    /* 駐車位置ラベルの小ウィンドウ（🔒 §22-ab・道具メニューから単独で使う） */
+    /* 駐車位置ラベルの欄（🔒 §22-ab・道具メニューから単独で使う）。
+     * 🔒 §30-49 B 3: 押す→開く／もう一度押す→畳む（［やめる］は無くした）。 */
     $('btnLabelBlock').addEventListener('click', function () {
+      if (tapGuard(this)) return;                // 🔒 §30-50 4
       if ($('plPanel').hidden) plOpen(); else plClose();
     });
     $('plAdd').addEventListener('click', function (e) {
@@ -2465,8 +2540,7 @@
       addCustomRow('plCustom');
     });
     $('plPlace').addEventListener('click', function () { labelArm('pl'); });
-    $('plCancel').addEventListener('click', plClose);
-    /* ［標準の値］（🔒 §30-22-4 10 / §30-22-6 1）。ガイダンス⑦と小ウィンドウの2か所、
+    /* ［標準の値］（🔒 §30-22-4 10 / §30-22-6 1）。ガイダンス⑦と道具メニューの欄の2か所、
      * 中身は**同じ関数**（値の出どころは LABEL_STD 1か所）。 */
     [['lbStd', 'lb'], ['plStd', 'pl']].forEach(function (kv) {
       var b = $(kv[0]);
@@ -4108,9 +4182,7 @@
       var ed2 = state.editor, live = (ed2.objects === objs);
       if (live) ed2.snapshot();
       // 前回の自動分だけ消す（🔴 配列は差し替えず splice だけ・§23-7-1）
-      for (var k = objs.length - 1; k >= 0; k--) {
-        if (objs[k] && objs[k].source === 'roadauto') objs.splice(k, 1);
-      }
+      spliceSource(objs, 'roadauto');
       /* 🔒 §30-25-4: 道路は一番下（描く順・当たり判定）。並びの上でも先頭へ入れて
        * おく（Editor.isRoad が source:'roadauto' を道路として数える）。 */
       for (var m = joined.length - 1; m >= 0; m--) objs.unshift(joined[m]);
@@ -4126,6 +4198,130 @@
       return 0;
     }).then(function (n) {
       roadAutoBusy = false;
+      return n;
+    });
+  }
+
+  /* ===== 🔒 §30-48 B（2026-10-01 オーナー指示）: 配置図の「自動描画」=====
+   * 道路［なし｜あり］・建物［なし｜あり］。**初期は両方なし**。
+   * 🔴 トグルの状態は**紙の中身から決める**（別の控えを持たない・§30-48 B 5）:
+   *    その紙に source:'roadauto' が1つでもあれば道路＝あり／'bldgauto' なら建物＝あり。
+   *    ＝紙ごと・案件に保存される・消しゴムで全部消せば「なし」・［戻す］［進む］にも付く。
+   * 🔴 鍵（road／bldg）→ 図形の印・描く関数 の表はここ1か所（index.html は data-auto）。 */
+
+  /** その配列から source が src の図形を全部抜く（🔴 差し替えず splice だけ・§23-7-1） */
+  function spliceSource(objs, src) {
+    for (var k = objs.length - 1; k >= 0; k--) {
+      if (objs[k] && objs[k].source === src) objs.splice(k, 1);
+    }
+  }
+  /** その紙に source が src の図形が1つでもあるか */
+  function sheetHasSource(sh, src) {
+    var objs = (sh && sh.objects) || [];
+    for (var i = 0; i < objs.length; i++) {
+      if (objs[i] && objs[i].source === src) return true;
+    }
+    return false;
+  }
+
+  var AUTO_DRAW = {
+    road: { src: 'roadauto', draw: function () { return drawRoadsNearFrame(); } },
+    bldg: { src: 'bldgauto', draw: function () { return drawBuildingsInFrame(); } }
+  };
+
+  /** トグルの見た目をいまの紙の中身から引き直す（図形が変わる・紙／図の切替の後） */
+  function autoDrawSync() {
+    var sh = curSheet(), busy = !!state.autoDrawBusy;
+    document.querySelectorAll('.hz-auto-seg[data-auto]').forEach(function (seg) {
+      var spec = AUTO_DRAW[seg.dataset.auto];
+      if (!spec) return;
+      var on = sheetHasSource(sh, spec.src);
+      seg.querySelectorAll('button[data-on]').forEach(function (b) {
+        b.classList.toggle('is-active', (b.dataset.on === '1') === on);
+        b.disabled = busy;
+      });
+    });
+    var bz = $('hzAutoBusy');
+    if (bz) bz.hidden = !busy;
+  }
+
+  /** 「なし」を押した時。🔒 その紙の自動分を、手直しした物も含めて全部消す（オーナー選択） */
+  function autoDrawClear(src) {
+    var c = state.current, sh = curSheet(), ed = state.editor;
+    if (!c || !sh || !ed || !sheetHasSource(sh, src)) return;
+    var objs = sh.objects, live = (ed.objects === objs);
+    if (live) ed.snapshot();                       // ［戻す］1回で戻る
+    spliceSource(objs, src);
+    if (live) { ed.selection = []; ed.commit(); updateHistoryButtons(); }
+    Store.autosave(c);
+    autoDrawSync();
+  }
+
+  /** トグルを押した時（key＝road／bldg・on＝あり） */
+  function autoDrawSet(key, on) {
+    var spec = AUTO_DRAW[key];
+    if (!spec || state.autoDrawBusy || !state.current || !state.editor) return;
+    if (on === sheetHasSource(curSheet(), spec.src)) { autoDrawSync(); return; }
+    if (!on) { autoDrawClear(spec.src); return; }
+    // 🔒 §30-48 B 8: 取りに行っている間は2つとも押せなくし、「描画中…」だけ出す
+    state.autoDrawBusy = true;
+    autoDrawSync();
+    spec.draw().then(function () {
+      state.autoDrawBusy = false;
+      autoDrawSync();       // 0 件・失敗の時は紙に何も無い＝「なし」のまま
+    });
+  }
+
+  /**
+   * 🔒 §30-48 B 7: 枠の範囲の建物の輪郭を、地理院のベクトルタイルから線だけの多角形で置く。
+   * 取得口は自動下書きと同じ（AutoDraft.fetchGsiShapes・建物だけ）・書式も自動下書きの建物と同じ。
+   * 🔴 流れは drawRoadsNearFrame と同じ（snapshot → 前回分を splice → unshift → commit
+   *    → autosave）＝押し直しは前回の bldgauto を消してから置く・［戻す］1回で戻る。
+   * 🔴 置き場所は配列の**先頭**: 描く順・当たり判定は Editor.isRoad で「道路 → その他」
+   *    に分かれる（bldgauto は道路ではない）ので、先頭＝道路より上・手で描いた物より下。
+   * 🔴 出典は紙ごと（§24-3）。
+   * 🙋 既存の［自動下書き］（#btnDraft）で描いた建物（source:'auto'）はこの対象外（§30-48 B 9）。
+   */
+  var bldgAutoBusy = false;
+  function drawBuildingsInFrame() {
+    var c = state.current, sh = curSheet();
+    if (!c || !sh || !state.editor) return Promise.resolve(0);
+    if (bldgAutoBusy) return Promise.resolve(0);
+    var f = sh.frame || frameFromView();
+    if (!f) {
+      hint('先に枠を決めてください（枠の中の建物を描きます）', 3000);
+      return Promise.resolve(0);
+    }
+    if (!window.AutoDraft || !window.Exporter || !window.Shozaizu) return Promise.resolve(0);
+    var b = Exporter.frameBounds(f);
+    bldgAutoBusy = true;
+    hint('枠の中の建物を取りに行っています…', 0);
+    return AutoDraft.fetchGsiShapes(b, { buildings: true }).then(function (shapes) {
+      var made = [];
+      (shapes.buildings || []).forEach(function (pts) {
+        // 取得口は外側も少し拾う（padBounds）ので、枠に掛かる物だけに絞る
+        if (!Shozaizu._bboxHits(pts, b)) return;
+        var o = AutoDraft.toPolygon(pts, { w: 1.4, color: '#666' });
+        o.source = 'bldgauto';
+        made.push(o);
+      });
+      var objs = sh.objects || (sh.objects = []);
+      var noneMsg = 'この枠の中には建物のデータがありませんでした';
+      if (!made.length && !sheetHasSource(sh, 'bldgauto')) { hint(noneMsg, 6000); return 0; }
+      var ed = state.editor, live = (ed.objects === objs);
+      if (live) ed.snapshot();
+      spliceSource(objs, 'bldgauto');
+      for (var m = made.length - 1; m >= 0; m--) objs.unshift(made[m]);
+      if (live) { ed.selection = []; ed.commit(); updateHistoryButtons(); }
+      Store.autosave(c);
+      if (made.length) noteDraftAttribution(false, sh);
+      hint(made.length ? ('枠の中の建物の輪郭を ' + made.length + ' 個描きました') : noneMsg, 6000);
+      return made.length;
+    }).catch(function (err) {
+      hint('建物を取りに行けませんでした（' + (err && err.message ? err.message : '通信エラー') + '）', 5000);
+      return 0;
+    }).then(function (n) {
+      bldgAutoBusy = false;
       return n;
     });
   }
@@ -4773,6 +4969,7 @@
      * 🔴 番号と字幕の出どころは sgRenderNums 1か所（ここで文を書かない）。
      * 🔒 §30-13-7 3: ここも「字幕を出す時」＝置き場所を引き直す契機（同じ文でも）。 */
     if (was && state.nav && navOnSide()) { sgCap.replace = true; sgRenderNums(); }
+    capSwSync();                        // 🔒 §30-48 D 3: プレビューを閉じたら左上の切替も戻す
   }
 
   /**
@@ -5614,8 +5811,11 @@
     var drawn = state.editor.objects.filter(function (o) {
       // 🔒 §22-ag: ⑦で引いた道路（source:'road'）は敷地ではないので拾わない
       // 🔒 §23: なぞり出した線（source:'reveal'）も敷地ではない（建物の輪郭など）
+      // 🔒 §30-48 B 7: 自動描画の建物（source:'bldgauto'）も「自動生成の建物」＝拾わない
+      // 🔒 §30-49 A 2: 自動で写した道路の輪（source:'roadauto'）も敷地にしない
       return isFillArea(o) && o.source !== 'auto' && o.source !== 'shozaizu'
-        && o.source !== 'road' && o.source !== 'reveal';
+        && o.source !== 'road' && o.source !== 'reveal' && o.source !== 'bldgauto'
+        && o.source !== 'roadauto';
     });
     if (drawn.length) return drawn[drawn.length - 1];
     return null;
@@ -5797,7 +5997,8 @@
   /* 🔒 §30-31-3 1: 旧 'chkBox'（提出前チェック）はこの一覧からも消した（窓ごと廃止）。 */
   var CASE_PANELS = ['welcomeBox', 'exPreviewBox',
     'exPick',                       // 🔒 §30-27-2: PDF・画像の窓
-    'stampPanel', 'plPanel', 'draftPanel', 'fillPanel', 'imgPanel', 'szPanel',
+    // 🔒 §30-49 B 5: 'plPanel' はここに置かない（ボタンの見た目も戻すので plClose を通す）
+    'stampPanel', 'draftPanel', 'fillPanel', 'imgPanel', 'szPanel',
     'pastePanel',
     'textPick',        // 🔒 §30-29-1 2: 文字の選択窓
     'arrowPick'];      // 🔒 §30-29-4 1: 幅の矢印の窓
@@ -5816,7 +6017,9 @@
     });
     textPickClose();     // 🔒 §30-29-1 2: 文字の選択窓も案件をまたいで持ち越さない
     arrowPickClose();    // 🔒 §30-29-4 1: 幅の矢印の窓も同じ（打ちかけの値も戻す）
-    plDisarm();
+    // 🔒 §30-49 B 4〜5: 保管場所ラベルの欄を畳む（ボタンの見た目・置く待ちも戻す）。
+    //    道具は触らない（案件を切り替える途中の editor に setTool しない）
+    plClose(true);
     /* 🔒 §30-25-26: fillPanel／imgPanel は隠すだけでは足りない。
      * 「辺に沿わせる」の2クリック待ち（.map-wrap の pointerdown 乗っ取り）と
      * 画像のつまみ表示（ImgLay.adjust）は窓の hidden とは別の状態なので、
@@ -6577,6 +6780,60 @@
     $('welcomeBox').hidden = true;
   }
 
+  /* ---------- ガイダンス説明文（字幕）の ON・OFF（🔒 §30-48 D） ----------
+   * 対象は地図の上の字幕（#sgCaption）だけ（左のガイダンス面の文・ボタンは変えない）。
+   * 🔴 記憶は**全体**（案件に入れない）＝「はじめに」の KEY_SKIP_WELCOME と同じ作法・
+   *    同じ名前の付け方。書けなくても動く（このページを開いている間はメモリの値で効く）。
+   *    🙋 覚えるのはその PC のそのブラウザだけ。 */
+  var KEY_CAP_OFF = 'shakomap.captionOff';
+  var capOffMem = (function () {
+    try { return localStorage.getItem(KEY_CAP_OFF) === '1'; }
+    catch (e) { return false; }       // 読めない時は「覚えていない」＝ON
+  })();
+
+  function capOff() { return capOffMem; }
+
+  /**
+   * 切替の見た目と、左上の切替（#capSwFloat）の出し入れ。🔴 出し入れはこの1か所
+   * （字幕を出す／消す・ガイダンスを開く／閉じる・プレビューを開く／閉じる の各所から呼ぶ）。
+   * 左上に出す条件＝OFF かつ ガイダンスを開いている かつ プレビューを出していない。
+   */
+  function capSwSync() {
+    var off = capOffMem;
+    document.querySelectorAll('[data-capsw]').forEach(function (b) {
+      b.classList.toggle('is-active', (b.dataset.capsw === 'off') === off);
+    });
+    var fl = $('capSwFloat'), pv = $('exPreviewBox');
+    if (fl) fl.hidden = !(off && navOnSide() && (!pv || pv.hidden));
+  }
+
+  /**
+   * ON・OFF を切り替える（字幕の中の行・左上の切替の共通の出口）。
+   * 🔴 OFF にする時: 字幕を消す。いま出していた文（sgCap.args）は控えたまま
+   *    ＝ON に戻した瞬間に同じ文をその場で出せる（プレビュー中に戻る既存の早期 return と
+   *    同じ考え方・sgCaptionShow は OFF の間も「出すはずだった文」を控え続ける）。
+   * 🔴 ON にする時: last を空にしてから控えの文を出す（同じ文でも出し直す）。
+   */
+  function capSet(off) {
+    off = !!off;
+    if (off !== capOffMem) {
+      capOffMem = off;
+      try { localStorage.setItem(KEY_CAP_OFF, off ? '1' : '0'); }
+      catch (e) { /* 覚えられないだけ。操作は止めない */ }
+      if (off) {
+        var keep = sgCap.args;
+        sgCaptionHide(true);
+        sgCap.args = keep;
+      } else {
+        sgCap.last = '';
+        var a = sgCap.args;
+        if (a) sgCaptionShow(a[0], a[1], a[2]);
+        else if (state.nav && navOnSide()) sgRenderNums();
+      }
+    }
+    capSwSync();
+  }
+
   /** 案件に保存してあるその図の段（無ければ 0）。🔒 §30-1: nav:{shozaizu,haichizu} */
   function navSavedDisp(fig) {
     var nv = state.current && state.current.nav;
@@ -6603,6 +6860,7 @@
     szSetHost(!!on);
     /* 幅が変わる＝地図の大きさが変わるが、mapview は ResizeObserver で
      * 自分で追随する（枠・オーバーレイもそこから引き直される）ので何もしない。 */
+    capSwSync();                 // 🔒 §30-48 D 3: ガイダンスを開く・閉じる＝左上の切替も
   }
 
   /**
@@ -6876,6 +7134,10 @@
   function startStampArm() {
     if (state.stampArm) return;
     if (!state.editor || !state.map) return;
+    /* 🔒 §30-49 B 4: ［駐車枠］は道具を切り替えずに置く状態へ入る（'tool' の通知が
+     * 出ない）ので、ここでも保管場所ラベルの欄を畳む（「選択」以外を選んだら畳む、と同じ）。
+     * 🔴 カーソルを戻す plDisarm が中で走るので、下の crosshair より前に呼ぶ。 */
+    if (!$('plPanel').hidden) plClose(true);
     state.stampArm = true;
     $('map').style.cursor = 'crosshair';
     var wrap = document.querySelector('.map-wrap');
@@ -6954,6 +7216,7 @@
     if (!keepStep) navSaveStep();
     navPinArm(null);
     plDisarm();                  // ⑪の2クリック待ちを握ったままにしない
+    capSwSync();                 // 🔒 §30-48 D 3: state.nav を外した後で左上の切替を消す
   }
 
   /** 輪郭とみなす図形の数。開いたまま確定（Shift+Enter＝path）も人が描いた物なら数える。
@@ -6962,6 +7225,10 @@
     var objs = objectsOf('haichizu');
     return objs.filter(function (o) {
       if (!o.points || o.points.length < 3) return false;
+      /* 🔒 §30-48 B 7: 自動描画の建物（source:'bldgauto'）は土地の輪郭ではない */
+      if (o.source === 'bldgauto') return false;
+      /* 🔒 §30-49 A 1: ［地図の道路を写す］の輪（source:'roadauto'・§30-38-4 で多角形）も数えない */
+      if (o.source === 'roadauto') return false;
       return o.type === 'polygon' || (o.type === 'path' && !o.source);
     }).length;
   }
@@ -7062,13 +7329,13 @@
   }
 
   /* ---- 駐車位置ラベル（🔒 §22-ab／🔒 §29-1 ⑪） ----
-   * 出す所は**2か所**（ガイダンス⑪＝接頭辞 'lb' ／ 道具メニューの小ウィンドウ＝'pl'）。
+   * 出す所は**2か所**（ガイダンス⑪＝接頭辞 'lb' ／ 道具メニューの［保管場所ラベル］の欄＝'pl'・🔒 §30-49 B）。
    * 🔴 入力の中身（LABEL_ROWS）も置き方も**同じ関数**。違うのは接頭辞と案内の出し先だけ。
    * 🔒 §29 Step 7: ⑪の「対象を自動で見つけて自動で置く」（旧 navPasteLabel）は廃止し、
    *    どちらの入口も**2クリックで人が決める**に揃えた（§18-ap「必ず自分で置く」と同じ考え）。
    * 🔴 1クリック目＝矢印の先（対象の駐車枠）／2クリック目＝ラベルを置く場所。 */
 
-  /** 定型4行を1度だけ作る。pre は 'lb'（ガイダンス⑪）/ 'pl'（小ウィンドウ） */
+  /** 定型4行を1度だけ作る。pre は 'lb'（ガイダンス⑪）/ 'pl'（道具メニューの欄） */
   function labelBuildRows(pre) {
     var box = $(pre + 'Rows');
     if (!box || box.childElementCount) return;      // 1度だけ作る
@@ -7130,30 +7397,39 @@
    *    ここを読む。ボタンそのものの文字は index.html の #sgLabelPlace / #plPlace）。 */
   var LABEL_PLACE_JA = '保管場所ラベル配置';
 
-  /** 案内の一言（⑪＝#lbHint ／ 小ウィンドウ＝#plHint） */
+  /** 案内の一言（⑪＝#lbHint ／ 道具メニューの欄＝#plHint） */
   function labelHint(pre, msg) {
     var el = $(pre + 'Hint');
     if (el) el.textContent = msg;
   }
 
+  /* 🔒 §30-49 B 3〜5: 道具メニューの［保管場所ラベル］の欄の開閉。
+   * 欄の hidden とボタンの押している見た目（.is-open）は**ここ2つだけ**で書く。 */
   function plOpen() {
     if (!state.current || !state.editor) return;
     labelBuildRows('pl');
-    /* 🔴 小ウィンドウは .stamp-panel の共通位置（左上）に重なって出るので、
-     * 先に塊スタンプの方を閉じる。2枚重なるとボタンが押せなくなる */
-    if (state.stamp) state.stamp.close();
+    /* 🔒 §30-49 B 1: 旧「先に塊スタンプの窓を閉じる」は外した（地図の上の小ウィンドウ同士の
+     * 重なり対策だった。欄は左メニューに入ったので重ならない）。 */
     $('plPanel').hidden = false;
+    $('btnLabelBlock').classList.add('is-open');
     /* 🔒 §30-25-36 2: 名前は LABEL_PLACE_JA。
      * 🔒 §30-22-4 10: 置き方はワンクリック（plDisarm の一言と同じ文にそろえる）。 */
     labelHint('pl', '［' + LABEL_PLACE_JA + '］のあと、対象の駐車枠をクリックします。');
+    /* 🔒 §30-49 B 3: 開いたら道具は「選択」（［保管場所マーク］の書式も畳まれる）。
+     * 🔴 'tool' の受け口は select では欄を閉じないので輪にならない。 */
+    state.editor.setTool('select');
   }
 
-  function plClose() {
+  /** 欄を畳む。keepTool＝道具を戻さない（利用者が「選択」以外を選んで閉じる時・
+   *  案件を切り替える時）。それ以外（ボタンのもう一押し）は道具を「選択」にする。 */
+  function plClose(keepTool) {
     $('plPanel').hidden = true;
+    $('btnLabelBlock').classList.remove('is-open');
     plDisarm();
+    if (!keepTool && state.editor) state.editor.setTool('select');
   }
 
-  /** ［配置］→ 2クリック待ちに入る。pre は 'lb'（ガイダンス⑪）/ 'pl'（小ウィンドウ） */
+  /** ［配置］→ 2クリック待ちに入る。pre は 'lb'（ガイダンス⑪）/ 'pl'（道具メニューの欄） */
   function labelArm(pre) {
     if (!state.current || !state.editor || !state.map) return;
     var lines = labelLinesFrom(pre);
@@ -7210,8 +7486,8 @@
     state.editor.setTool('select');
     state.editor.addLabelBlock({ at: spot.at, arrowTo: spot.arrowTo, lines: lines });
     updateHistoryButtons();
-    if (pre === 'pl') plClose();
-    else if (navOnSide()) sgRenderStatus();          // ⑪の「ラベル n 個」を引き直す
+    /* 🔒 §30-49 B 4: 道具メニューの欄（'pl'）は置いた後も開いたまま（続けて別の枠にも置ける） */
+    if (pre !== 'pl' && navOnSide()) sgRenderStatus();   // ⑪の「ラベル n 個」を引き直す
     hint('塊はドラッグで移動・右下のつまみで大きさ・矢印の先だけ別に動かせます', 5000);
   }
 
@@ -7292,6 +7568,17 @@
      * 🔒 §30-22-1 6: 'same'＝本拠と駐車場を**同じ場所に1つ**置く。 */
     hint(armLabel(key) + 'のマーカーを置く場所を地図でクリックしてください', 4000);
     navRenderPins();
+  }
+
+  /**
+   * 🔒 §30-50 2〜4: マーカー設置ボタン（ガイダンス①の #sgPinHome／#sgPinLot／#sgSame と
+   * 道具メニューの #sidePinHome／#sidePinLot／#sideSame）の利用者クリックの受け口。
+   * 同じ地点（key）を置こうとしている時にもう一度押したら解除する（どちらの面の
+   * ボタンでも、地点が同じなら同じ扱い）。🔴 プログラムからの解除・設置は navPinArm を直接呼ぶ。
+   */
+  function navPinBtn(key, el) {
+    if (tapGuard(el)) return;
+    navPinArm(state.pinPlace === key ? null : key);
   }
 
   /** 主役のラベルの文言（🔒 §30-22-1 6: 出どころは Shozaizu.PIN_LABEL 1か所） */
@@ -7690,7 +7977,7 @@
   /* ---- ⑪ 駐車位置ラベル（labelBlock） ---- */
 
   /* 🔒 §22-ab: 駐車位置ラベルの入力行は**ガイダンス⑪と道具メニューの小ウィンドウの2か所**。
-   * 定義をここ1つに集約し、ID の接頭辞（'lb'=⑪ / 'pl'=小ウィンドウ）だけを変える。
+   * 定義をここ1つに集約し、ID の接頭辞（'lb'=⑪ / 'pl'=道具メニューの欄）だけを変える。
    * 🔴 表をコピーして2か所に置くと、項目を足した時に片方だけ直す事故が起きる。 */
   var LABEL_ROWS = [
     { key: 'Len', label: '長さ',         unit: 'm', on: true,  ph: '例）5',   mode: 'decimal' },
@@ -7735,7 +8022,7 @@
    * 凡例 → ラベルの行。1行目は見出し「保管場所」。
    * 🔒 §18-f: 単位は数値欄の右に固定表示し、**文字列にも自動で付ける**
    * （オーナー提供の見本 assets/guide/label.png の文言に合わせる）
-   * pre = ID の接頭辞（'lb'=ガイダンス⑪ / 'pl'=道具メニューの小ウィンドウ・🔒 §22-ab）
+   * pre = ID の接頭辞（'lb'=ガイダンス⑪ / 'pl'=道具メニューの欄・🔒 §22-ab／§30-49 B）
    */
   function labelLinesFrom(pre) {
     var lines = ['保管場所'];
@@ -9747,6 +10034,8 @@
     state.hzAimShown = false;
     /* 🔒 §30-28-1 2: 道具メニューの▼も案件をまたいで残さない（全部閉じへ戻す） */
     state.toolMoreOpen = {};
+    /* 🔒 §30-48 A 3: 開いた直後の renderSheetBar で図の種類の既定を当て直させる */
+    state.toolMoreKind = null;
     toolMoreApply();
   }
 
@@ -9863,7 +10152,9 @@
    *    字幕が飛ぶ＝裁定 3 が禁じた「地図の移動が契機になる」状態になる。 */
   /* 🔒 §30-25-1 2: say（印つきの元の文）も控える。横長／縦長で組み方が変わるので、
    * sgCaptionPlace が置き場所を決めた後に文を組み直せるようにする。 */
-  var sgCap = { last: '', replace: false, say: '' };
+  /* 🔒 §30-48 D: args＝最後に「出すはずだった」文（[l1, l2, btn]）。説明文 OFF の間も
+   * 控え続け、ON に戻した瞬間に出す（capSet）。段を離れた時など reset で消す時は捨てる。 */
+  var sgCap = { last: '', replace: false, say: '', args: null };
 
   /* 🔒 §30-14-3: 字幕の中のボタンが押された時にすることの表（鍵は SG_NUM[].btn.act）。
    * 🔴 ここ1か所。表示文字列では分岐しない。 */
@@ -9926,10 +10217,15 @@
   function sgCaptionShow(l1, l2, btn) {
     var box = $('sgCaption');
     if (!box) return;
+    capSwSync();                      // 🔒 §30-48 D 3: 左上の切替の出し入れ
     /* 🔒 §30-13-3: 書き出しプレビューを出している間は字幕を出さない（紙面に重ねない）。
      * 🔴 last は書き換えずに戻る＝閉じた時（closeExportPreview → sgRenderNums）に
      *    同じ文がそのまま出る。 */
     if (!$('exPreviewBox').hidden) return;
+    /* 🔒 §30-48 D 3: 説明文 OFF の間は出さない。上と同じ考え方で last は書き換えず、
+     * 「出すはずだった文」だけを控える＝ON に戻した瞬間に capSet がその文を出す。 */
+    sgCap.args = [l1, l2, btn];
+    if (capOff()) return;
     var replace = sgCap.replace;
     sgCap.replace = false;            // 印は1回だけ効く
     var key = l1 + '\n' + (l2 || '') + '\n' + ((btn && btn.act) || '');
@@ -10074,6 +10370,7 @@
   function sgCaptionHide(reset) {
     var box = $('sgCaption');
     if (reset) sgCap.last = '';
+    if (reset) sgCap.args = null;       // 🔒 §30-48 D: 次の文はまた控え直す
     if (box) {
       box.hidden = true;
       box.classList.remove('is-moved');
@@ -10086,6 +10383,7 @@
       box.style.top = '';
       box.style.width = '';
     }
+    capSwSync();                        // 🔒 §30-48 D 3: 左上の切替の出し入れ
   }
 
   /**
@@ -10114,6 +10412,10 @@
         if (fn) fn();
       });
     }
+    /* 🔒 §30-48 D 2: 一番下の「説明文［ON｜OFF］」の行も、押した時に字幕のドラッグを
+     * 始めない（pointerdown を止める）。押した後の処理は data-capsw の配線（capSet）。 */
+    var capSw = $('sgCapSw');
+    if (capSw) capSw.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
     var dragging = false, offX = 0, offY = 0, wrap = null;
     box.addEventListener('pointerdown', function (e) {
       if (closeBtn && (e.target === closeBtn || closeBtn.contains(e.target))) return;
@@ -10409,7 +10711,8 @@
    * 🔴 見た目はガイダンス面の▼と**同じ**（描くのは sgMorePaint 1か所）。
    * 🔴 開いた状態は**同じ案件を開いている間だけ**覚える（案件には保存しない）。
    * 🔴 どの▼かは data-tmore（属性）で見る＝表示文字では分岐しない。 */
-  var TOOL_MORE_KEYS = ['mark', 'name', 'auto'];
+  /* 🔒 §30-48 A: 先頭の▼「マーカー設置」（pin）が増えて4つ */
+  var TOOL_MORE_KEYS = ['pin', 'mark', 'name', 'auto'];
 
   function toolMoreBox(key) { return $('sideMore_' + key); }
 
@@ -11170,6 +11473,9 @@
        * （消しゴム・Delete・戻す のどれでも通る1か所）。 */
       syncMarkShapeFromPolys();
       navOnObjects();          // 🔒 §30-25-11: 一言を出すだけ（自動では進まない）
+      /* 🔒 §30-48 B 5: 自動描画のトグルは紙の中身から引き直す
+       * （消しゴム・Delete・戻す・進む・写し直しのどれでも通る1か所）。 */
+      autoDrawSync();
       /* 🔒 §28-13 決定3: 重ね表示は「紙に無い名前」だけを出すので、
        * 図形が変わったら引き直す（文字を消したらその名前がまた薄く出る）。 */
       if (state.namelay) state.namelay.invalidate();
@@ -11244,6 +11550,15 @@
         if (rn) rn.hidden = (t !== 'reveal');
         if (t === 'reveal') { syncRevealSizes(); renderNameStat(); }
       }
+      /* 🔒 §30-48 C 2: 道具メニューの「保管場所マークの書式」は［保管場所マーク］の
+       * 道具を選んでいる間だけ出す（上の「筆の太さ」と同じ作法）。
+       * 🔴 右パネル・配置図⑦の書式はここでは触らない。 */
+      var sfb = $('sideStorageFmtBox');
+      if (sfb) sfb.hidden = (t !== 'storage');
+      /* 🔒 §30-49 B 4 ②: 「選択」以外の道具を選んだら保管場所ラベルの欄を畳む
+       * （［保管場所マーク］を含む＝2つは同時に開かない）。
+       * 🔴 道具は戻さない（keepTool）＝利用者が選んだ道具を奪わない・plClose との輪も作らない。 */
+      if (t !== 'select' && !$('plPanel').hidden) plClose(true);
       // 認識のハイライトは道具を持ち替えるまで出しっぱなし（正典 §16-10-d-3）
       if (state.recogTool && t !== state.recogTool) clearRecogLines();
       // 作図の道具を持っている間は、画像のつまみを引っ込めて作図を優先する
@@ -11694,6 +12009,9 @@
      * 扱いになって浮き出なくなる。 */
     if (state.reveal) state.reveal.setSheet(sh.id);
     updateHistoryButtons();
+    /* 🔒 §30-48 B 5: 紙・図の種類を切り替えた時（案件を開いた時も）は、
+     * 自動描画のトグルをその紙の中身から引き直す */
+    autoDrawSync();
   }
 
   /** ブラシ3段の選択状態を画面に反映（🔒 §23-3） */
@@ -11944,6 +12262,14 @@
     document.querySelectorAll('.tab').forEach(function (t) {
       t.classList.toggle('is-active', t.dataset.kind === state.kind);
     });
+    /* 🔒 §30-48 A 3: ▼「マーカー設置」の既定は**図の種類で決まる**（所在図＝開く／
+     * 配置図＝閉じる）。案件を開いた時・タブを切り替えた時・ガイダンスが図を切り替えた
+     * 時のどれもここを通る＝決める所はこの1か所。図が変わった時だけ当てる
+     * （同じ図にいる間の手の開け閉めは尊重・覚えない＝次に図が変わったら既定に戻る）。 */
+    if (state.toolMoreKind !== state.kind) {
+      state.toolMoreKind = state.kind;
+      toolMoreSet('pin', state.kind === 'shozaizu');
+    }
 
     var list = sheetsOf(state.kind);
     var idx = activeIdx(state.kind);
