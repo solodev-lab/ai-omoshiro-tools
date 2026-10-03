@@ -3296,6 +3296,9 @@ p.sg-tk { margin: 10px 0 4px; }
    部品は自動描画の行（.hz-auto-row／.hz-auto-k／.hz-auto-seg）をそのまま使う。
    🔴 所在図の時だけ出す。判定は #editorView の data-kind（データ）だけ・hidden 属性は使わない
       （.side-hz の逆＝ [hidden] の !important と取り合わない）。 */
+/* 🔒 §30-54: ［所在図を作る］＋固定の切替の器。所在図の時だけ出す（配置図では意味が無い） */
+#editorView:not([data-kind="shozaizu"]) .sz-make { display: none; }
+.sz-make { margin-top: 10px; }
 #editorView:not([data-kind="shozaizu"]) .sz-lock { display: none; }
 .sz-lock { margin: 6px 0 0; }
 /* 見出しが「道路・建物」と長いので、自動描画の 3em の幅を外す */

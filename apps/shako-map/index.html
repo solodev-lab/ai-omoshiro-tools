@@ -1900,14 +1900,14 @@
         <section class="tools">
           <!-- 🔒 §30-48 A（2026-10-01 オーナー指示）: 見出し「描く」は無くし、先頭を
                開閉できる「マーカー設置」にした（部品は他の▼と同じ・鍵は pin）。
-               🔴 中身（住所の欄〜［所在図を作る］）の id・配線は変えていない。
+               🔴 中身（住所の欄〜▼印を変える）の id・配線は変えていない。［所在図を作る］は §30-54 で外へ出した。
                🔴 開閉の既定は図の種類で決まる（所在図＝開く／配置図＝閉じる）＝
                   app.js renderSheetBar の1か所（toolMoreKind）。覚えない。 -->
           <div class="sg-more-w" id="sideMore_pin">
             <button type="button" class="sg-more" data-tmore="pin" aria-expanded="false"
               ><span class="sg-more-h"><b class="sg-more-t">マーカー設置</b
                 ><i class="sg-more-a">開く ▼</i></span
-              ><span class="sg-more-when">使用の本拠・駐車場のマーカーを置く／所在図を作る</span></button>
+              ><span class="sg-more-when">使用の本拠・駐車場のマーカーを置く</span></button>
             <div class="sg-more-body" hidden>
 
           <!-- ======== 1. 使用の本拠住所／駐車場住所（🔒 §30-28-2 1 → 🔒 §30-39-2）========
@@ -1999,28 +1999,35 @@
             </div>
           </div>
 
-          <button id="btnShozaizu" class="sg-wide"
-            title="使用の本拠と駐車場の2点から、所在図の下書きを作ります（設定は開く盤で変えられます）"
-            >所在図を作る</button>
-          <!-- 🔒 §30-53 5 ①（2026-10-03 オーナー指示）: 道路・建物の［固定｜解除］。
-               所在図の時だけ出す（CSS #editorView:not([data-kind="shozaizu"]) .sz-lock）。
-               🔴 見た目は §30-48 B 4 の自動描画と同じ部品（.hz-auto-row／.hz-auto-seg）。
-               🔴 値は紙の szLock 1つ・どちらかは data-lock（属性）＝表示文字では分岐しない
-                  （app.js szLockSet／szLockSync・ガイダンス④の切替と同じ関数）。 -->
-          <div class="sz-lock">
-            <div class="hz-auto-row">
-              <span class="hz-auto-k sz-lock-k">道路・建物</span>
-              <span class="seg hz-auto-seg sz-lock-seg">
-                <button type="button" data-lock="1"
-                  title="所在図で作った道路・建物・川の線を動かないようにします（文字や印は動かせます）">固定</button>
-                <button type="button" data-lock="0"
-                  title="所在図で作った道路・建物・川の線も選んで動かしたり消したりできます">解除</button>
-              </span>
-            </div>
-          </div>
               <button type="button" class="sg-more-x" data-tmore-x="pin">閉じる ▲</button>
             </div>
           </div><!-- /#sideMore_pin（🔒 §30-48 A） -->
+
+          <!-- 🔒 §30-54（2026-10-03 オーナー指示「所在図作成ボタンを表に出して」）:
+               ［所在図を作る］と「道路・建物［固定｜解除］」は ▼マーカー設置の**外**（▼が閉じていても
+               常に見える）。所在図の時だけ出す（CSS #editorView:not([data-kind="shozaizu"]) .sz-make）。
+               🔴 id・配線は変えていない（§30-48 A 2 の「中身＝…［所在図を作る］まで」はこの章で改めた）。 -->
+          <div class="sz-make">
+            <button id="btnShozaizu" class="sg-wide"
+              title="使用の本拠と駐車場の2点から、所在図の下書きを作ります（設定は開く盤で変えられます）"
+              >所在図を作る</button>
+            <!-- 🔒 §30-53 5 ①（2026-10-03 オーナー指示）: 道路・建物の［固定｜解除］。
+                 所在図の時だけ出す（CSS #editorView:not([data-kind="shozaizu"]) .sz-lock）。
+                 🔴 見た目は §30-48 B 4 の自動描画と同じ部品（.hz-auto-row／.hz-auto-seg）。
+                 🔴 値は紙の szLock 1つ・どちらかは data-lock（属性）＝表示文字では分岐しない
+                    （app.js szLockSet／szLockSync・ガイダンス④の切替と同じ関数）。 -->
+            <div class="sz-lock">
+              <div class="hz-auto-row">
+                <span class="hz-auto-k sz-lock-k">道路・建物</span>
+                <span class="seg hz-auto-seg sz-lock-seg">
+                  <button type="button" data-lock="1"
+                    title="所在図で作った道路・建物・川の線を動かないようにします（文字や印は動かせます）">固定</button>
+                  <button type="button" data-lock="0"
+                    title="所在図で作った道路・建物・川の線も選んで動かしたり消したりできます">解除</button>
+                </span>
+              </div>
+            </div>
+          </div><!-- /.sz-make（🔒 §30-54） -->
 
           <!-- 🔒 §30-29-2（2026-09-14 オーナー指示）: ここにあった
                  「紙と枠」／「道路や建物、文字や線を足す・消す」／「印を置く」／
