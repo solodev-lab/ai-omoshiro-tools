@@ -995,9 +995,9 @@
           <p class="sg-text" id="sgText"></p>
 
           <!-- ① マーカーを置く（🔒 §30-39-2 所在図①の並び・§30-12-5 を差し替え:
-               「使用の本拠住所」→ 欄＋①検索 → ▼地図を変える → ［使用の本拠マーカー設置］
-               →▼印 → 「駐車場住所」→ 欄＋②検索 → ［駐車場マーカー設置］→▼印
-               → ［同一住所］→▼印） -->
+               「使用の本拠住所」→ 欄＋①検索 → ▼地図を変える → ②［使用の本拠マーカー設置］
+               →▼印 → 「駐車場住所」→ 欄＋③検索 → ④［駐車場マーカー設置］→▼印
+               → ［同一住所］→▼印。番号は 🔒 §30-52 5） -->
           <div class="sg-body" id="sgS1" hidden>
             <!-- 🔒 §30-25-23（2026-09-14 オーナー指示）: 常設の道具の帯（1つだけの器）。
                  段に入るたびに app.js sgToolStripTo(n) がその段へ移す
@@ -1021,15 +1021,17 @@
                    入る＝1つのデータ・写す表は app.js ADDR_FIELDS 1か所）。
                    🔒 §30-12-2 2: 青は data-sgstate="next" だけが出す＝class="primary" は付けない -->
               <input type="text" id="sgAddrHome" placeholder="住所を入れて［検索］">
+              <!-- 🔒 §30-52 6: title は「赤いピンを立てます」（◎は［マーカー設置］で置く） -->
               <button id="sgSearchHome" class="go"
-                title="住所の場所へ地図を動かし、◎マーカーを置きます（ずれていればドラッグで直せます）">検索</button>
+                title="住所の場所へ地図を動かし、赤いピンを立てます">検索</button>
             </div>
 
-            <!-- 🔒 §30-39-2 5（2026-09-19 オーナー指示）: 検索すると◎が置かれる。
-                 🔴 §18-ap／§28-14 ①-1／2026-09-06「検索でマーカーは置かない」は改めた。 -->
-            <p class="sg-note">住所を入れて［検索］を押すと、その場所に◎マーカーが
-              置かれます。ずれていればマーカーをドラッグで直せます。住所で見つからない
-              時は［…マーカー設置］を押してから地図をクリックしてください。</p>
+            <!-- 🔒 §30-52 6（2026-10-03 オーナー指示）: 検索すると赤いピンが立つ。
+                 ◎は［…マーカー設置］→ 地図クリックで置く（§30-39-2 5 の「検索で◎が置かれる」は改めた）。 -->
+            <p class="sg-note">住所を入れて［検索］を押すと、その場所に赤いピンが
+              立ちます。［…マーカー設置］を押して、ピンの場所（またはずらした場所）を
+              クリックしてください。住所で見つからない時も、［…マーカー設置］を押して
+              から地図をクリックすれば置けます。</p>
 
             <!-- 🔒 §30-10: 地図の選択（〇2つ）。④の〇と**同じデータ**
                  （上部バーの #underlaySel / #underlayOff を書き換えるだけ）。
@@ -1064,10 +1066,10 @@
 
             <!-- 🔒 §28-14 ①-4 / §30-22-1 4〜6 / 🔒 §30-39-2: マーカーを置くボタンと、
                  その**直下**の▼「印を変える」。並びは ［使用の本拠マーカー設置］→
-                 ▼本拠の印 →「駐車場住所」の欄＋②［検索］→［駐車場マーカー設置］→
+                 ▼本拠の印 →「駐車場住所」の欄＋③［検索］→［駐車場マーカー設置］→
                  ▼駐車場の印 →［使用の本拠と駐車場が同一住所］（番号なし）。
-                 🔴 ［○○マーカー設置］は**番号なし**（§30-39-4 4）＝住所で見つからない
-                    時・置き直したい時の手置き。ふだんは［検索］で◎が置かれる。
+                 🔒 §30-52 5: ［○○マーカー設置］に案内数字が付く（②／④）＝［検索］で
+                    立てた赤いピンの場所をクリックして◎を置く（§30-39-4 4 の「番号なし」は改めた）。
                  🔴 ▼の器（.sg-more-g）は app.js の sgBuildMore が**その場所へ**
                     ボタン＋箱を挿して中身を移す（index.html の並びがそのまま出る）。 -->
             <div class="sg-pins">
@@ -1102,7 +1104,7 @@
             <div class="sg-find">
               <input type="text" id="sgAddrLot" placeholder="住所を入れて［検索］">
               <button id="sgSearchLot" class="go"
-                title="住所の場所へ地図を動かし、◎マーカーを置きます（ずれていればドラッグで直せます）">検索</button>
+                title="住所の場所へ地図を動かし、赤いピンを立てます">検索</button>
             </div>
 
             <div class="sg-pins">
@@ -1297,6 +1299,24 @@
                  🔴 index.html には data-icon（絵の鍵）と data-tool（動き）だけを書く。
                     絵も文言もここには書かない（道具メニューと必ず同じ物になる）。
                  🔴 並びは §30-22-3 2 の表のとおり。小見出し（.sg-tk）は残す。 -->
+            <!-- 🔒 §30-53 5 ②（2026-10-03 オーナー指示）: 道路・建物の［固定｜解除］＋説明文。
+                 ▼「文字や線を足す・消す・動かす」（#sgMoreSzTools の器）の**直上**。
+                 🔴 左メニューの切替（#btnShozaizu の直下）と**同じ部品・同じ関数**
+                    （値は紙の szLock 1つ・app.js szLockSync が2か所を揃える）。 -->
+            <div class="sz-lock">
+              <div class="hz-auto-row">
+                <span class="hz-auto-k sz-lock-k">道路・建物</span>
+                <span class="seg hz-auto-seg sz-lock-seg">
+                  <button type="button" data-lock="1"
+                    title="所在図で作った道路・建物・川の線を動かないようにします（文字や印は動かせます）">固定</button>
+                  <button type="button" data-lock="0"
+                    title="所在図で作った道路・建物・川の線も選んで動かしたり消したりできます">解除</button>
+                </span>
+              </div>
+              <p class="sg-note">所在図を作った直後は、道路・建物・川の線は固定していて
+                動きません（文字や印だけ動かせます）。道路や建物を動かしたい時は［解除］に
+                してください</p>
+            </div>
             <div class="sg-more-g" id="sgMoreSzTools">
             <div class="sg-tools">
               <span class="sg-tk">道路や建物、文字や線を足す・消す</span>
@@ -1901,11 +1921,11 @@
           <div class="sg-find">
             <input type="text" id="sideAddrHome" placeholder="住所を入れて［検索］">
             <button id="sideSearchHome" class="go"
-              title="住所の場所へ地図を動かし、◎マーカーを置きます（ずれていればドラッグで直せます）">検索</button>
+              title="住所の場所へ地図を動かし、赤いピンを立てます">検索</button>
           </div>
           <!-- 🔒 2026-09-06 / §30-28-2 1: マーカー設置はガイダンス①と同じ navPinArm()
-               （押す → 地図をクリック）。住所で見つからない時・置き直したい時に使う
-               （🔒 §30-39-3 4: ふだんは［検索］で◎が置かれる）。
+               （押す → 地図をクリック）。
+               （🔒 §30-52: ［検索］は赤いピンを立てるだけ＝◎はここで置く）。
                🔴 id はガイダンス①の #sgPinHome / #sgPinLot と重複できないので別名にし、
                   navRenderPins() が両方の見た目（✓印・押している間の色）を揃える。
                🔴 class="tool" は付けない（.tool の共通ハンドラが data-tool を読んで
@@ -1920,7 +1940,7 @@
           <div class="sg-find">
             <input type="text" id="sideAddrLot" placeholder="住所を入れて［検索］">
             <button id="sideSearchLot" class="go"
-              title="住所の場所へ地図を動かし、◎マーカーを置きます（ずれていればドラッグで直せます）">検索</button>
+              title="住所の場所へ地図を動かし、赤いピンを立てます">検索</button>
           </div>
           <div class="sg-pins">
             <button id="sidePinLot" class="pin-btn wide"
@@ -1982,6 +2002,22 @@
           <button id="btnShozaizu" class="sg-wide"
             title="使用の本拠と駐車場の2点から、所在図の下書きを作ります（設定は開く盤で変えられます）"
             >所在図を作る</button>
+          <!-- 🔒 §30-53 5 ①（2026-10-03 オーナー指示）: 道路・建物の［固定｜解除］。
+               所在図の時だけ出す（CSS #editorView:not([data-kind="shozaizu"]) .sz-lock）。
+               🔴 見た目は §30-48 B 4 の自動描画と同じ部品（.hz-auto-row／.hz-auto-seg）。
+               🔴 値は紙の szLock 1つ・どちらかは data-lock（属性）＝表示文字では分岐しない
+                  （app.js szLockSet／szLockSync・ガイダンス④の切替と同じ関数）。 -->
+          <div class="sz-lock">
+            <div class="hz-auto-row">
+              <span class="hz-auto-k sz-lock-k">道路・建物</span>
+              <span class="seg hz-auto-seg sz-lock-seg">
+                <button type="button" data-lock="1"
+                  title="所在図で作った道路・建物・川の線を動かないようにします（文字や印は動かせます）">固定</button>
+                <button type="button" data-lock="0"
+                  title="所在図で作った道路・建物・川の線も選んで動かしたり消したりできます">解除</button>
+              </span>
+            </div>
+          </div>
               <button type="button" class="sg-more-x" data-tmore-x="pin">閉じる ▲</button>
             </div>
           </div><!-- /#sideMore_pin（🔒 §30-48 A） -->

@@ -109,6 +109,12 @@
     /* 🔒 §28-14 ①-4: マーカーの形・色を**置く前に**選んだ時の控え（画面だけ）。
        置いた瞬間に points[key].mark へ移す（onNavPinPlace）＝案件に残るのはそちら。 */
     markPick: { home: null, lot: null },
+    /* 🔒 §30-52 2〜3: 住所検索の結果に立てる**赤いピン**（地点ごとに1本・緯度経度だけ）。
+       画面の目印で図形ではない＝紙に出ない・案件に保存しない。消えるのはその地点の◎を
+       置いた時（placePointAt／placeSamePoint）と案件を開いた／閉じた時。 */
+    searchPin: { home: null, lot: null },
+    /* 🔒 §30-53 3: 「道路・建物は固定中です」の一言を最後に出した時刻（10 秒に 1 回まで） */
+    lockHintAt: 0,
     /* 🔒 §30-24-1: **次に描く主役の多角形**の書式（太さ／色／斜線）。
        画面の状態なので案件には保存しない（何も選んでいない時に書式のアイコンを
        押すとここが変わり、次に描く多角形がこの書式で出る）。 */
@@ -1565,6 +1571,8 @@
     /* 🔒 §28-6 ⑤: 保存した段は消さない（次にこの案件を開いた時に続きから） */
     navClose(true);            // 掴んだままの地図クリックを残さない（§18）
     state.current = null;
+    clearSearchPin();          // 🔒 §30-52 3: 案件を閉じたら検索の赤いピンも消す
+    renderSearchPins();        // （state.current が無いので両方隠れる）
     renderCaseList();
     showView('list');
     if (p && p.then) p.then(afterCaseOp, afterCaseOp);
@@ -2199,6 +2207,15 @@
         autoDrawSet(seg.dataset.auto, b.dataset.on === '1');
       });
     });
+    /* 🔒 §30-53 5: 道路・建物の［固定｜解除］（左メニュー・ガイダンス④の2か所＝同じ配線）。
+     * どちらかは data-lock（属性）＝表示文字では分岐しない。処理は szLockSet の1か所。 */
+    document.querySelectorAll('.sz-lock-seg').forEach(function (seg) {
+      seg.addEventListener('click', function (e) {
+        var b = e.target && e.target.closest && e.target.closest('button[data-lock]');
+        if (!b || b.disabled) return;
+        szLockSet(b.dataset.lock === '1');
+      });
+    });
     /* 🔒 §30-48 D: 説明文の ON・OFF（字幕の中の行と地図の左上の切替＝同じ配線）。
      * どちらかは data-capsw（属性）。処理は capSet の1か所。 */
     document.querySelectorAll('[data-capsw]').forEach(function (b) {
@@ -2237,7 +2254,7 @@
     $('sgPinLot').addEventListener('click', function () { navPinBtn('lot', this); });
     /* 🔒 §30-39-2 3: ［検索］は4つ（本拠・駐車場 × ガイダンス①・道具メニュー）。
      * 欄の配線は ADDR_FIELDS の所1か所にまとめてある。ここはボタンだけ
-     * （中身は doSearch(key)＝地図を動かして、その場所に◎を置く・§30-39-3）。 */
+     * （中身は doSearch(key)＝地図を動かして、その場所に赤いピンを立てる・🔒 §30-52）。 */
     Object.keys(SEARCH_BTNS).forEach(function (key) {
       SEARCH_BTNS[key].forEach(function (id) {
         var b = $(id);
@@ -2331,9 +2348,10 @@
       }
     });
     /* 🔒 §30-13-2 所在図④-2: 本文の［所在図プレビュー］（旧 #sgPrev）は削除した。
-     * ⑧は下部（#sgFoot の data-act="szPrev"）＝ sgAct が navShowPreview('shozaizu') を呼ぶ。
+     * ⑨（🔒 §30-52 5 で番号が繰り下がった）は下部（#sgFoot の data-act="szPrev"）
+     * ＝ sgAct が navShowPreview('shozaizu') を呼ぶ。
      * 右パネルの #szPrev は従来どおり runShozaizuPreview のまま。 */
-    /* 🔒 §30-13-3: 所在図プレビューの下部ボタン（ガイダンス⑧から出した時だけ出る）。 */
+    /* 🔒 §30-13-3: 所在図プレビューの下部ボタン（ガイダンス⑨から出した時だけ出る）。 */
     $('exPreviewFoot').addEventListener('click', function (e) {
       var b = e.target && e.target.closest && e.target.closest('button[data-exfoot]');
       if (b && !b.disabled) exFootAct(b.dataset.exfoot);
@@ -4272,6 +4290,47 @@
     });
   }
 
+  /* ===== 🔒 §30-53（2026-10-03 オーナー指示）: 所在図の道路・建物を固定 =====
+   * 値は紙ごとの sheet.szLock 1つ（true＝固定・案件に保存）。印が無い紙（以前に作った
+   * 案件・新しい紙）は**固定**として扱う（§30-53 4）。
+   * 🔴 何が固定かの判定は editor.js の isLockedGen 1か所。ここは紙の値を editor へ写し、
+   *    切替（左メニュー・ガイダンス④の2か所）の見た目を揃えるだけ。
+   * 🔴 切替のどちらかは data-lock（属性 '1'＝固定／'0'＝解除）で受ける＝表示文字では分岐しない。 */
+  var LOCK_HINT_MS = 10000;        // 🔒 §30-53 3: 「固定中です」の一言は 10 秒に 1 回まで
+
+  /** その紙が固定か（szLock が false の時だけ解除） */
+  function szLockOn(sh) { return !(sh && sh.szLock === false); }
+
+  /** 切替の見た目をいまの紙の値から引き直す（2か所・同じ関数） */
+  function szLockSync() {
+    var on = szLockOn(curSheet());
+    document.querySelectorAll('.sz-lock-seg button[data-lock]').forEach(function (b) {
+      b.classList.toggle('is-active', (b.dataset.lock === '1') === on);
+    });
+  }
+
+  /** いまの紙の値を editor へ写して見た目も揃える（紙・図の切替・生成・切替の後） */
+  function szLockApply() {
+    if (state.editor) state.editor.setGenLocked(szLockOn(curSheet()));
+    szLockSync();
+  }
+
+  /** 切替を押した時（on＝固定） */
+  function szLockSet(on) {
+    var c = state.current, sh = curSheet();
+    if (!c || !sh) return;
+    sh.szLock = !!on;
+    szLockApply();
+    Store.autosave(c);
+  }
+
+  /** 🔒 §30-53 4: 所在図を作ったら固定へ戻す（全部作り直し・差分・標準に戻す のどれでも） */
+  function szLockAfterGen(sh) {
+    if (!sh) return;
+    sh.szLock = true;
+    if (sh === curSheet()) szLockApply();
+  }
+
   /**
    * 🔒 §30-48 B 7: 枠の範囲の建物の輪郭を、地理院のベクトルタイルから線だけの多角形で置く。
    * 取得口は自動下書きと同じ（AutoDraft.fetchGsiShapes・建物だけ）・書式も自動下書きの建物と同じ。
@@ -5178,9 +5237,10 @@
     if (!c) return Promise.resolve(null);
     if (state.kind !== 'shozaizu') switchKind('shozaizu');
     if (!c.points.home && !c.points.lot) {
-      /* 🔒 §30-39-4 4: 促し方を新しい作法（住所を検索すると◎が置かれる）に合わせる */
+      /* 🔒 §30-52（2026-10-03）: 検索は赤いピンを立てるだけ。◎は［マーカー設置］で置く */
       setSzResult('先にマーカーを置いてください（左の住所の欄に住所を入れて'
-        + '［検索］を押すと、その場所に◎が置かれます）。');
+        + '［検索］を押すと赤いピンが立ちます。［使用の本拠マーカー設置］を押して'
+        + '地図をクリックしてください）。');
       return Promise.resolve(null);
     }
     if (!c.points.home) {
@@ -5525,6 +5585,9 @@
           if (isFinite(autoNow)) shGen.szNameAuto[autoId] = autoNow;
           else delete shGen.szNameAuto[autoId];
         }
+        /* 🔒 §30-53 4: 所在図を作るたびに道路・建物は固定へ戻す
+         * （全部作り直し・差分作り直し・標準に戻す＝どれもこの完了の1か所を通る） */
+        szLockAfterGen(shGen);
         Store.autosave(state.current);
       }
       /* 🔒 §23-9 / 2026-09-03: 道路は「段の名前・描き方」を添える */
@@ -5629,8 +5692,9 @@
     var c = state.current;
     if (!c) return;
     if (!c.points.lot) {
-      // 🔒 §30-39-4 4: 促し方を新しい作法（住所を検索すると◎が置かれる）に合わせる
-      hint('先に駐車場のマーカーを置いてください（左の「駐車場住所」の欄に住所を入れて［検索］）', 4000);
+      // 🔒 §30-52: 検索は赤いピンを立てるだけ。◎は［駐車場マーカー設置］で置く
+      hint('先に駐車場のマーカーを置いてください（左の「駐車場住所」の欄に住所を入れて'
+        + '［検索］→［駐車場マーカー設置］を押して地図をクリック）', 4000);
       return;
     }
     $('btnAuto').disabled = true;
@@ -7617,9 +7681,9 @@
 
   /**
    * 🔒 §30-39-3 1（2026-09-19 オーナー指示）: **緯度経度を受けて、その地点の
-   * マーカーを作る（既にあれば置き直す）**。呼ぶのは2か所:
-   *   ・［○○マーカー設置］→ 地図クリック（onNavPinPlace）
-   *   ・住所検索（doSearch）＝検索した場所に◎を置く
+   * マーカーを作る（既にあれば置き直す）**。
+   * 🔒 §30-52 7（2026-10-03）: 呼ぶのは［○○マーカー設置］→ 地図クリック（onNavPinPlace）
+   *   だけになった（住所検索は赤いピンを立てるだけで、ここを呼ばない）。手置きの唯一の口。
    * 規則（同一住所の解除・文字・印・追従・自動保存）を2つ書かないため、
    * 「地点を作る」処理はここ1本だけにする。
    * 🔴 置いた後の一言（hint）は**呼ぶ側**が出す（置き方で文が違う）。
@@ -7647,6 +7711,9 @@
     state.markPick[key] = null;
     /* 🔒 §30-22-1 6: どちらかを置き直したら「同一住所」は外れる */
     c.points.same = false;
+    /* 🔒 §30-52 3: その地点の◎を置いたら、その地点の赤いピンは役目を終える
+     * （下の refreshPoints → renderOverlay で消える） */
+    clearSearchPin(key);
     navPinArm(null);
     /* 🔒 §30-24-3: 置き直しでも文字は必ず1つずつある
      * （leaveSamePoint が置いた方の文字を取り除いた直後の出口でもある）。
@@ -7698,6 +7765,7 @@
       state.markPick[key] = null;
     });
     c.points.same = true;
+    clearSearchPin();        // 🔒 §30-52 3: 同一住所は2地点とも置いた＝赤いピンは両方消す
     navPinArm(null);
     /* 🔒 §30-24-3: 全部消した後の紙に、文字を2つ（本拠・駐車場）置き直す
      * （正典 §30-24-2「全部消してから置く」）。消した紙は白紙と見分けが付かない
@@ -8061,7 +8129,7 @@
   function navShowPreview(only) {
     if (!state.current) return;
     /* 🔒 §30-27-1 1: プレビューは**1つの画面**。ここは「その図から見せる」だけを頼む。
-     * 🔒 §30-13-3: 所在図⑧から出した時だけ下部の行き先ボタン列を付ける。 */
+     * 🔒 §30-13-3: 所在図⑨（🔒 §30-52 5）から出した時だけ下部の行き先ボタン列を付ける。 */
     openPreview({ kind: only, foot: only === 'shozaizu', nav: true });
   }
 
@@ -9418,7 +9486,7 @@
         navRunShozaizu();        // 生成 → ③へ
         break;
       case 'szNo': navSkipShozaizu(); break;
-      /* 🔒 §30-13-2 所在図④-2 / §30-13-3: ⑧＝所在図だけのプレビュー。
+      /* 🔒 §30-13-2 所在図④-2 / §30-13-3: ⑨（🔒 §30-52 5）＝所在図だけのプレビュー。
        * 下部のボタン（PDF保存・画像保存・配置図ガイダンスへ進む…）はここから出した時だけ出る。 */
       case 'szPrev': navShowPreview('shozaizu'); break;
       /* 🔒 §30-1: 配置図①から所在図の案内へ戻る（保存された段・無ければ①）。
@@ -9437,7 +9505,7 @@
    * オーナー指示（🔒 §30-12-1）: 「青色に強調されたボタンを順に押していくと、
    * 所在図が出来上がります。」＝**やること**にだけ番号を付け、次に押す1つを青くする。
    *
-   * 🔴 番号の表は**ここ1か所**。番号の割り当ては §30-11 の表（所在図①〜⑧・
+   * 🔴 番号の表は**ここ1か所**。番号の割り当ては §30-11 の表（所在図①〜⑨＝🔒 §30-52 5・
    *    配置図①〜⑯＝🔒 §30-25-31 で②の［次へ］が増えて⑮→⑯）、
    *    字幕の指示文は §30-12-3 の表。画面（バッジ）も字幕も、この表だけを読む。
    * 各項目:
@@ -9467,26 +9535,44 @@
   function sgPast(k) { return function () { return !!(state.nav && state.nav.step > k); }; }
 
   var SG_NUM = {
-    /* ---- 所在図①〜⑧（🔒 §30-11 の表・「やること」だけ／say は §30-12-3 の表） ---- */
+    /* ---- 所在図①〜⑨（🔒 §30-11 の表・「やること」だけ／say は §30-12-3 の表）
+     * 🔒 §30-52 5: ①②の段に［○○マーカー設置］が2つ増えて⑦→⑨になった ---- */
     shozaizu: [null,
-      /* 🔒 §30-39-4（2026-09-19 オーナー指示）: ①＝本拠の検索・②＝駐車場の検索。
-       * 検索すると◎が置かれるので、済み判定はその地点があるかで見る。
-       * 🔴 ［○○マーカー設置］は**番号なし**（§30-39-4 4）＝住所で見つからない時・
-       *    置き直したい時の手置き。案内数字は［検索］に付く。 */
+      /* 🔒 §30-52 5（2026-10-03 オーナー指示）: ①本拠の検索 → ②［使用の本拠マーカー設置］
+       * → ③駐車場の検索 → ④［駐車場マーカー設置］→ ⑤［次へ］。
+       * 🔴 §30-39-4 4「マーカー設置は番号なし」はこの指示で改めた（検索は赤いピンを
+       *    立てるだけ＝◎は［マーカー設置］で置く）。
+       * 済み判定＝検索は「その地点の赤いピンがある または ◎がある」／
+       *          マーカー設置は「その地点の◎がある」。
+       * 🔒 §30-17-1: 改行の印「／」・行間つき改行の印「／／」（表が正）。 */
       { step: 1, sel: '#sgSearchHome', label: '使用の本拠住所を検索',
         /* 🔒 §30-25-23 4: 最初の案内に「いつでも選択に戻れる」の一言を足す */
         say: '使用の本拠の住所を入力し、／［検索］を押してください。'
-           + '／その場所に使用の本拠の◎マーカーが置かれます'
-           + '／／住所で見つからない時は［使用の本拠マーカー設置］を押してから地図をクリック'
+           + '／赤いピンが検索結果の場所に立ちます'
+           + '／／［使用の本拠マーカー設置］を押して、'
+           + '／ピンの場所（またはずらした場所）をクリックしてください'
            + '／／描いた物を動かしたい時は、上の［選択］をいつでも押せます',
+        done: function () {
+          return !!(state.current && (state.searchPin.home || state.current.points.home));
+        } },
+      /* 🔒 §30-52 5: ②④（マーカー設置）は strict＝後ろの番号が済んでも自分の◎が無ければ済みにしない */
+      { step: 1, sel: '#sgPinHome', strict: true, label: '使用の本拠マーカー設置',
+        say: '［使用の本拠マーカー設置］を押して、'
+           + '／赤いピンの場所（またはずらした場所）をクリックしてください'
+           + '／／住所で見つからない時も、押してから地図をクリックすれば置けます',
         done: function () { return !!(state.current && state.current.points.home); } },
-      /* 🔒 §30-13-1: ②④⑤⑦⑧の指示文はこの表で差し替え済み（§30-12-3 の表の上書き）。
-       * 🔒 §30-17-1: さらに改行の印「／」・行間つき改行の印「／／」を入れた（表が正）。 */
       { step: 1, sel: '#sgSearchLot', label: '駐車場住所を検索',
         say: '駐車場の住所を入力し、／［検索］を押してください。'
-           + '／その場所に駐車場の◎マーカーが置かれます'
-           + '／／住所で見つからない時や置き直したい時は、'
-           + '／［駐車場マーカー設置］を押してから地図をクリック',
+           + '／赤いピンが検索結果の場所に立ちます'
+           + '／／［駐車場マーカー設置］を押して、'
+           + '／ピンの場所（またはずらした場所）をクリックしてください',
+        done: function () {
+          return !!(state.current && (state.searchPin.lot || state.current.points.lot));
+        } },
+      { step: 1, sel: '#sgPinLot', strict: true, label: '駐車場マーカー設置',
+        say: '［駐車場マーカー設置］を押して、'
+           + '／赤いピンの場所（またはずらした場所）をクリックしてください'
+           + '／／住所で見つからない時も、押してから地図をクリックすれば置けます',
         done: function () { return !!(state.current && state.current.points.lot); } },
       { step: 1, sel: '#sgFoot button[data-act="next"]', label: '次へ', fin: true,
         say: 'マーカーの設置場所はドラッグで修正できます。／／よければ［次へ］を押してください',
@@ -9507,18 +9593,20 @@
            + '／交差点を増やしたり、文字の位置や建物名の位置を動かしたりできます。'
            + '／／ここでは、80％完成を目指してください',
         done: sgPast(3) },
-      /* 🔒 §30-13-2 所在図④-2/3: ⑧は**下部の［所在図プレビュー］**。
+      /* 🔒 §30-13-2 所在図④-2/3: ⑨（🔒 §30-52 5 で⑦→⑨）は**下部の［所在図プレビュー］**。
        * 🔒 §30-25-29（2026-09-14 オーナー指示）: 押したら薄い色（済み）にする。
        * 🔴 done() を持たせない＝「押した記録」（state.sgHit・sgMarkHit）で済みになる
-       *    ＝鍵の作法は他の番号と同じ1か所。⑧は最後の番号なので次の青は無い。
-       *    プレビューを閉じても薄いまま（案件を開き直すと sgResetHits で戻る）。 */
+       *    ＝鍵の作法は他の番号と同じ1か所。⑨は最後の番号なので次の青は無い。
+       *    プレビューを閉じても薄いまま（案件を開き直すと sgResetHits で戻る）。
+       * 🔒 §30-53 6: 道路・建物の固定の1行を最後に足す。 */
       { step: 4, sel: '#sgFoot button[data-act="szPrev"]', label: '所在図プレビュー', fin: true,
         say: '左メニューの「文字や線を足す・消す・動かす」を開くと、／文字の位置や'
            + '建物名の位置を動かせる選択ツール、／必要のない文字や線を消す消しゴムツール、'
            + '／文字を追記する文字ツールが使えます。／／直線ツールで道路を描く、'
            + '四角ツールで建物を描くこともできます。／／「下敷きの地図を変える」と、'
            + '地図から得られる情報を元に／書き加えることができます。'
-           + '／／できあがったら［所在図プレビュー］を押してください' }
+           + '／／できあがったら［所在図プレビュー］を押してください'
+           + '／／道路や建物は固定中です。動かしたい時は「道路・建物」を［解除］にしてください' }
     ],
     /* ---- 配置図①〜⑯（同上・🔒 §30-25-31 で②の［次へ］が増えて⑮→⑯） ---- */
     haichizu: [null,
@@ -10069,6 +10157,8 @@
     var it = SG_NUM[fig][i];
     if (!it) return false;
     if (sgNumSelfDone(fig, i)) return true;
+    /* 🔒 §30-52 5: strict の番号は自分の判定だけ（後ろの番号からの推定はしない） */
+    if (it.strict) return false;
     var list = SG_NUM[fig] || [];
     for (var j = i + 1; j < list.length; j++) {
       var b = list[j];
@@ -10602,9 +10692,9 @@
       var miss = [];
       if (!(c && c.points.home)) miss.push('使用の本拠');
       if (!(c && c.points.lot)) miss.push('駐車場');
-      /* 🔒 §30-39-4 4: 促し方を新しい作法（住所を検索すると◎が置かれる）に合わせる */
+      /* 🔒 §30-52: 検索は赤いピンを立てるだけ。◎は［○○マーカー設置］で置く */
       return miss.join('と') + 'のマーカーがまだ置かれていません'
-        + '（住所を入れて［検索］を押すと、その場所に◎が置かれます）';
+        + '（［検索］で赤いピンが立ちます。［…マーカー設置］を押して地図をクリック）';
     }
     if (n === 2 || n === 5) {
       /* 🔒 §28-3 / §29-1 ⑤: どちらも「この枠の中が紙に出る」を決める段 */
@@ -10982,7 +11072,7 @@
 
   /**
    * ［所在図プレビュー］（§28-4 の右パネル #szPrev）。
-   * 🔒 §30-13-2: ④の本文にあった #sgPrev は削除した（⑧は下部の data-act="szPrev"
+   * 🔒 §30-13-2: ④の本文にあった #sgPrev は削除した（⑨＝🔒 §30-52 5 は下部の data-act="szPrev"
    *    ＝ navShowPreview('shozaizu')。左面を隠さず下部ボタンが付く形）。
    */
   function runShozaizuPreview() {
@@ -11258,6 +11348,8 @@
     });
     // 🔒 §28-14 ①-4: 置く前のマーカーの種類の控えは案件をまたいで残さない
     state.markPick = { home: null, lot: null };
+    // 🔒 §30-52 2〜3: 検索の赤いピンは保存しない画面の目印＝案件を開き直すと無い
+    clearSearchPin();
     // 🔒 §30-38-5 1: 「頂点の足し引き」の一言も案件をまたいで残さない
     state.vertexHintFor = '';
 
@@ -11521,6 +11613,14 @@
       updateDrawBadge();
     });
     state.editor.on('hint', function (t) { hint(t, 4500); });
+    /* 🔒 §30-53 3: 固定中の道路・建物をクリックした時（他に当たる物が無い時）の一言。
+     * 気づける唯一の案内なので文言はこの1か所・同じ一言は 10 秒に 1 回まで。 */
+    state.editor.on('lockedHit', function () {
+      var now = Date.now();
+      if (now - state.lockHintAt < LOCK_HINT_MS) return;
+      state.lockHintAt = now;
+      hint('道路・建物は固定中です。動かす時は「道路・建物」を［解除］にしてください', 4500);
+    });
     state.editor.on('tool', function (t) {
       document.querySelectorAll('.tool').forEach(function (b) {
         b.classList.toggle('is-active', b.dataset.tool === t);
@@ -12012,6 +12112,8 @@
     /* 🔒 §30-48 B 5: 紙・図の種類を切り替えた時（案件を開いた時も）は、
      * 自動描画のトグルをその紙の中身から引き直す */
     autoDrawSync();
+    /* 🔒 §30-53 4・7: 道路・建物の固定も紙ごと＝その紙の値を editor へ写す */
+    szLockApply();
   }
 
   /** ブラシ3段の選択状態を画面に反映（🔒 §23-3） */
@@ -12398,6 +12500,9 @@
       if (src.szNameAuto && typeof src.szNameAuto === 'object') {
         sh.szNameAuto = JSON.parse(JSON.stringify(src.szNameAuto));
       }
+      /* 🔒 §30-53 4: 道路・建物の固定も写す（写した紙は同じ生成物を持つ）。
+       * 無い＝固定なので、解除している時だけ写せば足りる。 */
+      if (src.szLock === false) sh.szLock = false;
     }
     list.splice(at + 1, 0, sh);
     c.active[state.kind] = at + 1;
@@ -12658,14 +12763,12 @@
   /**
    * 住所検索（正典 §18-2〜4）。相手は 'home'（使用の本拠）／'lot'（駐車場）。
    *
-   * 🔒 §30-39-3（2026-09-19 オーナー指示）: **検索したら、その場所に◎を置く**。
-   *   住所を検索 → 地図をその場所へ（ZL17・§18-4）→ その地点のマーカーを置く。
-   *   既に置いてあれば置き直す（検索結果へ動く）。
-   *   🔴 置き方は［○○マーカー設置］→ 地図クリックと**同じ関数**（placePointAt）
-   *      ＝同一住所の解除・文字・印・追従・自動保存の規則が同じ。
-   *   🔴 §18-ap／§28-14 ①-1／2026-09-06 の「検索でマーカーは置かない」は
-   *      この指示で**改めた**。ジオコーダの結果は番地までなので、置いた◎は
-   *      ドラッグで直せることを一言で促す（§30-39-3 2）。
+   * 🔒 §30-52（2026-10-03 オーナー指示）: **検索したら赤いピンを立てる**（◎は置かない）。
+   *   住所を検索 → 地図をその場所へ（ZL17・§18-4）→ その場所に赤いピン（画面の目印）。
+   *   ◎は［○○マーカー設置］→ 地図クリック（placePointAt）で本人が置く。
+   *   🔴 §30-39-3「検索したら◎を置く」はこの指示で**改めた**（§18-ap の「検索では
+   *      置かない・本人が地図を見て置く」へ戻し、目印の赤いピンを足した）。
+   *   🔴 placePointAt は呼ばない＝ points に触らない（persistSheetState も要らない）。
    */
   function doSearch(key) {
     if (!state.current) return;
@@ -12689,12 +12792,13 @@
       }
       // 見つかった場所へ寄る（ZL17・§18-4）
       var ll = { lat: res[0].lat, lng: res[0].lng };
+      // 🔒 §30-52 1・3: ピンを先に立てる（setView の 'change' → renderOverlay で描かれる）
+      state.searchPin[key] = ll;
       state.map.setView(ll, SEARCH_ZOOM);
-      // 🔒 §30-39-3 1: その場所にマーカーを置く（手で置く時とまったく同じ関数）
-      placePointAt(key, ll);
-      searchMsg(ADDR_JA[key] + 'マーカーを置きました。位置がずれていれば'
-        + 'マーカーをドラッグで直してください');
-      persistSheetState();      // 中で Store.autosave も呼ぶ
+      renderOverlay();          // 寄る先が今と同じ場所でも、ピンは必ず描く
+      // 🔒 §30-52 4: 呼び名は ADDR_JA・ボタン名は pinLabel（どちらも表の1か所）
+      searchMsg('地図を動かしました。赤いピンが検索結果の場所です。［'
+        + pinLabel(key) + 'マーカー設置］を押して、地図をクリックしてください');
       /* 誘導①の表示（状態の一言）を引き直す。
          navRender() は誘導が閉じていれば何もしない（先頭で早期 return） */
       if (state.nav) navRender();
@@ -12827,6 +12931,42 @@
                             label: t, label2: t2 };
       makePinDraggable(g, key);
     });
+
+    /* 🔒 §30-52 1〜2: 住所検索の結果に立てる**赤いピン**（地図アプリの形＝丸い頭に
+     * 尖った足・足の先 (0,0) が検索結果の点）。既存の .pin と同じ層（overlay の SVG）。
+     * 🔴 .hit を付けない＝ pointer-events は none（.mv-overlay の既定）＝ピンの上の
+     *    クリックは地図のクリック（［マーカー設置］→ピンの上をクリックで置ける）。 */
+    state.searchPinEls = {};
+    ['home', 'lot'].forEach(function (key) {
+      var g = svgEl('g', { class: 'search-pin search-pin-' + key });
+      g.appendChild(svgEl('path', { class: 'search-pin-body',
+        d: 'M0 0C-2.2-7.5-11-13.5-11-23A11 11 0 1 1 11-23C11-13.5 2.2-7.5 0 0Z' }));
+      g.appendChild(svgEl('circle', { class: 'search-pin-dot', cx: 0, cy: -23, r: 4 }));
+      g.style.display = 'none';
+      svg.appendChild(g);
+      state.searchPinEls[key] = g;
+    });
+  }
+
+  /** 🔒 §30-52 3: 赤いピンを置き直す（renderOverlay＝地図を動かすたびに通る1か所から呼ぶ） */
+  function renderSearchPins() {
+    var els = state.searchPinEls || {};
+    ['home', 'lot'].forEach(function (key) {
+      var g = els[key];
+      if (!g) return;
+      var ll = state.searchPin[key];
+      if (!ll || !state.current || !state.map) { g.style.display = 'none'; return; }
+      var s = state.map.project(ll.lat, ll.lng);
+      g.style.display = '';
+      g.setAttribute('transform', 'translate(' + s.x.toFixed(1) + ','
+        + s.y.toFixed(1) + ')');
+    });
+  }
+
+  /** 🔒 §30-52 3: 赤いピンを消す（key 省略＝両方）。描き直しは呼ぶ側の renderOverlay */
+  function clearSearchPin(key) {
+    if (key) state.searchPin[key] = null;
+    else state.searchPin = { home: null, lot: null };
   }
 
   /**
@@ -13182,6 +13322,8 @@
     /* 🔒 §30-32-6 3: ［マーカーを表示］は「消した紙にいる時だけ」＝紙・図が変わる
      * たびに引き直す。ここ（画面を引き直す1か所）に置けば取りこぼしが無い。 */
     sgSyncPinShow();
+    /* 🔒 §30-52 3: 検索の赤いピンも画面を引き直すこの1か所で置き直す（地図に付いてくる） */
+    renderSearchPins();
     /* 🔒 §28-3（Fable 追加提案）: ②の「2つとも枠の中か」は**常時判定**。
      * 地図を動かすたびに枠も判定も動くので、枠を引くのと同じ場所で引き直す。 */
     if (navOnSide()) sgRenderStatus();

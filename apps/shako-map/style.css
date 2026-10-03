@@ -1862,6 +1862,16 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
    🔴 色は app.js の syncPinLook が Editor.MARK.colors から入れる（表は1か所）。 */
 .pin-box { fill: #fff; stroke: #111; stroke-width: 2.4; }
 .pin-hatch { fill: none; stroke: #111; stroke-width: 1.4; }
+/* 🔒 §30-52 1〜2: 住所検索の結果に立てるピン（本拠＝青・駐車場＝橙茶）（地図アプリの形・足の先が検索結果の点）。
+   🔴 掴めない目印（.hit を付けない＝ .mv-overlay の pointer-events:none のまま）。
+      ピンの上のクリックは地図のクリック＝［マーカー設置］でそのまま置ける。 */
+.search-pin { pointer-events: none; }
+.search-pin-body { fill: #e53935; stroke: #fff; stroke-width: 2; }
+/* 🔒 §30-52 2（2026-10-03 オーナー指示「本拠と駐車場の検索後アイコンの色をかえて」）:
+   ピンの色＝その地点の◎の印の色（.pin-home／.pin-lot の pin-core と同じ値＝本拠は青・駐車場は橙茶）。 */
+.search-pin-home .search-pin-body { fill: var(--acc); }
+.search-pin-lot .search-pin-body { fill: #b8460e; }
+.search-pin-dot { fill: #fff; }
 .pin-label {
   font: 700 13px "Yu Gothic UI", "Meiryo", sans-serif;
   fill: #111;
@@ -3282,6 +3292,15 @@ p.sg-tk { margin: 10px 0 4px; }
 .seg.hz-auto-seg button.is-active { background: var(--kind-line); border-color: var(--kind-line); }
 /* 取りに行っている間だけ出る一言（§30-48 B 8） */
 .hz-auto-busy { font-size: 11.5px; color: var(--mut); margin: 6px 0 0; }
+/* 🔒 §30-53 5: 所在図の道路・建物［固定｜解除］（左メニュー・ガイダンス④）。
+   部品は自動描画の行（.hz-auto-row／.hz-auto-k／.hz-auto-seg）をそのまま使う。
+   🔴 所在図の時だけ出す。判定は #editorView の data-kind（データ）だけ・hidden 属性は使わない
+      （.side-hz の逆＝ [hidden] の !important と取り合わない）。 */
+#editorView:not([data-kind="shozaizu"]) .sz-lock { display: none; }
+.sz-lock { margin: 6px 0 0; }
+/* 見出しが「道路・建物」と長いので、自動描画の 3em の幅を外す */
+.hz-auto-k.sz-lock-k { flex: 0 0 auto; }
+.sz-lock .sg-note { margin-top: 4px; }
 .tool-row {
   display: flex;
   align-items: center;

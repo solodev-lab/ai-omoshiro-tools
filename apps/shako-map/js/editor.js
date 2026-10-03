@@ -1282,6 +1282,10 @@
     /* 🔒 §30-22-1 4: ［多角形で描く］がどちらの地点の印を作るか。
      * app.js が道具を持ち替える時に入れる（既定は使用の本拠）。 */
     this.mainPolyKey = 'home';
+    /* 🔒 §30-53 4・7: いま開いている紙の「道路・建物を固定」（紙の sheet.szLock の控え）。
+     * 出どころは紙（app.js）1か所・app.js が紙の切替／生成／切替ボタンで setGenLocked を
+     * 通して写す。既定は固定（印が無い紙＝以前に作った案件も固定・§30-53 4）。 */
+    this.genLocked = true;
     this._numFrom = null;        // 番号割付の開始枠
     this.polygonMustClose = false;   // ウィザードの外周ステップでは必ず閉じる
     this._listeners = { change: [], select: [], tool: [], number: [], text: [],
@@ -2631,19 +2635,71 @@
    *   「見えている物が掴める」（§22-z の教訓: 描画・当たり判定・パン判定はセット）。
    * 🔴 選択・ドラッグ・消しゴム・採番・保管場所・パン判定は全部ここを通る。
    */
+  /* 🔒 §30-53 2・7: 固定中の物（isLockedGen）は**無い物**として扱う＝選べない・動かせない・
+   * 消しゴムで消せない・その上でドラッグすると地図が動く（_shouldPan もここを通る）。 */
   Editor.prototype.hitObject = function (px, py) {
+    return this._hitScan(px, py, false);
+  };
+
+  /**
+   * 🔒 §30-53 3: 固定中の物**だけ**を見た当たり（一言を出すかの判定にだけ使う）。
+   * 固定していない時は常に null。
+   */
+  Editor.prototype.hitLockedGen = function (px, py) {
+    return this.genLocked ? this._hitScan(px, py, true) : null;
+  };
+
+  /** 当たり判定の本体。locked＝true なら固定中の物だけ、false なら固定中の物を除いて見る */
+  Editor.prototype._hitScan = function (px, py, locked) {
     var i, o;
     for (i = this.objects.length - 1; i >= 0; i--) {
       o = this.objects[i];
       if (isRoad(o)) continue;                 // 道路は後回し（一番下の層）
+      if (this.isLockedGen(o) !== locked) continue;
       if (this._hitOne(o, px, py)) return o;
     }
     for (i = this.objects.length - 1; i >= 0; i--) {
       o = this.objects[i];
       if (!isRoad(o)) continue;
+      if (this.isLockedGen(o) !== locked) continue;
       if (this._hitOne(o, px, py)) return o;
     }
     return null;
+  };
+
+  /**
+   * 🔒 §30-53 1・7（2026-10-03 オーナー指示）: 所在図の道路・建物の固定。
+   * 判定は**ここ1か所**（紙の固定フラグ × データの条件）。当たり判定（hitObject）・
+   * 線分の当たり（hitSegment）・消しゴム・全選択・パン判定がこれを通る。
+   * 対象＝所在図の生成物（source:'shozaizu'）のうち文字でない物（道路・建物・川／水面／
+   *   等高線・鉄道・結線 role:'distance'）。
+   * 🔴 主役の印（role:'mainmark'＝■の四角・主役の多角形）は §30-53 1「動かせるまま」の
+   *    側なので除く（どちらも source:'shozaizu' を持つため、type だけでは外れない）。
+   */
+  Editor.prototype.isLockedGen = function (o) {
+    return !!(this.genLocked && o && o.source === 'shozaizu'
+              && o.type !== 'text' && o.role !== 'mainmark');
+  };
+
+  /**
+   * 🔒 §30-53 7: 固定の入り切り（app.js が紙の値を写す口）。
+   * 固定にした時は、選んでいた固定対象を選択から外す（掴めない物を選んだままにしない）。
+   */
+  Editor.prototype.setGenLocked = function (on) {
+    on = !!on;
+    var changed = (this.genLocked !== on);
+    this.genLocked = on;
+    if (!on) return;
+    var self = this, before = this.selection.length;
+    var keep = this.selection.filter(function (id) {
+      return !self.isLockedGen(self.byId(id));
+    });
+    if (keep.length === before) { if (changed) this.render(); return; }
+    // 🔴 selection は配列を差し替えてよい（objects と違い、外と参照を共有していない）
+    this.selection = keep;
+    this.clearStaggerMode();
+    this._emit('select', this.getSelected());
+    this.render();
   };
 
   Editor.prototype._hitOne = function (o, px, py) {
@@ -2758,19 +2814,22 @@
   Editor.prototype.hitSegment = function (px, py) {
     var r = this.edgeHandleR(), i, o, h;
     var sel = this.getSelected();
-    if (sel.length === 1) {
+    /* 🔒 §30-53 2・7: 固定中の物には頂点を足せない（判定は isLockedGen の1か所） */
+    if (sel.length === 1 && !this.isLockedGen(sel[0])) {
       h = this._segHitOne(sel[0], px, py, r);
       if (h) return h;
     }
     for (i = this.objects.length - 1; i >= 0; i--) {
       o = this.objects[i];
       if (isRoad(o)) continue;                 // 道路は後回し（一番下の層）
+      if (this.isLockedGen(o)) continue;
       h = this._segHitOne(o, px, py, r);
       if (h) return h;
     }
     for (i = this.objects.length - 1; i >= 0; i--) {
       o = this.objects[i];
       if (!isRoad(o)) continue;
+      if (this.isLockedGen(o)) continue;
       h = this._segHitOne(o, px, py, r);
       if (h) return h;
     }
@@ -3229,6 +3288,10 @@
         return;
       }
 
+      /* 🔒 §30-53 3: 掴める物が無く、固定中の物（道路・建物）に当たっていた時だけ
+       * 「固定中です」の一言を頼む（文言と 10 秒に 1 回の間引きは app.js 側）。 */
+      if (self.hitLockedGen(p.x, p.y)) self._emit('lockedHit');
+
       if (self.selection.length) {
         self.selection = [];
         self.clearStaggerMode();
@@ -3586,7 +3649,10 @@
       }
       if (ctrl && (e.key === 'a' || e.key === 'A')) {
         e.preventDefault();
-        self.selection = self.objects.map(function (o) { return o.id; });
+        /* 🔒 §30-53 2: 固定中の物は選べない＝全選択にも入れない */
+        self.selection = self.objects.filter(function (o) {
+          return !self.isLockedGen(o);
+        }).map(function (o) { return o.id; });
         self._emit('select', self.getSelected());
         self.render();
       }

@@ -231,6 +231,10 @@
         && (!s.szNameAuto || typeof s.szNameAuto !== 'object' || Array.isArray(s.szNameAuto))) {
       delete s.szNameAuto;
     }
+    /* 🔒 §30-53 4（2026-10-03）: 所在図の道路・建物の固定（app.js が書く・true＝固定）。
+     * 🔴 無い紙（この版より前の紙）は固定として扱う（app.js szLockOn）＝ここでは補わない。
+     *    真偽でない壊れた値だけ消す（消えた紙も固定）。 */
+    if (s.szLock !== undefined && typeof s.szLock !== 'boolean') delete s.szLock;
     if (!Array.isArray(s.attributions)) s.attributions = [];   // 出典（§24-3）
     if (!Array.isArray(s.objects)) s.objects = [];
     /* 🔴 null など「オブジェクトでない要素」だけ落とす。描画側（editor.js /
