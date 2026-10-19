@@ -38,9 +38,18 @@
    *      版2（12段の通し番号）→ 1〜4 は shozaizu / 5〜12 は haichizu の n−4
    *    🔴 読み替えた後、旧フィールド `navStep` は消す（同じ意味の値を2か所に置かない）。 */
   var NAV_STEP_VER = 3;
-  var NAV_STEPS = 12;                     // 段の総数（app.js の NAV.length と一致）
-  /* 図ごとの段の数（🔒 §30-1）。app.js の NAV の並び（①〜④＝所在図／⑤〜⑫＝配置図）と
-   * 対応する。範囲外の値は読み込みで捨てる（落とさない）。 */
+  /* 🔒 §45-4（2026-10-19 オーナー決定「9 は 7 に統合」）: v2 のページ（nav.page）の番号の版。
+   * 所在図ガイダンスは 15 → **14 ページ**（旧⑨「紙の向きを決める」を⑦へ統合・旧⑩〜⑮ → ⑨〜⑭）。
+   * 印 navPageVer を持たない案件の nav.page.shozaizu だけ 1 回読み替える（9 → 7・10 以上 → −1）。
+   * 配置図のページ（nav.page.haichizu）は番号が変わっていないので触らない。 */
+  /* 🔒 §50-2 B ⑭（2026-10-19）: 版 3＝所在図 14 → **13 ページ**（⑭「所在図の完成」を削除）。
+   * 印 2 の案件は所在図ページ 14 → 13。印なし→版 2 の読み替えの後に同じ（順に進める）。 */
+  var NAV_PAGE_VER = 3;
+  var NAV_STEPS = 12;                    // 旧の面の段の総数（①〜④＝所在図／⑤〜⑫＝配置図）
+  /* 図ごとの段の数（🔒 §30-1）。範囲外の値は読み込みで捨てる（落とさない）。
+   * 🔒 §33（C 段）: 旧の面は廃止。旧の段（nav.shozaizu／nav.haichizu）はここで検算して残し、
+   *    案件を開いた時に app.js guideFromOldSteps が v2 のページ（nav.page）へ読み替えて消す。
+   *    app.js では v2 のページの stage（1〜12）が navFigOf でこの区切りを使う。 */
   var NAV_FIG_LAST = { shozaizu: 4, haichizu: 8 };
 
   /** 通し番号（1〜12）→ 図ごとの段 {shozaizu|haichizu: n}（🔒 §30-1） */
@@ -59,7 +68,18 @@
       var v = Math.round(Number(nv[k]));
       if (v >= 1 && v <= NAV_FIG_LAST[k]) out[k] = v;
     });
-    return (out.shozaizu || out.haichizu) ? out : null;
+    /* 🔒 §33-5 10（ガイダンス v2・A 段）: v2 の進み具合は旧の段（nav.shozaizu 等）と
+     * **別の鍵** nav.page = {shozaizu: n}。ここでは「1 以上の整数」だけを残す
+     * （ページの数は app.js の GUIDE の表が唯一の出どころ＝上限は app.js が丸める）。 */
+    if (nv.page && typeof nv.page === 'object') {
+      var pg = {};
+      Object.keys(NAV_FIG_LAST).forEach(function (k) {
+        var p = Math.round(Number(nv.page[k]));
+        if (p >= 1) pg[k] = p;
+      });
+      if (pg.shozaizu || pg.haichizu) out.page = pg;
+    }
+    return (out.shozaizu || out.haichizu || out.page) ? out : null;
   }
 
   /* 🔒 2026-09-03: 名称の自動描画6分類（§23-5）の案件フィールド名。
@@ -70,11 +90,26 @@
   var NAME_LEVEL_KEYS = ['nameCrossLevel', 'nameShopLevel', 'nameOfficeLevel',
                          'nameBusLevel', 'nameRoadLevel', 'namePoiLevel',
                          'nameFacilityLevel', 'nameBuildingLevel'];
-  /* 🔒 §30-40-2（2026-09-21 オーナー指示）: 名前の8分類だけが持てる段「自動」。
-   * 🔴 ここは**段の数字（保存してよい値）**の話だけ。自動が何をするか（枠の中の
-   *    候補の数で段を決める・その境目）は shozaizu.js の NAME_AUTO が唯一の出どころ。
-   *    store.js は shozaizu.js より先に読み込まれるので、数字だけをここに持つ。 */
-  var NAME_LEVEL_AUTO = 0;
+  /* 🔒 §34-2（2026-10-14 オーナー決定）: 設定盤は **4 区分**（1 なし／2 標準／3 多め／4 全部）。
+   * 名前の 8 分類・目標物・建物・道路とも同じ値の範囲（旧の「自動」0 と「主役の周りだけ」は無い）。
+   * 🔒 §42-5（2026-10-18 オーナー決定）: **名前の 8 分類だけ 5 区分**（1 なし／2 標準／3 少なめ／
+   * 4 多め／5 全部）。目標物・建物・道路は 4 区分のまま（SZ_LEVEL_MAX）。
+   * 🔴 ここは**値（保存してよい数字）**の話だけ。値が生成で何をするか（名前の標準＝旧規則・
+   *    少なめ＝候補の 1/3・多め＝2/3 等）は shozaizu.js の genLevel／NAME_AUTO が唯一の出どころ。
+   * SZ_LEVEL_VER ＝ 今の区分の値で保存した印（szLevelVer）。2＝4 区分（§34-2）・3＝名前だけ 5 区分
+   * （§42-5）。持たない案件は旧の値（名前 0〜5・他 1〜5）。normalizeCase が版ごとに 1 回だけ読み替える。 */
+  var SZ_LEVEL_MAX = 4;
+  var SZ_LEVEL_MAX_NAME = 5;
+  var SZ_LEVEL_VER = 3;
+  /* 🔒 §42-5: 印 2（4 区分）→ 印 3 の名前の 8 分類（添字＝4 区分の値）。
+   * 1 なし→なし・2 標準→標準・3 多め→多め（4）・4 全部→全部（5）。 */
+  var SZ_LEVEL_FROM_V2 = [null, 1, 2, 4, 5];
+  /* 旧の値 → 4 区分（添字＝旧の値）。名前: 0 自動→標準・1 なし・2 周り→標準・3 標準→標準・
+   * 4 多め→多め・5 全部→全部／目標物・建物・道路: 1 なし・2 周り→標準・3 標準→標準・4→多め・5→全部 */
+  var SZ_LEVEL_FROM_OLD = {
+    name:  [2, 1, 2, 2, 3, 4],
+    grade: [null, 1, 2, 2, 3, 4]
+  };
 
   /* 🔒 §22-ao-②（2026-09-04 オーナー指示）: 所在図の設定盤・標準値の定義を1か所に統合。
    * 🔴 以前は newCase の既定・migrate の欠損補完・app.js の SZ_STD の3か所に
@@ -102,16 +137,19 @@
     /* 🔒 §30-40-1（2026-09-21 オーナー指示）: 目標物＝全部（5）／建物＝標準（3）／
      * 道路＝多め（4）。ZL によっては名前も目標物も出ない枠があり、
      * 「たくさん出た方が良い」＝既定を上げる（段の意味そのものは変えない）。 */
-    lmLevel: 5, bldgLevel: 3, roadLevel: 4,
-    /* 🔒 §30-40-1: 名前の8分類は全部**「自動」（NAME_LEVEL_AUTO）**で始める。
-     * 自動＝生成の時に「枠の中の候補の数」で段を決める（決め方と件数の
-     * 境目は shozaizu.js の NAME_AUTO が唯一の出どころ）。
-     * 🔴 旧 3/2/2/3/4/1/4/4 は、既に保存された案件にはそのまま残る
-     *    （migrate は欠けている物だけ補う＝開いただけで図が変わらない）。 */
-    nameCrossLevel: NAME_LEVEL_AUTO, nameShopLevel: NAME_LEVEL_AUTO,
-    nameOfficeLevel: NAME_LEVEL_AUTO, nameBusLevel: NAME_LEVEL_AUTO,
-    nameRoadLevel: NAME_LEVEL_AUTO, namePoiLevel: NAME_LEVEL_AUTO,
-    nameFacilityLevel: NAME_LEVEL_AUTO, nameBuildingLevel: NAME_LEVEL_AUTO
+    /* 🔒 §34-2（2026-10-14）: 4 区分の値。目標物＝全部（4＝旧 5）／建物＝標準（2＝旧 3）／
+     * 道路＝多め（3＝旧 4）。 */
+    lmLevel: 4, bldgLevel: 2, roadLevel: 3,
+    /* 🔒 §34-2: 名前の8分類は全部**「標準」（2＝旧の「自動」）**で始める。
+     * 標準＝生成の時に「枠の中の候補の数」で件数を決める（🔒 §42-5: §34-2 の規則のまま＝
+     * 10 件以下なら全部・それより多ければ近い順 3 件。境目と件数は shozaizu.js の NAME_AUTO が
+     * 唯一の出どころ）。
+     * 🔴 既に保存された案件の値は normalizeCase が今の区分へ読み替えて残す
+     *    （欠けている物だけ補う＝開いただけで図が変わらない）。 */
+    nameCrossLevel: 2, nameShopLevel: 2,
+    nameOfficeLevel: 2, nameBusLevel: 2,
+    nameRoadLevel: 2, namePoiLevel: 2,
+    nameFacilityLevel: 2, nameBuildingLevel: 2
   };
   /* 印の形の既定（🔒 §22-ao ＝◎）。points[key].mark を持たない案件は今もこれで描く。 */
   var MARK_STYLE_STD = 'circle';
@@ -220,16 +258,19 @@
     if (!s.pinHidden || typeof s.pinHidden !== 'object') s.pinHidden = {};
     /* 🔒 §30-43-2 2 / 4（2026-09-23）: 所在図の紙の控え2つ（app.js runShozaizu が書く）。
      *   szNames    … 前回の生成で名前（OSM）が紙に届いたか {ok, at}
-     *   szNameAuto … 「自動」で決まった段 {分類id: 段}
+     *   szNameCap  … 🔒 §42: 標準・多めで決まった件数 {分類id: 件数}（結果の一言の内訳だけ）
      * 🔴 壊れた値（オブジェクトでない・配列）だけ消す。それ以外は保存値をそのまま通す
-     *    （無い紙＝この版より前の紙は「分からない」扱い＝ app.js が全部作り直しへ落とす）。 */
+     *    （無い紙＝この版より前の紙は「分からない」扱い＝ app.js が全部作り直しへ落とす）。
+     * 🔒 §42: 旧の控え szNameAuto（「自動」で決まった旧の段 {分類id: 段}）は意味が無くなった
+     *    ので読み込みで捨てる（結果の一言の内訳にしか使っていない＝図は変わらない）。 */
     if (s.szNames !== undefined
         && (!s.szNames || typeof s.szNames !== 'object' || Array.isArray(s.szNames))) {
       delete s.szNames;
     }
-    if (s.szNameAuto !== undefined
-        && (!s.szNameAuto || typeof s.szNameAuto !== 'object' || Array.isArray(s.szNameAuto))) {
-      delete s.szNameAuto;
+    delete s.szNameAuto;
+    if (s.szNameCap !== undefined
+        && (!s.szNameCap || typeof s.szNameCap !== 'object' || Array.isArray(s.szNameCap))) {
+      delete s.szNameCap;
     }
     /* 🔒 §30-53 4（2026-10-03）: 所在図の道路・建物の固定（app.js が書く・true＝固定）。
      * 🔴 無い紙（この版より前の紙）は固定として扱う（app.js szLockOn）＝ここでは補わない。
@@ -294,6 +335,7 @@
        🔴 既存案件は保存値を尊重する（migrate は欠けている物だけ SZ_STD で補う）。
           開いただけで勝手に「標準」へ書き換えてはいけない。 */
     Object.keys(SZ_STD).forEach(function (k) { c[k] = SZ_STD[k]; });
+    c.szLevelVer = SZ_LEVEL_VER;          // 🔒 §34-2 / §42-5: 今の区分の値で作った印（読み替えない）
     return c;
   }
 
@@ -1099,10 +1141,36 @@
      * 🔴 2地点が**両方ある時だけ**成り立つ（片方を消したら同一も消える）。
      *    旧案件はこの印を持たないので false ＝ 従来どおり2地点の図。 */
     c.points.same = !!(c.points.same && c.points.home && c.points.lot);
-    /* 🔒 §23-10: 建物の自動描画レベルも SCHEMA 1 のままの**追加フィールド**（1〜5）。
+    /* 🔒 §34-2（2026-10-14）: 設定盤の値を今の区分へ**1 回だけ**読み替える（印＝ szLevelVer）。
+       印を持たない案件は旧の値（名前 0〜5・目標物／建物／道路 1〜5）＝ SZ_LEVEL_FROM_OLD で写す。
+       🔴 値が無い・旧の範囲外の物は触らない（下の検算が SZ_STD で補う）。
+       🔴 印を書かないと開くたびに読み替えが進む（3→2→2 は止まるが 4→3→2 と下がる）。 */
+    /* 🔒 §42-5（2026-10-18）: 読み替えは**版ごとに順に**進める。
+       印なし（旧 0〜5）→ SZ_LEVEL_FROM_OLD で 4 区分（印 2 相当）→ 名前だけ 5 区分（印 3）。
+       印 2（4 区分）→ 名前だけ SZ_LEVEL_FROM_V2 で 5 区分（目標物・建物・道路は 4 区分のまま）。
+       印 3 → そのまま。 */
+    var lvVer = Number(c.szLevelVer);
+    if (lvVer !== SZ_LEVEL_VER) {
+      var lvFrom = function (k, table) {
+        if (c[k] === undefined || c[k] === null || c[k] === '') return;
+        var to = table[Math.round(Number(c[k]))];
+        if (to) c[k] = to;
+      };
+      if (lvVer !== 2) {
+        ['lmLevel', 'bldgLevel', 'roadLevel'].forEach(function (k) {
+          lvFrom(k, SZ_LEVEL_FROM_OLD.grade);
+        });
+        NAME_LEVEL_KEYS.forEach(function (k) { lvFrom(k, SZ_LEVEL_FROM_OLD.name); });
+      }
+      // ここまでで 4 区分（印 2）の値 → 名前の 8 分類だけ 5 区分へ
+      NAME_LEVEL_KEYS.forEach(function (k) { lvFrom(k, SZ_LEVEL_FROM_V2); });
+      c.szLevelVer = SZ_LEVEL_VER;
+    }
+    /* 🔒 §23-10: 建物の自動描画レベルも SCHEMA 1 のままの**追加フィールド**（🔒 §34-2: 1〜4）。
        値が無い（範囲外を含む）時だけ SZ_STD.bldgLevel で補う。既存の値はそのまま。 */
-    if (!(Number(c.bldgLevel) >= 1 && Number(c.bldgLevel) <= 5)) c.bldgLevel = SZ_STD.bldgLevel;
-    else c.bldgLevel = Math.round(Number(c.bldgLevel));
+    if (!(Number(c.bldgLevel) >= 1 && Number(c.bldgLevel) <= SZ_LEVEL_MAX)) {
+      c.bldgLevel = SZ_STD.bldgLevel;
+    } else c.bldgLevel = Math.round(Number(c.bldgLevel));
     /* 🔒 §23-9: 道路の描き方も SCHEMA 1 のままの**追加フィールド**。
        保存済みの値（'line' / 'band' のどちらか）はそのまま通す。値が無い時だけ補う。 */
     if (c.roadStyle !== 'band' && c.roadStyle !== 'line') c.roadStyle = SZ_STD.roadStyle;
@@ -1113,19 +1181,20 @@
     /* 🔒 2026-09-03（所在図パネルの再構成）: ここから下は**今回足した設定**。
        🔴 値が無い時だけ SZ_STD で補う（§22-ao-②）。既に値がある既存案件はそのまま
           ＝「開いただけで図が変わる」事故にならない。 */
-    if (!(Number(c.lmLevel) >= 1 && Number(c.lmLevel) <= 5)) c.lmLevel = SZ_STD.lmLevel;
+    // 🔒 §34-2: 1〜4（4 区分）
+    if (!(Number(c.lmLevel) >= 1 && Number(c.lmLevel) <= SZ_LEVEL_MAX)) c.lmLevel = SZ_STD.lmLevel;
     else c.lmLevel = Math.round(Number(c.lmLevel));
-    if (!(Number(c.roadLevel) >= 1 && Number(c.roadLevel) <= 5)) c.roadLevel = SZ_STD.roadLevel;
-    else c.roadLevel = Math.round(Number(c.roadLevel));
+    if (!(Number(c.roadLevel) >= 1 && Number(c.roadLevel) <= SZ_LEVEL_MAX)) {
+      c.roadLevel = SZ_STD.roadLevel;
+    } else c.roadLevel = Math.round(Number(c.roadLevel));
     c.nature = (c.nature === undefined || c.nature === null) ? SZ_STD.nature : !!c.nature;
     /* 🔒 2026-09-03（後半）: 名称の自動描画6分類。
        🔴 §22-ao-②: 値が無い時だけ SZ_STD の該当キー（項目ごとに段が違う）で補う。
           既に値がある既存案件はそのまま（開いただけで図が変わらない原則は不変）。 */
-    /* 🔒 §30-40-2 4: 名前の8分類**だけ**は段 NAME_LEVEL_AUTO（自動）も正しい値＝
-     * 下限を 0 にする（目標物・建物・道路は上のとおり 1〜5 のまま）。
-     * 🔴 既に値がある案件はその段のまま（数字の段を選んであれば自動に変えない）。 */
+    /* 🔒 §34-2 / §42-5: 名前の8分類は 1〜5（旧の「自動」0 は上の読み替えで「標準」2 になった）。
+     * 🔴 既に値がある案件はその値のまま。 */
     NAME_LEVEL_KEYS.forEach(function (k) {
-      if (!(Number(c[k]) >= NAME_LEVEL_AUTO && Number(c[k]) <= 5)) c[k] = SZ_STD[k];
+      if (!(Number(c[k]) >= 1 && Number(c[k]) <= SZ_LEVEL_MAX_NAME)) c[k] = SZ_STD[k];
       else c[k] = Math.round(Number(c[k]));
     });
     /* 🔒 §28-6 ⑤（2026-09-06 オーナー承認）: ガイダンスの段。
@@ -1157,8 +1226,23 @@
       c.nav = normalizeNav(c.nav);        // 版が無いのに nav だけある物も検算はする
     }
     delete c.navStep;                     // 旧フィールドは残さない（🔒 §30-1）
-    if (c.nav) c.navStepVer = NAV_STEP_VER;
-    else { delete c.nav; delete c.navStepVer; }   // 段が無いのに印だけ残らないように
+    /* 🔒 §45-4: 所在図ガイダンスのページ番号を 14 ページへ**1 回だけ**読み替える（印＝navPageVer）。
+       旧⑨「紙の向きを決める」→ ⑦「所在図を自動で作る」（統合先）・旧⑩〜⑮ → ⑨〜⑭。
+       🔴 印を書かないと開くたびに −1 されてページが戻っていく。 */
+    if (c.nav && c.nav.page && Number(c.navPageVer) !== NAV_PAGE_VER) {
+      var pv = Number(c.navPageVer) || 1;
+      var szp = Math.round(Number(c.nav.page.shozaizu));
+      if (isFinite(szp)) {
+        if (pv < 2) {                     // 版 1 → 2（§45-4: 15 → 14 ページ）
+          if (szp === 9) szp = 7;
+          else if (szp >= 10) szp = szp - 1;
+        }
+        if (pv < 3 && szp >= 14) szp = 13; // 版 2 → 3（🔒 §50: ⑭完成を削除・14 → 13 ページ）
+        c.nav.page.shozaizu = szp;
+      }
+    }
+    if (c.nav) { c.navStepVer = NAV_STEP_VER; c.navPageVer = NAV_PAGE_VER; }
+    else { delete c.nav; delete c.navStepVer; delete c.navPageVer; }   // 段が無いのに印だけ残らないように
     // 旧版はテキストの大きさを実寸メートル(h_m)で持っていた。作図時のズームに
     // 左右されて書き出しが壊れるので、size クラスだけを使う形へ寄せる。
     // 🔴 §24-1: 掃除も補完も**シート1枚ずつ**（シートは互いに独立）
@@ -1194,6 +1278,7 @@
     KINDS: KINDS,                                  // 図の種類（§24-1・シートとは別）
     SZ_STD: SZ_STD,                                // 所在図設定盤の標準値（§22-ao-②・唯一の定義）
     NAV_STEP_VER: NAV_STEP_VER,                    // §29/§30-1: ガイダンスの段の番号の版
+    NAV_PAGE_VER: NAV_PAGE_VER,                    // §45-4: v2 のページ番号の版（所在図 14 ページ）
     NAV_STEPS: NAV_STEPS,                          // §29: 段の総数（12）
     NAV_FIG_LAST: NAV_FIG_LAST,                    // §30-1: 図ごとの段の数（所在図4／配置図8）
     newCase: newCase, defaultMap: defaultMap,

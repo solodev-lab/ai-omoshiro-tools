@@ -50,7 +50,7 @@
   --sg-go-soft-fg: #17408f;
 }
 
-/* 配置図ガイダンスの間だけ緑（app.js sgRender が body に sg-hz を付け外し） */
+/* 配置図ガイダンスの間だけ緑（app.js guideOpen／guideClose が body に sg-hz を付け外し） */
 body.sg-hz {
   --sg-go: var(--sg-hz-go);
   --sg-go-hover: var(--sg-hz-go-hover);
@@ -1062,6 +1062,85 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   transform: none;
   background: rgba(26, 122, 84, .92);
 }
+
+/* 🔒 §39（2026-10-17）: 多角形の小窓（地図の左上・ズーム .map-ctrl の反対側・同じ階層）。
+   .stamp-panel より小さい白い箱。幅 150px・ボタンは 28px 角。 */
+.poly-pad {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 6;
+  width: 150px;
+  box-sizing: border-box;
+  padding: 7px 8px 8px;
+  background: rgba(255, 255, 255, .97);
+  border: 1px solid var(--bd-strong);
+  border-radius: 7px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+  font-size: 12px;
+  user-select: none;
+}
+.poly-pad[hidden] { display: none; }
+.pp-title { font-size: 12px; font-weight: 700; margin: 0 0 5px; }
+.pp-pan {
+  display: grid;
+  grid-template-columns: 28px 1fr 28px;
+  grid-template-rows: 28px 28px 28px;
+  gap: 3px;
+  align-items: center;
+  justify-items: center;
+  margin-bottom: 6px;
+}
+.pp-pan button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+  touch-action: none;   /* 押し続けの繰り返しをスクロールに取られない */
+}
+.pp-up    { grid-column: 2; grid-row: 1; }
+.pp-left  { grid-column: 1; grid-row: 2; }
+.pp-right { grid-column: 3; grid-row: 2; }
+.pp-down  { grid-column: 2; grid-row: 3; }
+.pp-pan-label { grid-column: 2; grid-row: 2; font-size: 11px; color: var(--mut); }
+.pp-btn {
+  display: block;
+  width: 100%;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 12px;
+}
+.pp-row { display: flex; gap: 4px; margin-top: 4px; }
+.pp-row .pp-btn { flex: 1 1 0; min-width: 0; }
+/* 🔒 §40（2026-10-17）: ［閉じて確定］（#ppClose）は削除。直線・曲線・四角では［頂点を戻す］［確定］を隠す */
+.pp-row #ppDone[hidden],
+.poly-pad #ppBack[hidden] { display: none; }
+.poly-pad:has(#ppBack[hidden]) .pp-row { display: none; }        /* 矢印だけの時は余白も残さない */
+.poly-pad:has(#ppBack[hidden]) .pp-pan { margin-bottom: 0; }
+/* 点が足りない時の［確定］＝薄いが押せる（押すと editor の一言・button:disabled と同じ見た目） */
+.poly-pad .pp-btn.is-dim { opacity: .45; cursor: default; }
+.poly-pad .pp-btn.is-dim:hover { background: #fff; }
+/* 小窓が出ている間はスペースの表示を小窓の下へ（重ねない） */
+.map-wrap.has-polypad #spaceBadge { top: 212px; }
+/* 🔒 §40（2026-10-17）: 地図移動の箱（右上・ズーム .map-ctrl の真下・常に表示）。
+   右端は .map-ctrl と同じ 10px・z-index も同じ 6。top＝.map-ctrl（10＋34×2＋4＝82）＋8。
+   中の ▲▼◀▶ は左上の小窓と同じ .pp-pan（28px 角）。 */
+.pan-pad {
+  position: absolute;
+  right: 10px;
+  top: 90px;
+  z-index: 6;
+  width: 120px;
+  box-sizing: border-box;
+  padding: 5px 6px;
+  background: rgba(255, 255, 255, .95);
+  border: 1px solid var(--bd-strong);
+  border-radius: 7px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .22);
+  user-select: none;
+}
+.pan-pad .pp-pan { margin-bottom: 0; }
 .tool.is-temp {
   background: #dbe6fb;
   border-color: var(--acc);
@@ -1109,6 +1188,8 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   max-width: 1100px;
   max-height: 100%;
   width: 100%;
+  /* 🔒 §50-2 C（2026-10-19 オーナー「A4 縦がスクロール無しで全部見える高さに」）: 窓いっぱいの高さ */
+  height: 100%;
 }
 .ex-preview-head {
   display: flex;
@@ -1145,7 +1226,12 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   background: #fff;
   border: 1px solid var(--bd-strong);
   box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
-  max-height: 68vh;
+  /* 🔒 §50-2 C（2026-10-19）: 旧 68vh＝A4 縦は窓の中でスクロールが要った。
+     窓の外余白（24px×2）＋見出し＋道しるべ＋案内＋帯＋下部の列（所在図⑬から出した時）＋
+     本体の余白・札の高さを引いた残り（実測で決めた値・下の --ex-img-chrome）。
+     実測（所在図⑬から出した時・2026-10-19）: 1440×900＝外余白 48＋見出し 60＋道しるべ 46＋案内 34＋
+     帯 61＋下部の列 110＋本体の余白 32＋札 31＝422／1280×800 は案内が 2 行（54）で 442 → 450px。 */
+  max-height: calc(100vh - var(--ex-img-chrome, 450px));
   max-width: 100%;
 }
 .ex-preview-hintline { font-weight: 400; color: var(--mut); font-size: 11.5px; }
@@ -1288,6 +1374,8 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   border-radius: 0 0 10px 10px;
 }
 .ex-preview-bar button { padding: 8px 22px; font-weight: 700; }
+/* 🔒 §50-2 C: 帯の見出し「保存:」 */
+.ex-bar-k { font-size: 12.5px; font-weight: 700; color: var(--mut); }
 .ex-preview-bar-msg {
   margin: 0;
   font-size: 11.5px;
@@ -1654,8 +1742,17 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
    🔴 実測: ガイダンス③の左面（幅 340px）では1区画 38px で 11px の2文字が余裕で入る。
       右の浮き窓（#szSetHome・幅 236px）だけ1区画 20px しかないので、
       そこだけ文字を詰める（広い置き場は今までと同じ大きさのまま）。 */
-.gr6 .gr5-lb { white-space: nowrap; }
-#szSetHome .gr6 .gr5-lb { font-size: 10px; letter-spacing: -0.2px; }
+/* 🔒 §34-2（2026-10-14）: 区画は**4つ**（なし／標準／多め／全部・.gr6 は廃止）。
+   4 等分なら右の浮き窓（幅 236px）でも 1 区画 30px ほど＝11px の2文字が入るので
+   文字は詰めない。折り返しだけ止める。 */
+.gr4 .gr5-lb { white-space: nowrap; }
+/* 🔒 §42-5（2026-10-18 オーナー決定）: 名前の8分類だけ区画が**5つ**（なし｜標準｜少なめ｜多め｜全部・
+   .gr5n）。折り返しは必ず止める（行は高さ 24px で切ってある）。
+   🔴 右の浮き窓（#szSetHome・幅 236px）は 1 区画 ≈ 26px で「少なめ」3 文字（11px×3＝33px）が
+      入らないので、**そこだけ**文字を 10px に詰める（§30-40-2 1 と同じ作法）。
+      ガイダンス⑧（#sgSzSet・幅 470px）は足りるので触らない。 */
+.gr5n .gr5-lb { white-space: nowrap; }
+#szSetHome .gr5n .gr5-lb { font-size: 10px; letter-spacing: -0.04em; }
 
 /* 🔒 §22-ak-3（裁定）③: 生成件数は残すが**1行に圧縮**する。
    後半の6項目（+180px）を足すと 1280×800 で溢れるため、
@@ -1815,6 +1912,11 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 /* MapView 内部 */
 .mv-root { position: relative; overflow: hidden; cursor: grab; touch-action: none; }
 .mv-root.mv-dragging { cursor: grabbing; }
+/* 🔒 §39-8（2026-10-17 オーナー実機「配置図で多角形のカーソルが変わらない」）: 下敷きが Google の時、
+   Google の地図（.mv-gmap の中の .gm-style の div）が自分の div に cursor: default をインラインで書き、
+   #map に置いた道具のカーソル（矢印＋⬠・十字・消しゴム・印の形・grab）を上書きしていた。
+   Google の div は常に親（#map）のカーソルを継ぐ（!important でインラインに勝つ）＝地理院の下敷きと同じ見た目。 */
+.mv-root .mv-gmap, .mv-root .mv-gmap * { cursor: inherit !important; }
 .mv-underlay { position: absolute; inset: 0; }
 .mv-tilepane { position: absolute; inset: 0; }
 .mv-tile {
@@ -2162,7 +2264,9 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
    塗り（ハッチのパターン）は editor.js が fill 属性で色ごとに指定する。
    選択中だけ輪郭を選択色にする（ハッチの色はそのまま＝どの色か分かる） */
 .obj-mark { stroke-linejoin: miter; }
-.obj-mark.is-sel { stroke: var(--acc); stroke-width: 2.6; }
+/* 🔒 §33-8 4（2026-10-08）: 主役の印（■・多角形）は選択中も自分の色のまま
+   （選択は太さと角のつまみ .handle で分かる）＝ stroke は持たない */
+.obj-mark.is-sel { stroke-width: 2.6; }
 
 /* 自動下書きで生成した図形は少し細く薄く（手描きと見分ける） */
 .obj-rect.is-auto { opacity: .82; }
@@ -2220,8 +2324,45 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 /* 🔒 §28-1 ②（2026-09-06 オーナー承認）: ガイダンス中は左面が**ガイダンス面**になる。
    幅は 252px → 340px（説明文が1行 18〜20 字で読める幅）。閉じると道具メニューに戻る。
    🔴 中身は「入れ替える」だけ＝道具メニューの DOM は消さない（閉じたらそのまま戻る）。 */
-.side.is-guide { flex-basis: 340px; }
-.side.is-guide > *:not(#sideNav) { display: none !important; }
+/* 🔒 §33-1 5 / §33-7 ①（2026-10-07 オーナー決定「470px にする」）: ガイダンスの面は 470px。 */
+.side.is-guide { flex-basis: 470px; }
+/* 🔒 §33: ガイダンス中は v2 の面（#guideNav）だけを残す。
+   🔴 #sideNav は部品の倉庫（常に hidden＝出ない）。§33 C 段で旧の面としては廃止。 */
+.side.is-guide > *:not(#sideNav):not(#guideNav) { display: none !important; }
+
+/* ---- ガイダンス v2（🔒 §33-2）----
+   頭（図の名前・n / N・×）→ 題 → 説明 → 部品の箱 → いま: → ［戻る］［次へ］ → 理由の1行。
+   🔴 見た目は下の .sg-head／.sg-title／.sg-text／.sg-status／.sg-foot／.sg-why を使う
+      （§33 C 段で旧の面は廃止したが、この class は v2 の面がそのまま使っている）。 */
+.gd-count { margin-left: 8px; font-weight: 400; color: var(--mut); }
+.gd-title { font-size: 15.5px; margin: 2px 0 8px; }
+.gd-text { font-size: 13px; }
+.gd-text .sg-cap-p + .sg-cap-p { margin-top: .55em; }
+/* 部品の箱＝薄い地色の枠（§33-2） */
+.gd-parts {
+  padding: 2px 10px 10px;
+  border: 1px solid var(--bd);
+  border-radius: 7px;
+  background: var(--bg);
+}
+.gd-parts > :first-child { margin-top: 8px; }
+/* ［次へ］＝図の色の塗り（所在図＝青／配置図＝緑・--sg-go）。押せない時は薄く */
+.gd-foot .gd-next {
+  background: var(--sg-go);
+  border-color: var(--sg-go);
+  color: var(--acc-ink);
+  font-weight: 700;
+}
+.gd-foot .gd-next:hover:not(:disabled) { background: var(--sg-go-hover); }
+.gd-foot .gd-next:disabled { opacity: .45; cursor: not-allowed; }
+/* 🔒 §33-1 7: ①に入った時、面の枠を 1 秒間隔で 10 秒点滅（図の色 ↔ 透明・終わったら JS が外す）。
+   🔴 steps(2, jump-none) ＝ 1 秒の前半が図の色・後半が透明（中間の薄い色を作らない）。 */
+.side.is-guide { outline: 3px solid transparent; outline-offset: -3px; }
+.side.is-guide.is-blink { animation: guide-blink 1s steps(2, jump-none) 10; }
+@keyframes guide-blink {
+  from { outline-color: var(--sg-go); }
+  to { outline-color: transparent; }
+}
 
 .side-guide { display: flex; flex-direction: column; gap: 0; }
 .sg-head {
@@ -2240,53 +2381,7 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   line-height: 1;
   color: var(--mut);
 }
-/* 足跡。済んだ段だけ押せる（§28-6 ⑦）。
-   🔒 §29-1: **2段**にする（上＝所在図①〜④／下＝配置図⑤〜⑫）。
-   🔴 行を分けるのは幅の都合ではなく「どちらの図の段か」という意味の区切り。 */
-.sg-steps { margin-bottom: 10px; }
-.sg-srow { display: flex; gap: 4px; flex-wrap: wrap; align-items: stretch; }
-.sg-srow + .sg-srow { margin-top: 5px; }
-/* 行の見出し（所在図／配置図）。押せない・数えない、ただの札 */
-.sg-sk {
-  flex: 0 0 auto;
-  align-self: center;
-  font-size: 10px;
-  color: var(--mut);
-  padding: 0 2px 0 0;
-  white-space: nowrap;
-}
-.sg-steps span[data-step] {
-  flex: 1 1 0;
-  min-width: 52px;
-  text-align: center;
-  font-size: 10.5px;
-  padding: 5px 2px;
-  border: 1px solid var(--bd-strong);
-  border-radius: 5px;
-  background: #fff;
-  color: var(--mut);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.sg-steps span.is-done { color: var(--acc); border-color: var(--acc); cursor: pointer; }
-.sg-steps span.is-done:hover { background: #eef3fd; }
-/* 🔒 §30-17-2: 足あとの「いま」の段も図ごとの色（所在図＝青／配置図＝緑） */
-.sg-steps span.is-now { background: var(--sg-go); border-color: var(--sg-go); color: #fff; font-weight: 700; }
-
-/* 🔒 §30-12-1: ガイダンスの目指す所。足あとの直下・全段で常に出す1行
-   （オーナー: 「青色に強調されたボタンを順に押していくと、所在図が出来上がります。」）。 */
-/* 🔒 §30-17-4 1: 図ごとの色に合わせる（所在図＝青／配置図＝薄い緑） */
-.sg-aim {
-  margin: 0 0 10px;
-  padding: 7px 9px;
-  border-radius: 6px;
-  background: var(--sg-go-soft);
-  border: 1px solid var(--sg-go-soft-bd);
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--sg-go-soft-fg);
-}
+/* 🔒 §33（C 段）: 旧の面の足あと（.sg-steps）と目指す所の1行（.sg-aim）は廃止 */
 
 .sg-title { font-size: 14.5px; margin: 0 0 6px; }
 .sg-text { font-size: 12.5px; line-height: 1.7; color: var(--ink); margin: 0 0 12px; }
@@ -2333,6 +2428,89 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   box-shadow: 0 0 0 2px rgba(26, 86, 196, .18);
 }
 .sg-mk .mark-colors { margin-left: 0; }
+/* 🔒 §33-8 12 (b)（2026-10-14）: 印の種類の**行の一覧**（1 行＝形の記号＋説明・行ごと押す）＋色の行。
+   箱（.sg-marks）が白地と枠を持ち、行は透過（点滅＝箱の背景が行の下に見えるように）。
+   中身は app.js sgRenderMarks。 */
+.sg-marks {
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  background: #fff;
+}
+.sg-mk-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  line-height: 1.35;
+  white-space: normal;      /* 道具メニュー（幅 252px）では説明を折り返す */
+  cursor: pointer;
+}
+.sg-mk-row:hover { border-color: var(--bd-strong); }
+/* 🔒 §38（2026-10-17）: 選んだ行は .is-on 1 つ（⬠ の道具の間も .is-on・旧 .is-active は廃止） */
+.sg-mk-row.is-on {
+  border-color: var(--acc);
+  background: rgba(26, 86, 196, .07);
+}
+.sg-mk-row .mk-sym {
+  flex: 0 0 26px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--bd-strong);
+  border-radius: 5px;
+  background: #fff;
+  font-size: 13px;
+  line-height: 1;
+}
+.sg-mk-row.is-on .mk-sym {
+  border-color: var(--acc);
+  background: #eaf0fb;
+}
+.sg-mk-row .mk-desc { flex: 1 1 auto; min-width: 0; }
+/* 🔒 §34-3 ⑪〜⑬（2026-10-14）: 道具の行の一覧（1 行＝道具のボタン＋説明）。
+   箱は .sg-marks と同じ・行は .sg-mk-row と同じ見た目（行ごと押せる＝ app.js guidePartsRows）。
+   選んでいる道具の行（.tool.is-active）は .sg-mk-row.is-on と同じ色。 */
+.sg-tl-rows { display: flex; flex-direction: column; margin: 0 0 6px; }
+.sg-tl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-size: 12.5px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.sg-tl-row:hover { border-color: var(--bd-strong); }
+.sg-tl-row:has(.tool.is-active) {
+  border-color: var(--acc);
+  background: rgba(26, 86, 196, .07);
+}
+.sg-tl-row .tl-ico { flex: 0 0 auto; display: inline-flex; }
+.sg-tl-row .mk-desc { flex: 1 1 auto; min-width: 0; }
+.sg-mk-colors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 2px;
+  font-size: 12.5px;
+}
+.sg-mk-colors .mark-colors { margin-left: 0; }
+.sg-mk-colors .mk-ck { flex: 0 0 26px; text-align: center; font-weight: 700; }
+.sg-mk-colors .mk-std { color: var(--fg-sub, #555); white-space: nowrap; }
 /* 🔒 §30-25-40 1: 「印の大きさ」の行（.sg-mk-size）は廃止（印の右下のつまみと
    右パネルへ移した）＝ここに書式は無い。 */
 /* 🔒 §30-24-1: ①の▼の中の「多角形の書式」（右パネル #propMpStyle と同じ部品）。
@@ -2380,8 +2558,6 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
   font-size: 11.5px;
   color: var(--mut);
 }
-/* 青（次に押す物）になった時は2行目も白字（#sideNav の next の規則と揃える） */
-#sideNav button[data-sgstate="next"]:not(:disabled).sg-two i { color: inherit; }
 /* 🔒 §29-1: 1行に「見出し＋つまみ／欄＋単位」を並べる行（⑤の写真の濃さ・⑦の台数） */
 .sg-row {
   display: flex;
@@ -2416,6 +2592,17 @@ input[type=search]:focus { outline: 2px solid #9dbcf5; outline-offset: -1px; }
 /* 🔒 §28-4 / §28-6 ③: 生成中は設定盤を灰色にして触らせない
    （何も起きないように見える時間が一番不安）。 */
 .sg-sz.is-busy { opacity: .45; pointer-events: none; }
+/* 🔒 §45-2（2026-10-19）: 所在図ガイダンス⑦のズームの行
+   ［− ズームアウト（広く）］ 「いま ZL 17.5」 ［＋ ズームイン（狭く）］。灰色は disabled（共通のボタンの見た目）。 */
+.sg-zoom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+.sg-zoom-btn { flex: 1 1 0; min-width: 0; white-space: nowrap; padding: 6px 4px; }
+.sg-zoom-now { flex: 0 0 auto; font-size: 12px; color: var(--mut); white-space: nowrap; }
+#guideNav .sg-zoom-now { font-size: 13px; }
 .sg-busy {
   font-size: 12px;
   color: var(--acc);
@@ -2667,6 +2854,8 @@ p.sg-tk { margin: 10px 0 4px; }
 .sg-under:hover { border-color: var(--acc); }
 .sg-under input[type="radio"] { margin: 3px 0 0; flex: 0 0 auto; }
 .sg-under b { display: block; font-size: 12.5px; font-weight: 700; }
+/* 🔒 §47-2 2: Google の行の「Google の規約」リンク（灰色の説明文の中でも読める色・下線） */
+.sg-under a.sg-terms { color: var(--acc); text-decoration: underline; }
 .sg-under i {
   display: block;
   font-style: normal;
@@ -2821,289 +3010,131 @@ p.sg-tk { margin: 10px 0 4px; }
 
 /* 🔒 §30-31-3 2: 配置図⑧の提出前チェックの一覧（旧 .sg-chk）は廃止した。 */
 
-/* ---- 案内数字（🔒 §30-2・2026-09-08 オーナー指示）----
-   ガイダンス面の「押す部品」の**左肩**に番号のバッジを出す。
-   🔴 バッジは属性（data-sgnum）から ::before で出す＝部品の中身（textContent /
-      innerHTML）を書き換える所（マーカーのボタン・［枠を決定］・マーカーの種類）が
-      あるので、子要素を足す作りにすると消えてしまう。
-   状態（data-sgstate）:
-     next … 次に押すべき番号（青地・白字）
-     todo … まだの番号（白地・灰枠）
-     opt  … 押さなくても進める部品（薄く）
-     done … 済んだ番号（薄い✓） */
-[data-sgnum] { position: relative; }
-[data-sgnum]::before {
-  content: attr(data-sgnum);
-  position: absolute;
-  left: -6px;
-  top: -7px;
-  z-index: 3;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 2px;
-  box-sizing: border-box;
-  border: 1px solid var(--bd-strong);
-  border-radius: 9px;
-  background: #fff;
-  color: var(--mut);
-  font-size: 11px;
-  font-weight: 700;
-  font-style: normal;
-  line-height: 15px;
-  text-align: center;
-  pointer-events: none;
-}
-/* 🔒 §30-17-2: 番号バッジも図ごとの色（所在図＝青／配置図＝緑） */
-[data-sgstate="next"]::before {
-  background: var(--sg-go);
-  border-color: var(--sg-go);
-  color: #fff;
-  box-shadow: 0 0 0 3px var(--sg-go-soft);
-}
-[data-sgstate="opt"]::before { opacity: .45; }
-[data-sgstate="done"]::before {
-  color: var(--ok);
-  border-color: #bcd9c6;
-  opacity: .6;
-}
+/* ---- 🔒 §33（C 段）で廃止: 案内数字のバッジ（§30-2）・「青いボタンは常に1つ」（§30-12-2）・
+   「どれか1つ」（§30-18-1）・地図の上の字幕（§30-10／§30-12-3）・説明文 ON・OFF（§30-48 D）・
+   図をまたぐ文字リンク（§30-1）。
+   ガイダンスの面は v2（#guideNav）だけ。青（図の色）の塗りは v2 の［次へ］だけ（.gd-next）。 ---- */
 
-/* ---- 青いボタンは常に1つ（🔒 §30-12-2・2026-09-09 オーナー指示）----
-   「青色に強調されたボタンを順に押していくと、図が出来上がります。」
-   🔴 青の出どころは **data-sgstate="next" だけ**（固定の class="primary" は
-      ガイダンス面から外した＝ sgRenderFoot の spec・index.html の #sgSearchHome ほか）。
-   🔴 押せない時（disabled）は青にしない（青は「今押せる」物だけ・§30-12-2 4）。 */
-/* 🔒 §30-17-2: 「進む」色は図ごと（所在図＝青／配置図＝緑）。変数は :root と
-   body.sg-hz の1か所（app.js sgRender が navFigOf で付け外し）。 */
-#sideNav button[data-sgstate="next"]:not(:disabled) {
-  background: var(--sg-go);
-  border-color: var(--sg-go);
-  color: var(--acc-ink);
-}
-#sideNav button[data-sgstate="next"]:not(:disabled):hover { background: var(--sg-go-hover); }
-/* 道具ボタン（.sg-tool）の中の説明文も白字にする（既定は var(--mut)） */
-#sideNav button[data-sgstate="next"]:not(:disabled) b,
-#sideNav button[data-sgstate="next"]:not(:disabled) i { color: inherit; }
-/* 青地の上でも番号バッジが見えるように、白い縁を回す（バッジ自体は青のまま） */
-#sideNav button[data-sgstate="next"]:not(:disabled)::before {
-  border-color: #fff;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, .85);
-}
 /* 🔒 §30-17-3: 枠を決定した後の［枠を決めなおす］は**薄い色**（所在図＝薄い青／
    配置図＝薄い緑）。存在は分かるが「進む」ボタンと同じ濃さにはしない。
    印は app.js sgSyncOrient が付け外し（文言を変える1か所と同じ所）。
-   🔴 data-sgstate="next" が付いた時は上の next の規則が勝つ（specificity
-      (1,2,1) > (1,1,1)）＝決定前だけ next になるので通常は両立しない。 */
-#sideNav button.is-redo {
+   🔒 §33: v2 の面へ移した［枠を決めなおす］に効く。 */
+#guideNav button.is-redo {
   background: var(--sg-go-soft);
   border-color: var(--sg-go-soft-bd);
   color: var(--sg-go-soft-fg);
 }
 
-/* 🔒 §30-18-1「どれか1つ」の番号（配置図⑥＝直線／多角形／曲線）:
-   同じ番号を3つのボタンに付け、3つとも**薄い色**で強調する
-   （「青（緑）は常に1つ」の例外＝どれを押してもよい選択肢）。
-   🔴 バッジは通常の濃い色のまま（印は data-sgone・app.js sgRenderNums が付ける）。 */
-#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled),
-#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled):hover {
-  background: var(--sg-go-soft);
-  border-color: var(--sg-go-soft-bd);
-  color: var(--sg-go-soft-fg);
-}
-#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled) b,
-#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled) i { color: inherit; }
-/* 薄い地なので、バッジの白い縁（濃い地用）は元の色に戻す */
-#sideNav button[data-sgone][data-sgstate="next"]:not(:disabled)::before {
-  border-color: var(--sg-go);
-  box-shadow: 0 0 0 2px var(--sg-go-soft);
-}
-
-/* 🔒 §30-12-2 1「次に押す1つだけが青」: 選択中の道具（.tool.is-active）は
-   道具メニュー側では青地のままだが、**ガイダンス面では薄い青地＋青枠＋青字**にする。
-   🔴 青いボタン＝「次に押す物」を1つに保つため（選んだ道具と次の番号は別物）。
-   🔴 選択中の道具が同時に「次に押す物」の時は、上の next の規則が勝って青地になる。 */
-#sideNav .tool.is-active {
+/* 🔒 §30-12-2 1: 選択中の道具（.tool.is-active）は道具メニュー側では青地のままだが、
+   **ガイダンス面では薄い青地＋青枠＋青字**にする（塗りの色は［次へ］だけ・§33-2）。 */
+#guideNav .tool.is-active {
   background: #eef3fd;
   border-color: var(--acc);
   color: var(--acc);
 }
-#sideNav .tool.is-active i { color: var(--acc); }
-/* 🔒 §30-19-1: ガイダンス面の［枠をまとめて］も同じ薄い青（青いボタンは1つに保つ） */
-#sideNav .tool.is-on {
+#guideNav .tool.is-active i { color: var(--acc); }
+/* 🔒 §30-19-1: ガイダンス面の［駐車枠］（置く待ち）も同じ薄い青 */
+#guideNav .tool.is-on {
   background: #eef3fd;
   border-color: var(--acc);
   color: var(--acc);
 }
-#sideNav .tool.is-on b, #sideNav .tool.is-on i { color: var(--acc); }
+#guideNav .tool.is-on b, #guideNav .tool.is-on i { color: var(--acc); }
 
-/* ---- 字幕（🔒 §30-3 / §30-10・地図領域の上部中央・大きく）----
-   1行目＝次に押す番号／2行目＝その操作説明（§30-7 B）。
-   🔒 §30-10: 自動では消えない（タイマー・フェードは撤去）。字幕全体をつかんで
-   ドラッグできる（pointer-events は字幕だけ有効・押せない板ではなくなった）。
-   既定は上部中央固定（left:50%+transform）。動かすと .is-moved が付いて
-   left/top（px の inline style）を直接使う（js: sgCaptionInitDrag / sgCaptionShow）。 */
-.sg-caption {
-  position: absolute;
-  /* 🔒 §30-13-4: 全体を今より上へ（14px → 8px）。横向きは上・中央のまま横長に */
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 92%;
-  z-index: 12;
-  padding: 11px 34px 11px 18px;
-  border-radius: 12px;
-  background: #fff;
-  color: #111;
-  box-shadow: 0 6px 26px rgba(0, 0, 0, .3);
-  /* 🔒 §30-12-3: 左に大きく〇数字、右に指示文 */
-  display: flex;
-  align-items: center;
-  /* 🔒 §30-14-3: 文の下のボタンを次の行へ落とすため折り返しを許す */
-  flex-wrap: wrap;
-  gap: 13px;
-  text-align: left;
-  cursor: grab;
+/* 🔒 §33（2026-10-08 オーナー指示「ガイダンス中のフォントサイズを全体大きくして。+2 ほど」）:
+   v2 の面の中だけ、各部の文字を +2px。元の値は各規則のまま（倉庫の部品が道具メニュー等で
+   使われる時は元の大きさ）。値は「元の値 +2」で機械的に決める。
+   🔴 アイコンのボタン（.ico-btn・.tool[data-icon]）は font-size で絵を描いていないので触らない。 */
+#guideNav .gd-title { font-size: 17.5px; }
+#guideNav .gd-text { font-size: 15px; }
+#guideNav .gd-count { font-size: 15px; }
+#guideNav .sg-brand { font-size: 15px; }
+#guideNav .sg-status { font-size: 14px; }
+#guideNav .sg-why { font-size: 13.5px; }
+#guideNav .sg-foot button { font-size: 14.5px; }
+/* 🔒 §53-2 ⑰: 下部の 2 行目（［ガイダンス終了］・#gdFoot のすぐ下）＝行いっぱいの白いボタン 1 つ */
+#guideNav .gd-foot2 button { display: block; width: 100%; margin-top: 6px; padding: 9px 8px; font-size: 14.5px; }
+#guideNav .sg-note { font-size: 14px; }
+#guideNav .sg-lb { font-size: 13.5px; }
+#guideNav .sg-tk { font-size: 13px; }
+#guideNav .sg-use { font-size: 13.5px; }
+#guideNav .sg-two b { font-size: 14.5px; }
+#guideNav .sg-two i { font-size: 13.5px; }
+#guideNav .sg-wide { font-size: 16px; }
+#guideNav .pin-btn { font-size: 14.5px; }
+#guideNav .nav-add { font-size: 14px; }
+#guideNav .sg-more-t { font-size: 14.5px; }
+#guideNav .sg-more-when { font-size: 13px; }
+#guideNav .sg-more-a { font-size: 13.5px; }
+#guideNav .sg-more-now { font-size: 13.5px; }
+#guideNav .sg-more-x { font-size: 13.5px; }
+#guideNav .sg-under b { font-size: 14.5px; }
+#guideNav .sg-under i { font-size: 13px; }
+#guideNav .sg-ov b { font-size: 14.5px; }
+#guideNav .sg-ov i { font-size: 13px; }
+#guideNav .sg-ov-st { font-size: 13px; }
+#guideNav .sg-row { font-size: 14px; }
+#guideNav .sg-row-v { font-size: 13.5px; }
+#guideNav .sg-seg-i { font-size: 14.5px; }
+#guideNav .sg-seg-i i { font-size: 13px; }
+#guideNav .sg-uop-r { font-size: 14px; }
+#guideNav .sg-uop-r b { font-size: 13.5px; }
+#guideNav .sg-uop-sw { font-size: 14px; }
+#guideNav .sg-strip-say { font-size: 14px; }
+#guideNav .hz-auto-k { font-size: 14.5px; }
+#guideNav .hz-auto-seg button { font-size: 14px; }
+#guideNav .hz-auto-busy { font-size: 13.5px; }
+#guideNav .sg-find input { font-size: 14.5px; }
+#guideNav .sg-find .go { font-size: 16px; }
+#guideNav .sg-tools.is-row .sg-tool-s { font-size: 14px; }
+#guideNav .sg-tools.is-row .sg-textfree,
+#guideNav .sg-tools.is-row .sg-preset { font-size: 14px; }
+#guideNav .sg-tool b { font-size: 14.5px; }
+#guideNav .sg-tool i { font-size: 13px; }
+#guideNav .sg-busy { font-size: 14px; }
+/* 設定盤（.sg-sz）の中。🔴 区画の幅は変えない＝折り返さない（.gr4／.gr5n は nowrap 済み） */
+#guideNav .sg-sz .sz-k { font-size: 13.5px; flex: 0 0 70px; width: 70px; } /* 5 文字の見出し（名前の位置・施設・公園）が 2 行に折り返さない幅（60→70px） */
+#guideNav .sg-sz .gr5-lb { font-size: 13px; }
+#guideNav .sg-sz .sz-sw .mapsw-txt { font-size: 13px; }
+
+/* 🔒 §50-4 ①（2026-10-19）: 旧の無限の明滅（.is-pulse・④⑥の印の箱／③の上部バーの下敷き選択・
+   guidePulseSync）は廃止＝下の 5 秒点滅（.gd-blink）に統一した。 */
+/* v2 の面の中は +2px（§33 の文字の大きさ・#guideNav の上書きと同じ作法） */
+#guideNav .sg-mk-row, #guideNav .sg-mk-colors, #guideNav .sg-tl-row { font-size: 14.5px; }
+#guideNav .sg-mk-row .mk-sym { font-size: 15px; }
+
+/* 🔒 §50-2 A（2026-10-19 オーナー「押すべきボタンや入力欄を順番に点滅で案内」）:
+   ガイダンスの「次に押す物」の点滅＝ 1 秒周期・5 回（5 秒）。ボタン・入力欄・箱に効く 1 規則
+   （面 #guideNav の中だけ）。付け外しは app.js guideBlinkSync（段取り＝GUIDE の blinks）。
+   🔴 終わったら app.js が animationend で外す。途中で面を組み直した時は animation-delay を負に
+      して続きから点滅させる（5 秒を延ばさない）。 */
+#guideNav .gd-blink {
+  animation: gd-blink 1s steps(2, jump-none) 5;
 }
-/* 🔒 §30-14-3: 字幕の箱の中・文の下に出す小さなボタン（［使い方動画を見る］）。
-   横並びの時は行いっぱいを取って**次の行**へ落とす。縦長の箱では普通に続けて置く。 */
-/* 🔴 display は指定しない。指定すると `hidden` 属性（UA の display:none）を
-   打ち消してしまい、ボタンの無い番号でも空の箱が出る。
-   flex の子は自動で block 化されるので指定は要らない。 */
-.sg-caption:not(.is-side) .sg-caption-btnrow { flex: 0 0 100%; }
-.sg-caption.is-side .sg-caption-btnrow { flex: 0 0 auto; }
-/* 🔒 §30-17-4 2: 図ごとの色に合わせる（所在図＝青／配置図＝緑）。文字は白のまま */
-.sg-caption-btn {
-  font-size: 12.5px;
-  font-weight: 700;
-  line-height: 1.2;
-  padding: 6px 12px;
-  border: 1px solid var(--sg-go);
-  border-radius: 8px;
-  background: var(--sg-go);
-  color: #fff;
-  cursor: pointer;
+@keyframes gd-blink {
+  0%   { background-color: #fff; border-color: var(--bd-strong);
+         box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+  100% { background-color: #eef4ff; border-color: var(--acc);
+         box-shadow: 0 0 0 2px var(--acc); }
 }
-.sg-caption-btn:hover { background: var(--sg-go-hover); }
-/* 🔒 §30-13-4: A4 縦のときは「左面と枠の間」の空きに**縦長の箱**で置く
-   （左 8px・上 8px・幅は JS が空き−24px で入れる＝sgCaptionPlace）。
-   〇数字の下に指示文（縦並び）。空きが 220px 未満・A4 横なら付かない。 */
-.sg-caption.is-side {
-  left: 8px;
-  transform: none;
-  max-width: 360px;    /* 🔒 §30-13-8 3: 縦長の箱は最大 360px */
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+/* 色の付いた［次へ］（.gd-next＝白い文字）は地の色を変えると読めなくなるので、外側の輪だけ点滅 */
+#guideNav .gd-next.gd-blink { animation-name: gd-blink-ring; }
+@keyframes gd-blink-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 4px #9cc0ff; }
 }
-/* 🔒 §30-25-1 1（2026-09-13 オーナー指示）: A4 横（＝縦長の箱が置けない時）は
-   **横長の箱**。左 8px・幅は JS が「地図領域の幅−16px」で入れる（sgCaptionPlace）。
-   🔴 〇数字の**右から**指示文が始まる（数字の下へ落とさない）＝文の要素を
-      flex: 1 1 0 / min-width: 0 にする。折り返した2行目以降も文の左端に揃う。
-   🔴 文の下のボタン（.sg-caption-btnrow）は今までどおり次の行
-      （上の `.sg-caption:not(.is-side) .sg-caption-btnrow { flex: 0 0 100% }`）。 */
-.sg-caption.is-wide {
-  left: 8px;
-  transform: none;
-  max-width: none;
-}
-.sg-caption.is-wide i { flex: 1 1 0; min-width: 0; }
-.sg-caption.is-moved { transform: none; }
-.sg-caption.is-dragging { cursor: grabbing; }
-/* 🔒 §30-17-2: 字幕の〇数字も図ごとの色（所在図＝青／配置図＝緑） */
-.sg-caption b {
-  flex: 0 0 auto;
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--sg-go);
-}
-.sg-caption i {
-  font-style: normal;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.5;
-  color: #111;
-}
-/* ---- 字幕の改行と行間（🔒 §30-17-1・2026-09-13 オーナー指示）----
-   指示文の「／」→ <br>（改行だけ）／「／／」→ 段落（.sg-cap-p）＝改行＋行間。
-   中身は app.js sgSayHtml が組む（印は SG_NUM[].say の中・文言はデータのまま）。
-   🔴 行間が付くのは **A4 縦の縦長の箱（.is-side）だけ**。横長では 0。
-   🔴 下に長くなる時は app.js sgCaptionPlace が高さを測って
-      .is-tight（行間 0）→ .is-flow（改行も外して普通の折り返し）の順に削る。 */
+
+/* 🔒 §33-8 10: .gd-only の 1 行は倉庫（道具メニューの▼の中）では出さない。
+   v2 の面（#guideNav）へ移された時だけ見える（#sideNav .gd-only は #guideNav 側に一致しない） */
+#sideNav .gd-only { display: none; }
+
+/* 🔒 §33-8 2: ③④⑥は▼の器（.sg-more-g）をそのまま部品の箱へ移す。見出し（.sg-lb）の上の余白だけ揃える */
+#guideNav .gd-parts > .sg-more-g > .sg-lb:first-child { margin-top: 0; }
+
+/* ---- 説明文の改行と行間（🔒 §30-17-1 → §33-5 2）----
+   説明の「／」→ <br>（改行だけ）／「／／」→ 段落（.sg-cap-p）。
+   中身は app.js sgSayHtml が組む（文言は GUIDE の表のまま）。段落の間の行間は .gd-text の規則。 */
 .sg-cap-p { display: block; }
-.sg-caption.is-side .sg-cap-p + .sg-cap-p { margin-top: .55em; }
-.sg-caption.is-tight .sg-cap-p + .sg-cap-p,
-.sg-caption.is-flow .sg-cap-p + .sg-cap-p { margin-top: 0; }
-.sg-caption.is-flow br { display: none; }
-.sg-caption-x {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: #888;
-  font-size: 17px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-}
-.sg-caption-x:hover { background: #eee; color: #222; }
-
-/* ---- 説明文の ON・OFF（🔒 §30-48 D）----
-   字幕の一番下の1行（右端に「説明文［ON｜OFF］」）と、OFF の間だけ地図の左上に出す切替。
-   🔴 切替の見た目は既存の .seg（選んだ方が .is-active）。どちらかは data-capsw（属性）。
-   🔴 字幕の行は横長の箱では行いっぱい（次の行へ落とす）・縦長の箱では幅いっぱいに伸ばす。
-      高さが1行増えた分は app.js sgCaptionPlace が描いた後に測る（削り・下へ落とす）。 */
-.sg-caption-sw {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  font-size: 11.5px;
-  color: var(--mut);
-  cursor: default;
-}
-.sg-caption:not(.is-side) .sg-caption-sw { flex: 0 0 100%; }
-.sg-caption.is-side .sg-caption-sw { align-self: stretch; }
-.cap-sw button { padding: 2px 10px; font-size: 11.5px; font-weight: 700; }
-/* 🔒 §30-48 D 2: 選んだ方はガイダンスの色（--sg-go＝所在図は青／配置図は緑）。
-   🔴 共通の .seg button.is-active はこの下にあるので、クラスを重ねて勝たせる */
-.seg.cap-sw button.is-active { background: var(--sg-go); border-color: var(--sg-go); }
-.cap-sw-float {
-  position: absolute;
-  left: 12px;
-  top: 12px;
-  z-index: 12;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px 6px 12px;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, .25);
-  font-size: 13px;
-  font-weight: 700;
-  color: #111;
-}
-/* 少し大きめ（§30-48 D 3） */
-.cap-sw-float .cap-sw button { padding: 5px 14px; font-size: 13px; }
-/* 🔒 §30-48 D 6: 同じ左上に出るスペースの帯（#spaceBadge）は、切替が出ている間だけ下へ */
-.cap-sw-float:not([hidden]) ~ .space-badge { top: 56px; }
-
-/* 🔒 §30-1: 図をまたぐ移動（配置図①の［所在図ガイダンスへ］）は
-   ［戻る］の代わりの**小さな文字リンク**にする（同じ図の中の移動と見分ける）。 */
-.sg-foot .sg-link {
-  flex: 0 0 auto;
-  border: none;
-  background: none;
-  padding: 9px 2px;
-  font-size: 11.5px;
-  color: var(--acc);
-  text-decoration: underline;
-}
-.sg-foot .sg-link:hover { background: none; color: #0d3f96; }
 
 /* 🔒 §28-13 決定3: 重ね表示の canvas。曇り下書き（.reveal-fog）と同じ場所
    ＝下敷きと SVG の間。🔴 触れない（見るだけ・図形にならない）。 */
@@ -3267,7 +3298,7 @@ p.sg-tk { margin: 10px 0 4px; }
 .tools > h2 + .sg-tk { margin-top: 2px; }
 /* 区切り線のすぐ下の小見出しも、線と離れすぎないようにする */
 .tools > .sg-sep + .sg-tk { margin-top: 8px; }
-/* ▼（3つだけ）は区切り線の直後に来ることがあるので、上の余白を線に合わせる */
+/* ▼（5つだけ・🔒 §35）は区切り線の直後に来ることがあるので、上の余白を線に合わせる */
 .tools > .sg-sep + .sg-more-w { margin-top: 8px; }
 /* 🔒 §30-28-2 9: ▼の中の「なぞり出し」の区切り線は箱の中なので余白を詰める */
 .tools .sg-more-body > .sg-sep { margin-top: 10px; }
@@ -3296,9 +3327,22 @@ p.sg-tk { margin: 10px 0 4px; }
    部品は自動描画の行（.hz-auto-row／.hz-auto-k／.hz-auto-seg）をそのまま使う。
    🔴 所在図の時だけ出す。判定は #editorView の data-kind（データ）だけ・hidden 属性は使わない
       （.side-hz の逆＝ [hidden] の !important と取り合わない）。 */
-/* 🔒 §30-54: ［所在図を作る］＋固定の切替の器。所在図の時だけ出す（配置図では意味が無い） */
-#editorView:not([data-kind="shozaizu"]) .sz-make { display: none; }
-.sz-make { margin-top: 10px; }
+/* 🔒 §30-54: ［所在図を作る］＋固定の切替の器。所在図の時だけ出す（配置図では意味が無い）
+   → 🔒 §35-1: 器は折りたたみ ▼「所在図を作る」（#sideMore_make）になった（規則はそのまま移した）。
+      余白は他の▼と同じ .sg-more-w（10px）に任せる。 */
+#editorView:not([data-kind="shozaizu"]) #sideMore_make { display: none; }
+/* 🔒 §35-6 1: ▼「マーカー設置」は配置図では出さない（所在図では今のまま・部品の id と配線は不変） */
+#editorView:not([data-kind="shozaizu"]) #sideMore_pin { display: none; }
+/* 🔒 §35-2: 「幅の矢印」「保管場所」の2区画は配置図の時だけ出す（.side-hz と同じ作法） */
+#editorView:not([data-kind="haichizu"]) .side-hz-only { display: none; }
+.side-hz-only > .sg-sep + .sg-tk { margin-top: 8px; }
+/* 🔒 §41（2026-10-17）: 道具メニューの紙の向き・枠を決定（見た目は既存の .sg-wide／.sg-two のまま）。
+   余白と区切りだけ＝配置図では一番上に来るので上の線は出さず、最初のボタンの上も詰める。 */
+.side-paper { margin: 0 0 4px; }
+#editorView[data-kind="haichizu"] .side-paper > .sg-sep { display: none; }
+#editorView[data-kind="haichizu"] .side-paper > .sg-sep + .sg-wide { margin-top: 0; }
+/* 🔒 §41: 道具メニューの［使用の本拠と同じ住所を入れる］は小見出しと欄の間＝欄との間を少し空ける */
+#sideCopyHomeAddr { margin: 2px 0 6px; }
 #editorView:not([data-kind="shozaizu"]) .sz-lock { display: none; }
 .sz-lock { margin: 6px 0 0; }
 /* 見出しが「道路・建物」と長いので、自動描画の 3em の幅を外す */

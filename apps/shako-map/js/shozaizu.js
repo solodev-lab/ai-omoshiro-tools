@@ -403,50 +403,112 @@
    *    官庁街（名古屋三の丸）で図が文字に埋まった。
    *    **標準＝全分類ONでも読める密度**（6分類で計18件）に下げる。
    *    1〜2分類に絞って使う人は「多め」を選ぶ、という役割分担にする。 */
+  /* 🔒 §42-5（2026-10-18 オーナー決定）: 名前の 8 分類で生成の段として使うのは
+   * 段1（なし）・段3（標準の「候補が 10 件より多い」時＝件数 3・半径 0.45）・段5（全部）。
+   * **段2・段4 の行は名前では未使用**（表と nameRadiusFor は単体の確かめの控えとして残す）。
+   * 少なめ・多めは下の NAME_AUTO の割合（半径なし）で件数を決める。 */
   var NAME_LEVELS = {
     1: { radiusFrac: null, count: 0 },
-    2: { radiusFrac: 0.22, count: 1 },           // 6分類ON時 計 6
-    3: { radiusFrac: 0.45, count: 3 },           // 6分類ON時 計 18
-    4: { radiusFrac: 0.75, count: 8 },           // 6分類ON時 計 48
+    2: { radiusFrac: 0.22, count: 1 },           // 🔒 §42-5: 名前では未使用
+    3: { radiusFrac: 0.45, count: 3 },           // 🔒 §42-5: 標準（候補が 10 件より多い時）で使う
+    4: { radiusFrac: 0.75, count: 8 },           // 🔒 §42-5: 名前では未使用
     5: { radiusFrac: null, count: Infinity }     // 全部＝半径も件数も無制限
   };
   var NAME_RADIUS_MIN_M = 60;        // 枠が極小の時の下限(m)
   var NAME_RADIUS_MIN_FRAC = 0.6;    // 下限そのものが枠を飲まないための頭打ち
   var NAME_PRIO_UNIT = 150;          // 優先順位1つ分の不利(m)。§18-r と同じ物差し
 
-  /* 🔒 §30-40-2（2026-09-21 オーナー指示）: 名前の8分類だけが持てる**6つ目の選択
-   * 「自動」**（段 NAME_AUTO.level）。ZL を上げて枠が小さくなると、段ごとの半径
-   * （NAME_LEVELS の radiusFrac × 枠の半対角）と件数で候補が 0 になり、
-   * 分類によっては名前が1つも出ない ―― これを「枠に入る候補の数」で自動調整する。
-   *
-   * 決め方（この表が唯一の出どころ）:
-   *   その分類の**枠の中の候補**（近接重複を落とした後）が
-   *     ・allMax 件以下 … allLevel の段として件数・半径を決める
-   *     ・それより多い  … elseLevel の段として件数・半径を決める
-   * 🔴 自動で決めた段は**件数と半径だけ**に使う。描く範囲は枠の中のまま
-   *    （段4〜5 が画面まで描く規則＝areaFor は「手で選んだ時」の物。自動は
-   *     「紙に載る物を決める」仕組みなので枠の外へは広げない・§30-40-2 3）。
-   * 🙋 else を「多め」にしたければ elseLevel を1つ変えるだけ
-   *    （画面の文言も title もこの表の実値から組むので、書き換えは1か所）。
-   *
-   * 🔒 §30-40-2 の改定（2026-09-25 オーナー決定「10件以下なら全部にしたい」）:
-   *    allMax を 5→10 に上げた。境目の決め方（allMax 件以下は allLevel の段）
-   *    自体は変えていない。画面の文言・title はこの実値から組むので書き換えは
-   *    ここ1か所（app.js の nameLevelTitle / nameAutoNote は自動で追随する）。 */
-  var NAME_AUTO = { level: 0, allMax: 10, allLevel: 5, elseLevel: 3 };
+  /* 🔒 §30-40-2（2026-09-21 オーナー指示）: 名前の8分類だけが持てた「自動」＝ZL を上げて枠が
+   * 小さくなると、段ごとの半径と件数で候補が 0 になり名前が1つも出ない ―― これを「枠に入る
+   * 候補の数」で調整する仕組み。§34-2（2026-10-14）で設定盤が 4 区分になり、旧「自動」は
+   * 「標準」（level2）、「多め」はその広い版（level3）になった。
+   * 🔴 決めた件数は**件数だけ**に使う。描く範囲は枠の中のまま（§30-40-2 3・§34-1）。 */
+  /* 🔒 §42-5（2026-10-18 オーナー決定「推奨どおりで承認」・§42-2 を置き換え）: 名前の 8 分類だけ
+   * 設定盤は **5 区分**（1 なし｜2 標準｜3 少なめ｜4 多め｜5 全部）。NAME_AUTO は 2 種類の行を持つ。
+   *   ① 旧規則の行（allMax を持つ）＝ level2（標準・既定）… §34-2 のまま:
+   *      その分類の**枠の中の候補**（近接重複を落とした後）が allMax（10）件以下なら allLevel
+   *      （段5＝全部）・それより多ければ elseLevel（段3＝近い順 3 件・半径 0.45）の段として
+   *      NAME_LEVELS の件数・半径を使う。密集地で少なく抑える「おまかせ」＝直す前の図そのもの。
+   *      候補が少ない枠では全部と同じになる（§42-1 3・これは仕様）。
+   *   ② 割合の行（frac を持つ）＝ level3（少なめ）・level4（多め）… §42 → 🔒 §43-2 ②（2026-10-19
+   *      オーナー案「全部を 3 で割って振り分ける」・§42-5 の最低件数 3／6 は撤回）:
+   *      件数 ＝ N ≤ 0 ? 0 : Math[round](N × frac)（N＝同じく枠の中の候補の数＝全部の数）
+   *      level3（少なめ）… frac 1/3・四捨五入（round）
+   *      level4（多め）  … frac 2/3・切り上げ（ceil）
+   *      例 N=1 → 0／1・N=2 → 1／2・N=3 → 1／2・N=4 → 1／3・N=12 → 4／8・N=26 → 9／18
+   *      （オーナー原文「全部で 1 つなら多めも 1 つ、少な目は 0／2 つなら 全部 2・多め 2・少な目 1／
+   *       3 つなら 全部 3・多め 2・少な目 1」）
+   *      **半径は使わない**（件数だけ・近い順の前置きを取る＝半径と同じ役目）。
+   * 🔴 少なめ ⊂ 多め ⊂ 全部 は常に成り立つ（同じ並びの前置き）。標準は件数の順に並んでいない
+   *    （候補 ≤10 なら少なめより多く、＞10 なら少なめより少ない）＝「おまかせ」の位置（§42-5）。
+   * 🔴 絶対分（§22-aq-2）は件数に数えない・近接重複（§22-aq-3）・枠の中だけ（§34-1）は従来どおり。
+   * 🔴 画面の文言・title（app.js nameLevelTitle）はこの表の実値から組む＝書き換えはここ 1 か所。 */
+  var NAME_AUTO = {
+    level2: { allMax: 10, allLevel: 5, elseLevel: 3 },
+    level3: { frac: 1 / 3, round: 'round' },
+    level4: { frac: 2 / 3, round: 'ceil' }
+  };
 
-  /** 名前の8分類の段を数字にそろえる（🔒 §30-40-2: 0＝自動はそのまま通す） */
-  function nameLevelOf(v) {
-    var n = Math.round(Number(v));
-    if (!isFinite(n)) return 1;                       // 値が無い＝なし（従来どおり）
-    if (n === NAME_AUTO.level) return NAME_AUTO.level;
-    return Math.max(1, Math.min(5, n));
+  /**
+   * 🔒 §42 / §42-5 / §43-2 ②: 少なめ・多め（NAME_AUTO の割合の行）の件数。
+   * @param auto NAME_AUTO の割合の行（{frac, round:'round'|'ceil'}）
+   * @param nCand 枠の中の候補の数（近接重複を落とした後）
+   * @return 出す件数（絶対分は別に出る＝この数に含めない）
+   * 🔴 浮動小数の保険: ceil は 1e-9 を引いてから（例 9×(2/3)＝6.000000000000001 を 7 にしない）。
+   *    round は N×1/3 が .5 ちょうどにならない（N は整数）ので素のまま。
+   */
+  function nameAutoCap(auto, nCand) {
+    if (!(nCand > 0)) return 0;
+    var x = nCand * auto.frac;
+    var n = (auto.round === 'ceil') ? Math.ceil(x - 1e-9) : Math.round(x);
+    return Math.max(0, Math.min(nCand, n));
   }
 
-  /** その分類を使うか（🔒 §30-40-2 4: 「自動」も**使う**と数える＝OSM も取りに行く） */
+  /* 🔒 §34-2 / §42-5: 設定盤の値 → 生成の段（旧 1〜5）の読み替えは**ここ 1 か所**（genLevel）。
+   *   名前の 8 分類（1〜5）… 1 → なし／2 → 標準（level2＝旧規則）／3 → 少なめ（level3＝1/3）／
+   *                          4 → 多め（level4＝2/3）／5 → 全部
+   *   目標物・建物・道路（1〜4）… 1 → 旧 1／2 → 旧 3／3 → 旧 4／4 → 旧 5（旧 2「主役の周りだけ」は無くなった）
+   * 🔴 生成の中（BLDG_LEVELS・ROAD・NAME_LEVELS・LM_COUNT）は旧の段のまま＝読み替えの後だけを見る。 */
+  var GEN_GRADE = [1, 1, 3, 4, 5];          // 添字＝設定盤の値（0 は使わない）
+  var GEN_NAME = [
+    null,
+    { level: 1 },                              // なし
+    { level: 5, auto: NAME_AUTO.level2 },      // 標準（旧規則・段は下の ④ の直前で決まる）
+    { level: 5, auto: NAME_AUTO.level3 },      // 少なめ（🔒 §42-5: 件数は候補の 1/3）
+    { level: 5, auto: NAME_AUTO.level4 },      // 多め（🔒 §42-5: 件数は候補の 2/3）
+    { level: 5 }                               // 全部
+  ];
+  /* 🔒 §42-5: 設定盤の値の上限（名前の 8 分類だけ 5 区分・他は 4 区分）。store.js と同じ値 */
+  var GRADE_MAX_NAME = 5;
+  var GRADE_MAX_OTHER = 4;
+
+  /** 設定盤の値を 1〜max にそろえる（値が無い・数字でない時は def・max 省略＝4） */
+  function gradeOf(v, def, max) {
+    var n = Math.round(Number(v));
+    if (!isFinite(n)) return def;
+    return Math.max(1, Math.min(max || GRADE_MAX_OTHER, n));
+  }
+
+  /**
+   * 🔒 §34-2 / §42-5: 設定盤の値 → 生成の段。
+   * @param row 'name'（名前の 8 分類・値 1〜5）／'lm'／'bldg'／'road'（値 1〜4）
+   * @return 名前は {level, auto}（auto＝NAME_AUTO の行・無ければ段は level のまま）／
+   *         それ以外は旧の段の数字（1〜5）
+   */
+  function genLevel(row, v) {
+    if (row === 'name') return GEN_NAME[gradeOf(v, 1, GRADE_MAX_NAME)];
+    // 値が無い時の既定は従来どおり（道路＝標準・目標物と建物＝なし）
+    return GEN_GRADE[gradeOf(v, row === 'road' ? 2 : 1)];
+  }
+
+  /** 名前の8分類の設定盤の値を 1〜5 にそろえる（値が無い＝なし・🔒 §42-5） */
+  function nameLevelOf(v) {
+    return gradeOf(v, 1, GRADE_MAX_NAME);
+  }
+
+  /** その分類を使うか（なし＝1 だけが使わない＝OSM も取りに行かない） */
   function nameCatUsed(v) {
-    var n = nameLevelOf(v);
-    return n === NAME_AUTO.level || n >= 2;
+    return nameLevelOf(v) >= 2;
   }
 
   /* 🔒 §22-aq（2026-09-05 オーナー決定「案②」）: **交差点名だけ半径で絞らない**。
@@ -472,6 +534,8 @@
 
   var CROSSING_CAT = 'crossing';     // 半径を外す分類（osm.js CATS の id）
   var CROSSING_FRAME_FROM = 3;       // この段から半径を掛けない（3=標準）
+  /* 🔒 §42-5: 少なめ・多めは半径をそもそも使わない（全分類）＝この例外は自然に含まれる。
+   * 標準（旧規則）で段3（候補が 10 件より多い時）になった時は、この例外で交差点名だけ半径なし（§34-2 のまま）。 */
 
   /* 🔒 §30-21-4 4: 同じ分類の中の近接重複（§22-aq-3 ③）を掛けない分類（棟名が並ぶため）。
    * 🔴 分類の id（osm.js CATS）で持つ＝表示文字では判定しない（§26-2 注意②）。 */
@@ -1103,7 +1167,7 @@
   /* ============ 名称の自動描画（🔒 2026-09-03・§23-5 の6分類を5段階で） ============ */
 
   /** 使う分類が1つでもあるか（全部「なし」なら false ＝ OSM を呼ばない）。
-   * 🔒 §30-40-2 4: 「自動」（段 NAME_AUTO.level）も**使う**＝取りに行く。 */
+   * 🔒 §30-40-2 4 / §42-5: 標準・少なめ・多め（NAME_AUTO の行）も**使う**＝取りに行く。 */
   function anyNameCat(nameLevels) {
     if (!nameLevels || !global.OSM) return false;
     for (var i = 0; i < global.OSM.CATS.length; i++) {
@@ -1431,9 +1495,10 @@
   function buildAutoNames(osm, opts, objs, exNames, Rframe, stat, gsiBase, areaFor) {
     var lv = opts.nameLevels || {};
     stat.names = {};
-    /* 🔒 §30-40-2 5: 「自動」を選んだ分類が、どの段に決まったか（分類の id → 段）。
+    /* 🔒 §30-40-2 5 → §42-5: 標準・少なめ・多めを選んだ分類が、何件に決まったか（分類の id → 件数）。
+     * 旧 stat.nameAuto（分類の id → 旧の段）は §42 で段を使わなくなったので件数に替えた。
      * 画面の1行（app.js）はこの値を読む＝表示文字では分岐しない（§26-2 注意②）。 */
-    stat.nameAuto = {};
+    stat.nameCap = {};
     stat.namesTotal = 0;
     stat.nameDupGsi = 0;
     stat.nameDupBase = 0;
@@ -1459,12 +1524,8 @@
     var baseSpots = (gsiBase && gsiBase.spots) ? gsiBase.spots : [];
 
     var fb = opts.frameBounds || opts.bounds;
-    /* 🔒 §30-25-3 2（2026-09-13 オーナー指示）: 名前を描く範囲は**その分類の段**で決める
-     * （1〜3＝枠の中／4 多め・5 全部＝取得範囲＝画面に映っている所）。
-     * 🔴 範囲の出どころは generate の areaFor 1か所（建物・道路と同じ物）。
-     * 🔒 §30-40-2 3: 「自動」（段 NAME_AUTO.level）は areaFor が枠を返す段＝
-     *    **枠の中だけ**。自動で決めた段（下の ④）は件数と半径にしか使わない
-     *    ので、ここには渡さない（自動で枠の外へ広がらない）。 */
+    /* 🔒 §34-1（§30-25-3 2 を改めた）: 名前を描く範囲は**どの段も枠の中だけ**。
+     * 🔴 範囲の出どころは generate の areaFor 1か所（建物・道路と同じ物）。 */
     function areaOf(catId) { return areaFor ? areaFor(lv[catId]) : fb; }
     // 分類ごとの候補置き場と、分類ごとの同名よけ（🔴 分類をまたがない・是正3）
     var byCat = Object.create(null), seenInCat = Object.create(null);
@@ -1475,7 +1536,7 @@
 
     function offer(it) {
       /* 🔒 §30-40-2 2: 候補集めは段の大小を見ない（「なし」だけ捨てる）。
-       * 「自動」もここでは普通に集め、段は下の ④ の直前で決める。 */
+       * 標準・少なめ・多めもここでは普通に集め、件数は下の ④ の直前で決める（🔒 §42-5）。 */
       if (!nameCatUsed(lv[it.cat])) return;     // その分類は「なし」
       if (!it.name) return;
       var p = { lat: it.lat, lng: it.lng };
@@ -1567,14 +1628,17 @@
 
     var out = [];
     global.OSM.CATS.forEach(function (c) {
-      /* 🔒 §30-40-2 2: 「自動」（段 NAME_AUTO.level）はここではまだ段が決まらない。
-       * 決まるのは近接重複（②-b/③）を落とした後（④の直前）なので、それまでは
-       * 「上限いっぱいの段」として進める。この先で段の数字を見るのは
+      /* 🔒 §30-40-2 2 / §34-2 / §42-5: 標準・少なめ・多め（auto＝NAME_AUTO の行）はここでは
+       * まだ件数が決まらない。決まるのは近接重複（②-b/③）を落とした後（④の直前）なので、
+       * それまでは「上限いっぱいの段」（段5＝gl.level＝旧規則の allLevel と同じ）として進める。
+       * この先で段の数字を見るのは
        *   ・crossingMustSet / roadMustSet … 段1「なし」かどうかだけ
        *   ・道路名の最近点の焼き込み       … 同上
-       * なので、仮の段で結果は変わらない（④の件数・半径だけが段で決まる）。 */
-      var auto = (nameLevelOf(lv[c.id]) === NAME_AUTO.level);
-      var n = auto ? NAME_AUTO.allLevel : nameLevelOf(lv[c.id]);
+       * なので、段5のままで結果は変わらない（④の件数・半径だけが行で決まる）。 */
+      /* 🔒 §34-2: 設定盤の値 → 生成の段は genLevel 1 か所（標準・少なめ・多め＝auto を持つ） */
+      var gl = genLevel('name', lv[c.id]);
+      var auto = gl.auto || null;
+      var n = gl.level;
       stat.names[c.id] = 0;
       if (n <= 1) return;
       var arr = byCat[c.id];
@@ -1648,23 +1712,35 @@
           }
         }
       }
-      /* 🔒 §30-40-2 2: 「自動」の段はここで決める ―― **枠の中に残った候補の数**
-       * （近接重複を落とした後＝紙に出る見込みのある候補）を数え、
-       * NAME_AUTO.allMax 以下なら allLevel・それより多ければ elseLevel。
-       * 🔴 候補はもともと areaOf（＝自動は枠の中）に限ってあるので、
+      /* 🔒 §30-40-2 2 / §42-5: 標準・少なめ・多めの件数はここで決める ―― **枠の中に残った
+       * 候補の数 N**（近接重複を落とした後＝紙に出る見込みのある候補）を数え、行の種類で分ける。
+       *   ・旧規則の行（標準・allMax を持つ）… N ≤ allMax なら allLevel・それより多ければ
+       *     elseLevel の段として、下の NAME_LEVELS の件数・半径（nameRadiusFor）を使う（§34-2 のまま）
+       *   ・割合の行（少なめ・多め・frac を持つ）… 件数＝nameAutoCap・**半径は使わない**（R=null）
+       * 🔴 候補はもともと areaOf（＝どの段も枠の中・§34-1）に限ってあるので、
        *    この数がそのまま「枠の中の候補の数」になる。
-       * 🔴 決めた段は下の ④（件数 cap・半径 R）にだけ効く。描く範囲は枠のまま。 */
+       * 🔴 決めた件数・半径は下の ④（cap・R）にだけ効く。描く範囲は枠のまま。
+       * 🔴 stat.nameCap[分類id] ＝標準・少なめ・多めで決まった件数（結果の一言の内訳に使う・
+       *    旧規則で全部になった時も Infinity ではなく候補の数 N）。 */
+      var R = null, cap = 0, nCand = 0;
+      var byFrac = !!(auto && auto.frac);      // 割合の行（少なめ・多め）
       if (auto) {
-        var nCand = 0;
         for (i = 0; i < arr.length; i++) { if (!arr[i].dup) nCand++; }
-        n = (nCand <= NAME_AUTO.allMax) ? NAME_AUTO.allLevel : NAME_AUTO.elseLevel;
-        stat.nameAuto[c.id] = n;
       }
-      /* 🔒 §22-aq: 交差点名だけ段3以上は半径を掛けない（＝枠の中の全部が候補）。
-       * 判定は分類の id（＝ nameCat）1か所で持つ。定数は NAME_LEVELS の隣。 */
-      var noRadius = (c.id === CROSSING_CAT && n >= CROSSING_FRAME_FROM);
-      var R = noRadius ? null : nameRadiusFor(n, Rframe);      // null＝半径では絞らない
-      var cap = NAME_LEVELS[n].count;
+      if (byFrac) {
+        cap = nameAutoCap(auto, nCand);
+        stat.nameCap[c.id] = cap;
+      } else {
+        // 旧規則の行（標準）は段をここで決める（§34-2 のまま）
+        if (auto) n = (nCand <= auto.allMax) ? auto.allLevel : auto.elseLevel;
+        /* 🔒 §22-aq: 交差点名だけ段3以上は半径を掛けない（＝枠の中の全部が候補）。
+         * 判定は分類の id（＝ nameCat）1か所で持つ。定数は NAME_LEVELS の隣。
+         * 🔒 §42-5: ここへ来るのは段5（全部）と、標準（旧規則）で決まった段（3／5）。 */
+        var noRadius = (c.id === CROSSING_CAT && n >= CROSSING_FRAME_FROM);
+        R = noRadius ? null : nameRadiusFor(n, Rframe);      // null＝半径では絞らない
+        cap = NAME_LEVELS[n].count;
+        if (auto) stat.nameCap[c.id] = Math.min(cap, nCand);
+      }
       /* 🔒 §22-aq-2 ④: 段の件数を消費した数。**絶対分は件数に数えない**ので
        * stat.names（実際に出した数）とは別に持つ。 */
       var capUsed = 0;
@@ -1757,24 +1833,64 @@
     return null;
   }
 
+  /** 緯度経度を 1e-6 で丸めた文字（§44 の鍵用） */
+  function llKey(p) {
+    if (!p || !isFinite(p.lat) || !isFinite(p.lng)) return '';
+    return p.lat.toFixed(6) + ',' + p.lng.toFixed(6);
+  }
+
+  /**
+   * 🔒 §44（2026-10-19 オーナー決定）: 差分作り直しで「前からある同じ名前」を見分ける鍵。
+   * @return [位置まで入れた鍵, 位置を入れない鍵 or null] ／ 突き合わせない物は null
+   *   OSM の名前（nameSrc:'osm'）
+   *     ・●のある名前 … nameCat＋text＋anchor（●の場所は生成で決まる＝置き直しで動かない）
+   *     ・路線番号の印（badge）… nameCat＋text＋at（印は置き直されない＝生成時の at のまま）
+   *       🔴 同じ番号が別の場所にも出るので位置を入れない鍵は作らない（地理院の印も同じ）
+   *     ・●の無い名前（道路名）… nameCat＋text（置き直しで at が動くので位置を入れない）
+   *   地理院の注記（annoKind）… annoKind＋text＋(anchor||at)。●の無い物は置き直しで at が
+   *     動き得るので、位置を入れない鍵（annoKind＋text）も返す（先に位置まで入れた鍵で探す）
+   *   それ以外（面・線・主役の文字 role 付き）… null＝突き合わせない（従来どおり作り直す）
+   * 🔴 鍵はデータ属性だけで作る。表示文字で分岐はしない（text は「同じ物か」の比較にだけ使う
+   *    ＝§26-2 注意②の「表示文字で種類を決めない」には当たらない）。
+   */
+  function reuseKeysOf(o) {
+    if (!o || o.type !== 'text' || !o.text || o.role) return null;
+    if (o.nameSrc === 'osm' && o.nameCat) {
+      var head = 'osm|' + o.nameCat + '|' + o.text;
+      if (o.anchor) return [head + '|' + llKey(o.anchor), null];
+      if (o.badge) return [head + '|' + llKey(o.at), null];
+      return [head, null];
+    }
+    if (o.annoKind) {
+      var h2 = 'gsi|' + o.annoKind + '|' + o.text;
+      if (o.anchor) return [h2 + '|' + llKey(o.anchor), null];
+      if (o.badge) return [h2 + '|' + llKey(o.at), null];     // 印は同じ番号が複数ある
+      return [h2 + '|' + llKey(o.at), h2];
+    }
+    return null;
+  }
+
   /**
    * 🔒 §30-42-4 1（2026-09-22 Fable 裁定）: 差分作り直しの結果の1行を
    * 「いま紙にある生成物」から数え直す。
-   * 差分の流れでは existingNames に「残す生成物の文字」を先勝ちの相手として渡す
-   * ので、流れ全体の stats（buildAutoNames が数える件数）は先勝ちで落ちた分だけ
-   * 小さく出る（実測: 名称の自動描画 14 → 7・紙の中身は変わらず数字だけ）。
+   * 差分の流れでは紙に載るのが**その項目の物だけ**で、他の項目は前回の物が残るので、
+   * 流れ全体の stats（buildAutoNames が数える件数）と紙の中身は一致するとは限らない。
+   * （旧は existingNames に「残す生成物の文字」を先勝ちの相手として渡していたため
+   *  先勝ちで落ちた分だけ小さく出た＝実測 14 → 7。🔒 §43-2 ① でその渡し方は撤回。）
    * 数字と紙が食い違うのは紛らわしいので、app.js が差分の経路の時だけこの関数で
    * stat を上書きしてから結果の1行を組む。
    * @param objs いま紙にある生成物（source:'shozaizu'）の配列。
-   * @param stat 書き換える stats（roads/buildings/landmarks/annoKept/names/
+   * @param stat 書き換える stats（roads/rails/buildings/landmarks/annoKept/names/
    *             namesTotal 以外は触らない）。
    * 🔴 判定は partOf とデータ属性だけで行う（表示文字で分岐しない・§26-2 注意②）。
-   * 🔴 鉄道・川・等高線・山名は数え直さない: nature の差分ではその項目（partOf
-   *    'nature'）ごと丸ごと作り直すので、流れ全体の値がそのまま紙の中身と一致する
-   *    （鉄道は nature の差分対象ではなく常に「残す物」＝差分では触らないのでこれも不変）。
+   * 🔴 川・等高線・山名は数え直さない: nature の差分ではその項目（partOf
+   *    'nature'）ごと丸ごと作り直すので、流れ全体の値がそのまま紙の中身と一致する。
+   * 🔒 §42（2026-10-18）: 鉄道（rails）は数え直す。app.js が stats の無い時（紙を変えずに
+   *    終わった経路）にも、結果の一言「道路 ○ / 鉄道 ○ / 名称 ○」を**いまの紙から**組む
+   *    ため（空の stat を渡して呼ぶ）。定義は generate の stat.rails++（style.rail の線）と同じ。
    */
   function recount(objs, stat) {
-    var roads = 0, buildings = 0, landmarks = 0, annoKept = 0;
+    var roads = 0, rails = 0, buildings = 0, landmarks = 0, annoKept = 0;
     var names = {}, namesTotal = 0, i, o, p;
     if (global.OSM && global.OSM.CATS) {
       global.OSM.CATS.forEach(function (c) { names[c.id] = 0; });
@@ -1785,6 +1901,7 @@
       p = partOf(o);
       if (p === 'road') roads++;
       else if (p === 'bldg') buildings++;
+      if (o.type === 'path' && o.style && o.style.rail) rails++;
       if (o.type === 'text' && o.annoKind === 'landmark') landmarks++;
       /* generate の stat.annoKept++（地理院の Anno 由来・nameSrc を持たない）と
        * 同じ定義。OSM 由来の名称は annoKind を持たない（§26-2 の注記どおり）ので
@@ -1799,6 +1916,7 @@
       }
     }
     stat.roads = roads;
+    stat.rails = rails;
     stat.buildings = buildings;
     stat.landmarks = landmarks;
     stat.annoKept = annoKept;
@@ -1815,7 +1933,9 @@
    *        marks:{home:{shape,color}, lot:{shape,color}}, ← 🔒 §28-14 ①-4: 形と色を
    *              **地点ごと**に指定する（渡された方が優先。無ければ markStyle）
    *        roadStyle:'line'|'band'}   ← 道路の描き方（既定 'line'＝黒線1本・§23-9）
-   *   bldgLevel（🔒 §23-10）: 1=なし(既定) / 2=主役の周りだけ / 3=標準 / 4=多め / 5=全部
+   *   bldgLevel / roadLevel / lmLevel / nameLevels の値（🔒 §34-2）: 設定盤の 1=なし / 2=標準 /
+   *     3=多め / 4=全部。生成の段への読み替えは genLevel 1 か所（下の旧 5 段の説明は生成の中の段）
+   *   bldgLevel（🔒 §23-10・生成の段）: 1=なし(既定) / 2=主役の周りだけ / 3=標準 / 4=多め / 5=全部
    *   roadStyle（🔒 §23-9）: 'line'=従来の黒線1本（既定・後方互換）
    *                          'band'=白い帯＋黒の縁取り（ヤフー式の2本描き）
    *   diff（🔒 §30-42-2 2）: {key, keep} ＝**差分作り直し**。取得→整形は全部走らせ、
@@ -1829,7 +1949,8 @@
     var roadStyle = (opts.roadStyle === 'band') ? 'band' : 'line';
     var roadTable = roadStyleTable(roadStyle);
     var bldgFill = bldgStyle();
-    var bldgLevel = Math.max(1, Math.min(5, Number(opts.bldgLevel) || 1));
+    /* 🔒 §34-2: opts の段は設定盤の値（1〜4）。生成の段（旧 1〜5）への読み替えは genLevel 1 か所 */
+    var bldgLevel = genLevel('bldg', opts.bldgLevel);
     var bldgCfg = BLDG_LEVELS[bldgLevel];
     /* 🔴 §23-10-b: 半径は D ではなく「枠の大きさ」＝ R_frame（描画範囲の対角の半分）に連動。
      * frameBounds（実際の紙面の枠）があればそれを優先、無ければ bounds（取得範囲＝
@@ -1841,22 +1962,23 @@
       : 0;
     var bldgR = bldgRadiusFor(bldgLevel, bldgRframe);  // null=段1(対象外)/段5(無制限)
     var bldgLat0 = (bounds.north + bounds.south) / 2;
-    /* 🔒 §30-25-3 2（2026-09-13 オーナー指示）: **描く範囲は段で決める**。
-     *   段 1〜3（なし・主役の周りだけ・標準） … 枠の中だけ（今まで通り）
-     *   段 4（多め）・5（全部）              … 取得範囲の全部＝画面に映っている所
+    /* 🔒 §34-1（2026-10-14・§30-25-3 2 を改めた）: **どの段も枠の中だけを描く**。
+     * 旧は段 4〜5（多め・全部）だけ枠の外（画面に映っている所）まで候補にしていたため、
+     * 近接重複の判定（主役に近い順）で枠の外の同名バス停が先に残り、枠の中の方が
+     * 「重複」として落ちて「全部にしたら消えた」に見えた（SHOW_OUT_FROM は廃止）。
+     * 候補の集合がどの段でも同じになり、段は「前置きをどこまで取るか」だけ＝右へ行くほど必ず増える。
      * 🔴 出どころはこの1関数だけ（建物・道路・名前の8分類・目標物が同じ物を読む）。
-     * 🔴 枠が無い生成（frameBounds なし）は取得範囲そのものが枠＝どの段でも同じ。 */
+     *    引数の段は今は使わない（呼ぶ側はそのまま）。
+     * 🔴 枠が無い生成（frameBounds なし）は取得範囲そのものが枠。 */
     var frameArea = opts.frameBounds || bounds;
-    var SHOW_OUT_FROM = 4;                 // この段から枠の外にも描く
-    function areaFor(level) {
-      var n = Math.max(1, Math.min(5, Math.round(Number(level) || 1)));
-      return (n >= SHOW_OUT_FROM) ? bounds : frameArea;
+    function areaFor() {
+      return frameArea;
     }
     // 目標物（地理院の注記）の段。件数は opts.landmarks（LM_COUNT）が持つ
-    var lmLevel = Math.max(1, Math.min(5, Math.round(Number(opts.lmLevel) || 1)));
+    var lmLevel = genLevel('lm', opts.lmLevel);              // 🔒 §34-2
     /* 🔒 2026-09-03: 道路の量も5段階。半径は建物と**同じ R_frame** に連動させる
      * （同じ枠なら「主役の周りだけ」の広さが建物と道路でそろう）。 */
-    var roadLevel = Math.max(1, Math.min(5, Math.round(Number(opts.roadLevel) || 3)));
+    var roadLevel = genLevel('road', opts.roadLevel);        // 🔒 §34-2
     var roadR = roadRadiusFor(roadLevel, bldgRframe);  // null=半径では絞らない
     /* 🔒 2026-09-03: 名称の6分類（§23-5）も5段階で自動描画する。
      * 🔴 タイルと OSM は**同時に**取りに行く（直列にすると待ち時間が足し算になる）。
@@ -2392,18 +2514,52 @@
        * 上で、その項目（key）に属する物だけを新しい生成物として取り出す。
        * 文字は `placeLabels` の `only` に新しい文字だけを渡す＝残す文字（keep）は
        * 「もう置いてある障害物」になり、位置は1つも動かない（§22-am-3 と同じ仕組み）。
-       * 🔴 判定は partOf（データ属性）1か所。表示文字では分岐しない（注意②）。 */
+       * 🔴 判定は partOf（データ属性）1か所。表示文字では分岐しない（注意②）。
+       * 🔒 §44（2026-10-19 オーナー決定「同じラベルを動かすだけの動作はやめてほしい」）:
+       *    差分では**前からある同じ名前はそのまま残し、置き直さない**。app.js が渡す
+       *    `opts.diff.old`（その項目の消す予定の物）と newPart を鍵（reuseKeyOf・データ属性
+       *    だけ）で突き合わせ、一致した新しい物は捨てて古い物を**障害物**に回す（only の外＝
+       *    位置・引き出し線・id を一切触らない）。返り値 reusedIds＝残した古い物の id
+       *    （app.js はそれを消さない）。増えた分だけ置き・減った分だけ消える＝段を戻せば
+       *    最初の図とまったく同じ。全部作り直し（diff なし）は従来どおり全部置き直す。 */
       var diffKey = (opts.diff && opts.diff.key) ? opts.diff.key : null;
-      var newPart = null, newTexts = null, placeObjs = objs;
+      var newPart = null, newTexts = null, placeObjs = objs, reusedIds = [];
       if (diffKey) {
         newPart = objs.filter(function (o) { return partOf(o) === diffKey; });
+        /* 🔒 §44: 古い物（文字だけ）を鍵で引けるようにする。同じ鍵が 2 つあれば先勝ち。
+         * 鍵は 2 段（reuseKeysOf）: ① 位置まで入れた鍵 → ② 位置を入れない鍵（●の無い名前
+         * だけ・置き直しで at が動いた古い物も拾うため）。1 つの古い物は 1 回だけ使う。 */
+        var oldExact = Object.create(null), oldLoose = Object.create(null);
+        (opts.diff.old || []).forEach(function (o) {
+          var ks = reuseKeysOf(o);
+          if (!ks) return;
+          if (!oldExact[ks[0]]) oldExact[ks[0]] = o;
+          if (ks[1] && !oldLoose[ks[1]]) oldLoose[ks[1]] = o;
+        });
+        var usedOld = Object.create(null), reusedOld = [];
+        var pickOld = function (map, k) {
+          var o = k ? map[k] : null;
+          return (o && !usedOld[o.id]) ? o : null;
+        };
+        newPart = newPart.filter(function (o) {
+          var ks = reuseKeysOf(o);
+          if (!ks) return true;
+          var old = pickOld(oldExact, ks[0]) || pickOld(oldLoose, ks[1]);
+          if (!old) return true;
+          usedOld[old.id] = true;              // 1 つの古い物は 1 回だけ再利用（先勝ち）
+          reusedOld.push(old);
+          reusedIds.push(old.id);
+          return false;                        // 新しい物は捨てる（古い物を残す）
+        });
+        stat.nameReused = reusedIds.length;
         newTexts = newPart.filter(function (o) { return o.type === 'text'; });
         /* 残す生成物の文字（app.js が渡す）＝障害物としてだけ通す（返り値には入れない）。
+         * 🔒 §44: 再利用した古い文字も同じく障害物（only に入れない＝動かさない）。
          * 🔴 手描き・なぞり出しの文字は keep に入らない（全部作り直しでも
          *    placeLabels の外＝障害物にしていない。従来と同じ扱いにそろえる）。 */
         placeObjs = (opts.diff.keep || []).filter(function (o) {
           return o && o.type === 'text';
-        }).concat(newTexts);
+        }).concat(reusedOld, newTexts);
       }
       // 🔒 §30-13-5: 整形（タイル→図形）はここまで／ここから配置（重なり回避）
       tEnd('shozaizu:整形');
@@ -2480,13 +2636,15 @@
 
       /* 🔒 §30-42-2 2: 差分作り直しの返り値は**新しい生成物だけ**（文字は置いた後）。
        * stats は流れ全体の値のまま（同 4）。
-       * 🔒 §30-42-4 1（裁定済み）: 差分では existingNames に「残す生成物の文字」が
-       *    入るため、この stats の名前の件数は先勝ちで落ちた分だけ小さく出る
-       *    （実測: 名称の自動描画 14 → 7・紙の中身は変わらず数字だけ）。数字と紙が
-       *    食い違うのは紛らわしいので、app.js が差分の経路の時だけ
-       *    `Shozaizu.recount(いま紙にある生成物, stats)` で数え直してから
-       *    結果の1行を組む（このまま stats を使わない）。 */
-      return { objects: diffKey ? newPart : objs, stats: stat,
+       * 🔒 §30-42-4 1（裁定済み）→ §43-2 ①: 差分では紙に載るのが**その項目の物だけ**で、
+       *    他の項目は前回の物が残る＝この stats と紙の中身は一致するとは限らない
+       *    （旧は existingNames に「残す生成物の文字」が入り、先勝ちで落ちた分だけ小さく
+       *    出ていた＝実測 14 → 7。§43 でその渡し方は撤回＝差分も最初の生成と同じ規則）。
+       *    app.js は差分の経路の時だけ `Shozaizu.recount(いま紙にある生成物, stats)` で
+       *    数え直してから結果の1行を組む（このまま stats を使わない）。 */
+      /* 🔒 §44: reusedIds＝差分で残した古い物の id（app.js はこれを消さない）。
+       *    全部作り直しでは空。 */
+      return { objects: diffKey ? newPart : objs, reusedIds: reusedIds, stats: stat,
                zoom: got.z, minRankJa: RANK_JA[minRank] };
     }).catch(function (e) {
       /* 🔒 §30-13-7 7: 途中で失敗しても計測は必ず閉じる（finally 相当）。
@@ -3176,8 +3334,8 @@
        * ●（無ければ文字そのもの）が紙の枠の外にある名前は、**落とさずに**
        * 枠の制約を外して置く（紙には枠の中しか出ないが、画面では枠の外も見える
        * ＝「枠の中に目印が無い」と分かって枠を決め直せる・§30-25-3 5）。
-       * 🔴 段 1〜3 では枠の外の物はそもそも作られない（areaFor が切る）ので、
-       *    ここへ来るのは「多め・全部」で意図して作った物だけ。
+       * 🔴 🔒 §34-1: どの段でも枠の外の物はそもそも作られない（areaFor が枠を返す）ので、
+       *    ここへ来るのは手で置いた物など生成の外から来た物だけ。
        * 🔴 役割つき（自宅・駐車場・距離）は所在図の主役なので従来どおり対象外。 */
       if (!o.role && !inFrame(base)) { freeRecs.push(rec); return; }
 
@@ -3948,9 +4106,15 @@
     /* 🔒 2026-09-03（後半）: 名称6分類の5段階・川・山（UI・単体テスト・実測で使う） */
     NAME_LEVEL_JA: NAME_LEVEL_JA,
     NAME_LEVELS: NAME_LEVELS,
-    /* 🔒 §30-40-2: 名前の8分類の「自動」（段の数字と決め方）。app.js は
-     * 画面の段（0）と説明の文言を**この実値から**組む＝値を写さない。 */
+    /* 🔒 §34-2 / §42-5: 名前の 8 分類の「標準」（level2＝旧規則 allMax/allLevel/elseLevel）・
+     * 「少なめ」（level3）・「多め」（level4＝割合 frac・丸め方 round／🔒 §43-2 ②）の決め方。app.js は
+     * 説明の文言を**この実値から**組む＝値を写さない。割合の件数の計算は nameAutoCap 1 か所。 */
     NAME_AUTO: NAME_AUTO,
+    nameAutoCap: nameAutoCap,
+    GRADE_MAX_NAME: GRADE_MAX_NAME,
+    /* 🔒 §34-2: 設定盤の値（1〜4）→ 生成の段の読み替え（1 か所）。app.js は目標物の件数
+     * （LM_COUNT）を引く時だけ使う */
+    genLevel: genLevel,
     NAME_PRIO_UNIT: NAME_PRIO_UNIT,
     /* 🔒 2026-09-04 是正2: 近接重複の抑制（仮値・実機目視で確定） */
     NAME_DUP_M: NAME_DUP_M,

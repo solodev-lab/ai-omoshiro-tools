@@ -1,0 +1,319 @@
+/* 紙のマニュアル（正典 §36-5）。HTML は 1 つ・CSS は「共通／印刷／画面」の 3 区画。
+   🔴 色・大きさの値はこの先頭の :root 1 か所。 */
+:root {
+  /* 'Segoe UI Symbol' は最後＝BIZ UDPGothic に無い記号（⬠ など）だけそこから出る */
+  --font: "BIZ UDPGothic", "BIZ UDPゴシック", "Meiryo", "メイリオ", "Segoe UI Symbol", sans-serif;
+  --fs: 10.5pt;                 /* 本文 */
+  --ink: #1a1a1a;
+  --sub: #555;
+  --line: #d6d9de;
+  --red: #D32F2F;               /* 押す所（画像の〇・番号札と同じ） */
+  --blue: #1565C0;              /* 出て来る物 */
+  --band-sz: #1d5fc4;           /* 所在図＝青 */
+  --band-hz: #1f8a4c;           /* 配置図＝緑 */
+  --band-gray: #5f6670;         /* 0・3・4・5 部 */
+  --fig-h: 56mm;               /* 画像の行の高さ（shot の h で変えられる） */
+  --page-w: 186mm;              /* A4 210mm − 余白 12mm×2 */
+  --page-h: 272mm;              /* A4 297mm − 余白 12mm×2（273mm）より 1mm 低く＝端数で白紙が出ない */
+}
+
+/* ======================================================== 共通（印刷と画面） */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  font-size: var(--fs);
+  line-height: 1.5;
+  color: var(--ink);
+  background: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.page {
+  width: var(--page-w);
+  height: var(--page-h);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  background: #fff;
+}
+
+/* 頭（図の色の帯・図ごとの番号） */
+.pg-head {
+  display: flex;
+  align-items: baseline;
+  gap: 5mm;
+  padding: 2mm 4mm;
+  color: #fff;
+  border-radius: 2mm;
+  background: var(--band-gray);
+}
+.band-sz .pg-head { background: var(--band-sz); }
+.band-hz .pg-head { background: var(--band-hz); }
+.pg-no { font-size: 11pt; white-space: nowrap; }
+.pg-no b { font-size: 17pt; margin-left: 0.6mm; }
+.pg-no small { font-size: 10pt; opacity: 0.85; }
+.pg-title { margin: 0; font-size: 16pt; font-weight: 700; line-height: 1.3; }
+
+/* やること（1 文） */
+.pg-aim {
+  margin: 0;
+  padding: 1.6mm 3mm;
+  border-left: 1.4mm solid var(--red);
+  background: #fdf3f3;
+  font-size: 11pt;
+}
+.pg-aim b { color: var(--red); margin-right: 2.5mm; }
+
+/* 本文＝節の並び。画像（.fig）は高さを揃えて横に並べ、入らなければ次の行へ。
+   画像以外の節は 1 行を占める。🔴 紙への詰め方は build.py（はみ出した最初の節から次の紙へ）
+   ＝ここは overflow: hidden（はみ出しを測るため・節の途中では切らない） */
+.pg-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: flex-start;
+  gap: 2.2mm 3mm;
+}
+.pg-body > :not(.fig) { flex: 0 0 100%; }
+.pg-body > * { break-inside: avoid; }
+.fig {
+  margin: 0;
+  display: inline-flex;
+  flex-direction: column;
+  width: min-content;
+  max-width: 100%;
+}
+.fig img {
+  display: block;
+  height: var(--h, var(--fig-h));
+  width: auto;
+  max-width: var(--page-w);
+  border: 0.3mm solid var(--line);
+  border-radius: 1mm;
+}
+.fig-w img { width: var(--w); height: auto; }
+.fig figcaption {
+  min-width: 38mm;              /* 細い画像の下で 1 行 3 字に折れないように */
+  margin-top: 0.6mm;
+  font-size: 8.5pt;
+  line-height: 1.35;
+  color: var(--sub);
+}
+
+/* 節（手順・できたか確かめる・うまくいかない時・補足） */
+.sec h3 {
+  margin: 0 0 1mm;
+  padding-bottom: 0.4mm;
+  font-size: 11pt;
+  border-bottom: 0.35mm solid var(--line);
+}
+.sec-steps h3 { color: var(--red); border-color: #f0c4c4; }
+.sec-check h3 { color: var(--blue); border-color: #c4d6ee; }
+
+.steps { list-style: none; margin: 0; padding: 0; }
+.steps li { display: flex; gap: 2.2mm; margin: 0 0 1.2mm; }
+.steps p { margin: 0; }
+/* 手順の番号＝画像の番号札と同じ絵（赤丸に白の太字） */
+.nb {
+  flex: 0 0 auto;
+  width: 6mm; height: 6mm;
+  margin-top: 0.1mm;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-weight: 700;
+  font-size: 10pt;
+  line-height: 6mm;
+  text-align: center;
+}
+
+.checks, .notes { margin: 0; padding-left: 5mm; }
+.checks { list-style: none; padding-left: 0; }
+.checks li::before { content: "☐"; color: var(--blue); margin-right: 1.6mm; }
+.checks li, .notes li { margin: 0 0 0.6mm; }
+
+.troubles { margin: 0; }
+.troubles dt { font-weight: 700; }
+.troubles dt::before { content: "・"; }
+.troubles dd { margin: 0 0 0.6mm 4.5mm; }
+.troubles dd::before { content: "→ "; color: var(--red); font-weight: 700; }
+
+/* 表（0-1 名前と役目・0-4 道具の一覧） */
+.tbl { width: 100%; border-collapse: collapse; font-size: 9.5pt; line-height: 1.35; }
+.tbl th, .tbl td { border: 0.25mm solid var(--line); padding: 0.5mm 1.6mm; vertical-align: middle; text-align: left; }
+.tbl-narrow td:nth-child(2) { white-space: nowrap; font-weight: 700; }
+.tbl th { background: #f1f3f6; font-weight: 700; white-space: nowrap; }
+.tbl td.t-img { width: 1%; white-space: nowrap; text-align: center; }
+.tbl td.t-img img { display: block; margin: 0 auto; }
+.tbl td.t-name { font-weight: 700; white-space: nowrap; }
+.tbl-narrow td:first-child { width: 1%; white-space: nowrap; text-align: center; font-weight: 700; color: var(--red); }
+
+/* 流れ図（所在図① など） */
+/* 2 段組み（左の段の上から下へ・続きは右の段）＝ 15 動作を 1 ページに */
+.flow { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 6mm; }
+.flow li { display: flex; gap: 2.4mm; align-items: flex-start; padding: 0.8mm 0; border-bottom: 0.2mm dashed var(--line); break-inside: avoid; }
+.flow li b { font-size: 10.5pt; }
+.flow .fl-aim { display: block; font-size: 8.5pt; color: var(--sub); line-height: 1.35; }
+.fl-opt { margin-left: 2mm; padding: 0 1.4mm; border: 0.25mm solid #b9bec6; border-radius: 1mm; font-size: 8pt; color: var(--sub); }
+.flow li.opt b { color: #6b7280; font-weight: 500; }
+.flow li.opt .nb { background: #e8a5a5; }
+
+/* 凡例（印の意味） */
+.lg-lead { margin: 0 0 1mm; font-size: 9.5pt; }
+.lg-red { color: var(--red); }
+.lg-blue { color: var(--blue); }
+.legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2mm 4mm; }
+.legend li { display: flex; gap: 2mm; align-items: center; font-size: 9pt; line-height: 1.35; }
+.legend svg { flex: 0 0 auto; width: 22mm; height: 10mm; }
+.legend b { display: block; font-size: 9.5pt; }
+
+/* 動画の QR（配置図⑥） */
+.qr { display: flex; gap: 4mm; align-items: center; padding: 1.5mm 2mm; border: 0.3mm solid var(--line); border-radius: 1.5mm; }
+.qr img { width: 24mm; height: 24mm; }
+.qr p { margin: 0; font-size: 9.5pt; }
+.qr-url { font-size: 8pt; color: var(--sub); word-break: break-all; }
+
+/* ボタン名［ ］は少し太く */
+.btn { font-weight: 700; white-space: nowrap; }
+/* 〔ページ id〕の行き先・〔色:#…〕の見本 */
+.ref { white-space: nowrap; color: var(--blue); }
+.swatch { display: inline-block; width: 3.4mm; height: 3.4mm; margin-right: 1.2mm; vertical-align: -0.5mm;
+          border: 0.25mm solid #333; border-radius: 0.6mm; }
+.sec h3:empty { display: none; }
+
+/* 表紙 */
+.page-cover .pg-body { display: block; }
+.cv { height: 100%; display: flex; flex-direction: column; padding: 34mm 10mm 0; border-top: 6mm solid var(--band-hz);
+      box-shadow: inset 0 6mm 0 0 var(--band-sz); }
+.cv-kicker { margin: 0 0 3mm; font-size: 13pt; color: var(--sub); letter-spacing: 0.2em; }
+.cv-title { margin: 0; font-size: 25pt; line-height: 1.35; }
+.cv-sub { margin: 6mm 0 0; font-size: 13pt; color: #333; }
+.cv-app { display: flex; gap: 6mm; align-items: center; margin-top: 26mm; padding: 5mm 6mm;
+          border: 0.4mm solid var(--line); border-radius: 2mm; width: fit-content; }
+.cv-app p { margin: 0; font-size: 11pt; }
+.cv-qr { width: 34mm; height: 34mm; }
+.cv-url { color: var(--ink); font-size: 10pt; text-decoration: none; word-break: break-all; }
+.cv-note { margin-top: auto; font-size: 10pt; color: var(--sub); }
+.cv-ver { margin: 2mm 0 6mm; font-size: 10pt; color: var(--sub); }
+
+/* 目次（部ごとの表・左に番号・右にページ） */
+.sec-tocpart h3 { color: #fff; background: var(--band-gray); border: 0; padding: 0.6mm 2.5mm; border-radius: 1mm; }
+.sec-tocpart.band-sz h3 { background: var(--band-sz); }
+.sec-tocpart.band-hz h3 { background: var(--band-hz); }
+.toc-tbl { width: 100%; border-collapse: collapse; font-size: 9.5pt; line-height: 1.3; }
+.toc-tbl td { padding: 0.45mm 1.5mm; border-bottom: 0.2mm dotted #c3c8cf; }
+.toc-tbl .tc-no { width: 12mm; white-space: nowrap; font-weight: 700; }
+.toc-tbl .tc-seq { width: 16mm; text-align: right; white-space: nowrap; }
+.toc-tbl .tc-seq::after { content: " ページ"; font-size: 8pt; color: var(--sub); }
+.toc-tbl a { color: var(--ink); text-decoration: none; }
+.toc-note { margin: 1mm 0 0; font-size: 9.5pt; color: var(--sub); }
+
+/* 表 2 つを横に並べる（早見表） */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; align-items: start; }
+.pair .sec-table h3 { font-size: 10.5pt; }
+
+/* 困ったとき（症状／原因／直し／見る所） */
+.tbl-trouble .tbl { font-size: 8.8pt; }
+.tbl-trouble .tbl td:first-child { width: 30%; font-weight: 700; }
+.tbl-trouble .tbl td:last-child { width: 17%; font-size: 8.3pt; }
+/* 早見表（A4 横・小さめの字） */
+.tbl-quick .tbl { font-size: 8.8pt; line-height: 1.3; }
+.tbl-quick .tbl td { padding: 0.9mm 1.2mm; }
+.tbl-quick .tbl td:first-child { width: 6mm; text-align: center; font-weight: 700; }
+.tbl-quick .tbl td:nth-child(2) { white-space: nowrap; font-weight: 700; }
+.tbl-quick .tbl td:nth-child(3) { white-space: nowrap; }
+.tbl-quick .tbl td:last-child { width: 7mm; text-align: center; }
+/* 下敷きの一覧 */
+.tbl-under .tbl { font-size: 8.6pt; }
+.tbl-under .tbl td:first-child { width: 24%; font-weight: 700; }
+.tbl-under .tbl td:nth-child(3) { width: 13%; }
+/* 2 列の一覧（キーボード・下敷き） */
+.tbl-key .tbl td:first-child { width: 28%; white-space: nowrap; font-weight: 700; }
+
+/* A4 横の紙（早見表）。🔒 @page に名前を付けてこの紙だけ横にする */
+.page.landscape { width: 273mm; height: 185mm; page: landscape; }
+
+/* 足 */
+.pg-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 1.2mm;
+  border-top: 0.3mm solid var(--line);
+  font-size: 8.5pt;
+  color: var(--sub);
+}
+
+.toc { display: none; }
+.zoom[hidden] { display: none; }
+
+/* ======================================================== 印刷（A4 縦・1 動作＝1 ページ） */
+@page { size: A4; margin: 12mm; }
+@page landscape { size: A4 landscape; margin: 12mm; }
+@media print {
+  .page { break-after: page; }
+  .page:last-child { break-after: auto; }
+  .zoom { display: none !important; }
+}
+
+/* ======================================================== 画面（Web 版: 目次を左に固定・ページを縦に並べる） */
+@media screen {
+  body { background: #e9ebef; }
+  .toc {
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 250px;
+    overflow-y: auto;
+    padding: 16px 14px;
+    background: #fff;
+    border-right: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .toc-h { margin: 0 0 4px; font-weight: 700; font-size: 14px; }
+  .toc-v { margin: 0 0 12px; color: var(--sub); font-size: 12px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0 0 6px; }
+  .toc a { color: var(--ink); text-decoration: none; display: block; padding: 4px 6px; border-radius: 4px; }
+  .toc a:hover { background: #f0f3f8; }
+  .toc-no { display: block; font-size: 11px; color: var(--sub); }
+  .pages { margin-left: 250px; padding: 24px 16px 48px; }
+  .page {
+    margin: 0 auto 24px;
+    padding: 12mm;
+    width: 210mm;
+    height: 297mm;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  }
+  .fig img { cursor: zoom-in; }
+  .zoom {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, 0.75);
+    cursor: zoom-out;
+    z-index: 10;
+  }
+  .zoom img { max-width: 96vw; max-height: 96vh; background: #fff; }
+  .page.landscape { width: 297mm; height: 210mm; }
+  /* 画面では表紙の QR は出さない（リンクで開ける） */
+  .cv-qr { display: none; }
+  .cv-url { color: var(--blue); text-decoration: underline; font-size: 12pt; }
+}
+/* 画面幅 1024 前後: 目次を細くし、紙を少し縮める（横に流れないように） */
+@media screen and (max-width: 1180px) and (min-width: 901px) {
+  .toc { width: 200px; }
+  .pages { margin-left: 200px; }
+  .page { zoom: 0.9; }
+  .page.landscape { zoom: 0.66; }
+}
+@media screen and (max-width: 900px) {
+  .toc { position: static; width: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .pages { margin-left: 0; padding: 12px 0; overflow-x: auto; }
+}

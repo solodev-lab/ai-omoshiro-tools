@@ -47,3 +47,9 @@ apps/shako-map/spike/_*
 # _data＝Geofabrik の pbf（日本全体 約2GB）・_out＝書き出したタイル（数百MB）。絶対にコミットしない
 apps/shako-map/tools/names_tiles/_data/
 apps/shako-map/tools/names_tiles/_out/
+
+# 車庫証明メーカー 紙のマニュアル（🔒 正典 §36-6）。撮りたての画像（raw）と、撮り直し・組み直しの前の版の
+# 退避先（raw/_old）はコミットしない（raw は capture.py で作り直せる・画像は捨てないが git には入れない）。
+# git に入れるのは印つきの img/*.png|jpg と out/manual.pdf（2026-10-16 Fable 指示）
+apps/shako-map/manual/img/raw/
+apps/shako-map/manual/out/p*.png

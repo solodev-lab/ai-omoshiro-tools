@@ -313,8 +313,10 @@
    *   描画と同じこの1か所**（別に見積もると画像と枠がずれる）。
    * @param lboxes 🔒 §30-32-2: 同じく**駐車位置ラベルの塊**の箱（[{id,x,y,w,h}]）。
    *   形の出どころは labelBlockGeom（描画と同じ）1か所。
+   * @param cboxes 🔒 §51-2 3: 同じく**方位記号**の箱（[{id,x,y,w,h}]・針＋上の「N」まで）。
+   *   形の出どころは drawCompass と同じ Editor.compassBox（compassBoxPx）1か所。
    */
-  function drawObjects(g, objects, proj, S, mpp, pxmm, boxes, lboxes) {
+  function drawObjects(g, objects, proj, S, mpp, pxmm, boxes, lboxes, cboxes) {
     // S = 線の太さの倍率、mpp = 1px あたりの実距離(m)
     // 🔒 §22-at: 1U が表す実距離(m) = 出力px何個ぶんか(S) × 1pxの実距離(mpp)
     var mPerU = mpp * S;
@@ -342,6 +344,11 @@
       if (lboxes && o.type === 'labelBlock' && o.at) {
         var lb = labelBlockGeom(o, proj, pxmm);
         lboxes.push({ id: o.id, x: lb.x, y: lb.y, w: lb.w, h: lb.h });
+      }
+      /* 🔒 §51-2 3: 方位記号の箱（プレビューで掴む的・大きさのつまみは付けない）。 */
+      if (cboxes && o.type === 'compass' && o.at) {
+        var cbx = compassBoxPx(o, proj, pxmm);
+        if (cbx) cboxes.push(cbx);
       }
     }
     for (var ti = 0; ti < texts.length; ti++) {
@@ -786,8 +793,10 @@
       g.restore();
       return;
     }
+    /* ふつうの●。🔒 §34-4: ［●と名前］（dotStyle 'dot'）もこの枝（画面 editor.js と同じ）。
+     * 印の大きさ（markScale）は 'dot' だけに効く（他の●は markScaleOf が 1） */
     g.beginPath();
-    g.arc(a.x, a.y, r, 0, Math.PI * 2);
+    g.arc(a.x, a.y, r * markScaleOf(o), 0, Math.PI * 2);
     g.fillStyle = color;
     g.fill();
     g.lineWidth = Math.max(0.8, 1.3 * S);
@@ -1302,6 +1311,17 @@
     drawText(g, { x: p.x, y: p.y + cg.labelY }, 'N', cg.labelSize, '#111', S);
     g.restore();
   }
+  /**
+   * 🔒 §51-2 3: 描いた方位記号の外接箱（canvas px・{id,x,y,w,h}）。
+   * 🔴 半径は drawCompass と同じ mmPx(compassRMm(o), pxmm)、形は Editor.compassBox
+   *    （針の先の**上**に「N」が乗る＝箱の上端は「N」の上・下端は針の下端）。
+   */
+  function compassBoxPx(o, proj, pxmm) {
+    if (!o || !o.at || !global.Editor || !global.Editor.compassBox) return null;
+    var p = proj(o.at.lat, o.at.lng);
+    var bx = global.Editor.compassBox(mmPx(compassRMm(o), pxmm));
+    return { id: o.id, x: p.x - bx.hw, y: p.y + bx.cy - bx.hh, w: bx.hw * 2, h: bx.hh * 2 };
+  }
 
   /**
    * 🔒 §22-am（2026-09-04）: **紙の付き物が居座る場所**（縮尺バー・出典・通し表示）。
@@ -1549,7 +1569,9 @@
     var textBoxes = [];
     // 🔒 §30-32-2: 駐車位置ラベルの塊の箱も同じ1か所（描画）から集める
     var labelBoxes = [];
-    drawObjects(g, opts.objects || [], proj, S, mpp, pxmm, textBoxes, labelBoxes);
+    // 🔒 §51-2 3: 方位記号の箱も同じ1か所（描画）から集める
+    var compassBoxes = [];
+    drawObjects(g, opts.objects || [], proj, S, mpp, pxmm, textBoxes, labelBoxes, compassBoxes);
     g.restore();
 
     /* 🔒 §28-3/§28-7（2026-09-06 オーナー指示）: **方位記号の自動描画は廃止**した。
@@ -1605,6 +1627,8 @@
              textBoxes: textBoxes,
              // 🔒 §30-32-2: 駐車位置ラベルの塊の箱（canvas px・textBoxes と同じ形）
              labelBoxes: labelBoxes,
+             // 🔒 §51-2 3: 方位記号の箱（canvas px・textBoxes と同じ形）
+             compassBoxes: compassBoxes,
              place: place, page: lay.page, sheetWmm: place.w,
              /* 1:N は**実際に紙へ刷られる幅**で出す（作図領域が広がったので
                 従来の 138mm 固定のままだと 1.4 倍ずれた数字になる） */

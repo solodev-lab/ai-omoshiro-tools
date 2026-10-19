@@ -115,6 +115,23 @@
   var ERASER_CURSOR = 'url("data:image/svg+xml;utf8,'
     + encodeURIComponent(ERASER_SVG) + '") 3 21, auto';
 
+  /* 🔒 §33-8 12 (d) ③（2026-10-14 オーナー決定）: 主役の多角形（mainpoly）の道具の間の
+   * カーソルは**⬠ の絵**（→ §38 で矢印＋小さな ⬠ に改めた・下）。
+   * 作りは ERASER_CURSOR と同じ（データ URI・encodeURIComponent 済み）。他の作図道具は十字のまま。 */
+  /* 🔒 §38（2026-10-17）: ⬠ の絵だけ（ホットスポット＝絵の中心）はクリック点が分かりにくい
+   * → **標準の矢印（白地・黒縁・先端が左上 (2,2)）＋右下に小さな ⬠（12px・黒縁白地）**。
+   * 32×32・ホットスポット＝矢印の先端（2 2）。 */
+  /* 🔒 §39（2026-10-17）: 汎用の［多角形］（polygon）も同じ絵 → 名前を POLY_* に改めた（setTool）。 */
+  var POLY_SVG =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'>"
+    + "<path d='M2 2L2 19.5L6.6 15.3L9.7 22.3L12.5 21.1L9.5 14.2H15.6Z' fill='#ffffff'"
+    + " stroke='#111827' stroke-width='1.3' stroke-linejoin='round'/>"
+    + "<path d='M24 18.3L29.7 22.4L27.5 29.2H20.5L18.3 22.4Z' fill='#ffffff'"
+    + " stroke='#111827' stroke-width='1.5' stroke-linejoin='round'/>"
+    + "</svg>";
+  var POLY_CURSOR = 'url("data:image/svg+xml;utf8,'
+    + encodeURIComponent(POLY_SVG) + '") 2 2, crosshair';
+
   /* 🔒 §25-7 申し送りの決着（オーナー決定 2026-08-30）:
    * 「＋を押すと塊が伸びるので＋ボタン自体も1枠分(ZL21 で約33px)外へ動き、
    *  連打すると的を追いかけることになる」→ **ボタンを一定時間その場に固定する**。
@@ -397,14 +414,20 @@
     /* 🔒 §30-25-9（2026-09-13 オーナー指示）: **木**（樹冠＋幹・🔒 §30-30-2 もこもこ）。
      * 中身は信号機・P マークとまったく同じ「印つき文字」で、印の絵だけが違う。
      * 🔒 §30-35-2 1: 木も名前は聞かない（印だけ）。 */
-    tree:    { dotStyle: 'tree',    nameCat: 'tree',     askName: false }
+    tree:    { dotStyle: 'tree',    nameCat: 'tree',     askName: false },
+    /* 🔒 §34-4（2026-10-14 オーナー指示）: **●と名前**（印つき文字の 5 つ目）。
+     * クリックした所に●（_drawText の既定の●の枝＝ .anno-dot）・続けて名前を聞く。
+     * 名前を●から離すと引き出し線（wantLead・§22-am-6-2 の仕組みそのまま）。 */
+    dot:     { dotStyle: 'dot',     nameCat: 'dot',      askName: true }
   };
 
-  /** その文字が「印だけでも意味を持つ」物か（文字が空でも消さない・§28-5 A） */
+  /** その文字が「印だけでも意味を持つ」物か（文字が空でも消さない・§28-5 A）
+   *  🔒 §34-4: ●と名前（dotStyle 'dot'）も空のまま Enter で●だけ残る */
   function keepsMark(o) {
     return !!(o && o.type === 'text' && o.anchor
               && (o.dotStyle === 'signal' || o.dotStyle === 'bus'
-                  || o.dotStyle === 'parking' || o.dotStyle === 'tree'));
+                  || o.dotStyle === 'parking' || o.dotStyle === 'tree'
+                  || o.dotStyle === 'dot'));
   }
 
   /**
@@ -581,6 +604,10 @@
     var a = markAxisScale(o);
     return { w: MARK.minMm * a.w, h: MARK.minMm * a.h };
   }
+  /* 🔒 §54-2 2〜3（2026-10-19）: 主役の■の角のドラッグ（縦横を同じ比率）の下限（1 辺の実寸 m）と、
+   * 紙の最小 mm に張り付いている時の一言（ドラッグを始めた時に 1 回だけ）。 */
+  var MARK_DIM_MIN_M = 0.5;
+  var MARK_MIN_HINT = '印は紙の最小の大きさです。地図を拡大すると実寸で変えられます';
 
   /* 🔒 §30-25-37 1: ◎（主役の二重丸）の輪の線の太さ。CSS（.anno-ring）・紙（export.js）
    * と同じ値をここに置き、倍率（markScale）を掛けて style で入れる。 */
@@ -1524,8 +1551,11 @@
     this.clearOverlayFreeze(true);   // 🔒 §25-7 修正1
     if (t !== 'select') this.selection = [];
     /* 🔒 §30-15-1: 消しゴムは消しゴムの絵（ERASER_CURSOR）。他の作図道具は十字。 */
+    /* 🔒 §33-8 12 (d) ③: 主役の多角形は⬠の絵 */
+    /* 🔒 §39（2026-10-17）: 汎用の多角形（polygon）も同じ絵（POLY_CURSOR）。他の作図道具は十字のまま。 */
     this._toolCursor = (t === 'select') ? ''
-      : (t === 'eraser' ? ERASER_CURSOR : 'crosshair');
+      : (t === 'eraser' ? ERASER_CURSOR
+        : ((t === 'mainpoly' || t === 'polygon') ? POLY_CURSOR : 'crosshair'));
     // 道具が変われば「押す前の姿」は古くなる（スペース中の持ち替え対策）
     this._cursorBefore = null;
     this._applyCursor();
@@ -1570,7 +1600,7 @@
   };
   Editor.prototype.undo = function () {
     // 作図の途中なら、まず「打った点」を1つ戻す
-    if (this.canUndoPoint()) { this.undoPoint(); this._emit('change'); return; }
+    if (this.backspacePoint()) return;   // 🔒 §39: Backspace と同じ 1 本
     if (!this.undoStack.length) return;
     this.redoStack.push(clone(this.objects));
     this._restore(this.undoStack.pop());
@@ -1618,6 +1648,31 @@
     return true;
   };
 
+  /* 🔒 §39（2026-10-17）: Backspace の「直前のクリックを1つ戻す」を公開の口に切り出した
+   * （keydown の Backspace と小窓の［頂点を戻す］が同じ 1 本を通る）。戻せたら true。 */
+  Editor.prototype.backspacePoint = function () {
+    if (!this.canUndoPoint()) return false;
+    this.undoPoint();
+    this._emit('change');
+    return true;
+  };
+
+  /* 🔒 §39（2026-10-17）: 多角形の確定を公開の口に切り出した
+   * （Enter／Shift＋Enter・ダブルクリック・小窓の［確定］［閉じて確定］が同じ 1 本を通る）。
+   *   close=false … 閉じずに確定（Enter）／close=true … 閉じて確定（Shift＋Enter）
+   *   mainpoly は常に閉じる（§30-22-1 4）。polygonMustClose（外周ステップ）は必ず閉じる（§22-ac）。
+   * draft が無い・道具が違う時は false。点が足りない時は従来どおり一言を出して false。 */
+  Editor.prototype.commitDraft = function (close) {
+    if (!this.draft) return false;
+    if (this.tool === 'mainpoly') return this._commitMainPoly();
+    if (this.tool !== 'polygon') return false;
+    if (this.polygonMustClose) {
+      if (!close) this._emit('hint', 'この手順では外周を閉じて確定します');
+      return this._commitPolygon();
+    }
+    return this._commitPolygon({ open: !close });
+  };
+
   /* ---------- 編集操作 ---------- */
 
   Editor.prototype.deleteSelected = function () {
@@ -1630,6 +1685,13 @@
     this.selection = [];
     this.commit();
     this._emit('select', []);
+  };
+  /** 🔒 §33-8 5: 選択を外すだけ（図形には触らない・履歴に積まない）。
+   *  並びは deleteSelected の「selection=[] → _emit('select',[])」と同じ */
+  Editor.prototype.clearSelection = function () {
+    this.selection = [];
+    this._emit('select', []);
+    this.render();
   };
   Editor.prototype.copySelected = function () {
     var sel = this.getSelected();
@@ -2255,7 +2317,9 @@
              h: Math.max(size, lines.length * lh) + pad * 2 };
   };
 
-  /** 塊ラベルを1つ置く（誘導⑧の［ラベル貼り付け］から呼ぶ） */
+  /** 塊ラベルを1つ置く（誘導⑧の［ラベル貼り付け］から呼ぶ）
+   *  🔒 §49（2026-10-19）: opt.noSnap＝控え（undo）を取らない。保管場所マークの枠へ
+   *  まとめて置く時は 1 つ目だけ控えを取り、2 つ目以降は noSnap＝［戻す］1 回で全部消える。 */
   Editor.prototype.addLabelBlock = function (opt) {
     var o = {
       id: uid(), type: 'labelBlock',
@@ -2266,7 +2330,7 @@
       scale: opt.scale || 1,
       style: { color: '#111', w: 2 }
     };
-    this.snapshot();
+    if (!opt.noSnap) this.snapshot();
     this.objects.push(o);
     this.selection = [o.id];
     this.commit();
@@ -2445,13 +2509,10 @@
        * 🔒 §30-31-1 1: 角に加えて**4辺の辺つまみ**も出す（下のふつうの四角と同じ
        *    edgeHandleR）。角＝同じ比率／辺＝掴んだ辺だけ（🔒 §30-35-3 1・
        *    反対の辺は動かないので中心はピンからずれる）。
-       * 🔴 角を先に見る（小さい■では角と辺つまみが重なるため）。 */
-      if (isMainMark(o) && o.type === 'rect') {
-        if (Math.abs(loc.x - geo.hw) <= HANDLE_TEXT + 3 &&
-            Math.abs(loc.y - geo.hh) <= HANDLE_TEXT + 3) {
-          return { obj: o, kind: 'markSize' };
-        }
-      }
+       * 🔒 §54-2 1（2026-10-19 オーナー実機「使用の本拠は四角の時サイズ変更ができない」）:
+       *    旧「角を先に見る」を改めた。小さい■（紙の最小 mm に張り付いた ZL16.5 前後）では
+       *    角の当たり（HANDLE_TEXT＋3）が右辺・下辺の中点を覆い、辺が掴めなかった。
+       *    **辺の中点（4 つ）を先に**見て、当たらなければ角。 */
       /* 🔒 §30-14-5 2 / §30-25-17: 辺つまみは小さく（edgeHandleR＝ZL で可変）。
        * 当たりは今までどおり半径 +2 まで。 */
       var edgeR = this.edgeHandleR();
@@ -2461,6 +2522,12 @@
         if (Math.abs(loc.x - edges[i].x) <= edgeR + 2 &&
             Math.abs(loc.y - edges[i].y) <= edgeR + 2) {
           return { obj: o, kind: 'edge', index: edges[i].i };
+        }
+      }
+      if (isMainMark(o) && o.type === 'rect') {
+        if (Math.abs(loc.x - geo.hw) <= HANDLE_TEXT + 3 &&
+            Math.abs(loc.y - geo.hh) <= HANDLE_TEXT + 3) {
+          return { obj: o, kind: 'markSize' };
         }
       }
       return null;
@@ -3228,6 +3295,15 @@
         /* 🔒 §25-8「最後に触った操作系に矢印キーが付く」。
          * マウスの回転つまみを掴んだ時も“回転を触った”と数える。 */
         if (h.kind === 'rotate') self.arrowMode = 'rotate';
+        /* 🔒 §54-2 3: 主役の■が紙の最小 mm に張り付いている（rectHalf の下限が効いている）間に
+         * 辺・角のドラッグを始めたら、その旨を 1 回言う（見た目は最小の比のまま伸びる）。 */
+        if ((h.kind === 'edge' || h.kind === 'markSize') && h.obj.type === 'rect'
+            && isMainMark(h.obj) && h.obj.w_m > 0 && h.obj.h_m > 0) {
+          var rh = self.rectHalf(h.obj);
+          if (rh.hw > (h.obj.w_m / rh.mpp) / 2 + 0.5 || rh.hh > (h.obj.h_m / rh.mpp) / 2 + 0.5) {
+            self._emit('hint', MARK_MIN_HINT);
+          }
+        }
         if (h.kind === 'lbSize') {
           // 掴んだ時の「左上からの距離」を基準に倍率を決める（§18-f 駐車位置ラベル）
           var lg = self.labelBlockGeom(h.obj);
@@ -3254,6 +3330,13 @@
           drag.base = mainMarkScaleOf(h.obj);
           drag.d0 = Math.max(8, Math.hypot(p.x - drag.ox, p.y - drag.oy));
           drag.mainKey = mainMarkKeyOf(h.obj);
+          /* 🔒 §54-2 2（2026-10-19）: 主役の■の角は**縦横（w_m/h_m）を同じ比率で**伸縮する
+           * （■の実寸は案件の w_m/h_m が真実＝倍率 markScale を書いても■には効かなかった）。
+           * 基準は掴んだ時の対角（d0）と中心（markScaleOrigin）・掴んだ時の縦横。
+           * ◎（dotStyle double の文字）は今までどおり markScale の経路。 */
+          if (h.obj.type === 'rect' && isMainMark(h.obj) && h.obj.w_m > 0 && h.obj.h_m > 0) {
+            drag.rectDims = { w0: h.obj.w_m, h0: h.obj.h_m };
+          }
         }
         try { self.map.el.setPointerCapture(e.pointerId); } catch (err) {}
         return;
@@ -3312,15 +3395,11 @@
         return;
       }
       // 多角形を閉じる（正典 §4-5）
-      if (self.tool === 'polygon' && self.draft) {
-        e.preventDefault(); e.stopPropagation();
-        self._commitPolygon();
-        return;
-      }
       // 🔒 §30-22-1 4: 主役の多角形はダブルクリックでも閉じる（Enter と同じ）
-      if (self.tool === 'mainpoly' && self.draft) {
+      /* 🔒 §39（2026-10-17）: どちらも commitDraft(true)（閉じて確定）の 1 本を通す（結果は従来どおり） */
+      if ((self.tool === 'polygon' || self.tool === 'mainpoly') && self.draft) {
         e.preventDefault(); e.stopPropagation();
-        self._commitMainPoly();
+        self.commitDraft(true);
         return;
       }
       // テキストを再編集（正典 §4-8）
@@ -3417,6 +3496,18 @@
        * 🔴 上限・下限は clampMarkScale 1か所（右パネルのボタンも同じ値を通る）。 */
       if (drag.mode === 'markSize') {
         var md = Math.hypot(p.x - drag.ox, p.y - drag.oy);
+        /* 🔒 §54-2 2: 主役の■＝縦横を同じ比率で（図形の w_m/h_m を書いて見た目を追う・
+         * 保存は指を離した時に onMainMarkDims）。下限は辺つまみと同じく 1 辺 MARK_DIM_MIN_M。 */
+        if (drag.rectDims) {
+          var rk = md / drag.d0;
+          var rmin = Math.max(MARK_DIM_MIN_M / drag.rectDims.w0, MARK_DIM_MIN_M / drag.rectDims.h0);
+          rk = Math.max(rk, rmin);
+          drag.obj.w_m = Math.round(drag.rectDims.w0 * rk * 100) / 100;
+          drag.obj.h_m = Math.round(drag.rectDims.h0 * rk * 100) / 100;
+          drag.moved = true;
+          self.render();
+          return;
+        }
         var mv2 = clampMarkScale(drag.base * (md / drag.d0));
         /* 🔒 §30-25-40 2〜3: 主役の印（◎・■）は案件の points[key].mark.scale が
          * 値の出どころ。図形の markScale へ直接書かず app.js の口へ渡す
@@ -3475,7 +3566,14 @@
         if (drag.mode === 'vertex' && isMainMark(drag.obj)) self.syncMarkPin(drag.obj);
         /* 🔒 §30-25-40 2: 主役の印の大きさは**指を離した時**に案件へ保存する
          * （ドラッグ中は見た目だけ追う）。 */
-        if (drag.mode === 'markSize' && drag.mainKey && self.onMainMarkScale) {
+        if (drag.mode === 'markSize' && drag.rectDims) {
+          /* 🔒 §54-2 2: ■の角＝縦横を案件へ（中心は渡さない＝ずれ dx/dy は変えない）。
+           * 動かしていない時は書かない（倍率の口も通さない）。 */
+          var rdk = mainMarkKeyOf(drag.obj);
+          if (drag.moved && rdk && self.onMainMarkDims) {
+            self.onMainMarkDims(rdk, drag.obj.w_m, drag.obj.h_m);
+          }
+        } else if (drag.mode === 'markSize' && drag.mainKey && self.onMainMarkScale) {
           self.onMainMarkScale(drag.mainKey, mainMarkScaleOf(drag.obj),
                                { obj: drag.obj, done: true });
         }
@@ -3583,19 +3681,11 @@
       /* 🔒 §30-22-1 4（2026-09-13 オーナー指示）: 主役の多角形（mainpoly）だけは
        * **最後の Enter で閉じる**（§4-5「自動で閉じない」の唯一の例外）。
        * 土地の形を囲む道具なので、開いたままでは印にならない。 */
-      if (e.key === 'Enter' && self.tool === 'mainpoly' && self.draft) {
+      /* 🔒 §39（2026-10-17）: mainpoly・polygon（polygonMustClose の枝を含む）とも
+       * commitDraft(Shift の有無) の 1 本を通す（結果は従来どおり・枝の中身は commitDraft へ移した）。 */
+      if (e.key === 'Enter' && (self.tool === 'mainpoly' || self.tool === 'polygon') && self.draft) {
         e.preventDefault();
-        self._commitMainPoly();
-        return;
-      }
-      if (e.key === 'Enter' && self.tool === 'polygon' && self.draft) {
-        e.preventDefault();
-        if (self.polygonMustClose) {
-          if (!e.shiftKey) self._emit('hint', 'この手順では外周を閉じて確定します');
-          self._commitPolygon();
-        } else {
-          self._commitPolygon({ open: !e.shiftKey });
-        }
+        self.commitDraft(e.shiftKey);
         return;
       }
       /* 🔒 §25-7/§25-8 矢印キー。取り合いの決着（オーナー決定 2026-08-29）:
@@ -3627,10 +3717,9 @@
       }
       if (e.key === 'Backspace') {
         // 作図中は「直前のクリックを1つ戻す」（オーナー指示 2026-08-16）
-        if (self.canUndoPoint()) {
+        /* 🔒 §39（2026-10-17）: 中身は backspacePoint() の 1 本（小窓の［頂点を戻す］と同じ） */
+        if (self.backspacePoint()) {
           e.preventDefault();
-          self.undoPoint();
-          self._emit('change');
           return;
         }
       }
@@ -3758,6 +3847,22 @@
   /** 辺つまみで伸縮。掴んだ辺だけ動き、反対の辺は固定する。
    *  掴んだ辺のローカル座標を X、固定側の辺を F とすると
    *    新しい辺の長さ = |X - F| ／ 中心は (X + F) / 2 へ動く。 */
+  /**
+   * 🔒 §54-2 1 補（2026-10-19）: 辺つまみの「見えている 1px が実寸で何 m か」。
+   * ふつうは 1px の実距離（mpp）。主役の■が紙の最小 mm に張り付いている間は、見えている大きさ
+   * （rectHalf の下限＝ markMinMm×w_m/基準 で w_m に比例）が実寸より大きいので、
+   * mpp のままだと固定側の辺（見えている位置）と実寸が食い違い、引くたびに幅が雪だるま式に
+   * 増えた（ZL16.5 で 40px 引くと 10m → 578m）。見えている半幅と実寸の比（w_m ÷ 見えている幅）を
+   * 使えば、張り付いていない時は mpp と同じ値・張り付いている時は見た目どおりに伸びる。
+   */
+  function edgeMPerPx(o, geo, axis) {
+    if (o && o.type === 'rect' && o.role === 'mainmark') {
+      var m = (axis === 'w') ? o.w_m : o.h_m, half = (axis === 'w') ? geo.hw : geo.hh;
+      if (m > 0 && half > 0) return m / (2 * half);
+    }
+    return geo.mpp;
+  }
+
   Editor.prototype._resizeEdge = function (o, edge, p) {
     var isStamp = (o.type === 'stampGroup');
     var geo = isStamp ? this.stampGeom(o) : this.rectHalf(o);
@@ -3779,7 +3884,7 @@
       var fx = (edge === 1) ? -geo.hw : geo.hw;
       var x = loc.x;
       x = (edge === 1) ? Math.max(x, fx + MIN_PX) : Math.min(x, fx - MIN_PX);
-      span = Math.abs(x - fx) * geo.mpp;
+      span = Math.abs(x - fx) * edgeMPerPx(o, geo, 'w');
       // 塊は枠数を保ったまま各枠が等分に追従する（正典 §4-4「全体伸縮」）。
       // 階段状にずらしている分は枠の大きさではないので差し引く。
       if (isStamp) {
@@ -3792,7 +3897,7 @@
       var fy = (edge === 2) ? -geo.hh : geo.hh;
       var y = loc.y;
       y = (edge === 2) ? Math.max(y, fy + MIN_PX) : Math.min(y, fy - MIN_PX);
-      span = Math.abs(y - fy) * geo.mpp;
+      span = Math.abs(y - fy) * edgeMPerPx(o, geo, 'h');
       if (isStamp) {
         var sy = geo.col ? 0 : geo.span * geo.mpp;
         o.cell_h_m = geo.col ? span / o.count : Math.max(0.3, span - sy);
@@ -4203,7 +4308,9 @@
     if (o.dotStyle === 'double' || o.role === 'pinlabel') {
       return { hw: ms * DOT_R * 2, dy: 0 };
     }
-    return { hw: size * DOT_R, dy: 0 };          // ふつうの●（文字の大きさに比例）
+    /* ふつうの●（文字の大きさに比例）。🔒 §34-4: ［●と名前］の●（dotStyle 'dot'）だけは
+     * 印つき文字なので印の大きさ（markScale）も掛かる（他の●は markScaleOf が 1）。 */
+    return { hw: size * DOT_R * markScaleOf(o), dy: 0 };
   }
 
   /**
@@ -4236,6 +4343,12 @@
        * 🔒 §30-30-2: 箱は**樹冠の外接**（もこもこの一番外側）で取る。 */
       var tg = treeGeom(s);
       return { hw: tg.hw, hh: tg.h / 2, dy: -tg.h / 2 };
+    }
+    /* 🔒 §34-4: ［●と名前］の●＝ anchor が中心の円（半径は _drawText の既定の●と同じ式）
+     * 🔴 size は呼ぶ側の文字の大きさ（markRect＝ max(6, textPx)）＝描画と同じ値 */
+    if (o.dotStyle === 'dot') {
+      var dr = Math.max(DOT_MIN_PX, size * DOT_R) * markScaleOf(o);
+      return { hw: dr, hh: dr, dy: 0 };
     }
     var bg = busStopGeom(s);       // 足の接地点が anchor＝上へだけ伸びる
     return { hw: Math.max(bg.bw, bg.foot) / 2, hh: bg.h / 2, dy: -bg.h / 2 };
@@ -5569,12 +5682,17 @@
           r: (rr * 0.45).toFixed(1), class: 'anno-core' + (sel ? ' is-sel' : '') });
         // 線の太さも倍率どおりに（CSS の .anno-ring と同じ値 RING_W が出どころ）
         ring.style.strokeWidth = (RING_W * ms).toFixed(2);
-        if (dHex && !sel) { ring.style.stroke = dHex; core.style.fill = dHex; }
+        /* 🔒 §33-8 4（2026-10-08）: 選択中も◎は自分の色（markColor）で描く
+         * （選択は文字の青と .sel-box で分かる）。inline の style は .anno-ring.is-sel／
+         * .anno-core.is-sel より強い＝色を持たない旧データだけが選択の青になる。 */
+        if (dHex) { ring.style.stroke = dHex; core.style.fill = dHex; }
         layer.appendChild(ring);
         layer.appendChild(core);
       } else {
+        /* ふつうの●。🔒 §34-4: ［●と名前］（dotStyle 'dot'）もこの枝＝同じ●。
+         * 印の大きさ（markScale・右下のつまみ）は 'dot' だけに効く（他の●は markScaleOf が 1） */
         layer.appendChild(el('circle', { cx: a.x.toFixed(1), cy: a.y.toFixed(1),
-          r: r0.toFixed(1), class: 'anno-dot' + (sel ? ' is-sel' : '') }));
+          r: (r0 * markScaleOf(o)).toFixed(1), class: 'anno-dot' + (sel ? ' is-sel' : '') }));
       }
     }
     /* 🔒 §22-av: 路線番号の印（国道 ▽ / 都道府県道 六角形）を数字の**下に**敷く。
