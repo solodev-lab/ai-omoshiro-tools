@@ -9,7 +9,7 @@
 <meta property="og:description" content="所在図は住所を入れて自動作成・最短1分。配置図は写真をなぞって5分。行政書士事務所向け。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://solodev-lab.com/shako/">
-<meta property="og:image" content="https://solodev-lab.com/shako/img/haichizu.jpg">
+<meta property="og:image" content="https://solodev-lab.com/shako/img/haichizu_v3.jpg">
 <link rel="icon" type="image/png" href="../apps/shako-map/assets/favicon.png">
 <!-- Google Analytics（サイト共通） -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX7SCK9ECB"></script>
@@ -179,10 +179,26 @@
   @media (max-width: 640px) { .flow3 { grid-template-columns: 1fr; } }
   .flow3 div { background: rgba(255,255,255,.12); border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.7; }
   .flow3 b { display: block; font-size: 16px; }
+  /* 無料サポート・LINE */
+  .line-box { margin-top: 24px; display: flex; gap: 22px; align-items: center; background: #fff; color: var(--ink); border-radius: 12px; padding: 20px 24px; }
+  .line-box img { flex: none; width: 150px; height: 150px; }
+  .line-badge { display: inline-block; background: var(--accent); color: #fff; font-weight: 900; font-size: 15px; padding: 4px 14px; border-radius: 99px; }
+  .line-head { margin-top: 10px; font-size: 19px; font-weight: 900; line-height: 1.55; color: var(--blue-d); }
+  .line-sub { margin-top: 6px; font-size: 14.5px; line-height: 1.75; color: var(--sub); }
+  .line-btn { display: inline-block; margin-top: 12px; background: #06c755; color: #fff; font-weight: 900; font-size: 15px; padding: 10px 22px; border-radius: 8px; text-decoration: none; }
+  @media (max-width: 640px) { .line-box { flex-direction: column; text-align: center; padding: 20px 16px; } }
+
+  /* お申し込み（販売スイッチが開いている時だけ表示。申し込み欄の部品は form.css） */
+  .buy-box { margin-top: 28px; background: #fff; color: var(--ink); border-radius: 12px; padding: 28px 24px 24px; }
+  @media (max-width: 640px) { .buy-box { padding: 22px 16px 20px; } }
+  .buy-box h3 { font-size: 20px; font-weight: 900; color: var(--blue-d); line-height: 1.5; margin-bottom: 18px; }
+  .ask-head { margin-top: 36px; color: #fff; font-size: 19px; font-weight: 900; line-height: 1.5; }
 
   footer { padding: 28px 0 40px; font-size: 13px; color: var(--sub); }
-  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+  footer .links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 </style>
+<link rel="stylesheet" href="form.css">
 </head>
 <body id="top">
 
@@ -304,12 +320,12 @@
     <p class="lead">駐車場のまわりの道路は自動で描きます。あとは空から見た写真の上で駐車場をなぞって、駐車枠を並べるだけ。広い月極駐車場でも、台数を数えながら1台ずつ描く必要はありません。</p>
     <div class="cards">
       <div class="card"><h3>なぞる</h3><p>空から見た写真を図の下に重ねて表示し、その上から駐車場の形をなぞるだけです。お手持ちの写真や、契約書に付いている区画図を下に敷くこともできます。写真がいつ撮影されたものかも表示するので、古い写真かどうかもすぐに分かります。</p></div>
-      <div class="card"><h3>まとめて置く</h3><p>駐車枠は、1台ずつではなくまとめて並べられます。見本の74台分の駐車場も、4ステップで枠が揃いました。番号は枠をなぞるだけで、1から順に振られます。</p></div>
+      <div class="card"><h3>まとめて置く</h3><p>駐車枠は、1台ずつではなくまとめて並べられます。見本の107台分の駐車場も、列ごとにまとめて枠を並べました。番号は枠をなぞるだけで、1から順に振られます。</p></div>
       <div class="card em"><h3>自動で採寸</h3><p>採寸が難しい大通りなどの道路も、地図の縮尺から距離を自動で計測して表示します。測りたい所に矢印を引けば、その長さがそのまま書き込まれます。</p><small>※取り込んだ写真や図面の上では、その画像の縮尺で計測されます。実際に測った値を手で入れることもできます。</small></div>
     </div>
     <div style="margin-top:28px">
-      <div class="shot"><img src="img/haichizu.jpg" alt="配置図の見本（74台分）" loading="lazy" width="1600" height="970"></div>
-      <p class="cap">見本：74台分の駐車場の配置図（アプリから書き出したもの）。</p>
+      <div class="shot"><img src="img/haichizu_v3.jpg" alt="配置図の見本（107台分）" loading="lazy" width="1600" height="970"></div>
+      <p class="cap">見本：107台分の駐車場の配置図（来客用・車いすの枠つき・アプリから書き出したもの）。</p>
     </div>
     <h3 class="sub">配置図に必要な道具が、ひととおり揃っています</h3>
     <ul class="list grid2" style="margin-top:18px">
@@ -338,7 +354,7 @@
         <li><div><b>ガイダンスがあるので迷いません</b><span>所在図は13段階、配置図は17段階（1 画面に 1 動作）。いま何をすればよいかを画面が順番に案内します。</span></div></li>
         <li><div><b>ボタンごとに使い方を表示</b><span>それぞれのボタンに「どんな時に使うか」が書いてあるので、説明書を読まなくても使えます。</span></div></li>
         <!-- 🔒 §36-6（2026-10-16）: 紙のマニュアルの入口（画像に印を付けた 1 動作 1 ページの手順書） -->
-        <li><div><b>画像つきの手順書（PDF）もあります</b><span>ガイダンスを使わずに作る時のために、押す所に印を付けた画面の画像で 1 動作ずつ説明した手順書を用意しています。<a href="../apps/shako-map/manual/manual.html" target="_blank" rel="noopener">画面で見る</a>・<a href="../apps/shako-map/manual/out/manual.pdf" target="_blank" rel="noopener">PDF</a></span></div></li>
+        <li><div><b>画像つきの手順書（PDF）もあります</b><span>ガイダンスを使わずに作る時のために、押す所に印を付けた画面の画像で 1 動作ずつ説明した手順書を用意しています。<a href="../apps/shako-map/manual/manual.html" target="_blank" rel="noopener">画面で見る</a>・<a href="../apps/shako-map/manual/out/manual.pdf" target="_blank" rel="noopener">PDF</a><br>簡単版（所在図 1 枚・配置図 1 枚）: <a href="../apps/shako-map/manual/quick.html" target="_blank" rel="noopener">画面で見る</a>・<a href="../apps/shako-map/manual/out/quick.pdf" target="_blank" rel="noopener">PDF</a></span></div></li>
         <li><div><b>紙と同じ見た目で確認してから出せます</b><span>印刷したときと同じ見た目でプレビューできるので、刷り直しがありません。PDF や画像で書き出して、そのまま申請書に添付できます。</span></div></li>
         <li><div><b>差し戻しも、案件を開いて直すだけ</b><span>作った図面は自動で保存されます。案件番号や名前で検索でき、完了した案件も管理できます。一から描き直す必要はありません。</span></div></li>
         <li><div><b>インストールは不要です</b><span>パソコンの Chrome または Edge で開くだけで使えます。</span></div></li>
@@ -416,6 +432,10 @@
         <div class="q">補助者が何人かいる事務所でも使えますか？</div>
         <div class="a"><div><p>使えます。プランごとに、同時に使えるパソコンの台数が決まっています。スタンダードは2台、プロは3台、事務所スタンダードは5台、事務所プロは台数の制限がありません。</p></div></div>
       </div>
+      <div>
+        <div class="q">適格請求書（インボイス）は発行できますか？</div>
+        <div class="a"><div><p>発行できます。適格請求書発行事業者として登録しています。請求書・領収書は、税率・消費税額・登録番号を記載した適格請求書の形式でお送りします。</p></div></div>
+      </div>
     </div>
   </div>
 </section>
@@ -424,13 +444,62 @@
 <section id="apply">
   <div class="wrap">
     <div class="eyebrow">お申し込み・お問い合わせ</div>
-    <h2 style="color:#fff">まずはフォームからお気軽にどうぞ。</h2>
-    <p class="lead">お申し込み、料金のご相談、ご質問は、下のフォームで受け付けています。</p>
-    <div class="flow3">
+    <h2 style="color:#fff" id="applyTitle">まずはフォームからお気軽にどうぞ。</h2>
+    <p class="lead" id="applyLead">お申し込み、料金のご相談、ご質問は、下のフォームで受け付けています。</p>
+
+    <!-- オンラインのお申し込み（§31-6 A・B・E／§31-9）。販売スイッチ（/v1/mode）が開いている時だけ、スクリプトが表示する -->
+    <div class="buy-box fm" id="buyBox" hidden>
+      <span class="testbadge" id="buyTest" hidden>テスト用（実際の請求は行われません）</span>
+      <h3>プランを選んで、そのままお申し込みできます</h3>
+      <form id="buyForm" novalidate>
+        <fieldset class="fld">
+          <legend>① プラン</legend>
+          <div class="opt-grid" id="buyPlans"></div>
+        </fieldset>
+        <fieldset class="fld">
+          <legend>② お支払いの周期</legend>
+          <div class="opt-grid two">
+            <div class="opt"><input type="radio" name="cycle" id="cyM" value="month" checked><label for="cyM">月払い<small>毎月の上限の件数で使います</small></label></div>
+            <div class="opt"><input type="radio" name="cycle" id="cyY" value="year"><label for="cyY">年払い<span class="tag">2か月分お得</span><small>月額の10か月分・1年間の合計件数で使います</small></label></div>
+          </div>
+        </fieldset>
+        <div class="fld">
+          <label class="lbl" for="buyOffice">③ 事務所名<small>ライセンスキーに記録されます</small></label>
+          <input type="text" id="buyOffice" autocomplete="organization" maxlength="100" placeholder="例）○○行政書士事務所">
+        </div>
+        <div class="fld">
+          <label class="lbl" for="buyEmail">メールアドレス<small>ライセンスキーをお送りします</small></label>
+          <input type="email" id="buyEmail" autocomplete="email" maxlength="200" inputmode="email" placeholder="例）info@example.com">
+        </div>
+        <div class="sum" id="buySum" aria-live="polite"></div>
+        <div class="msg err" id="buyErr" role="alert" hidden></div>
+        <div class="btns">
+          <button type="button" class="btn" id="buyCard">カードで申し込む</button>
+          <button type="button" class="btn ghost" id="buyBank">請求書（銀行振込）で申し込む</button>
+        </div>
+        <p class="legal-note">
+          月払いは1か月ごと、年払いは1年ごとに自動で更新されます（解約するまで続きます）。お申し込みの前に、<a href="tokushoho.html" target="_blank" rel="noopener">特定商取引法に基づく表示</a>・<a href="terms.html" target="_blank" rel="noopener">利用規約</a>・<a href="privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>をご確認ください。お申し込みにより、利用規約に同意したものとみなします。<br>
+          カード＝次の画面（Stripe）でお支払いに進みます。銀行振込＝次の画面で請求先をうかがい、確認のうえお申し込みとなります。
+        </p>
+      </form>
+    </div>
+
+    <div class="flow3" id="applyFlow">
       <div><b>1. フォームを送信</b>ご希望のプランや、ご質問の内容をお書きください。</div>
       <div><b>2. ご案内をお送りします</b>ご記入いただいたメールアドレスに、使い方のご案内をお送りします。</div>
       <div><b>3. その日から使えます</b>パソコンで開くだけで使えます。インストールは不要です。</div>
     </div>
+    <!-- 無料サポート・LINE（2026-10-21 オーナー指示）。🔴 電話番号・メールは Web に出さない＝連絡は LINE とフォームだけ -->
+    <div class="line-box">
+      <img src="img/line_qr.png" alt="LINE の QR コード（個別問い合わせ先）" width="150" height="150" loading="lazy">
+      <div>
+        <span class="line-badge">無料サポート受付中</span>
+        <p class="line-head">事務所や事業所に伺って、直接デモや操作説明も行っております。</p>
+        <p class="line-sub">お気軽にご連絡ください。個別のお問い合わせは LINE でも受け付けています（QR コードを読み取るか、下のボタンから友だち追加）。</p>
+        <a class="line-btn" href="https://lin.ee/omNkU5P" target="_blank" rel="noopener">LINE で友だち追加</a>
+      </div>
+    </div>
+    <div class="ask-head" id="askHead" hidden>ご質問・ご相談はこちら</div>
     <div class="form-box" id="formBox">
       <div class="form-pending">フォームは準備中です。もうしばらくお待ちください。</div>
     </div>
@@ -440,10 +509,12 @@
 <footer>
   <div class="wrap">
     <div>車庫証明 所在図・配置図メーカー　運営: solodev-lab</div>
-    <div><a href="../privacy.html">プライバシーポリシー</a>　見本図の出典: 国土地理院／© OpenStreetMap contributors</div>
+    <div class="links"><a href="tokushoho.html">特定商取引法に基づく表示</a><a href="terms.html">利用規約</a><a href="privacy.html">プライバシーポリシー</a></div>
+    <div style="flex-basis:100%">見本図の出典: 国土地理院／© OpenStreetMap contributors</div>
   </div>
 </footer>
 
+<script src="api.js"></script>
 <script>
   /* 申し込みフォーム（Google フォーム）。オーナーがフォームを作ったら、
      「埋め込み」の URL（…/viewform?embedded=true）をここへ入れるだけで表示される。 */
@@ -454,6 +525,87 @@
     var box = document.getElementById('formBox');
     box.innerHTML = ''; box.appendChild(f);
   }
+
+  /* オンラインのお申し込み（販売スイッチ GET /v1/mode）。
+     closed（既定・失敗時も）＝上のフォームだけ／test＝URL に ?sale=test がある時だけ表示／open＝全員に表示。
+     ※ ?api=・?mode= の手元用の上書きは api.js 側で localhost／127.0.0.1 の時だけ効く。 */
+  (function () {
+    var S = window.Shako;
+    if (!S) return;
+    var $ = function (id) { return document.getElementById(id); };
+    S.mode().then(function (m) {
+      if (!S.saleUsable(m)) return;
+      initBuy(m);
+    });
+
+    function initBuy(m) {
+      var planBox = $('buyPlans');
+      S.PLANS.forEach(function (p) {
+        var d = document.createElement('div'); d.className = 'opt';
+        d.innerHTML = '<input type="radio" name="plan" id="pl_' + p.id + '" value="' + p.id + '"' + (p.id === 'standard' ? ' checked' : '') + '>' +
+          '<label for="pl_' + p.id + '">' + p.name + (p.id === 'standard' ? '<span class="tag">おすすめ</span>' : '') +
+          '<span class="pr"></span><small></small></label>';
+        planBox.appendChild(d);
+      });
+      if (m === 'test') $('buyTest').hidden = false;
+
+      var cycle = function () { return document.querySelector('input[name=cycle]:checked').value; };
+      var planId = function () { return document.querySelector('input[name=plan]:checked').value; };
+
+      function refresh() {
+        var y = cycle() === 'year';
+        S.PLANS.forEach(function (p) {
+          var l = document.querySelector('label[for=pl_' + p.id + ']');
+          l.querySelector('.pr').textContent = S.yen(y ? p.y : p.m) + (y ? '／年' : '／月');
+          l.querySelector('small').textContent = '税込・' + (y ? p.qy : p.qm) + '・' + p.seats;
+        });
+        var p = S.plan(planId());
+        $('buySum').innerHTML = '選択中：<b>' + p.name + '（' + (y ? '年払い' : '月払い') + '）' + S.yen(y ? p.y : p.m) + '／' + (y ? '年' : '月') + '（税込）</b>　' + (y ? p.qy : p.qm) + '・' + p.seats;
+      }
+      $('buyBox').addEventListener('change', refresh);
+      refresh();
+
+      function err(msg) { var e = $('buyErr'); e.textContent = msg || ''; e.hidden = !msg; }
+      function read() {
+        var office = $('buyOffice').value.trim(), email = $('buyEmail').value.trim();
+        $('buyOffice').classList.toggle('bad', !office);
+        var okMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        $('buyEmail').classList.toggle('bad', !okMail);
+        if (!office) { err('事務所名を入力してください'); $('buyOffice').focus(); return null; }
+        if (!okMail) { err('メールアドレスを正しく入力してください'); $('buyEmail').focus(); return null; }
+        err('');
+        return { plan: planId(), cycle: cycle(), office: office, email: email };
+      }
+
+      /* ⑤ カード：POST /v1/checkout → 返事の url（Stripe Checkout）へ */
+      $('buyCard').addEventListener('click', function () {
+        var v = read(); if (!v) return;
+        var btn = this; btn.disabled = true;
+        S.post('/v1/checkout', v).then(function (r) {
+          if (r.ok && r.data.url) { location.href = r.data.url; return; }
+          btn.disabled = false;
+          err(r.status === 403 ? '現在お申し込みを受け付けていません。' : S.NETERR);
+        }, function () { btn.disabled = false; err(S.NETERR); });
+      });
+
+      /* ⑤ 銀行振込：invoice.html へ。事務所名・メールは URL に載せず、このタブの sessionStorage で渡す */
+      $('buyBank').addEventListener('click', function () {
+        var v = read(); if (!v) return;
+        S.stash({ office: v.office, email: v.email });
+        var u = 'invoice.html?plan=' + encodeURIComponent(v.plan) + '&cycle=' + v.cycle;
+        if (S.query.get('sale') === 'test') u += '&sale=test';
+        if (S.LOCAL) { ['api', 'mode'].forEach(function (k) { if (S.query.get(k)) u += '&' + k + '=' + encodeURIComponent(S.query.get(k)); }); }
+        location.href = u;
+      });
+
+      /* 申し込み欄が出る時は、Google フォームを「ご質問はこちら」に格下げ（§31-12） */
+      $('applyTitle').textContent = 'お申し込み';
+      $('applyLead').textContent = 'プランを選んで、そのままお申し込みいただけます。ご質問・ご相談は、その下のフォームで受け付けています。';
+      $('applyFlow').hidden = true;
+      $('askHead').hidden = false;
+      $('buyBox').hidden = false;
+    }
+  })();
 </script>
 </body>
 </html>

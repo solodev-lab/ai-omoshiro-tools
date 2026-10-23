@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>お申し込みありがとうございます｜車庫証明 所在図・配置図メーカー</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="../apps/shako-map/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sub.css">
+<link rel="stylesheet" href="form.css">
+<style>
+  .card-box { margin-top: 24px; border: 1px solid var(--line); border-radius: 12px; padding: 24px 20px; }
+  @media (max-width: 640px) { .card-box { padding: 18px 14px; } }
+  .card-box h2 { font-size: 20px; font-weight: 900; color: var(--blue-d); line-height: 1.5; }
+  .done-ok { font-size: 17px; font-weight: 900; color: var(--blue-d); margin-top: 6px; }
+  ol.how { margin-top: 12px; padding-left: 1.5em; font-size: 15px; line-height: 1.9; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="name" href="./">車庫証明 所在図・配置図メーカー</a>
+    <a class="mini" href="./">← 紹介ページへ</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap narrow fm">
+    <h1>お申し込みありがとうございます</h1>
+
+    <p class="pre sub" id="wait">ライセンスキーを確認しています…</p>
+
+    <div class="card-box" id="okBox" hidden>
+      <h2>お支払いを受け付けました</h2>
+      <p class="done-ok" id="who"></p>
+      <p class="pre" style="margin-top:12px">ライセンスキーは次のとおりです。</p>
+      <div class="keybox">
+        <div class="k" id="certText"></div>
+        <div class="btns">
+          <button type="button" class="btn ghost" id="copyBtn">キーをコピー</button>
+          <a class="btn" id="openApp" href="#">アプリを開く</a>
+        </div>
+      </div>
+      <ol class="how">
+        <li>［アプリを開く］を押すと、キーが自動で入ります。</li>
+        <li>自動で入らない場合は、アプリの最初の画面の入力欄にキーを貼り付けてください。</li>
+        <li>キーを入れるのは最初の1回だけです。更新やプラン変更で入れ直す必要はありません。</li>
+      </ol>
+      <p class="legal-note">メールでも同じキーをお送りしました。このキーは事務所名が記録されたものです。他の方に渡さないでください。</p>
+    </div>
+
+    <div class="card-box" id="ngBox" hidden>
+      <h2 id="ngTitle">メールをご確認ください</h2>
+      <p class="pre" id="ngText"></p>
+      <div class="btns"><a class="btn" href="./">紹介ページへ戻る</a></div>
+    </div>
+
+    <div class="pagelinks">
+      <a href="tokushoho.html">特定商取引法に基づく表示</a>
+      <a href="terms.html">利用規約</a>
+      <a href="privacy.html">プライバシーポリシー</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>車庫証明 所在図・配置図メーカー　運営: solodev-lab</div>
+    <div class="links"><a href="tokushoho.html">特定商取引法に基づく表示</a><a href="terms.html">利用規約</a><a href="privacy.html">プライバシーポリシー</a></div>
+  </div>
+</footer>
+
+<script src="api.js"></script>
+<script>
+(function () {
+  var S = window.Shako;
+  var $ = function (id) { return document.getElementById(id); };
+  /* Stripe の戻り先の ?sid=（設計書の表記 ?s= も受ける） */
+  var sid = S.query.get('sid') || S.query.get('s') || '';
+
+  function ng(title, text) {
+    $('wait').hidden = true; $('okBox').hidden = true; $('ngBox').hidden = false;
+    $('ngTitle').textContent = title; $('ngText').textContent = text;
+  }
+  function ok(d) {
+    $('wait').hidden = true; $('ngBox').hidden = true; $('okBox').hidden = false;
+    var p = S.plan(d.plan);
+    $('who').textContent = (d.office || '') + (p ? '　' + p.name : (d.plan ? '　' + d.plan : ''));
+    $('certText').textContent = d.cert;
+    $('openApp').href = '../apps/shako-map/#lic=' + encodeURIComponent(d.cert);
+    $('copyBtn').onclick = function () {
+      var b = this;
+      S.copy(d.cert).then(function () { b.textContent = 'コピーしました'; setTimeout(function () { b.textContent = 'キーをコピー'; }, 2000); },
+        function () { var r = document.createRange(); r.selectNodeContents($('certText')); var s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = '選択しました（Ctrl+C でコピー）'; });
+    };
+  }
+
+  if (!sid) { ng('お申し込み情報が見つかりません', 'このページは、お支払いの完了後に自動で開きます。ライセンスキーは、ご入力のメールアドレスへお送りしています。メールをご確認ください。'); return; }
+
+  /* webhook が間に合わず status:'processing'（'pending'）の間は、3 秒ごとに最大 10 回やり直す */
+  var tries = 0, MAX = 10;
+  function ask() {
+    tries++;
+    S.post('/v1/session', { sid: sid, s: sid }).then(function (r) {
+      var d = r.data || {};
+      if (r.ok && d.cert) { ok(d); return; }
+      if (r.ok && (d.status === 'processing' || d.status === 'pending')) { again(); return; }
+      ng('メールをご確認ください', 'ライセンスキーは、ご入力のメールアドレスへお送りしています。メールが届かない場合は、特定商取引法に基づく表示に記載のメールアドレスまでご連絡ください。');
+    }, function () {
+      if (tries < MAX) { again(); return; }
+      ng('通信できませんでした', S.NETERR + '。ライセンスキーは、ご入力のメールアドレスへもお送りしています。メールをご確認ください。');
+    });
+  }
+  function again() {
+    if (tries >= MAX) { ng('メールをご確認ください', 'お支払いの反映に少し時間がかかっています。ライセンスキーは、ご入力のメールアドレスへお送りします。メールをご確認ください。'); return; }
+    setTimeout(ask, 3000);
+  }
+  ask();
+})();
+</script>
+</body>
+</html>

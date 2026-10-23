@@ -1,0 +1,65 @@
+/* 申し込みフォーム共通（紹介ページ・invoice・thanks）。変数は各ページの :root（紹介ページと同じ値） */
+[hidden] { display: none !important; }
+.fm { color: var(--ink); }
+.fm fieldset { border: 0; min-width: 0; }
+.fm .fld { margin-top: 22px; }
+.fm .fld:first-child { margin-top: 0; }
+.fm .lbl, .fm legend { display: block; font-weight: 900; font-size: 15px; line-height: 1.6; padding: 0; }
+.fm .lbl small, .fm legend small { font-weight: 400; color: var(--sub); font-size: 13px; margin-left: 6px; }
+.fm input[type=text], .fm input[type=email], .fm select {
+  display: block; width: 100%; margin-top: 6px; padding: 12px 12px; font: inherit; font-size: 16px; line-height: 1.5;
+  color: var(--ink); background: #fff; border: 2px solid var(--line); border-radius: 8px; -webkit-appearance: none; appearance: none;
+}
+.fm select { background-image: linear-gradient(45deg, transparent 50%, var(--sub) 50%), linear-gradient(135deg, var(--sub) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
+.fm input:focus, .fm select:focus { outline: 3px solid var(--blue-l); border-color: var(--blue); }
+.fm input.bad { border-color: #c92a2a; }
+.fm .hint { font-size: 13px; color: var(--sub); margin-top: 4px; line-height: 1.7; }
+.fm .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+@media (max-width: 640px) { .fm .row2 { grid-template-columns: 1fr; } }
+
+/* 選ぶ札（ラジオ） */
+.opt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 8px; }
+.opt-grid.two { grid-template-columns: 1fr 1fr; }
+@media (max-width: 400px) { .opt-grid.two { grid-template-columns: 1fr; } }
+.opt { position: relative; min-width: 0; }
+.opt input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.opt label { display: block; height: 100%; border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; background: #fff; line-height: 1.5; font-weight: 700; font-size: 15px; }
+.opt label small { display: block; font-weight: 400; color: var(--sub); font-size: 13px; line-height: 1.6; margin-top: 2px; }
+.opt label .pr { display: block; font-weight: 900; font-size: 17px; color: var(--ink); margin-top: 2px; }
+.opt input:checked + label { border-color: var(--accent); background: var(--accent-l); }
+.opt input:focus-visible + label { outline: 3px solid var(--blue); outline-offset: 2px; }
+.opt .tag { display: inline-block; margin-left: 6px; font-size: 11px; background: var(--accent); color: #fff; padding: 1px 6px; border-radius: 4px; vertical-align: middle; font-weight: 700; }
+
+/* チェック */
+.chk { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 15px; line-height: 1.6; }
+.chk input { flex: none; width: 20px; height: 20px; margin-top: 3px; accent-color: var(--accent); }
+
+/* ボタンまわり */
+.fm .btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.fm .btns .btn { flex: 1 1 240px; border: 0; cursor: pointer; font-family: inherit; }
+.fm .btns .btn.ghost { border: 2px solid var(--blue); }
+.fm .btn[disabled] { opacity: .55; cursor: wait; filter: none; }
+.fm .legal-note { margin-top: 14px; font-size: 13px; color: var(--sub); line-height: 1.8; }
+.fm .legal-note a { color: var(--blue); }
+.msg { margin-top: 14px; padding: 10px 14px; border-radius: 8px; font-size: 14.5px; line-height: 1.7; }
+.msg.err { background: #fff0f0; border: 1px solid #f0b4b4; color: #a61e1e; }
+.msg.info { background: var(--blue-l); border: 1px solid #c3d4f5; color: var(--blue-d); }
+.testbadge { display: inline-block; background: #c92a2a; color: #fff; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 10px; }
+.sum { margin-top: 20px; padding: 12px 14px; border: 2px solid var(--accent); border-radius: 10px; background: var(--accent-l); font-size: 15px; line-height: 1.7; }
+.sum b { font-size: 18px; }
+
+/* キーの表示 */
+.keybox { margin-top: 16px; padding: 18px 16px; background: var(--gray); border: 2px solid var(--blue); border-radius: 10px; }
+.keybox .k { font-family: Consolas, "Courier New", monospace; font-size: 15px; line-height: 1.6; word-break: break-all; overflow-wrap: anywhere; user-select: all; color: var(--ink); font-weight: 700; }
+.keybox .btns { margin-top: 14px; }
+.keybox .btns .btn { flex: 1 1 200px; padding: 12px 20px; font-size: 16px; }
+
+/* 確認表 */
+.cf { width: 100%; min-width: 0; border-collapse: collapse; margin-top: 16px; font-size: 15px; background: #fff; }
+.cf th, .cf td { text-align: left; white-space: normal; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.7; }
+.cf th { width: 9em; background: var(--blue-l); color: var(--blue-d); font-weight: 700; font-size: 14px; }
+.cf tr:last-child th, .cf tr:last-child td { border-bottom: 1px solid var(--line); }
+@media (max-width: 560px) {
+  .cf th, .cf td { display: block; width: 100%; }
+  .cf th { border-bottom: 0; padding-bottom: 4px; }
+}

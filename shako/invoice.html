@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>請求書（銀行振込）でお申し込み｜車庫証明 所在図・配置図メーカー</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="../apps/shako-map/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sub.css">
+<link rel="stylesheet" href="form.css">
+<style>
+  .stepbar { display: flex; gap: 8px; margin-top: 18px; font-size: 13px; color: var(--sub); flex-wrap: wrap; }
+  .stepbar span { padding: 2px 10px; border-radius: 12px; background: var(--gray); }
+  .stepbar span.on { background: var(--blue); color: #fff; font-weight: 700; }
+  .card-box { margin-top: 24px; border: 1px solid var(--line); border-radius: 12px; padding: 24px 20px; }
+  @media (max-width: 640px) { .card-box { padding: 18px 14px; } }
+  .card-box h2 { font-size: 20px; font-weight: 900; color: var(--blue-d); line-height: 1.5; }
+  .done-ok { font-size: 17px; font-weight: 900; color: var(--blue-d); margin-top: 6px; }
+  ol.how { margin-top: 12px; padding-left: 1.5em; font-size: 15px; line-height: 1.9; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="name" href="./">車庫証明 所在図・配置図メーカー</a>
+    <a class="mini" href="./">← 紹介ページへ</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap narrow fm">
+    <h1>請求書（銀行振込）でお申し込み</h1>
+
+    <p class="pre sub" id="loading">確認しています…</p>
+
+    <!-- 受け付けていない時 -->
+    <div class="card-box" id="closedBox" hidden>
+      <h2>現在お申し込みを受け付けていません</h2>
+      <p class="pre">紹介ページのお問い合わせフォームからご連絡ください。</p>
+      <div class="btns"><a class="btn" href="./#apply">紹介ページへ戻る</a></div>
+    </div>
+
+    <!-- ① 入力 -->
+    <div id="vForm" hidden>
+      <div class="stepbar"><span class="on">1 入力</span><span>2 確認</span><span>3 完了</span></div>
+      <span class="testbadge" id="tTest" hidden style="margin-top:14px">テスト用（実際の請求は行われません）</span>
+      <form class="card-box" id="f" novalidate>
+        <fieldset class="fld">
+          <legend>プラン</legend>
+          <select id="plan" aria-label="プラン"></select>
+        </fieldset>
+        <fieldset class="fld">
+          <legend>お支払いの周期</legend>
+          <div class="opt-grid two">
+            <div class="opt"><input type="radio" name="cycle" id="cyM" value="month" checked><label for="cyM">月払い</label></div>
+            <div class="opt"><input type="radio" name="cycle" id="cyY" value="year"><label for="cyY">年払い<span class="tag">2か月分お得</span></label></div>
+          </div>
+        </fieldset>
+        <div class="fld">
+          <label class="lbl" for="office">事務所名<small>ライセンスキーに記録されます</small></label>
+          <input type="text" id="office" autocomplete="organization" maxlength="100">
+        </div>
+        <div class="fld">
+          <label class="lbl" for="email">メールアドレス<small>請求書とライセンスキーをお送りします</small></label>
+          <input type="email" id="email" autocomplete="email" inputmode="email" maxlength="200">
+        </div>
+        <div class="fld row2">
+          <div>
+            <label class="lbl" for="postal">請求先の郵便番号</label>
+            <input type="text" id="postal" autocomplete="postal-code" inputmode="numeric" maxlength="10" placeholder="例）450-0002">
+          </div>
+          <div>
+            <label class="lbl" for="person">ご担当者名</label>
+            <input type="text" id="person" autocomplete="name" maxlength="60">
+          </div>
+        </div>
+        <div class="fld">
+          <label class="lbl" for="address">請求先の住所</label>
+          <input type="text" id="address" autocomplete="street-address" maxlength="200">
+        </div>
+        <div class="msg err" id="err1" role="alert" hidden></div>
+        <div class="btns"><button type="button" class="btn" id="toConfirm">確認画面へ進む</button></div>
+      </form>
+    </div>
+
+    <!-- ② 最終確認（特商法の最終確認画面・§31-10 E） -->
+    <div id="vConfirm" hidden>
+      <div class="stepbar"><span>1 入力</span><span class="on">2 確認</span><span>3 完了</span></div>
+      <div class="card-box">
+        <h2>お申し込み内容の確認</h2>
+        <p class="pre sub" style="margin-top:6px">下の内容でよろしければ［申し込む］を押してください。押すまでお申し込みは確定しません。</p>
+        <table class="cf" id="cfTable"></table>
+        <div class="msg info" style="margin-top:16px">
+          <b>お支払い：</b>請求書の発行から7日以内にお振込みください。請求書は、お客さま専用の振込先を記載して Stripe からメールでお送りします。振込手数料はお客さまのご負担です。<br>
+          <b>自動更新：</b><span id="cfRenew"></span>解約のお手続きをされるまで継続します（最低契約期間はありません）。解約は、アプリの「ライセンスの詳細」にある「解約する」からいつでもできます（<a href="tokushoho.html" target="_blank" rel="noopener">特定商取引法に基づく表示</a>）。
+        </div>
+        <p class="legal-note">内容は <a href="tokushoho.html" target="_blank" rel="noopener">特定商取引法に基づく表示</a>・<a href="terms.html" target="_blank" rel="noopener">利用規約</a>・<a href="privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>のとおりです。［申し込む］を押すと、利用規約に同意したものとみなします。</p>
+        <div class="msg err" id="err2" role="alert" hidden></div>
+        <div class="btns">
+          <button type="button" class="btn" id="submit">申し込む</button>
+          <button type="button" class="btn ghost" id="back">入力に戻る</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 完了 -->
+    <div id="vDone" hidden>
+      <div class="stepbar"><span>1 入力</span><span>2 確認</span><span class="on">3 完了</span></div>
+      <div class="card-box">
+        <h2>お申し込みを受け付けました</h2>
+        <p class="done-ok" id="doneOffice"></p>
+        <p class="pre" style="margin-top:12px">ライセンスキーは次のとおりです。<b>請求書の発行後すぐにお使いいただけます</b>（お振込みの期限は請求書に記載しています）。</p>
+        <div class="keybox">
+          <div class="k" id="certText"></div>
+          <div class="btns">
+            <button type="button" class="btn ghost" id="copyBtn">キーをコピー</button>
+            <a class="btn" id="openApp" href="#">アプリを開く</a>
+          </div>
+        </div>
+        <ol class="how">
+          <li>［アプリを開く］を押すと、キーが自動で入ります。</li>
+          <li>自動で入らない場合は、アプリの最初の画面の入力欄にキーを貼り付けてください。</li>
+          <li>キーを入れるのは最初の1回だけです。更新やプラン変更で入れ直す必要はありません。</li>
+        </ol>
+        <p class="legal-note">請求書は Stripe からメールで届きます。ライセンスキーのお知らせも、ご入力のメールアドレスにお送りしています。このキーは事務所名が記録されたものです。他の方に渡さないでください。</p>
+      </div>
+    </div>
+
+    <div class="pagelinks">
+      <a href="tokushoho.html">特定商取引法に基づく表示</a>
+      <a href="terms.html">利用規約</a>
+      <a href="privacy.html">プライバシーポリシー</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>車庫証明 所在図・配置図メーカー　運営: solodev-lab</div>
+    <div class="links"><a href="tokushoho.html">特定商取引法に基づく表示</a><a href="terms.html">利用規約</a><a href="privacy.html">プライバシーポリシー</a></div>
+  </div>
+</footer>
+
+<script src="api.js"></script>
+<script>
+(function () {
+  var S = window.Shako, Q = S.query;
+  var $ = function (id) { return document.getElementById(id); };
+  var views = ['closedBox', 'vForm', 'vConfirm', 'vDone'];
+  function show(id) {
+    $('loading').hidden = true;
+    views.forEach(function (v) { $(v).hidden = (v !== id); });
+    window.scrollTo(0, 0);
+  }
+
+  /* 初期値＝URL の plan／cycle（個人情報でない物）と、紹介ページから sessionStorage で渡された事務所名・メール */
+  var sel = $('plan');
+  S.PLANS.forEach(function (p) { var o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o); });
+  function applyPlanLabels() {
+    var y = document.querySelector('input[name=cycle]:checked').value === 'year';
+    S.PLANS.forEach(function (p, i) {
+      sel.options[i].textContent = p.name + '　' + S.yen(y ? p.y : p.m) + (y ? '／年' : '／月') + '（税込）・' + (y ? p.qy : p.qm) + '・' + p.seats;
+    });
+  }
+  var qp = Q.get('plan'); if (qp && S.plan(qp)) sel.value = qp; else sel.value = 'standard';
+  if (Q.get('cycle') === 'year') $('cyY').checked = true;
+  var st = S.unstash() || {};
+  $('office').value = st.office || Q.get('office') || '';
+  $('email').value = st.email || Q.get('email') || '';
+  applyPlanLabels();
+  document.querySelectorAll('input[name=cycle]').forEach(function (r) { r.addEventListener('change', applyPlanLabels); });
+
+  function err(id, msg) { var e = $(id); e.textContent = msg || ''; e.hidden = !msg; }
+  var data = null;
+  function readForm() {
+    var d = {
+      plan: sel.value,
+      cycle: document.querySelector('input[name=cycle]:checked').value,
+      office: $('office').value.trim(), email: $('email').value.trim(),
+      postal: $('postal').value.trim(), address: $('address').value.trim(), person: $('person').value.trim()
+    };
+    var need = [['office', '事務所名'], ['email', 'メールアドレス'], ['postal', '請求先の郵便番号'], ['address', '請求先の住所'], ['person', 'ご担当者名']];
+    var bad = null;
+    need.forEach(function (n) {
+      var empty = !d[n[0]];
+      if (n[0] === 'email') empty = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email);
+      $(n[0]).classList.toggle('bad', empty);
+      if (empty && !bad) bad = n;
+    });
+    if (bad) { err('err1', bad[0] === 'email' && d.email ? 'メールアドレスを正しく入力してください' : bad[1] + 'を入力してください'); $(bad[0]).focus(); return null; }
+    err('err1', '');
+    return d;
+  }
+
+  $('toConfirm').addEventListener('click', function () {
+    var d = readForm(); if (!d) return;
+    data = d;
+    var p = S.plan(d.plan), y = d.cycle === 'year';
+    function esc(s) { var x = document.createElement('div'); x.textContent = s; return x.innerHTML; }
+    var rows = [
+      ['プラン', esc(p.name) + '（' + (y ? p.qy : p.qm) + '・同時に使えるパソコン ' + p.seats + '）'],
+      ['お支払いの周期', y ? '年払い（1年ごと）' : '月払い（1か月ごと）'],
+      ['料金（税込）', '<b>' + S.yen(y ? p.y : p.m) + '／' + (y ? '年' : '月') + '</b>（消費税10%を含みます）'],
+      ['事務所名', esc(d.office)],
+      ['メールアドレス', esc(d.email)],
+      ['請求先', '〒' + esc(d.postal) + '<br>' + esc(d.address) + '<br>ご担当者：' + esc(d.person)]
+    ];
+    $('cfTable').innerHTML = rows.map(function (r) { return '<tr><th>' + r[0] + '</th><td>' + r[1] + '</td></tr>'; }).join('');
+    $('cfRenew').textContent = y ? '年払いは1年ごとに自動で更新されます。' : '月払いは1か月ごとに自動で更新されます。';
+    err('err2', '');
+    show('vConfirm');
+  });
+  $('back').addEventListener('click', function () { show('vForm'); });
+
+  var busy = false;
+  $('submit').addEventListener('click', function () {
+    if (busy || !data) return;
+    busy = true; $('submit').disabled = true; err('err2', '');
+    S.post('/v1/invoice-signup', {
+      plan: data.plan, cycle: data.cycle, email: data.email, office: data.office,
+      billing: { name: data.office, postal: data.postal, address: data.address, person: data.person }
+    }).then(function (r) {
+      busy = false; $('submit').disabled = false;
+      if (r.ok && r.data.cert) { done(r.data); return; }
+      err('err2', r.status === 403 ? '現在お申し込みを受け付けていません。' : S.NETERR);
+    }, function () { busy = false; $('submit').disabled = false; err('err2', S.NETERR); });
+  });
+
+  function done(d) {
+    S.unstashClear();
+    $('doneOffice').textContent = data.office + '　' + S.plan(data.plan).name + '（' + (data.cycle === 'year' ? '年払い' : '月払い') + '）';
+    $('certText').textContent = d.cert;
+    $('openApp').href = '../apps/shako-map/#lic=' + encodeURIComponent(d.cert);
+    $('copyBtn').onclick = function () {
+      var b = this;
+      S.copy(d.cert).then(function () { b.textContent = 'コピーしました'; setTimeout(function () { b.textContent = 'キーをコピー'; }, 2000); },
+        function () { var r = document.createRange(); r.selectNodeContents($('certText')); var s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = '選択しました（Ctrl+C でコピー）'; });
+    };
+    show('vDone');
+  }
+
+  /* 販売スイッチ（紹介ページと同じ。closed、または test で ?sale=test が無ければ受け付けない） */
+  S.mode().then(function (m) {
+    if (!S.saleUsable(m)) { show('closedBox'); return; }
+    if (m === 'test') $('tTest').hidden = false;
+    show('vForm');
+  });
+})();
+</script>
+</body>
+</html>
