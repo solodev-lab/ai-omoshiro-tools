@@ -54,11 +54,26 @@ jobs:
         #    Secrets が空なら空文字で書く＝Google の下敷きは選択肢に出ない（地理院・OSM のみ）。
         #    キー自体は利用者のブラウザに届く公開キー。守りは Google Cloud 側の
         #    HTTP リファラー制限（https://solodev-lab.com/*）と日次上限（config.sample.js 参照）。
+        # 🔒 §31-9（ライセンス）: ゲートと公開鍵も同じ流儀で GitHub の変数（Variables）から書く。
+        #    SHAKO_LICENSE_GATE   … 0（既定＝キー不要・今の公開版のまま）／1（キーが無いと使えない）。
+        #                           🔴 配信物に焼く＝サーバーを止められてもゲートは外れない
+        #    SHAKO_LICENSE_PUBKEY … 証の検証用の公開鍵（Ed25519・base64url）。秘密ではない
+        #    LICENSE_API は本番の Worker に固定（手元は config.js を手で書く）。
         env:
           SHAKO_KEY: ${{ secrets.SHAKO_GOOGLE_MAPS_KEY }}
+          SHAKO_GATE: ${{ vars.SHAKO_LICENSE_GATE }}
+          SHAKO_PUB: ${{ vars.SHAKO_LICENSE_PUBKEY }}
         run: |
-          printf 'window.SHAKO_CONFIG = { GOOGLE_MAPS_API_KEY: "%s" };\n' "$SHAKO_KEY" > _site/apps/shako-map/js/config.js
+          # 本番の公開鍵（秘密ではない・2026-10-21 Worker 配置時の鍵＝.env の SHAKO_LICENSE_PUBLIC_KEY）。
+          # GitHub の変数 SHAKO_LICENSE_PUBKEY があればそちらが勝つ（鍵を取り替える時）
+          SHAKO_PUB="${SHAKO_PUB:-t0rT4y1K3rnOpROIUHdCOlLnU9bMoTzRyDDJNMCrLvE}"
+          GATE="${SHAKO_GATE:-0}"
+          if [ "$GATE" != "1" ]; then GATE=0; fi
+          if [ "$GATE" = "1" ] && [ -z "$SHAKO_PUB" ]; then echo "SHAKO_LICENSE_GATE=1 なのに SHAKO_LICENSE_PUBKEY が空（誰もキーを入れられなくなる）" && exit 1; fi
+          if ! printf '%s' "$SHAKO_PUB" | grep -Eq '^[A-Za-z0-9_-]*$'; then echo "SHAKO_LICENSE_PUBKEY に base64url 以外の文字がある" && exit 1; fi
+          printf 'window.SHAKO_CONFIG = { GOOGLE_MAPS_API_KEY: "%s", LICENSE_API: "https://shako-api.solodev-lab.com", LICENSE_GATE: %s, LICENSE_PUBKEY: "%s" };\n' "$SHAKO_KEY" "$GATE" "$SHAKO_PUB" > _site/apps/shako-map/js/config.js
           if [ -z "$SHAKO_KEY" ]; then echo "SHAKO_GOOGLE_MAPS_KEY は未設定（Google の下敷きは出ない）"; else echo "config.js を書いた（キーの長さ ${#SHAKO_KEY}）"; fi
+          echo "ライセンスのゲート=$GATE・公開鍵の長さ ${#SHAKO_PUB}"
       - name: shako-map の版番号を書き込む（§30-33）
         # 🔒 §30-33（2026-09-15）: 配信した新しい版が、ブラウザのキャッシュのせいで
         #    利用者の画面に届かない（古い版のまま使われる）のを防ぐ。
