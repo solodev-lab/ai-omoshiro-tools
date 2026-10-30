@@ -179,6 +179,16 @@ body {
 .qr img { width: 24mm; height: 24mm; }
 .qr p { margin: 0; font-size: 9.5pt; }
 .qr-url { font-size: 8pt; color: var(--sub); word-break: break-all; }
+/* 問い合わせ先（最後のページ） */
+.ct-lead { margin: 0 0 4mm; font-size: 12pt; font-weight: 700; line-height: 1.7; }
+.ct-box { display: flex; gap: 8mm; align-items: center; padding: 6mm; border: 0.6mm solid var(--band-gray); border-radius: 2.5mm; }
+.ct-line { flex: none; text-align: center; }
+.ct-line img { width: 42mm; height: 42mm; display: block; }
+.ct-line span { display: block; margin-top: 1.5mm; font-size: 9pt; font-weight: 700; }
+.ct-list { margin: 0; display: grid; grid-template-columns: 16mm 1fr; gap: 3mm 4mm; align-items: baseline; }
+.ct-list dt { font-weight: 700; color: var(--sub); }
+.ct-list dd { margin: 0; }
+.ct-url { font-size: 11pt; font-weight: 700; letter-spacing: .02em; }
 
 /* ボタン名［ ］は少し太く */
 .btn { font-weight: 700; white-space: nowrap; }
@@ -316,4 +326,54 @@ body {
 @media screen and (max-width: 900px) {
   .toc { position: static; width: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .pages { margin-left: 0; padding: 12px 0; overflow-x: auto; }
+}
+
+/* ======================================================== 簡単版（quick.json・build.py の kind: "quick"）
+   1 枚＝帯＋やること 1 行＋コマの格子（列 --cols × 行 --rows）。コマ＝番号札・一言・画像 1 枚。
+   🔴 ここより上の規則は変えない（64 ページ版の見た目を保つ）。値はこの区画の中だけ。 */
+.quick .pg-body { flex-wrap: nowrap; flex-direction: column; align-items: stretch; gap: 2.2mm; }
+.quick .pg-aim { align-self: flex-start; }
+.quick .pg-body > * { flex: 0 0 auto; }
+.quick .qk-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows, 3), minmax(0, 1fr));
+  gap: 2.4mm;
+}
+.quick .qk-cell {
+  margin: 0;
+  width: auto;
+  max-width: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2mm;
+  padding: 1.6mm;
+  border: 0.3mm solid var(--line);
+  border-radius: 1.6mm;
+}
+.quick .qk-cell figcaption {
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  gap: 1.8mm;
+  align-items: center;
+  font-size: 10.5pt;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.quick .qk-cell .nb { width: 8mm; height: 8mm; line-height: 8mm; font-size: 14pt; margin: 0; }
+.quick .qk-img { position: relative; flex: 1 1 auto; min-height: 0; }
+.quick .qk-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  object-position: 50% 0;       /* 一言のすぐ下に寄せる（余りは下へ） */
+  border: 0;
+  border-radius: 0;
 }

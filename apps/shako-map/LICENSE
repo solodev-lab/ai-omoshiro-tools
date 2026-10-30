@@ -1,0 +1,37 @@
+車庫証明 所在図・配置図メーカー
+Copyright (c) 2026 光源 (Kogen). All rights reserved.
+
+本ソフトウェアおよび付属文書（以下「本ソフトウェア」）は、光源の著作物です。
+本ソフトウェアはオープンソースではありません。利用規約
+（https://solodev-lab.com/shako/terms.html）に同意した利用者が、同規約の範囲で
+ブラウザ上で実行する目的に限って利用できます。
+
+次の行為を禁止します（書面による事前の許諾がある場合を除く）。
+  1. 本ソフトウェアの全部または一部の複製、改変、翻案、再配布、公衆送信
+  2. 本ソフトウェアの解析（リバースエンジニアリング、逆コンパイル、逆アセンブル）
+  3. 本ソフトウェアを生成 AI・機械学習モデル等に入力し、学習・再現・派生物の作成に
+     用いること
+  4. 本ソフトウェアに付された著作権表示・本ライセンスの削除または改変
+
+本ソフトウェアは現状有姿で提供され、保証はありません。
+地図データの出典（国土地理院・OpenStreetMap・PLATEAU）と第三者ライブラリ
+（jsPDF ほか）はそれぞれの権利者のライセンスに従います。
+
+---
+
+Shako-shomei Shozaizu / Haichizu Maker
+Copyright (c) 2026 Kogen. All rights reserved.
+
+This software is proprietary and is NOT open source. It may be used only by
+users who have agreed to the Terms of Service
+(https://solodev-lab.com/shako/terms.html), for the purpose of running it in a
+web browser within the scope of those Terms.
+
+Without prior written permission, you may not: (1) copy, modify, adapt,
+redistribute or publicly transmit this software in whole or in part;
+(2) reverse engineer, decompile or disassemble it; (3) input it into generative
+AI or machine-learning systems for training, reproduction or the creation of
+derivative works; (4) remove or alter this notice.
+
+Provided "as is", without warranty. Map data (GSI, OpenStreetMap, PLATEAU) and
+third-party libraries (jsPDF and others) remain under their own licenses.
