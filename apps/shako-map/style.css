@@ -3465,7 +3465,28 @@ p.sg-tk { margin: 10px 0 4px; }
 }
 .lic-badge.is-warn { border-color: #e08a00; background: #fff3df; color: #8a4b00; }   /* §31-4 5・past_due＝橙 */
 .lic-badge.is-dead { border-color: var(--warn); background: #fdecea; color: var(--warn); }
-.cl-lic-badge { margin-top: 4px; }
+.cl-lic-badge { margin-top: 4px; flex: 0 0 auto; }   /* 🔒 §62-4: 期限まで読めるよう縮めない（上限は 46vw） */
+/* 一言はキーのボタンの左隣（出ている間はボタンの代わりに一言が右へ寄る） */
+.cl-lic-note { margin-left: auto; white-space: normal; }
+.cl-lic-note:not([hidden]) + .lic-keybtn { margin-left: 0; }
+/* 🔒 §62-1: キーのボタン（案件一覧の［＋新しい案件］の行の右端・白文字） */
+/* 🔴 クラス名は lic-keybtn（lic-key は貼る窓のかぶせ物 overlay('lic-key') が使っている） */
+.lic-keybtn {
+  margin-left: auto;
+  font-weight: 700;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+}
+.lic-keybtn.is-none { background: #d93025; }               /* 赤＝ライセンスキー入力 */
+.lic-keybtn.is-none:hover { background: #b3261e; }
+.lic-keybtn.is-ok { background: #1a73e8; }                 /* 青＝認証済 */
+.lic-keybtn.is-ok:hover { background: #1558b0; }
+/* 黄＝認証済・注意（§62-2）。白文字だと黄色の上で読めないので、ここだけ濃い茶の文字 */
+.lic-keybtn.is-care { background: #f2b705; color: #3d2e00; }
+.lic-keybtn.is-care:hover { background: #d9a404; }
+/* 🔒 §62-6: 一度書き出した案件だけに出る［PDF］［画像］ */
+.cl-item .cl-ex { font-size: 12px; }
 .lic-tag {
   display: inline-block;
   font-size: 10.5px;
@@ -3511,9 +3532,14 @@ body.lic-ro #editorView .ed-head > :not(#btnBackToList):not(.lic-badge):not(.lic
   pointer-events: none;
   opacity: .45;
 }
+/* 🔒 §62-5（オーナー「全部薄く表示で触れなくする」）: 道具の行・紙の帯・道具メニューも薄く。
+   図面（地図）だけは見るためにそのままの濃さ（触れないのは上の pointer-events） */
+body.lic-ro #editorView > .ed-tabs,
+body.lic-ro #editorView > .ed-sheetbar,
+body.lic-ro #editorView > .toolbar2,
+body.lic-ro #editorView .ed-stage > .side { opacity: .45; }
 
-/* TOP の状態 0 */
-.lic-gate .lic-key-input { margin-top: 18px; }
+/* キーを貼る窓（🔒 §62-5: 旧 TOP の状態 0 の画面は廃止・窓だけ使う） */
 .lic-key-input {
   display: block;
   width: 100%;

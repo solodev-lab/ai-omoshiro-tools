@@ -59,26 +59,11 @@ inform them that doing so is prohibited by the rights holder.
         <!-- 🔒 §31-2 7: ライセンスの表示（押すと詳細窓・§31-7）。中身は js/license.js -->
         <button type="button" class="lic-badge cl-lic-badge" data-lic-badge hidden></button>
       </header>
-      <!-- 🔒 §31-7・§20-4: 期限切れ・解約・72 時間超の帯（中身は js/license.js） -->
+      <!-- 🔒 §31-7・§20-4・§62-5: 期限切れ・解約・72 時間超・（ゲート 1 の）キー無しの帯（中身は js/license.js） -->
       <div class="lic-band" data-lic-band hidden></div>
 
-      <!-- 🔒 §31-7 状態 0（§20-6③ 完全キー制）: キーが無い時、案件フォルダより前に出る。
-           ゲート（SHAKO_CONFIG.LICENSE_GATE）が 0 なら出ない＝今までどおり（§31-9）。
-           出し分けは app.js の renderTop()・配線は js/license.js -->
-      <div class="cl-gate lic-gate" id="clLic" hidden>
-        <h2 class="cl-gate-title">ライセンスキーを入力してください</h2>
-        <textarea id="licKeyInput" class="lic-key-input" rows="3" spellcheck="false"
-                  placeholder="SHAKO-…（メールで届いたキーをそのまま貼ってください）"></textarea>
-        <div class="cl-gate-btns">
-          <button id="licKeyGo" class="primary">使い始める</button>
-        </div>
-        <p class="lic-msg" id="licKeyMsg"></p>
-        <div class="lic-gate-none">
-          <p class="lic-gate-k">お持ちでない方</p>
-          <p><a id="licSiteLink" class="lic-gate-link" href="https://solodev-lab.com/shako/" target="_blank" rel="noopener">料金とお申し込み</a></p>
-          <p class="cl-gate-text"><a id="licTrialLink" href="https://solodev-lab.com/shako/#apply" target="_blank" rel="noopener">お試しをご希望の方はフォームからどうぞ（7 日間・件数無制限）</a></p>
-        </div>
-      </div>
+      <!-- 🔒 §62-5: 旧「状態 0」の締め出しの画面（#clLic）は廃止。キーが無くてもいつもの画面を出し、
+           案件一覧の行の右端の［ライセンスキー入力］（data-lic-key）から入れてもらう -->
 
       <!-- 🔒 §30-46 B: 国土地理院の告知（住所検索の停止・メンテ等）。
            ゲート（フォルダ未選択・未オープン）と一覧の**両方**で見える位置に
@@ -119,6 +104,12 @@ inform them that doing so is prohibited by the rights holder.
           <button id="btnImport" title="他のパソコンから貰った案件ファイル（.shako・旧 .shako.json も可）をこのフォルダに入れます">案件ファイルを読み込む</button>
           <!-- 🔒 §20-8: 案件ファイルは .shako（独自拡張子）。旧 .shako.json / .json も受け続ける -->
           <input type="file" id="fileImport" accept=".shako,.json,.shako.json" hidden>
+          <!-- 🔒 §62-1（2026-10-30 オーナー指示）: 行の右端にキーのボタン。
+               有効なキーが無い＝赤「ライセンスキー入力」／有効＝青・注意が要る時は黄「ライセンスキー認証済」。
+               色・文字・押した時の動きは js/license.js（render・bindKeyButtons） -->
+          <!-- 🔒 §62-3: キーが入った時・一覧から書き出した時の一言（js/license.js の note）＝ボタンの左隣 -->
+          <span class="lic-note cl-lic-note" data-lic-note hidden></span>
+          <button type="button" class="lic-keybtn" data-lic-key hidden>ライセンスキー入力</button>
         </div>
 
         <!-- 🔒 §19-2/19-3/19-4: 絞り込み（タブ・検索・並び替え）。

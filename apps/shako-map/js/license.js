@@ -260,6 +260,24 @@
   }
   function isDead(st) { return st === 'expired' || st === 'canceled' || st === 'unknown'; }
 
+  /** 有効なキーがあるか（期限切れ・解約・確認できないは「無い」と同じ） */
+  function valid() { return !!S.p && !isDead(status()); }
+  /** 🔒 §62-5: 見るだけにする時。ゲート 1 は有効なキーが無い時（キー無しも期限切れも同じ）。
+   *  ゲート 0 はキー無しなら今までどおり全部・死んだ証だけ見るだけ（今までどおり） */
+  function viewOnly() { return GATE ? !valid() : (!!S.p && isDead(status())); }
+  /** 🔒 §62-2: 黄色＝そのままだと本当に止まる時だけ（自動更新のお客さんは毎月黄色にしない）。
+   *  ①お試しの残り 3 日以下 ②解約の予約で最後の日まで 7 日以下 ③振込の支払い待ち・支払い失敗（＋席の超過） */
+  function needsCare() {
+    if (!valid()) return false;
+    var st = status(), today = todayUtc();
+    if (S.seat || st === 'pending' || st === 'past_due') return true;
+    if (isTrial() && S.p.periodEnd && daysBetween(today, S.p.periodEnd) <= 3) return true;
+    var until = S.seen && S.seen.cancelUntil;
+    return !!(until && daysBetween(today, until) <= 7);
+  }
+  /** 🔒 §62-4: 期限が 2099 年以降（先生の無期限キー）とオフラインのキーは「無期限」と出す */
+  function isForever() { return isOfflineKey() || !!(S.p && S.p.periodEnd && S.p.periodEnd >= '2099-01-01'); }
+
   /** 最後に確認できた時刻（ms）。まだ一度も無ければ証が出た時刻（サーバーが署名した時刻） */
   function lastOk() {
     var v = lsGet(K.ok), t = NaN;
@@ -457,8 +475,14 @@
       adopt(v);
       startHb();
       render();
+      keyInNote();
       return (hbBusy || Promise.resolve()).then(function () { return { ok: true }; });
     });
+  }
+
+  /** 🔒 §62-3: キーが入った直後の一言（リンクでも貼り付けでも） */
+  function keyInNote() {
+    if (S.p) note('ライセンスキーを入れました（' + S.p.office + '）', 8000);
   }
 
   /** URL の `#lic=SHAKO-…` を読んで保存し、URL から消す（§31-2 3） */
@@ -471,28 +495,19 @@
       history.replaceState(null, '', global.location.pathname + global.location.search);
     } catch (e) { global.location.hash = ''; }
     return verifyCert(str).then(function (v) {
-      if (v.ok) { adopt(v); return null; }
+      if (v.ok) { adopt(v); keyInNote(); return null; }
       return VERIFY_MSG[v.error] || VERIFY_MSG.signature;
     });
   }
 
-  /** TOP の状態 0（§31-7）の窓に配線する（index.html の #clLic） */
-  function bindGate() {
-    var go = $('licKeyGo'), inp = $('licKeyInput'), msg = $('licKeyMsg');
-    if (!go || !inp) return;
-    go.addEventListener('click', function () {
-      go.disabled = true;
-      if (msg) msg.textContent = '確認しています…';
-      submitKey(inp.value).then(function (r) {
-        go.disabled = false;
-        if (!r.ok) { setMsg(msg, r.msg, r.contact); return; }
-        inp.value = '';
-        if (msg) msg.textContent = '';
-        if (S.hooks.renderTop) S.hooks.renderTop();
+  /** 🔒 §62-1: キーのボタン（案件一覧の［＋新しい案件］の行の右端）。
+   *  有効なキーが無い＝赤［ライセンスキー入力］→ 貼る窓／有効＝青・黄［ライセンスキー認証済］→ 詳細窓 */
+  function bindKeyButtons() {
+    document.querySelectorAll('[data-lic-key]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (valid()) showDetail(); else showKeyBox();
       });
     });
-    var a = $('licSiteLink'); if (a) a.href = SITE_URL;
-    var t = $('licTrialLink'); if (t) t.href = TRIAL_URL;
   }
 
   /* ================= §22-2b 新しい 1 件か（端末の中だけ） ================= */
@@ -564,6 +579,20 @@
     }
     var seq = ((c.billing && c.billing.seq) || 0) + 1;
     return countOnce(c, seq, wm);
+  }
+
+  /**
+   * 🔒 §62-6: 案件一覧の［PDF］［画像］から書き出す前に通す。
+   * 有効なキーがあれば今の決まりのまま（beforeExport）。見るだけの間は、件数に入った案件
+   * （一度書き出した＝billing.seq > 0）だけ数えず・透かしなしで通す＝払った期間の図面を人質にしない。
+   * 一度も書き出していない案件は通さない（作るだけ作って解約後にまとめて書き出す抜け道を作らない）。
+   */
+  function listExportGate(c) {
+    if (!viewOnly()) return beforeExport(c);
+    var b = c && c.billing;
+    if (b && b.seq > 0) return Promise.resolve({ watermark: null, done: function () {} });
+    showKeyBox('この案件はまだ一度も書き出していないため、書き出すにはライセンスキーが必要です');
+    return Promise.resolve(null);
   }
 
   /** /v1/count を 1 回。止まったら止める画面へ（確定したら同じ (caseUuid, seq) で出し直す・§31-8 6） */
@@ -848,7 +877,7 @@
       ['事務所名', p.office],
       ['プラン', isTrial() ? 'お試し（7 日間・' + (p.quota != null ? p.quota + ' 件' : '件数無制限') + '）'
         : (PLANS[p.plan] ? PLANS[p.plan].label : p.plan) + '・' + (yr ? '年払い' : '月払い')],
-      ['期間', fmtDay(p.periodStart, yr) + '〜' + fmtDay(lastDay(p), yr)],
+      ['期間', fmtDay(p.periodStart, yr || isForever()) + '〜' + (isForever() ? '（無期限）' : fmtDay(lastDay(p), yr))],
       ['件数', n.quota == null ? num(n.used) + ' 件（無制限）' : num(n.used) + '/' + num(n.quota) + ' 件'
         + (queueMine().length ? '（うち未送信 ' + queueMine().length + ' 件）' : '')],
       ['席', (seats ? seats.used : '—') + '/' + (p.seats == null ? '無制限' : p.seats) + ' 台'],
@@ -979,8 +1008,10 @@
     box.appendChild(msg);
   }
 
-  /** ［別のキーを入れる］（事務所の乗り換え・§31-7） */
-  function showKeyBox() {
+  /** ［別のキーを入れる］（事務所の乗り換え・§31-7）・🔒 §62-1 赤の［ライセンスキー入力］も同じ窓。
+   *  @param lead 窓の一番上に出す一言（「新しい案件を作るには…」など・無くてよい） */
+  function showKeyBox(lead) {
+    var first = !S.p;              // まだ一度もキーが入っていない
     var box = overlay('lic-key');
     var inp = h('textarea', { class: 'lic-key-input', rows: '3', placeholder: 'SHAKO-…', spellcheck: 'false' });
     var msg = h('p', { class: 'lic-msg' });
@@ -995,11 +1026,20 @@
         if (S.hooks.renderTop) S.hooks.renderTop();
       });
     });
-    box.appendChild(h('h2', { class: 'lic-h', text: '別のライセンスキーを入れる' }));
-    box.appendChild(h('p', { class: 'lic-mut', text: 'メールで届いたキー（SHAKO- で始まる文字列）を貼ってください。案件フォルダの案件はそのまま使えます' }));
+    box.appendChild(h('h2', { class: 'lic-h', text: first ? 'ライセンスキーを入れる' : '別のライセンスキーを入れる' }));
+    if (lead) box.appendChild(h('p', { class: 'lic-info', text: lead }));
+    box.appendChild(h('p', { class: 'lic-mut', text: 'メールなどで届いたキー（SHAKO- で始まる文字列）を、最後までそのまま貼ってください。案件フォルダの案件はそのまま使えます' }));
     box.appendChild(inp);
     box.appendChild(h('div', { class: 'lic-btns' }, [go, h('button', { text: 'やめる', onclick: function () { closeOverlay(box); } })]));
     box.appendChild(msg);
+    // キーをお持ちでない方（旧 TOP の状態 0 の窓にあった 2 つの行き先）
+    if (first) {
+      box.appendChild(h('div', { class: 'lic-gate-none' }, [
+        h('p', { class: 'lic-gate-k', text: 'キーをお持ちでない方' }),
+        h('p', {}, [h('a', { class: 'lic-gate-link', href: SITE_URL, target: '_blank', rel: 'noopener', text: '料金とお申し込み' })]),
+        h('p', {}, [h('a', { href: TRIAL_URL, target: '_blank', rel: 'noopener', text: 'お試し（7 日間・件数無制限）をご希望の方はフォームからどうぞ' })])
+      ]));
+    }
     inp.focus();
   }
 
@@ -1052,14 +1092,15 @@
     if (st === 'expired') return s + '・期限切れ';
     if (st === 'canceled') return s + '・解約済み';
     if (st === 'unknown') return s + '・確認できません';
-    if (isOfflineKey()) return s;
+    if (isOfflineKey()) return s + '・無期限';                // 🔒 §62-4
     if (isTrial()) {
       /* 🔒 2026-10-21（🙋7 A）: お試しの最終日＝periodEnd の前日（Worker の expires もそこへ揃える）。
        * 「あと N 日」は今日を含めた残りの日数＝periodEnd − 今日（発行日は「あと 7 日」・最終日は「あと 1 日」） */
       var left = Math.max(0, daysBetween(todayUtc(), p.periodEnd));
       return s + '・あと ' + left + ' 日' + (n.quota != null ? '・' + n.used + '/' + n.quota + ' 件' : '');   // 無制限は件数を出さない
     }
-    var end = '（〜' + fmtDay(lastDay(p), p.unit === 'year') + '）';
+    // 🔒 §62-4: 期限 2099 年以降（先生の無期限キー）は「〜2099/12/30」と出さない
+    var end = isForever() ? '・無期限' : '（〜' + fmtDay(lastDay(p), p.unit === 'year') + '）';
     if (n.quota == null) return s + end;                     // 無制限は件数を出さない
     return s + '・' + num(n.used) + '/' + num(n.quota) + ' 件' + end;
   }
@@ -1069,7 +1110,20 @@
     var st = status();
     var dead = on && isDead(st);
     var grace = on && !dead && overGrace();
-    document.body.classList.toggle('lic-ro', dead);           // 期限切れ・解約＝閲覧と JSON だけ
+    var ro = viewOnly();
+    var noKey = ro && !on;                                    // ゲート 1 でキーが入っていない
+    // 🔒 §62-5: 見るだけ＝期限切れ・解約・（ゲート 1 の）キー無し。編集・書き出しは押せない
+    document.body.classList.toggle('lic-ro', ro);
+    // 🔒 §62-1: キーのボタン（赤＝入力／青・黄＝認証済）
+    var ok = valid(), care = ok && needsCare();
+    document.querySelectorAll('[data-lic-key]').forEach(function (b) {
+      b.hidden = false;
+      b.classList.toggle('is-none', !ok);
+      b.classList.toggle('is-ok', ok && !care);
+      b.classList.toggle('is-care', care);
+      b.textContent = ok ? 'ライセンスキー認証済' : 'ライセンスキー入力';
+      b.title = ok ? '押すとライセンスの詳細を表示します' : '押すとライセンスキーを貼る窓が開きます';
+    });
     document.querySelectorAll('[data-lic-badge]').forEach(function (b) {
       b.hidden = !on;
       if (!on) return;
@@ -1083,14 +1137,21 @@
     });
     document.querySelectorAll('[data-lic-band]').forEach(function (band) {
       band.textContent = '';
-      band.hidden = !(dead || grace);
-      if (dead) {
+      band.hidden = !(dead || grace || noKey);
+      // 🔒 §62-5・62-6: 見るだけの間にできること＝案件を見る・一度書き出した案件の PDF・画像（案件一覧から）
+      var canDo = '案件は見ることと、一度書き出した案件の PDF・画像（案件一覧の［PDF］［画像］）だけできます';
+      if (noKey) {
+        band.appendChild(h('span', { text: 'ライセンスキーが入っていません。' + canDo }));
+        band.appendChild(h('button', { text: 'ライセンスキー入力', onclick: function () { showKeyBox(); } }));
+      } else if (dead) {
         band.appendChild(h('span', { text: st === 'canceled'
-          ? 'ライセンスは解約済みです。案件は見ることと案件ファイルの取り出しだけできます。再開する時は紹介ページからお申し込みください'
+          ? 'ライセンスは解約済みです。' + canDo + '。再開する時は紹介ページからお申し込みください'
           : st === 'unknown'
-            ? 'このライセンスキーは確認できません。案件は見ることと案件ファイルの取り出しだけできます'
-            : 'ライセンスの期限が切れています。お支払いが確認できると自動で戻ります' }));
-        if (st === 'canceled') {
+            ? 'このライセンスキーは確認できません。' + canDo
+            : isTrial()
+              ? 'お試しの期間が終わりました。' + canDo
+              : 'ライセンスの期限が切れています。お支払いが確認できると自動で戻ります（それまでは' + canDo + '）' }));
+        if (st === 'canceled' || (st === 'expired' && isTrial())) {
           band.appendChild(h('button', { text: '料金とお申し込み', onclick: function () { global.open(SITE_URL, '_blank', 'noopener'); } }));
         } else if (st === 'expired' && !isTrial()) {
           band.appendChild(h('button', { text: '支払いとプランの管理', onclick: function () { showDetail(); } }));
@@ -1178,7 +1239,7 @@
    */
   function boot(hooks) {
     S.hooks = hooks || {};
-    bindGate();
+    bindKeyButtons();
     document.querySelectorAll('[data-lic-badge]').forEach(function (b) {
       b.addEventListener('click', showDetail);
     });
@@ -1193,10 +1254,8 @@
       var stored = lsGet(K.lic);
       return stored ? verifyCert(stored).then(function (v) { if (v.ok) adopt(v); }) : null;
     }).then(function () {
-      if (hashMsg) {
-        var el = $('licKeyMsg');
-        if (el) el.textContent = hashMsg;
-      }
+      // リンクのキーが読めなかった時は、貼る窓を開いて理由を出す（旧 TOP の状態 0 の窓の代わり・§62-5）
+      if (hashMsg) showKeyBox(hashMsg);
       if (S.p && S.seen && S.seen.count && S.seen.count.periodStart && S.seen.count.periodStart !== S.p.periodStart
           && S.seen.count.periodEnd !== S.p.periodEnd) {
         S.seen.count = null;               // 期間が進んだ後の古い数字は使わない
@@ -1209,13 +1268,16 @@
 
   global.License = {
     boot: boot,
-    /** 状態 0（§31-7）: ゲートが 1 で、使える証が無い */
-    needKey: function () { return GATE && !S.p; },
     active: function () { return !!S.p; },
-    /** PDF・画像を書き出してよいか（期限切れ・解約・席の超過は押せない） */
-    canExport: function () { return !S.p || (!S.seat && !isDead(status())); },
-    readOnly: function () { return !!S.p && isDead(status()); },
+    /** 図面作成画面から PDF・画像を書き出してよいか（見るだけの間・席の超過は押せない） */
+    canExport: function () { return !viewOnly() && !S.seat; },
+    /** 🔒 §62-5: 見るだけの間（ゲート 1 で有効なキーが無い・期限切れ・解約） */
+    viewOnly: viewOnly,
+    /** 🔒 §62-1: キーを貼る窓を開く（lead＝一番上の一言） */
+    askKey: function (lead) { showKeyBox(lead); },
     beforeExport: beforeExport,
+    listExportGate: listExportGate,
+    note: note,
     pointsChanged: pointsChanged,
     showDetail: showDetail,
     hb: hb,

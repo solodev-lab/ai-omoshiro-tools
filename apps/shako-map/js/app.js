@@ -749,6 +749,7 @@
        （上部バーの［案件名］欄でいつでも入れられる）。
        🔴 番号（§19-1）の自動採番は従来どおり Store.newCase() の中で1つ消費する。 */
     $('btnNewCase').addEventListener('click', function () {
+      if (licAsk('新しい案件を作るには、ライセンスキーが必要です')) return;   // 🔒 §62-5
       var c = Store.newCase('');
       c.name = '';                 // Store 側の既定（'無題の案件'）を使わず空で始める
       /* 🔴 §26-4-1 バグ修正: save() の戻り値を見ずに openCase していたため、
@@ -811,7 +812,10 @@
       });
     });
 
-    $('btnImport').addEventListener('click', function () { $('fileImport').click(); });
+    $('btnImport').addEventListener('click', function () {
+      if (licAsk('案件ファイルを読み込むには、ライセンスキーが必要です')) return;   // 🔒 §62-5
+      $('fileImport').click();
+    });
     $('fileImport').addEventListener('change', function (e) {
       var f = e.target.files && e.target.files[0];
       if (!f) return;
@@ -874,16 +878,9 @@
    * 🔴 案件一覧（renderCaseList）は③の中でだけ動く。
    */
   function renderTop() {
-    /* 🔒 §31-7 状態 0（§20-6③ 完全キー制）: キーが無い時は案件フォルダより前に
-     * ライセンスの画面だけ（この画面より先には進めない＝フォルダも開かない）。
-     * ゲート（SHAKO_CONFIG.LICENSE_GATE）が 0 なら needKey() は常に false＝今までどおり。 */
-    if (window.License && License.needKey()) {
-      $('clMain').hidden = true;
-      $('clGate').hidden = true;
-      $('clLic').hidden = false;
-      return Promise.resolve('license');
-    }
-    $('clLic').hidden = true;
+    /* 🔒 §62-5（2026-10-30 オーナー決定）: キーが無くても締め出さない（旧 §31-7 状態 0 の画面は廃止）。
+     * いつもの画面を出し、案件一覧の右端の［ライセンスキー入力］から入れてもらう。
+     * 有効なキーが無い間（ゲート 1）は見るだけ＝License.viewOnly()（新しい案件・読み込みはキーの窓）。 */
     if (!FSave.supported()) {
       showGate('unsupported');
       return Promise.resolve('unsupported');
@@ -1022,6 +1019,16 @@
       li.appendChild(main);
 
       li.appendChild(mkBtn('開く', 'primary', function () { openCase(it.id); }));
+      /* 🔒 §62-6（2026-10-30 オーナー案）: 件数に入った案件（一度でも書き出した）だけ［PDF］［画像］。
+       * 有効なキーがあれば今の決まりのまま・見るだけの間は数えず透かしなしで出す */
+      if (it.countedAt) {
+        var bPdf = mkBtn('PDF', 'cl-ex', function () { listExport(it.id, 'pdf'); });
+        bPdf.title = '一度書き出したこの案件の PDF をもう一度保存します';
+        li.appendChild(bPdf);
+        var bPng = mkBtn('画像', 'cl-ex', function () { listExport(it.id, 'png'); });
+        bPng.title = '一度書き出したこの案件の画像（PNG）をもう一度保存します';
+        li.appendChild(bPng);
+      }
       /* 🔒 §27-5-a の積み残しをここで是正。完了・複製・名前・削除は
        * **保存の失敗を握り潰さない**（満杯／フォルダに書けない を必ず知らせる）。
        * 🔴 §27-7②: 保存先がファイルになったのでどれも Promise を返す。 */
@@ -1030,6 +1037,7 @@
         Store.setDone(it.id, !it.done).then(afterCaseOp, caseOpFailed);
       }));
       li.appendChild(mkBtn('複製', '', function () {
+        if (licAsk('案件を複製するには、ライセンスキーが必要です')) return;   // 🔒 §62-5（新しい案件と同じ扱い）
         Store.duplicate(it.id).then(afterCaseOp, caseOpFailed);
       }));
       li.appendChild(mkBtn('名前', '', function () {
@@ -1052,6 +1060,19 @@
     });
     /* 🔒 §27-12: 案件の本体はフォルダのファイルなので、ここに容量の表示は無い
        （案件一覧の使用率表示は廃止。上限そのものが無くなった）。 */
+  }
+
+  /** 🔒 §62-5: 有効なキーが無い間（見るだけ）はキーの窓を開いて true（呼んだ側は何もしない） */
+  function licAsk(lead) {
+    if (!window.License || !License.viewOnly()) return false;
+    License.askKey(lead);
+    return true;
+  }
+
+  /** 🔒 §62-6: 案件一覧の［PDF］［画像］。その案件を開き（見るだけの間は薄い画面のまま）、
+   *  今の「紙を選ぶ窓」を出す。保存・やめる・閉じるで案件一覧へ戻る（exPickClose）。 */
+  function listExport(id, mode) {
+    openCase(id, { after: function () { exPickOpen(mode, { fromList: true }); } });
   }
 
   /** 一覧の行の操作が成功した後（🔒 §27-12: TOP ページごと引き直す）。
@@ -1099,7 +1120,8 @@
       var b = $(id);
       if (b) b.disabled = !ok;
     });
-    if (!ok && $('exPick') && !$('exPick').hidden) exPickClose();
+    // 🔒 §62-6: 案件一覧の［PDF］［画像］から開いた窓は見るだけの間も閉じない（listExportGate が通す）
+    if (!ok && $('exPick') && !$('exPick').hidden && !(state.exPick && state.exPick.fromList)) exPickClose();
   }
 
   /** §31-8 4・§22-5: 「場所が変わりました」の［複製する］＝§19-1 の複製（新しい番号）を開く */
@@ -8860,29 +8882,37 @@
   function exPickOpen(mode, opt) {
     opt = opt || {};
     if (!state.current) return;
-    /* 🔒 §31-7・§31-8 7: 期限切れ・解約（閲覧と JSON だけ）と席の超過の間は書き出せない */
-    if (window.License && !License.canExport()) {
-      if (License.readOnly()) {
-        hint('ライセンスの期限が切れているため、PDF・画像は書き出せません（案件を見ることと案件ファイルの取り出しはできます）', 5000);
-        License.showDetail();
+    /* 🔒 §31-7・§31-8 7・§62-5: 見るだけの間（期限切れ・解約・ゲート 1 のキー無し）と席の超過の間は
+     * 図面作成画面からは書き出せない。🔒 §62-6: 案件一覧の［PDF］［画像］から来た時（fromList）は、
+     * 見るだけの間でも窓を出す（通すかどうかは保存の時に License.listExportGate が決める） */
+    var fromList = !!opt.fromList;
+    if (window.License && !License.canExport() && !(fromList && License.viewOnly())) {
+      if (License.viewOnly()) {
+        hint('ライセンスが有効でないため、ここからは PDF・画像を書き出せません'
+          + '（一度書き出した案件は、案件一覧の［PDF］［画像］から出せます）', 6000);
       }
+      if (fromList) backToList();
       return;
     }
     var list = pagesForExport().filter(function (p) { return !!p.frame; });
     var inf = sgComboInfo();          // 🔴 まとめられるかの判定は1か所
     if (!list.length) {
       hint('書き出せる図がありません。先に図を作ってください。', 3500);
+      if (fromList) backToList();
       return;
     }
     var pdf = (mode !== 'png');
     var pk = { mode: pdf ? 'pdf' : 'png', pages: list, combo: !!inf.ok,
-               comboInfo: inf, sel: {}, one: false };
+               comboInfo: inf, sel: {}, one: false, fromList: fromList };
     state.exPick = pk;
     /* 🔒 §30-27-2 2: 最初は**いま見ている紙だけ**にチェック。
-     * プレビューを出していない時（上部バーの［書き出し］から）は編集中の紙。 */
+     * プレビューを出していない時（上部バーの［書き出し］から）は編集中の紙。
+     * 🔒 §62-6: 案件一覧から来た時は全部の紙にチェック（控えをまとめて出すのが目的） */
     var pg = state.exPager, open = !$('exPreviewBox').hidden;
     var ofKind = opt.kind ? list.filter(function (p) { return p.kind === opt.kind; }) : [];
-    if (ofKind.length) {
+    if (fromList) {
+      list.forEach(function (p) { pk.sel[p.sheetId] = true; });
+    } else if (ofKind.length) {
       ofKind.forEach(function (p) { pk.sel[p.sheetId] = true; });   // 🔒 §53-2: その図の紙だけ
     } else if (open && pg && exIsCombo(pg.i) && pk.combo) {
       pk.one = true;
@@ -8904,8 +8934,11 @@
   }
 
   function exPickClose() {
+    var back = !!(state.exPick && state.exPick.fromList);
     $('exPick').hidden = true;
     state.exPick = null;
+    // 🔒 §62-6: 案件一覧の［PDF］［画像］から来た窓は、保存・やめる・閉じるのどれでも案件一覧へ戻る
+    if (back) backToList();
   }
 
   /** 窓の中身を引き直す（区画の見出し・紙の札・まとめ・実行ボタンの可否） */
@@ -9007,7 +9040,9 @@
      * （新しい 1 件なら /v1/count・上限なら止める画面）。null＝作らない（止めた・やめた）。
      * 🔒 §21-2: 権限はクリックの中で先に取っておく（通信を待つ間にユーザー操作が切れる）。 */
     FSave.prepare();
-    var gate = window.License ? License.beforeExport(state.current) : null;
+    // 🔒 §62-6: 案件一覧から来た時は listExportGate（見るだけの間は一度書き出した案件だけ・数えない）
+    var gate = !window.License ? null
+      : (pk.fromList ? License.listExportGate(state.current) : License.beforeExport(state.current));
     Promise.resolve(gate || { watermark: null, done: function () {} }).then(function (t) {
       if (!t) {
         if ($('exPickMsg')) $('exPickMsg').textContent = '';
@@ -9069,7 +9104,13 @@
    */
   function exPickDone(m, ok) {
     if (ok) {
+      // 🔒 §62-6: 案件一覧から来た時は一覧へ戻るので、結果の一言は一覧の上部（License.note）に出す
+      var fromList = !!(state.exPick && state.exPick.fromList);
       exPickClose();
+      if (fromList) {
+        if (window.License) License.note(m, 10000);
+        return;
+      }
       if ($('exBarMsg')) $('exBarMsg').textContent = m;
       /* プレビューを開かずに（配置図⑧の［PDFにして保存］から）出した時は帯が
        * 見えないので、同じ一言をその場の案内としても出す。 */
@@ -12172,6 +12213,8 @@
     if (opt && opt.fresh) welcomeOpen();
     /* 🔒 §30-33-1 4: 既に新しい版を見つけていれば、開いた瞬間から上部バーに案内を出す */
     verSyncNote();
+    // 🔒 §62-6: 案件一覧の［PDF］［画像］から来た時は、画面を組み終えてから紙を選ぶ窓を出す
+    if (opt && opt.after) opt.after();
   }
 
   function ensureMap() {
