@@ -40,62 +40,15 @@ jobs:
             --exclude='/apps/insta-reels' --exclude='/apps/tarot-v2' \
             --exclude='/worker' --exclude='/tools' --exclude='/docs' \
             --exclude='/logs' --exclude='/sns-templates' \
-            --exclude='/apps/shako-map/docs' --exclude='/apps/shako-map/tools' \
-            --exclude='/apps/shako-map/spike' --exclude='/apps/shako-map/worker' \
+            --exclude='/apps/shako-map' \
             --exclude='*.md' \
             ./ _site/
           touch _site/.nojekyll
           echo "=== published top-level ===" && ls _site
-          echo "=== published apps/ (should NOT contain solara/diet_app) ===" && ls _site/apps
-          echo "=== published apps/shako-map (should NOT contain docs/tools/spike) ===" && ls _site/apps/shako-map
-      - name: shako-map の config.js を Secrets から作る（キーはリポジトリに置かない）
-        # 🔒 2026-09-13: Google Maps のキーは GitHub Secrets（SHAKO_GOOGLE_MAPS_KEY）から
-        #    配信時にだけ config.js へ差し込む。履歴に残らず、取り替えは Secrets の書き換えだけ。
-        #    Secrets が空なら空文字で書く＝Google の下敷きは選択肢に出ない（地理院・OSM のみ）。
-        #    キー自体は利用者のブラウザに届く公開キー。守りは Google Cloud 側の
-        #    HTTP リファラー制限（https://solodev-lab.com/*）と日次上限（config.sample.js 参照）。
-        # 🔒 §31-9（ライセンス）: ゲートと公開鍵も同じ流儀で GitHub の変数（Variables）から書く。
-        #    SHAKO_LICENSE_GATE   … 0（既定＝キー不要・今の公開版のまま）／1（キーが無いと使えない）。
-        #                           🔴 配信物に焼く＝サーバーを止められてもゲートは外れない
-        #    SHAKO_LICENSE_PUBKEY … 証の検証用の公開鍵（Ed25519・base64url）。秘密ではない
-        #    LICENSE_API は本番の Worker に固定（手元は config.js を手で書く）。
-        env:
-          SHAKO_KEY: ${{ secrets.SHAKO_GOOGLE_MAPS_KEY }}
-          SHAKO_GATE: ${{ vars.SHAKO_LICENSE_GATE }}
-          SHAKO_PUB: ${{ vars.SHAKO_LICENSE_PUBKEY }}
-        run: |
-          # 本番の公開鍵（秘密ではない・2026-10-21 Worker 配置時の鍵＝.env の SHAKO_LICENSE_PUBLIC_KEY）。
-          # GitHub の変数 SHAKO_LICENSE_PUBKEY があればそちらが勝つ（鍵を取り替える時）
-          SHAKO_PUB="${SHAKO_PUB:-t0rT4y1K3rnOpROIUHdCOlLnU9bMoTzRyDDJNMCrLvE}"
-          GATE="${SHAKO_GATE:-0}"
-          if [ "$GATE" != "1" ]; then GATE=0; fi
-          if [ "$GATE" = "1" ] && [ -z "$SHAKO_PUB" ]; then echo "SHAKO_LICENSE_GATE=1 なのに SHAKO_LICENSE_PUBKEY が空（誰もキーを入れられなくなる）" && exit 1; fi
-          if ! printf '%s' "$SHAKO_PUB" | grep -Eq '^[A-Za-z0-9_-]*$'; then echo "SHAKO_LICENSE_PUBKEY に base64url 以外の文字がある" && exit 1; fi
-          printf 'window.SHAKO_CONFIG = { GOOGLE_MAPS_API_KEY: "%s", LICENSE_API: "https://shako-api.solodev-lab.com", LICENSE_GATE: %s, LICENSE_PUBKEY: "%s" };\n' "$SHAKO_KEY" "$GATE" "$SHAKO_PUB" > _site/apps/shako-map/js/config.js
-          if [ -z "$SHAKO_KEY" ]; then echo "SHAKO_GOOGLE_MAPS_KEY は未設定（Google の下敷きは出ない）"; else echo "config.js を書いた（キーの長さ ${#SHAKO_KEY}）"; fi
-          echo "ライセンスのゲート=$GATE・公開鍵の長さ ${#SHAKO_PUB}"
-      - name: shako-map の版番号を書き込む（§30-33）
-        # 🔒 §30-33（2026-09-15）: 配信した新しい版が、ブラウザのキャッシュのせいで
-        #    利用者の画面に届かない（古い版のまま使われる）のを防ぐ。
-        #    配信のたびに**コミット番号(7桁)**を、_site の中の3か所へ同じ値で書き込む。
-        #      (a) version.json           … アプリが数分ごと・案件一覧に戻った時に見に行く印
-        #      (b) index.html の window.SHAKO_VER … いま動いている版
-        #      (c) JS・CSS の ?v=<番号>   … HTML が新しくなれば中身も必ず新しい
-        #    🔴 書き換えるのは _site（配信物）だけ。リポジトリのソースは
-        #       印（__SHAKO_VER__）のまま＝手元では「版なし」でアプリは何もしない。
-        run: |
-          VER="${GITHUB_SHA:0:7}"
-          AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          if [ -z "$VER" ]; then echo "GITHUB_SHA が空（版番号を作れない）" && exit 1; fi
-          printf '{"ver":"%s","at":"%s"}\n' "$VER" "$AT" > _site/apps/shako-map/version.json
-          sed -i "s/__SHAKO_VER__/$VER/g" _site/apps/shako-map/index.html
-          echo "=== version.json ===" && cat _site/apps/shako-map/version.json
-          if grep -q '__SHAKO_VER__' _site/apps/shako-map/index.html; then
-            echo "置換されていない __SHAKO_VER__ が index.html に残っている" && exit 1
-          fi
-          HITS=$(grep -o "$VER" _site/apps/shako-map/index.html | wc -l)
-          if [ "$HITS" -eq 0 ]; then echo "index.html に版番号が1つも入っていない" && exit 1; fi
-          echo "index.html の置換 $HITS 件（版 $VER）"
+          echo "=== published apps/ (should NOT contain solara/diet_app/shako-map) ===" && ls _site/apps
+      # 🔒 2026-10-31: 車庫証明メーカー（apps/shako-map）は非公開リポ solodev-lab/shako-map へ移した。
+      #    配信は Cloudflare Worker shako-app（ルート solodev-lab.com/apps/shako-map/*）。
+      #    ここに apps/shako-map を戻しても配信されないよう上の rsync で除外している（保険）。
       - name: legal/solara のルートは ja/ の写し（二重管理を作らない）
         # 🔴 2026-07-29: legal/solara/ の日本語版が「ルート」と「ja/」に同じ内容で2つ在り、
         #    直すたびに両方を手で直す状態だった(6ファイルとも改行以外は完全一致だった)。
