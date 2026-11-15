@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>車庫証明 所在図・配置図メーカー｜図面作成が最短6分に</title>
-<meta name="description" content="車庫証明の所在図・配置図を、住所を入れるだけで自動作成。所在図は最短1分、配置図は15分が5分に。行政書士事務所向けのパソコン用ツール。月額3,300円（税込）から。">
-<meta property="og:title" content="車庫証明 所在図・配置図メーカー｜図面作成が最短6分に">
-<meta property="og:description" content="所在図は住所を入れて自動作成・最短1分。配置図は写真をなぞって5分。行政書士事務所向け。">
+<title>車庫証明 所在図・配置図メーカー｜申請書と図面、30分の作業が最短7分に</title>
+<meta name="description" content="車庫証明の申請書・所在図・配置図を作るパソコン用ツール。申請書はスキャンした書類（PDF・画像）から読み取って完成、所在図は住所を入れるだけで自動作成、配置図は写真をなぞるだけ。30分の作業が最短7分に。行政書士事務所向け。月額3,300円（税込）から。">
+<meta property="og:title" content="車庫証明 所在図・配置図メーカー｜申請書と図面、30分の作業が最短7分に">
+<meta property="og:description" content="申請書はスキャンした書類から読み取って1分。所在図は住所を入れて自動作成・最短1分。配置図は写真をなぞって5分。行政書士事務所向け。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://solodev-lab.com/shako/">
 <meta property="og:image" content="https://solodev-lab.com/shako/img/haichizu_v3.jpg">
@@ -66,25 +66,29 @@
   @media (max-width: 480px) { .hero .cta .btn { flex: 1 1 100%; } }
   .hero .note { font-size: 12px; color: var(--sub); margin-top: 12px; }
 
-  /* 棒グラフ（同じ物差し＝全幅 25 分。結ぶ線は入れない） */
+  /* 棒グラフ（同じ物差し＝全幅 30 分。結ぶ線は入れない）。2026-11-08 申請書を足す: 申請書 5/30・所在図 10/30・配置図 15/30／新 7/30＝23.33%（中は 1:1:5） */
   .bars { margin-top: 28px; display: grid; grid-template-columns: 80px 1fr 64px; gap: 0 12px; max-width: 780px; }
   .bars .lbls, .bars .vals { display: grid; grid-template-rows: 40px 40px; row-gap: 20px; align-items: center; }
   .bars .lbls div { font-weight: 700; color: var(--sub); font-size: 14px; }
   .plot { position: relative; display: grid; grid-template-rows: 40px 40px; row-gap: 20px; }
   .bar { height: 40px; border-radius: 6px; display: flex; overflow: hidden; font-weight: 700; font-size: 14px; color: #fff; }
   .bar span { display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
-  .bar.old { width: 100%; } .bar.old span:first-child { background: #b9c0cb; width: 40%; } .bar.old span:last-child { background: #9aa3b0; width: 60%; }
-  .bar.new { width: 24%; } .bar.new span:first-child { background: var(--accent); width: 16.67%; } .bar.new span:last-child { background: #c2410c; width: 83.33%; }
+  .bar.old { width: 100%; } .bar.old span:nth-child(1) { background: #b9c0cb; width: 16.67%; } .bar.old span:nth-child(2) { background: #a9b1bd; width: 33.33%; } .bar.old span:nth-child(3) { background: #9aa3b0; width: 50%; }
+  .bar.new { width: 23.33%; } .bar.new span:nth-child(1) { background: var(--accent); width: 14.29%; } .bar.new span:nth-child(2) { background: #d24d0a; width: 14.29%; } .bar.new span:nth-child(3) { background: #c2410c; width: 71.42%; }
   .bars .t { font-weight: 900; font-size: 20px; white-space: nowrap; }
   .bars .t.new { color: var(--accent); font-size: 24px; }
-  .plot .tnew { position: absolute; left: calc(24% + 10px); bottom: 0; height: 40px; display: flex; align-items: center; }
+  .plot .tnew { position: absolute; left: calc(23.33% + 10px); bottom: 0; height: 40px; display: flex; align-items: center; }
   @media (max-width: 480px) {
     .bars { grid-template-columns: 64px 1fr 48px; gap: 0 8px; }
     .bars .lbls div { font-size: 12px; } .bar { font-size: 11px; }
     .bars .t { font-size: 16px; } .bars .t.new { font-size: 18px; }
+    /* 狭い画面は棒の中に名前が入らない＝分だけ。新しい棒は細すぎるので字を出さない（横の「最短7分」で分かる） */
+    .bar .nm { display: none; } .bar.new span { font-size: 0; }
   }
+  .bar .nm { font-style: normal; }
 
-  .stats { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 900px; }
+  .stats { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; max-width: 1000px; }
+  .stat .no { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 15px; margin-right: 6px; vertical-align: 2px; }
   .stat { border: 2px solid var(--blue); border-radius: 10px; background: #fff; padding: 12px 16px; display: flex; align-items: baseline; justify-content: center; gap: 14px; line-height: 1; flex-wrap: wrap; }
   .stat .k { font-weight: 900; font-size: 22px; color: var(--blue); }
   .stat .v { font-weight: 700; font-size: 18px; color: var(--sub); }
@@ -92,6 +96,8 @@
   /* 大きい数字は行の高さを詰める（詰めないと上に空きができて文字が下に寄る） */
   .stat .big { font-size: 56px; font-weight: 900; color: var(--accent); margin: 0 .12em; line-height: .72; position: relative; top: .07em; }
   .stat { padding: 16px 16px 14px; }
+  /* 3 つ横並び（2026-11-08 申請書を足す）で幅が足りない時は少し小さく */
+  @media (max-width: 960px) { .stat { gap: 10px; padding: 14px 10px 12px; } .stat .k { font-size: 19px; } .stat .v { font-size: 16px; } .stat .big { font-size: 44px; } }
   @media (max-width: 640px) {
     .stats { grid-template-columns: 1fr; gap: 10px; }
     .stat .k { font-size: 18px; } .stat .v { font-size: 16px; } .stat .big { font-size: 44px; }
@@ -110,6 +116,7 @@
   /* お悩み → 解決策 */
   .solve { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
   .pair { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+  .pair.wide { grid-column: 1 / -1; }  /* 申請書の組（2026-11-08）は 1 行全部＝残りの 6 つが 3＋3 に並ぶ */
   /* 札（悩み／解決）は左に絶対配置。本文は b と文字が混ざるので flex にしない */
   .pain { padding: 14px 16px 18px 60px; font-size: 15px; color: var(--sub); line-height: 1.6; position: relative; }
   .pain::before { content: "悩み"; position: absolute; left: 16px; top: 15px; font-size: 11px; font-weight: 700; background: #e3e7ee; color: var(--sub); border-radius: 4px; padding: 2px 6px; line-height: 1.5; }
@@ -205,7 +212,7 @@
 <header class="top">
   <div class="wrap">
     <a class="name" href="#top">車庫証明 所在図・配置図メーカー</a>
-    <nav><a href="#shozaizu">所在図</a><a href="#haichizu">配置図</a><a href="#easy">使いやすさ</a><a href="#price">料金</a><a href="#faq">よくある質問</a></nav>
+    <nav><a href="#shinsei">申請書</a><a href="#shozaizu">所在図</a><a href="#haichizu">配置図</a><a href="#easy">使いやすさ</a><a href="#price">料金</a><a href="#faq">よくある質問</a></nav>
     <a class="mini" href="#apply">お申し込み</a>
   </div>
 </header>
@@ -214,28 +221,30 @@
 <div class="hero">
   <div class="wrap">
     <div class="badge">★ 自動車の総保有台数が最も多い都道府県・愛知県の現役行政書士おすすめツール</div>
-    <h1>車庫証明の図面、<br>25分の作図が<span style="white-space:nowrap">最短<span class="big">6</span>分に。</span></h1>
-    <p class="sub">所在図は、住所を入れてボタンを押すだけで自動で出来上がります。配置図は、空から見た写真の上をなぞるだけ。めんどうな作図はさっと終わらせて、本来の業務の時間を取り戻しましょう。</p>
+    <!-- 2026-11-08 オーナー指示: 申請書も入れて 30分→最短7分・並びは ①申請書 ②所在図 ③配置図（フライヤーと同じ） -->
+    <h1>車庫証明の申請書と図面、<br>30分の作業が<span style="white-space:nowrap">最短<span class="big">7</span>分に。</span></h1>
+    <p class="sub">申請書は、スキャンした書類（PDF・画像）を読み込ませるだけで完成します。所在図は、住所を入れてボタンを押すだけで自動で出来上がります。配置図は、空から見た写真の上をなぞるだけ。めんどうな書き写しと作図はさっと終わらせて、本来の業務の時間を取り戻しましょう。</p>
     <div class="bars">
       <div class="lbls"><div>これまで</div><div>このツール</div></div>
       <div class="plot">
-        <div class="bar old"><span>所在図 10分</span><span>配置図 15分</span></div>
-        <div class="bar new"><span>1</span><span>5分</span></div>
-        <div class="t new tnew">最短6分</div>
+        <div class="bar old"><span><i class="nm">申請書 </i>5分</span><span><i class="nm">所在図 </i>10分</span><span><i class="nm">配置図 </i>15分</span></div>
+        <div class="bar new"><span>1</span><span>1</span><span>5分</span></div>
+        <div class="t new tnew">最短7分</div>
       </div>
-      <div class="vals"><div class="t">25分</div></div>
+      <div class="vals"><div class="t">30分</div></div>
     </div>
     <!-- フライヤー1枚目と同じ時間の枠（数字を大きく） -->
     <div class="stats">
-      <div class="stat"><span class="k">所在図</span><span class="v">10分 <span class="arr">▶</span> 最短<span class="big">1</span>分</span></div>
-      <div class="stat"><span class="k">配置図</span><span class="v">15分 <span class="arr">▶</span> <span class="big">5</span>分</span></div>
+      <div class="stat"><span class="k"><span class="no">1</span>申請書</span><span class="v">5分 <span class="arr">▶</span> <span class="big">1</span>分</span></div>
+      <div class="stat"><span class="k"><span class="no">2</span>所在図</span><span class="v">10分 <span class="arr">▶</span> 最短<span class="big">1</span>分</span></div>
+      <div class="stat"><span class="k"><span class="no">3</span>配置図</span><span class="v">15分 <span class="arr">▶</span> <span class="big">5</span>分</span></div>
     </div>
-    <!-- 1件 25分→最短6分＝19分短縮。1日5件＝95分。月20日稼働＝1,900分≒約32時間 -->
+    <!-- 1件 30分→最短7分＝23分短縮。1日5件＝115分。月20日稼働＝2,300分≒約38時間 -->
     <div class="save">
-      <div class="it"><span>1件で</span><b><span class="num">19</span>分</b>短縮</div>
-      <div class="it"><span>1日5件なら</span><b><span class="num">95</span>分</b>短縮</div>
-      <div class="it"><span>1か月（20日）なら</span><b>約<span class="num">32</span>時間</b>短縮</div>
-      <div class="hr">人手不足の事務所にも。<br>作図の時間を、そのまま他の業務へ。</div>
+      <div class="it"><span>1件で</span><b><span class="num">23</span>分</b>短縮</div>
+      <div class="it"><span>1日5件なら</span><b><span class="num">115</span>分</b>短縮</div>
+      <div class="it"><span>1か月（20日）なら</span><b>約<span class="num">38</span>時間</b>短縮</div>
+      <div class="hr">人手不足の事務所にも。<br>その時間を、そのまま他の業務へ。</div>
     </div>
     <p class="note">※所要時間は実務での一例です。案件の内容や操作の慣れによって異なります。</p>
     <div class="cta">
@@ -251,6 +260,10 @@
     <div class="eyebrow">こんなお悩み、ありませんか？</div>
     <h2>そのお悩み、このツールが解決します。</h2>
     <div class="solve">
+      <div class="pair wide">
+        <div class="pain">依頼人の書類を見ながら、型式・車台番号を1字ずつ書き写している</div>
+        <div class="fix"><b>書類を読み込ませるだけ。</b>スキャンした書類（PDF・画像）や車検証から、型式・車台番号・住所などを拾って申請書の欄に書き込みます。</div>
+      </div>
       <div class="pair">
         <div class="pain">会議や面談のあと、疲れた頭で図面を描いている</div>
         <div class="fix"><b>所在図はボタン1つで自動作成。</b>住所を入れて押すだけなので、疲れている日でも最短1分で終わります。</div>
@@ -279,8 +292,30 @@
   </div>
 </section>
 
+<!-- 申請書（2026-11-08 オーナー指示: 「スキャンした書類から完成する」が分かれば足りる・5分→1分・新機能とは書かない） -->
+<section id="shinsei">
+  <div class="wrap">
+    <div class="eyebrow">申請書　5分 → 1分</div>
+    <h2>申請書は、スキャンした書類を読み込ませるだけ。<span class="num big">1</span>分。</h2>
+    <p class="lead">依頼人からもらった書類や車検証を、PDF や画像のまま読み込ませます。型式・車台番号・住所などを拾って、申請書の欄に書き込みます。1字ずつ書き写す必要はありません。</p>
+    <div class="two">
+      <div>
+        <div class="shot"><img src="img/ui_docread_top.png" alt="書類から読み取った項目の一覧" loading="lazy" width="1196" height="468"></div>
+        <p class="cap">読み取った項目の一覧（値は架空）。はっきりしない値は赤で表示するので、そこだけ書類と見比べれば済みます。</p>
+      </div>
+      <ul class="list">
+        <li><div><b>作れる書類</b><span>保管場所証明申請書・保管場所届出書（軽自動車・変更の届出）・自認書・使用承諾証明書。所在図・配置図と合わせて 1つの PDF に書き出せます。</span></div></li>
+        <li><div><b>読んだ住所は、そのまま所在図・配置図に</b><span>読み取った使用の本拠・保管場所の住所で、そのまま地図を検索できます。</span></div></li>
+        <li><div><b>書類はパソコンの中で読むだけ</b><span>読み込ませた書類の画像は、保存も外部への送信もしません。</span></div></li>
+        <li><div><b>スキャナーの画像がおすすめ</b><span>画像から読んだ値には読み違いがあります。必ず書類と見比べてください。スマートフォンの写真より、スキャナーで読み込んだ画像の方が正確に読めます。</span></div></li>
+        <li><div><b>全国共通の法定様式で作ります</b><span>複写式などの独自の様式を求める地域では使えません。</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <!-- 所在図 -->
-<section id="shozaizu">
+<section id="shozaizu" class="alt">
   <div class="wrap">
     <div class="eyebrow">所在図　10分 → 最短1分</div>
     <h2>所在図は、住所を入れてボタンを押すだけ。最短<span class="num big">1</span>分。</h2>
@@ -313,7 +348,7 @@
 </section>
 
 <!-- 配置図 -->
-<section id="haichizu" class="alt">
+<section id="haichizu">
   <div class="wrap">
     <div class="eyebrow">配置図　15分 → 5分</div>
     <h2>配置図は、写真の上でなぞるだけ。15分が<span class="num big">5</span>分に。</h2>
@@ -340,7 +375,7 @@
 </section>
 
 <!-- 使いやすさ -->
-<section id="easy">
+<section id="easy" class="alt">
   <div class="wrap">
     <div class="eyebrow">誰でも・ずっと・安心</div>
     <h2>補助者でも、パソコンが苦手でも。</h2>
@@ -366,7 +401,7 @@
 </section>
 
 <!-- 料金 -->
-<section id="price" class="alt">
+<section id="price">
   <div class="wrap">
     <div class="eyebrow">料金</div>
     <h2>月額 <span class="num">3,300</span>円（税込）から。<br>毎月の件数に合わせて選べます。</h2>
@@ -400,7 +435,7 @@
 </section>
 
 <!-- よくある質問 -->
-<section id="faq">
+<section id="faq" class="alt">
   <div class="wrap">
     <div class="eyebrow">よくある質問</div>
     <div class="faq">
@@ -418,7 +453,11 @@
       </div>
       <div>
         <div class="q">お客様の住所などが外部に送られることはありませんか？</div>
-        <div class="a"><div><p>ありません。案件の内容は、あなたが選んだフォルダにだけ保存され、外部のサーバーに送られることはありません。</p></div></div>
+        <div class="a"><div><p>ありません。案件の内容は、あなたが選んだフォルダにだけ保存され、外部のサーバーに送られることはありません。申請書を作るために読み込ませた書類の画像も、パソコンの中で読むだけで、保存も外部への送信もしません。</p></div></div>
+      </div>
+      <div>
+        <div class="q">どの様式の申請書が作れますか？</div>
+        <div class="a"><div><p>全国共通の法定様式（保管場所証明申請書・保管場所届出書）で作ります。複写式など、独自の様式を求める地域では使えません。自認書・使用承諾証明書も作れます。</p></div></div>
       </div>
       <div>
         <div class="q">作った図面は、そのまま警察に提出できますか？</div>
